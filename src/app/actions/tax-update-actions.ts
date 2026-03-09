@@ -45,7 +45,7 @@ export async function updatePaymentStatus(id: string | number, paymentStatus: "L
       }
     });
 
-    await createAuditLog("UPDATE_PAYMENT", "TaxData", numId.toString(), `Ubah status pembayaran menjadi ${paymentStatus}`);
+    await createAuditLog("UPDATE_PAYMENT", "TaxData", data.namaWp, `Ubah status pembayaran menjadi ${paymentStatus} (ID: ${numId})`);
 
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");
@@ -153,7 +153,7 @@ export async function updateWpRegion(id: number, dusun: string | null, rt: strin
       }
     });
 
-    await createAuditLog("UPDATE_REGION", "TaxData", id.toString(), `Dusun: ${dusun}, RT: ${rt}, RW: ${rw}`);
+    await createAuditLog("UPDATE_REGION", "TaxData", data.namaWp, `Dusun: ${dusun}, RT: ${rt}, RW: ${rw} (ID: ${id})`);
 
     revalidatePath("/laporan");
     revalidatePath("/data-pajak");

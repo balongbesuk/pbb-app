@@ -22,7 +22,7 @@ export async function assignPenarik(taxId: string, penarikId: string | null) {
       }
     });
 
-    await createAuditLog("ASSIGN_TAX", "TaxMapping", taxId, `Ubah penugasan satu objek ke petugas UUID: ${penarikId || 'Dikosongkan'}`);
+    await createAuditLog("ASSIGN_TAX", "TaxMapping", data.namaWp, `Ubah penugasan satu objek ke petugas UUID: ${penarikId || 'Dikosongkan'} (ID: ${taxId})`);
 
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");

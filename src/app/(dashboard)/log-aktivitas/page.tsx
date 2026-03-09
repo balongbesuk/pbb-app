@@ -8,12 +8,25 @@ import { id } from "date-fns/locale";
 
 function getActionLabel(action: string) {
   switch (action) {
-    case "UPLOAD_TAX": return { label: "Upload Data", color: "bg-blue-500", icon: <FileText className="w-3 h-3" /> };
-    case "CLEAR_TAX": return { label: "Hapus Data Tahunan", color: "bg-red-500", icon: <Activity className="w-3 h-3" /> };
-    case "UPDATE_PAYMENT": return { label: "Ubah Status Lunas", color: "bg-emerald-500", icon: <ShieldCheck className="w-3 h-3" /> };
-    case "ASSIGN_TAX": return { label: "Tugaskan PBB", color: "bg-indigo-500", icon: <UserCircle className="w-3 h-3" /> };
-    case "UPDATE_REGION": return { label: "Ubah Wilayah RT/RW", color: "bg-amber-500", icon: <Box className="w-3 h-3" /> };
-    default: return { label: action, color: "bg-slate-500", icon: <Activity className="w-3 h-3" /> };
+    case "UPLOAD_TAX": return { label: "Upload Data", color: "bg-blue-600", icon: <FileText className="w-3 h-3" /> };
+    case "CLEAR_TAX": return { label: "Hapus Data Tahunan", color: "bg-red-600", icon: <Activity className="w-3 h-3" /> };
+    case "UPDATE_PAYMENT": return { label: "Ubah Status Lunas", color: "bg-emerald-600", icon: <ShieldCheck className="w-3 h-3" /> };
+    case "ASSIGN_TAX": return { label: "Tugaskan PBB", color: "bg-indigo-600", icon: <UserCircle className="w-3 h-3" /> };
+    case "UPDATE_REGION": return { label: "Ubah Wilayah RT/RW", color: "bg-amber-600", icon: <Box className="w-3 h-3" /> };
+    case "RESTORE_TAX": return { label: "Restore Data", color: "bg-purple-600", icon: <FileText className="w-3 h-3" /> };
+    default: return { label: action, color: "bg-slate-600", icon: <Activity className="w-3 h-3" /> };
+  }
+}
+
+function getEntityLabel(entity: string) {
+  switch (entity) {
+    case "TaxData": 
+    case "TaxMapping":
+      return "Data Pajak (PBB)";
+    case "User": return "Pengguna";
+    case "DusunReference": return "Referensi Dusun";
+    case "VillageConfig": return "Pengaturan Desa";
+    default: return entity;
   }
 }
 
@@ -70,9 +83,20 @@ export default async function AuditLogPage() {
                           </span>
                        </div>
                        
-                       <p className="text-sm text-foreground/80 leading-relaxed">
-                         Mengeksekusi tindakan pada modul <span className="font-semibold text-primary">{log.entity}</span> 
-                         {log.entityId && <span> ID target: <code className="bg-muted px-1 py-0.5 rounded text-xs">{log.entityId}</code></span>}
+                       <p className="text-sm text-foreground/80 leading-relaxed italic">
+                         {log.entityId ? (
+                           <>
+                             Melakukan perubahan pada <span className="font-semibold text-primary not-italic">{getEntityLabel(log.entity)}</span>
+                             <span className="not-italic"> 
+                               {log.entity === "TaxData" || log.entity === "TaxMapping" ? " untuk Wajib Pajak: " : " dengan ID: "}
+                               <code className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold text-xs">{log.entityId}</code>
+                             </span>
+                           </>
+                         ) : (
+                           <>
+                             Menjalankan proses sistem pada modul <span className="font-semibold text-primary not-italic">{getEntityLabel(log.entity)}</span>
+                           </>
+                         )}
                        </p>
                        
                        {log.details && (
