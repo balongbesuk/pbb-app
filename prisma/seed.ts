@@ -22,16 +22,6 @@ async function main() {
   });
 
   console.log({ admin });
-
-  // Add some default dusun references
-  const dusuns = ["BALONGBESUK", "KARANGASEM", "SUMBERAGUNG", "KRAJAN"];
-  for (const name of dusuns) {
-    await prisma.dusunReference.upsert({
-      where: { name },
-      update: {},
-      create: { name }
-    });
-  }
 }
 
 main()
