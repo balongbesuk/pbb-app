@@ -1,61 +1,64 @@
-# 🏦 PBB Manager - Sistem Manajemen Pajak Desa
+# 🏦 PBB Manager - Sistem Manajemen Pajak Desa (Versi 1.0)
 
-Selamat datang di **PBB Manager**, sebuah aplikasi web modern berbasis **Next.js 16** untuk membantu Pemerintah Desa/Kelurahan dalam mengelola pendataan, penagihan, dan pelaporan Pajak Bumi dan Bangunan (PBB) secara efisien dan transparan.
-
----
-
-## 🌟 Fitur Utama (Versi Produksi)
-
--   **Dashboard Real-time:** Pantau persentase realisasi, sisa tagihan, dan tren bulanan.
--   **Import DHKP Excel:** Unggah data ribuan warga dalam hitungan detik.
--   **Alokasi Petugas:** Bagi tugas penagihan per RW secara mudah kepada petugas lapangan.
--   **Log Aktivitas (Audit Trail):** Rekam jejak setiap perubahan status pembayaran untuk keamanan.
--   **Mobile Friendly:** Tampilan responsif untuk Tablet/HP petugas di lapangan.
+**PBB Manager** adalah aplikasi web modern masa kini untuk membantu Pemerintah Desa/Kelurahan dalam mengelola pendataan, penagihan, dan pelaporan Pajak Bumi dan Bangunan (PBB) secara akurat, cepat, dan transparan.
 
 ---
 
-## 🚀 Panduan Instalasi (Khusus Pemula)
+## 🔥 Fitur Unggulan
 
-Ikuti langkah demi langkah di bawah ini untuk menjalankan aplikasi di laptop/komputer Anda:
+-   **Dashboard Visual:** Pantau persentase penagihan harian dan grafik tren bulanan.
+-   **Import Cepat:** Unggah ribuan data DHKP dari Excel dalam hitungan detik.
+-   **Alokasi Otomatis:** Deteksi RT/RW dan Dusun dari alamat warga secara sitematis.
+-   **Tugas Penarik:** Bagi daftar tagihan ke setiap petugas lapangan dengan satu klik.
+-   **Audit Aktivitas:** Catat siapa yang melakukan transaksi lunas untuk mencegah selisih uang.
+-   **Laporan Excel:** Cetak rekapitulasi lunas/belum lunas per RW yang siap dilaporkan ke Kecamatan.
+-   **Responsif:** Sangat nyaman dibuka melalui HP atau Tablet oleh petugas saat menagih ke rumah warga.
+
+---
+
+## 🛠️ Panduan Instalasi (Untuk Pemula)
+
+Ikuti langkah-langkah di bawah ini untuk menjalankan aplikasi di komputer kantor atau server desa Anda.
 
 ### 1. Persiapan Awal
-Pastikan Anda sudah menginstal **Node.js** di komputer. Jika belum, download di [nodejs.org](https://nodejs.org).
+Pastikan komputer Anda sudah terinstall:
+-   **Node.js (Versi Terbaru):** Download di [nodejs.org](https://nodejs.org/) (Pilih versi LTS). Klik Next terus sampai finish.
+-   **Web Browser:** Gunakan Google Chrome atau Microsoft Edge terbaru.
 
-### 2. Persiapan Project
-1.  Buka folder proyek ini di komputer Anda.
-2.  Buka **Terminal** atau **Command Prompt (CMD)** di dalam folder tersebut.
-3.  Ketik perintah berikut untuk mengunduh semua library pendukung:
-    ```bash
+### 2. Cara Download & Setup
+1.  **Download Project:** Klik tombol hijau bertuliskan **"Code"** di atas, lalu pilih **"Download ZIP"**. Ekstrak hasilnya ke folder pilihan Anda (Misal di `D:\PBB-APP`).
+2.  **Buka Command Prompt (CMD):** Klik Start, ketik `CMD`, tekan Enter.
+3.  **Masuk ke Folder:** Ketik perintah ini (Sesuaikan dengan folder Anda):
+    ```cmd
+    cd /d D:\PBB-APP
+    ```
+4.  **Install Sistem:** Ketik perintah di bawah ini dan tunggu sampai selesai (perlu koneksi internet):
+    ```cmd
     npm install
     ```
+5.  **Buka File Konfigurasi:** Cari file bernama `.env.example`, ubah namanya menjadi `.env`. Isi bagian `NEXTAUTH_SECRET` dengan kode rahasia bebas.
 
-### 3. Pengaturan Database (Sangat Penting)
-Secara bawaan, database tidak diunggah ke GitHub demi keamanan data. Untuk membuat database baru yang bersih, jalankan perintah ini:
-```bash
-npx prisma db push
-```
-*Perintah ini akan membuat file `dev.db` di folder prisma secara otomatis.*
-
-### 4. Menjalankan Mode Produksi (Cepat & Stabil)
-Jangan gunakan perintah `dev` jika aplikasi ingin digunakan secara serius. Jalankan perintah produksi ini:
-```bash
-npm run build
-npm run start
-```
-Akses aplikasi melalui peramban (Chrome/Edge) di alamat: [http://localhost:3000](http://localhost:3000)
-
----
-
-## 💡 Tutorial Penggunaan Singkat
-
-1.  **Login Pertama:** Masuk menggunakan akun admin.
-2.  **Lengkapi Profil:** Isi Nama Desa & Tahun Pajak di menu **Pengaturan**.
-3.  **Upload Data:** Masukkan file Excel DHKP di menu **Upload Data PBB**.
-4.  **Ubah Status:** Cari nama warga di **Data Pajak**, lalu klik tombol statusnya untuk menandai pembayaran.
+### 3. Menjalankan Mode Produksi (Siap Pakai)
+Untuk penggunaan sehari-hari di kantor, jalankan perintah berikut:
+1.  **Siapkan Database:**
+    ```cmd
+    npx prisma db push
+    ```
+2.  **Kompilasi Aplikasi (Hanya Sekali):**
+    ```cmd
+    npm run build
+    ```
+3.  **Jalankan Aplikasi:**
+    ```cmd
+    npm run start
+    ```
+4.  **Akses:** Buka Google Chrome dan ketik alamat: `http://localhost:3000`
 
 ---
 
-## 🛡️ Catatan Keamanan
-Jangan membagikan file `.env` kepada orang asing karena berisi kunci rahasia aplikasi Anda.
+## 🔒 Keamanan & Pemeliharaan
+-   **Database:** Seluruh data tersimpan secara aman di folder `prisma/dev.db`. Jangan hapus file tersebut.
+-   **Backup:** Disarankan melakukan copy-paste folder seluruh aplikasi ke Flashdisk setiap minggu sebagai cadangan data.
 
-*Dibuat oleh Antigravity AI Assistant - 2026*
+---
+**Dibuat oleh Antigravity AI Assistant untuk Desa Terdigitalisasi - 2026**

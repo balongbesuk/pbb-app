@@ -1,73 +1,84 @@
-# 📘 Panduan Lengkap Penggunaan PBB Manager
+# 📖 Panduan Penggunaan Aplikasi PBB Manager
 
-Dokumen ini berisi instruksi detail cara mengoperasikan aplikasi PBB Manager setelah berhasil diinstal.
-
----
-
-## 🛠️ Langkah Awal (Setup Admin)
-
-### 1. Konfigurasi Profil Desa
-Sangat penting untuk mengisi data profil di menu **Pengaturan > Profil Instansi**.
--   **Nama Desa, Kecamatan, dan Kabupaten** akan digunakan otomatis sebagai Kop Surat pada setiap laporan Excel yang diunduh.
--   Data ini membuat laporan Anda terlihat resmi dan profesional.
-
-### 2. Pendaftaran Referensi Dusun
-Masuk ke **Pengaturan > Referensi Dusun**. Masukkan semua nama dusun yang ada.
--   **Fungsi:** Sistem akan mencocokkan alamat pada file Excel yang diupload dengan daftar ini secara otomatis.
+Dokumen ini adalah panduan langkah-demi-langkah bagi Admin Desa dan Petugas Penarik untuk mengoperasikan aplikasi Pajak Bumi dan Bangunan (PBB) dengan benar.
 
 ---
 
-## 📅 Manajemen Data Tahunan
+## 🚀 Bab 1: Persiapan Akun (Admin)
 
-### 1. Upload Data (DHKP)
--   Buka menu **Upload Data PBB**.
--   Gunakan template yang tersedia jika data Anda berantakan.
--   Sistem memiliki fitur **Anti Ganda**, jadi jika Anda upload file yang sama dua kali, data tidak akan menduplikasi (hanya menambah yang baru).
+### 1. Masuk ke Sistem (Login)
+-   Buka alamat aplikasi (misal: `http://localhost:3000`).
+-   Masukkan **Username** dan **Password** Admin yang telah diberikan.
+-   Disarankan segera mengubah password di menu **Pengaturan > Akun** demi keamanan data warga.
 
-### 2. Pembersihan Data
-Jika ingin memulai tahun baru (misal pindah dari 2025 ke 2026), gunakan tombol **Reset Data** di halaman Upload untuk membersihkan database tahun tersebut tanpa menghapus akun login petugas.
-
----
-
-## 👮 Pembagian Tugas (Mapping)
-
-Admin tidak perlu mengatur penarik satu per satu untuk ribuan data.
--   Buka menu **Laporan**.
--   Pilih salah satu RW (Misal: RW 01).
--   Klik **Atur Penarik Masal**.
--   Pilih nama petugas yang bertanggung jawab di RW tersebut.
--   **Hasil:** Seluruh warga di RW tersebut otomatis menjadi tugas petugas tersebut di aplikasi mereka.
+### 2. Melengkapi Profil Pemerintahan
+-   Klik menu **Pengaturan** di sebelah kiri.
+-   Pilih **Profil Instansi**.
+-   Isi Nama Desa, Kecamatan, dan Kabupaten/Kota.
+-   **Mengapa penting?** Karena data ini akan muncul otomatis di kepala (kop) laporan Excel yang akan Anda serahkan ke atasan.
 
 ---
 
-## 📱 Panduan Untuk Petugas Penarik
+## 📂 Bab 2: Manajemen Data Pajak (Admin)
 
-### 1. Pencarian Cepat
-Gunakan kolom pencarian di menu **Data Pajak**. Anda bisa mencari dengan mengetik:
--   Sebagian nama warga (Contoh: "Purnomo").
--   Nomor NOP.
+### 1. Pendaftaran Nama-Nama Dusun
+Ini adalah langkah paling penting sebelum upload data.
+-   Masuk ke **Pengaturan > Referensi Dusun**.
+-   Tambahkan semua nama dusun di desa Anda satu per satu.
+-   Tanpa daftar ini, aplikasi tidak bisa memisahkan warga per dusun secara otomatis.
 
-### 2. Penandaan Pembayaran
-Cukup satu klik pada label status di tabel. 
--   **Belum Lunas (Merah)** -> **Lunas (Hijau)**.
--   Status Lunas akan mencatat waktu pembayaran dan siapa yang melakukan klik tersebut di sistem **Log Aktivitas**.
-
----
-
-## 📊 Pelaporan & Audit
-
-### 1. Monitoring Dashboard
-Bagan grafik akan bergeser secara real-time setiap kali ada petugas yang menandai lunas di lapangan. Admin bisa memantau siapa penarik yang kinerjanya paling lambat atau wilayah mana yang paling sulit ditagih.
-
-### 2. Audit Trail (Log)
-Jika terjadi selisih uang, Admin bisa memeriksa menu **Log Aktivitas**.
--   "X mengubah NOP 35... menjadi Lunas pada jam 14.00".
--   Ini mencegah adanya petugas yang menandai lunas namun uangnya tidak disetorkan.
+### 2. Mengunggah Data DHKP (Excel)
+Ini dilakukan setiap setahun sekali atau saat ada pembaruan data.
+-   Pilih menu **Upload Data PBB**.
+-   Pilih Tahun Pajak (misal: 2026).
+-   Pilih file Excel DHKP Anda.
+-   Klik **Mulai Import**. Tunggu sampai muncul notifikasi "Berhasil".
+-   Aplikasi secara pintar akan membagi warga ke dalam RT dan RW berdasarkan alamat di Excel.
 
 ---
 
-## 💾 Backup & Pemulihan
-Gunakan fitur **Restore Alokasi** di menu Pengaturan jika Anda baru saja mengupload data tahun baru dan ingin menerapkan pembagian petugas (Mapping) yang sama seperti tahun lalu secara otomatis.
+## 👮 Bab 3: Pembagian Tugas Petugas (Mapping)
+
+Jangan lelah membagi tugas satu per satu. Gunakan fitur **Masal** (Cepat):
+1.  Klik menu **Laporan**.
+2.  Pilih Tab **Wilayah** (Misal: RW 01).
+3.  Klik tombol biru **"Atur Penarik Masal"**.
+4.  Pilih nama Kepala Dusun atau Petugas lapangan.
+5.  **Hasil:** Semua warga di RW tersebut akan muncul di HP/Tablet petugas tersebut saat mereka login.
 
 ---
-*Dibuat oleh Antigravity AI Assistant - 2026*
+
+## 💳 Bab 4: Pelaporan Pembayaran (Petugas Lapangan)
+
+### 1. Mencari Nama Warga
+Petugas cukup membawa HP saat menagih ke rumah warga:
+-   Klik menu **Data Pajak**.
+-   Ketik nama warga atau nomor NOP di kotak pencarian.
+-   Gunakan filter RT atau RW agar daftar lebih pendek.
+
+### 2. Menandai Lunas
+-   Jika warga membayar, klik label berwarna Merah bertuliskan **"Belum Lunas"**.
+-   Status akan berubah menjadi Hijau **"Lunas"**.
+-   Data ini langsung masuk ke laporan Admin secara *real-time*.
+
+---
+
+## 🔍 Bab 5: Monitoring & Keamanan (Admin)
+
+### 1. Pantau Lewat Dashboard
+-   Buka halaman **Dashboard** untuk melihat uang yang sudah terkumpul.
+-   Lihat grafik **Top Kolektor** untuk tahu siapa petugas yang paling rajin menagih.
+
+### 2. Log Aktivitas (Audit)
+-   Gunakan menu **Log Aktivitas** untuk memantau transaksi.
+-   Jika ada warga protes sudah bayar tapi di sistem belum, Anda bisa cek di sini siapa petugas yang terakhir kali mengubah data tersebut.
+
+---
+
+## 💾 Bab 6: Penutupan & Backup data
+
+-   **Ekspor Laporan:** Setiap bulan, buka menu **Laporan**, lalu pilih **Excel Laporan Lunas** untuk disimpan sebagai arsip fisik kantor.
+-   **Backup Sistem:** Copy folder aplikasi ini ke Flashdisk secara rutin agar jika komputer rusak, data pajak desa tidak hilang.
+
+---
+*Panduan ini dibuat eksklusif untuk kemajuan Desa Anda - 2026*
