@@ -8,7 +8,7 @@ Dokumen ini adalah panduan langkah-demi-langkah bagi Admin Desa dan Petugas Pena
 
 ### 1. Masuk ke Sistem (Login)
 -   Buka alamat aplikasi (misal: `http://localhost:3000`).
--   Masukkan **Username** dan **Password** Admin yang telah diberikan.
+-   Masukkan **Username**: `admin` dan **Password**: `admin123` (Akun bawaan default).
 -   Disarankan segera mengubah password di menu **Pengaturan > Akun** demi keamanan data warga.
 
 ### 2. Melengkapi Profil Pemerintahan

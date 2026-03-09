@@ -43,6 +43,7 @@ Untuk penggunaan sehari-hari di kantor, jalankan perintah berikut:
 1.  **Siapkan Database:**
     ```cmd
     npx prisma db push
+    npx prisma db seed
     ```
 2.  **Kompilasi Aplikasi (Hanya Sekali):**
     ```cmd
@@ -53,6 +54,8 @@ Untuk penggunaan sehari-hari di kantor, jalankan perintah berikut:
     npm run start
     ```
 4.  **Akses:** Buka Google Chrome dan ketik alamat: `http://localhost:3000`
+    -   **Username Default:** `admin`
+    -   **Password Default:** `admin123`
 
 ---
 
