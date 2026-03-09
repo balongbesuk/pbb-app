@@ -1,0 +1,26 @@
+
+> pbb-app@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 6.6s
+  Running TypeScript ...
+Failed to compile.
+
+./src/components/dashboard/dashboard-filters.tsx:31:37
+Type error: Type '(val: string) => void' is not assignable to type '(value: string | null, eventDetails: SelectRootChangeEventDetails) => void'.
+  Types of parameters 'val' and 'value' are incompatible.
+    Type 'string | null' is not assignable to type 'string'.
+      Type 'null' is not assignable to type 'string'.
+
+  29 |       <div className="flex items-center gap-2">
+  30 |         <Label className="text-xs font-semibold uppercase text-muted-foreground whitespace-nowrap">Tahun Pajak</Label>
+> 31 |         <Select value={currentYear} onValueChange={handleYearChange}>
+     |                                     ^
+  32 |           <SelectTrigger className="w-[100px] h-9 bg-white/50 border-none shadow-none focus:ring-0">
+  33 |             <SelectValue />
+  34 |           </SelectTrigger>
+Next.js build worker exited with code: 1 and signal: null

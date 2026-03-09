@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏦 PBB Manager - Sistem Manajemen Pajak Desa
 
-## Getting Started
+Selamat datang di **PBB Manager**, sebuah aplikasi web modern berbasis **Next.js 16** untuk membantu Pemerintah Desa/Kelurahan dalam mengelola pendataan, penagihan, dan pelaporan Pajak Bumi dan Bangunan (PBB) secara efisien dan transparan.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Fitur Utama
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+-   **Dashboard Real-time:** Pantau persentase realisasi, sisa tagihan, dan tren bulanan dalam grafik interaktif.
+-   **Import DHKP Excel:** Unggah data pajak ribuan baris dalam hitungan detik.
+-   **Otomasi Wilayah:** Deteksi otomatis RT/RW dan Dusun dari alamat warga.
+-   **Manajemen Penarik:** Alokasikan daftar penagihan ke petugas lapangan secara presisi.
+-   **Log Aktivitas (Audit Trail):** Rekam jejak siapa yang mengubah data, menandai lunas, atau menghapus data.
+-   **Laporan Excel:** Ekspor rekapitulasi lunas/belum lunas per RW dengan satu klik.
+-   **Mobile Friendly:** Tampilan responsif yang nyaman dibuka di Tablet atau Smartphone oleh petugas lapangan.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Panduan Penginstalan
 
-## Learn More
+### 1. Prasyarat
+-   **Node.js** (Versi 18+)
+-   **NPM** (Bawaan Node.js)
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Langkah Setup
+1.  **Clone Project:**
+    Download atau Clone folder ini ke komputer Anda.
+2.  **Install Dependencies:**
+    Buka terminal di folder project, jalankan:
+    ```bash
+    npm install
+    ```
+3.  **Konfigurasi Environment:**
+    Buat file bernama `.env` di folder root dan isi dengan:
+    ```env
+    DATABASE_URL="file:./dev.db"
+    NEXTAUTH_SECRET="pbb-manager-secret-key-123"
+    NEXTAUTH_URL="http://localhost:3000"
+    ```
+4.  **Inisialisasi Database:**
+    Simpan skema database ke file lokal:
+    ```bash
+    npx prisma db push
+    ```
+5.  **Jalankan:**
+    ```bash
+    npm run dev
+    ```
+    Buka peramban di alamat [http://localhost:3000](http://localhost:3000).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📖 Cara Penggunaan Singkat
 
-## Deploy on Vercel
+### Untuk Admin:
+1.  **Profil:** Isi data Desa di menu **Pengaturan**.
+2.  **Data:** Unggah file Excel DHKP di menu **Upload Data PBB**.
+3.  **Tugas:** Buka menu **Laporan**, pilih wilayah, dan gunakan tombol **Atur Penarik Masal** untuk membagi tugas ke petugas.
+4.  **Audit:** Cek menu **Log Aktivitas** secara berkala untuk memantau integritas data.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Untuk Petugas (Penarik):
+1.  **Login** dengan akun penarik yang sudah dibuat admin.
+2.  Buka menu **Data Pajak**, cari nama warga yang membayar.
+3.  Klik status **Belum Lunas** (Merah) untuk mengubahnya menjadi **Lunas** (Hijau).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🛡️ Lisensi & Kontribusi
+Aplikasi ini dikembangkan untuk mempermudah birokrasi tingkat desa. 
+
+**Dibuat oleh Antigravity AI Assistant - 2026**

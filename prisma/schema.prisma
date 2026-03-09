@@ -1,14 +1,169 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum Role {
+  ADMIN
+  PENARIK
+  PENGGUNA
+}
+
+enum PaymentStatus {
+  LUNAS
+  BELUM_LUNAS
+  TIDAK_TERBIT
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  username      String    @unique
+  password      String
+  role          Role      @default(PENGGUNA)
+  dusun         String?   
+  rt            String?
+  rw            String?
+  
+  taxData       TaxData[] @relation("PenarikPajak")
+  taxMappings   TaxMapping[]
+
+  notifications Notification[]
+  
+  sentTransferRequests     TransferRequest[] @relation("Sender")
+  receivedTransferRequests TransferRequest[] @relation("Receiver")
+  
+  auditLogs     AuditLog[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model TaxData {
+  id              Int       @id @default(autoincrement())
+  nop             String    
+  namaWp          String
+  alamatObjek     String
+  luasTanah       Float
+  luasBangunan    Float
+  ketetapan       Float
+  tagihanDenda    Float
+  pembayaran      Float
+  pokok           Float
+  denda           Float
+  lebihBayar      Float
+  tanggalBayar    DateTime?
+  sisaTagihan     Float
+  tempatBayar     String?
+  tahun           Int
+
+  dusun           String?
+  rt              String?
+  rw              String?
+  status          String    @default("UNMATCHED")
+  paymentStatus   PaymentStatus @default(BELUM_LUNAS)
+
+  penarikId       String?
+  penarik         User?     @relation("PenarikPajak", fields: [penarikId], references: [id])
+
+  transferRequests TransferRequest[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([nop])
+  @@index([tahun])
+  @@index([rt, rw])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String?
+  type      String   // INFO, REQUEST, REJECTED, ACCEPTED
+  isRead    Boolean  @default(false)
+  link      String?  // Optional link to action
+  createdAt DateTime @default(now())
+}
+
+model TransferRequest {
+  id          String   @id @default(cuid())
+  taxId       Int
+  taxData     TaxData  @relation(fields: [taxId], references: [id])
+  senderId    String
+  sender      User     @relation("Sender", fields: [senderId], references: [id])
+  receiverId  String
+  receiver    User     @relation("Receiver", fields: [receiverId], references: [id])
+  type        String   @default("GIVE") // GIVE (Sender gives to Receiver), TAKE (Sender takes from Receiver)
+  status      String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  message     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model VillageRegion {
+  id      String @id @default(cuid())
+  dusun   String
+  rt      String
+  rw      String
+  
+  @@unique([dusun, rt, rw])
+}
+
+model DusunReference {
+  id   String @id @default(cuid())
+  name String @unique
+}
+
+model TaxMapping {
+  id         String @id @default(cuid())
+  nop        String @unique
+  rt         String
+  rw         String
+  dusun      String
+  penarikId  String?
+  penarik    User?  @relation(fields: [penarikId], references: [id])
+}
+
+model AddressLearning {
+  id              String @id @default(cuid())
+  addressPattern  String @unique
+  rt              String
+  rw              String
+  dusun           String
+  confidence      Float
+}
+
+model RegionOtomation {
+  id    String @id @default(cuid())
+  type  String @default("RW") // "RW" atau "RT"
+  code  String @unique       // Nomor RW atau RT
+  dusun String
+}
+model VillageConfig {
+  id        Int    @id @default(1)
+  namaDesa  String @default("")
+  kecamatan String @default("")
+  kabupaten String @default("")
+  tahunPajak Int @default(2026)
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?  // Optional in case of system actions
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String   // e.g., "UPDATE_PAYMENT", "UPDATE_REGION", "UPLOAD_EXCEL", "CLEAR_DATA"
+  entity    String   // e.g., "TaxData", "DusunReference"
+  entityId  String?  // e.g., TaxData ID or User ID being touched
+  details   String?  // Additional JSON or string details
+  createdAt DateTime @default(now())
 }

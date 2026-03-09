@@ -1,0 +1,24 @@
+
+> pbb-app@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 10.1s
+  Running TypeScript ...
+Failed to compile.
+
+./src/components/layout/notification-bell.tsx:71:28
+Type error: Type '{ children: Element; asChild: true; }' is not assignable to type 'IntrinsicAttributes & Props<unknown>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & Props<unknown>'.
+
+  69 |   return (
+  70 |     <DropdownMenu>
+> 71 |       <DropdownMenuTrigger asChild>
+     |                            ^
+  72 |         <Button variant="ghost" size="icon" className="relative group">
+  73 |           <Bell className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+  74 |           {unreadCount > 0 && (
+Next.js build worker exited with code: 1 and signal: null

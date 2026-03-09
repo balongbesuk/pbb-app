@@ -1,0 +1,24 @@
+
+> pbb-app@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 8.8s
+  Running TypeScript ...
+Failed to compile.
+
+./src/app/(dashboard)/dashboard/page.tsx:239:23
+Type error: Type '{ children: Element; asChild: true; variant: "secondary"; size: "sm"; className: string; }' is not assignable to type 'IntrinsicAttributes & ButtonProps & VariantProps<(props?: (ConfigVariants<{ variant: { default: string; outline: string; secondary: string; ghost: string; destructive: string; link: string; }; size: { ...; }; }> & ClassProp) | undefined) => string>'.
+  Property 'asChild' does not exist on type 'IntrinsicAttributes & ButtonProps & VariantProps<(props?: (ConfigVariants<{ variant: { default: string; outline: string; secondary: string; ghost: string; destructive: string; link: string; }; size: { ...; }; }> & ClassProp) | undefined) => string>'.
+
+  237 |                 ))}
+  238 |               </div>
+> 239 |               <Button asChild variant="secondary" size="sm" className="w-full mt-6 text-xs gap-2">
+      |                       ^
+  240 |                  <Link href="/laporan">
+  241 |                    Lihat Semua Laporan <ChevronRight className="w-3 h-3" />
+  242 |                  </Link>
+Next.js build worker exited with code: 1 and signal: null

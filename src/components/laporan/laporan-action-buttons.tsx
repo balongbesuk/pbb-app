@@ -1,0 +1,24 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Download, Printer } from "lucide-react";
+
+export function LaporanActionButtons({ tahun, currentUser }: { tahun: number; currentUser?: any }) {
+  const handleExport = () => {
+    window.location.href = `/api/export-laporan-excel?tahun=${tahun}`;
+  };
+
+  return (
+    <div className="flex items-center gap-2 print:hidden">
+      {currentUser?.role !== "PENGGUNA" && (
+        <Button 
+          className="gap-2 shadow-lg"
+          onClick={handleExport}
+        >
+          <Download className="w-4 h-4" />
+          Export Excel
+        </Button>
+      )}
+    </div>
+  );
+}
