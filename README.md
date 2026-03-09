@@ -4,68 +4,58 @@ Selamat datang di **PBB Manager**, sebuah aplikasi web modern berbasis **Next.js
 
 ---
 
-## 🚀 Fitur Utama
+## 🌟 Fitur Utama (Versi Produksi)
 
--   **Dashboard Real-time:** Pantau persentase realisasi, sisa tagihan, dan tren bulanan dalam grafik interaktif.
--   **Import DHKP Excel:** Unggah data pajak ribuan baris dalam hitungan detik.
--   **Otomasi Wilayah:** Deteksi otomatis RT/RW dan Dusun dari alamat warga.
--   **Manajemen Penarik:** Alokasikan daftar penagihan ke petugas lapangan secara presisi.
--   **Log Aktivitas (Audit Trail):** Rekam jejak siapa yang mengubah data, menandai lunas, atau menghapus data.
--   **Laporan Excel:** Ekspor rekapitulasi lunas/belum lunas per RW dengan satu klik.
--   **Mobile Friendly:** Tampilan responsif yang nyaman dibuka di Tablet atau Smartphone oleh petugas lapangan.
+-   **Dashboard Real-time:** Pantau persentase realisasi, sisa tagihan, dan tren bulanan.
+-   **Import DHKP Excel:** Unggah data ribuan warga dalam hitungan detik.
+-   **Alokasi Petugas:** Bagi tugas penagihan per RW secara mudah kepada petugas lapangan.
+-   **Log Aktivitas (Audit Trail):** Rekam jejak setiap perubahan status pembayaran untuk keamanan.
+-   **Mobile Friendly:** Tampilan responsif untuk Tablet/HP petugas di lapangan.
 
 ---
 
-## 🛠️ Panduan Penginstalan
+## 🚀 Panduan Instalasi (Khusus Pemula)
 
-### 1. Prasyarat
--   **Node.js** (Versi 18+)
--   **NPM** (Bawaan Node.js)
+Ikuti langkah demi langkah di bawah ini untuk menjalankan aplikasi di laptop/komputer Anda:
 
-### 2. Langkah Setup
-1.  **Clone Project:**
-    Download atau Clone folder ini ke komputer Anda.
-2.  **Install Dependencies:**
-    Buka terminal di folder project, jalankan:
+### 1. Persiapan Awal
+Pastikan Anda sudah menginstal **Node.js** di komputer. Jika belum, download di [nodejs.org](https://nodejs.org).
+
+### 2. Persiapan Project
+1.  Buka folder proyek ini di komputer Anda.
+2.  Buka **Terminal** atau **Command Prompt (CMD)** di dalam folder tersebut.
+3.  Ketik perintah berikut untuk mengunduh semua library pendukung:
     ```bash
     npm install
     ```
-3.  **Konfigurasi Environment:**
-    Buat file bernama `.env` di folder root dan isi dengan:
-    ```env
-    DATABASE_URL="file:./dev.db"
-    NEXTAUTH_SECRET="pbb-manager-secret-key-123"
-    NEXTAUTH_URL="http://localhost:3000"
-    ```
-4.  **Inisialisasi Database:**
-    Simpan skema database ke file lokal:
-    ```bash
-    npx prisma db push
-    ```
-5.  **Jalankan:**
-    ```bash
-    npm run dev
-    ```
-    Buka peramban di alamat [http://localhost:3000](http://localhost:3000).
+
+### 3. Pengaturan Database (Sangat Penting)
+Secara bawaan, database tidak diunggah ke GitHub demi keamanan data. Untuk membuat database baru yang bersih, jalankan perintah ini:
+```bash
+npx prisma db push
+```
+*Perintah ini akan membuat file `dev.db` di folder prisma secara otomatis.*
+
+### 4. Menjalankan Mode Produksi (Cepat & Stabil)
+Jangan gunakan perintah `dev` jika aplikasi ingin digunakan secara serius. Jalankan perintah produksi ini:
+```bash
+npm run build
+npm run start
+```
+Akses aplikasi melalui peramban (Chrome/Edge) di alamat: [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 📖 Cara Penggunaan Singkat
+## 💡 Tutorial Penggunaan Singkat
 
-### Untuk Admin:
-1.  **Profil:** Isi data Desa di menu **Pengaturan**.
-2.  **Data:** Unggah file Excel DHKP di menu **Upload Data PBB**.
-3.  **Tugas:** Buka menu **Laporan**, pilih wilayah, dan gunakan tombol **Atur Penarik Masal** untuk membagi tugas ke petugas.
-4.  **Audit:** Cek menu **Log Aktivitas** secara berkala untuk memantau integritas data.
-
-### Untuk Petugas (Penarik):
-1.  **Login** dengan akun penarik yang sudah dibuat admin.
-2.  Buka menu **Data Pajak**, cari nama warga yang membayar.
-3.  Klik status **Belum Lunas** (Merah) untuk mengubahnya menjadi **Lunas** (Hijau).
+1.  **Login Pertama:** Masuk menggunakan akun admin.
+2.  **Lengkapi Profil:** Isi Nama Desa & Tahun Pajak di menu **Pengaturan**.
+3.  **Upload Data:** Masukkan file Excel DHKP di menu **Upload Data PBB**.
+4.  **Ubah Status:** Cari nama warga di **Data Pajak**, lalu klik tombol statusnya untuk menandai pembayaran.
 
 ---
 
-## 🛡️ Lisensi & Kontribusi
-Aplikasi ini dikembangkan untuk mempermudah birokrasi tingkat desa. 
+## 🛡️ Catatan Keamanan
+Jangan membagikan file `.env` kepada orang asing karena berisi kunci rahasia aplikasi Anda.
 
-**Dibuat oleh Antigravity AI Assistant - 2026**
+*Dibuat oleh Antigravity AI Assistant - 2026*
