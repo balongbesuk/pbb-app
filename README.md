@@ -1,3 +1,6 @@
+<img width="2537" height="941" alt="image" src="https://github.com/user-attachments/assets/de9d301d-7095-49ca-b683-6cdc57a4ea22" />
+
+
 # 🏦 PBB Manager - Sistem Manajemen Pajak Desa
 
 **PBB Manager** adalah aplikasi web modern masa kini untuk membantu Pemerintah Desa/Kelurahan dalam mengelola pendataan, penagihan, dan pelaporan Pajak Bumi dan Bangunan (PBB) secara akurat, cepat, dan transparan.
