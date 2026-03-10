@@ -8,11 +8,15 @@ export async function createAuditLog(
   action: string,
   entity: string,
   entityId: string | null = null,
-  details: string | null = null
+  details: string | null = null,
+  manualUserId: string | null = null
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id || null;
+    let userId = manualUserId;
+    if (!userId) {
+      const session = await getServerSession(authOptions);
+      userId = (session?.user as any)?.id || null;
+    }
 
     await prisma.auditLog.create({
       data: {

@@ -1,7 +1,7 @@
 import { getAuditLogs } from "@/app/actions/log-actions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, UserCircle, Activity, Box, Search, Calendar, ShieldCheck, ArrowRightLeft, CheckCircle2, XCircle } from "lucide-react";
+import { FileText, UserCircle, Activity, Box, Search, Calendar, ShieldCheck, ArrowRightLeft, CheckCircle2, XCircle, LogIn } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -37,6 +37,7 @@ function getActionLabel(action: string, details?: string | null) {
         icon: isAccepted ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />
       };
     }
+    case "LOGIN": return { label: "Login Sistem", color: "bg-indigo-600", icon: <LogIn className="w-3 h-3" /> };
     default: return { label: action, color: "bg-slate-600", icon: <Activity className="w-3 h-3" /> };
   }
 }

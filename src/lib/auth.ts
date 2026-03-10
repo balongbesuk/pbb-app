@@ -13,7 +13,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;
-        
+
         const user = await prisma.user.findUnique({
           where: { username: credentials.username },
         });
@@ -54,4 +54,19 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
+  events: {
+    async signIn({ user }) {
+      if (user) {
+        await prisma.auditLog.create({
+          data: {
+            action: "LOGIN",
+            entity: "User",
+            entityId: user.id,
+            details: `Pengguna ${user.name} berhasil login ke dalam sistem`,
+            userId: user.id
+          }
+        });
+      }
+    }
+  }
 };
