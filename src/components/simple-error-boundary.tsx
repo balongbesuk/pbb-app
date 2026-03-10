@@ -18,7 +18,7 @@ export class SimpleErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-4 bg-red-50 text-red-500 rounded-md">
+        <div className="rounded-md bg-red-50 p-4 text-red-500">
           <p className="font-bold">UI Crash!</p>
           <pre className="text-xs whitespace-pre-wrap">{this.state.error?.message}</pre>
         </div>

@@ -24,7 +24,7 @@ export async function GET() {
     ];
 
     sheet.getRow(1).font = { bold: true };
-    sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD3D3D3' } };
+    sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD3D3D3" } };
 
     // Add example rules/dummy data
     sheet.addRow({
@@ -41,7 +41,7 @@ export async function GET() {
       lebihBayar: 0,
       tanggalBayar: "",
       sisaTagihan: 25000,
-      tempatBayar: ""
+      tempatBayar: "",
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -53,7 +53,6 @@ export async function GET() {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
     });
-
   } catch (error) {
     console.error("Template Create Error: ", error);
     return new NextResponse("Internal Server Error", { status: 500 });

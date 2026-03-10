@@ -38,7 +38,7 @@ export default function RootLayout({
         >
           <QueryProvider>
             <AuthProvider>
-              <div className="min-h-screen gradient-bg print:bg-white print:min-h-0 print:h-auto">
+              <div className="gradient-bg min-h-screen print:h-auto print:min-h-0 print:bg-white">
                 {children}
               </div>
               <Toaster position="top-right" />

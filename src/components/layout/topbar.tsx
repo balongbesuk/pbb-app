@@ -8,7 +8,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Bell, User, LogOut } from "lucide-react";
@@ -30,22 +30,23 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
   if (!mounted) {
     return (
-      <header className="h-16 glass sticky top-0 z-10 border-b border-border/50 flex items-center justify-between px-4 md:px-6">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-100 bg-white/80 px-4 backdrop-blur-md md:px-6 dark:border-zinc-900 dark:bg-zinc-950/80">
         <div className="flex-1" />
       </header>
     );
   }
 
   return (
-    <header className="h-16 glass sticky top-0 z-10 border-b border-border/50 flex items-center justify-between px-4 md:px-6">
-      <div className="flex items-center gap-2 md:gap-4 flex-1">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-100 bg-white/80 px-4 backdrop-blur-md md:px-6 dark:border-zinc-900 dark:bg-zinc-950/80">
+      <div className="flex flex-1 items-center gap-2 md:gap-4">
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Buka menu navigasi"
           className="md:hidden"
           onClick={onToggleSidebar}
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="h-5 w-5" />
         </Button>
         <div className="flex-1" />
       </div>
@@ -55,23 +56,35 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
         <NotificationBell />
 
-        <div className="h-8 w-px bg-border/20 mx-1 md:mx-2" />
+        <div className="bg-border/20 mx-1 h-8 w-px md:mx-2" />
 
         <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
+          <div className="hidden text-right sm:block">
             <p className="text-sm font-semibold">{session?.user?.name || "Admin"}</p>
-            <p className="text-xs text-muted-foreground capitalize">{(session?.user as any)?.role?.toLowerCase() || "User"}</p>
+            <p className="text-muted-foreground text-xs capitalize">
+              {(session?.user as any)?.role?.toLowerCase() || "User"}
+            </p>
           </div>
 
           <DropdownMenu>
-            <DropdownMenuTrigger className="p-0 h-10 w-10 rounded-full hover:bg-muted transition-colors cursor-pointer outline-none">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+            <DropdownMenuTrigger className="hover:ring-primary/5 h-9 w-9 cursor-pointer rounded-full p-0 transition-all outline-none hover:ring-4">
+              <div className="bg-primary/5 dark:bg-primary/10 text-primary border-primary/10 flex h-9 w-9 items-center justify-center rounded-full border text-sm font-black">
                 {session?.user?.name?.charAt(0) || "A"}
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 glass border-border/50">
+            <DropdownMenuContent
+              align="end"
+              className="w-64 rounded-2xl border border-zinc-100 bg-white p-2 shadow-2xl dark:border-zinc-900 dark:bg-zinc-950"
+            >
               <DropdownMenuGroup>
-                <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
+                <DropdownMenuLabel className="px-3 py-2">
+                  <p className="text-foreground text-sm leading-none font-bold">
+                    {session?.user?.name || "User"}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-[10px] tracking-widest uppercase">
+                    {(session?.user as any)?.role || "User"}
+                  </p>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-border/50" />
                 <DropdownMenuItem
                   className="cursor-pointer"
@@ -82,7 +95,10 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator className="bg-border/50" />
-              <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={() => signOut({ callbackUrl: '/login' })}>
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive cursor-pointer"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Keluar</span>
               </DropdownMenuItem>

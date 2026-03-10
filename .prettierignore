@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Generated files
+next-env.d.ts
+*.tsbuildinfo
+
+# Config & lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Prisma migrations (auto-generated SQL)
+prisma/migrations/
+
+# Public assets
+public/

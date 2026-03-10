@@ -21,18 +21,15 @@ export async function GET(req: NextRequest) {
 
     // Build Where Clause
     const whereClause: any = { tahun };
-    
+
     if (search) {
-      whereClause.OR = [
-        { nop: { contains: search } },
-        { namaWp: { contains: search } }
-      ];
+      whereClause.OR = [{ nop: { contains: search } }, { namaWp: { contains: search } }];
     }
-    
+
     if (dusun !== "all") whereClause.dusun = dusun;
     if (rw !== "all") whereClause.rw = rw;
     if (rt !== "all") whereClause.rt = rt;
-    
+
     if (penarik === "none") {
       whereClause.penarikId = null;
     } else if (penarik !== "all") {
@@ -50,14 +47,9 @@ export async function GET(req: NextRequest) {
     const data = await prisma.taxData.findMany({
       where: whereClause,
       include: {
-        penarik: { select: { name: true } }
+        penarik: { select: { name: true } },
       },
-      orderBy: [
-        { dusun: 'asc' },
-        { rw: 'asc' },
-        { rt: 'asc' },
-        { namaWp: 'asc' }
-      ]
+      orderBy: [{ dusun: "asc" }, { rw: "asc" }, { rt: "asc" }, { namaWp: "asc" }],
     });
 
     // Generate Excel
@@ -82,7 +74,7 @@ export async function GET(req: NextRequest) {
 
     // Styling Header
     sheet.getRow(1).font = { bold: true };
-    sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD3D3D3' } };
+    sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD3D3D3" } };
 
     data.forEach((item, index) => {
       sheet.addRow({
@@ -98,7 +90,7 @@ export async function GET(req: NextRequest) {
         sisa: item.sisaTagihan,
         statusPemda: item.paymentStatus === "LUNAS" ? "LUNAS PEMDA" : "BELUM LUNAS",
         statusTarik: item.sisaTagihan <= 0 ? "LUNAS DITARIK" : "BELUM LUNAS",
-        penarik: item.penarik?.name || "Belum Dialokasikan"
+        penarik: item.penarik?.name || "Belum Dialokasikan",
       });
     });
 
@@ -112,7 +104,6 @@ export async function GET(req: NextRequest) {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
     });
-
   } catch (error) {
     console.error("Export Error: ", error);
     return new NextResponse("Internal Server Error", { status: 500 });

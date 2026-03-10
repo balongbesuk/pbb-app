@@ -15,7 +15,7 @@ export function ProfileForm() {
   const [config, setConfig] = useState({
     namaDesa: "",
     kecamatan: "",
-    kabupaten: ""
+    kabupaten: "",
   });
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export function ProfileForm() {
       setConfig({
         namaDesa: data.namaDesa,
         kecamatan: data.kecamatan,
-        kabupaten: data.kabupaten
+        kabupaten: data.kabupaten,
       });
       setLoading(false);
     }
@@ -44,20 +44,20 @@ export function ProfileForm() {
   };
 
   if (loading) {
-     return (
-        <Card className="glass border-none shadow-lg">
-           <CardContent className="p-8 flex justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-           </CardContent>
-        </Card>
-     );
+    return (
+      <Card className="glass border-none shadow-lg">
+        <CardContent className="flex justify-center p-8">
+          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
     <Card className="glass border-none shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Building className="w-5 h-5 text-primary" />
+          <Building className="text-primary h-5 w-5" />
           Profil Instansi / Desa
         </CardTitle>
         <CardDescription>
@@ -66,38 +66,38 @@ export function ProfileForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSave} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="nama-desa">Nama Desa</Label>
-              <Input 
-                id="nama-desa" 
-                value={config.namaDesa} 
-                onChange={e => setConfig({...config, namaDesa: e.target.value})}
-                className="bg-white/50 dark:bg-slate-900/50" 
+              <Input
+                id="nama-desa"
+                value={config.namaDesa}
+                onChange={(e) => setConfig({ ...config, namaDesa: e.target.value })}
+                className="bg-white/50 dark:bg-slate-900/50"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="kecamatan">Kecamatan</Label>
-              <Input 
-                id="kecamatan" 
-                value={config.kecamatan} 
-                onChange={e => setConfig({...config, kecamatan: e.target.value})}
-                className="bg-white/50 dark:bg-slate-900/50" 
+              <Input
+                id="kecamatan"
+                value={config.kecamatan}
+                onChange={(e) => setConfig({ ...config, kecamatan: e.target.value })}
+                className="bg-white/50 dark:bg-slate-900/50"
               />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="kabupaten">Kabupaten / Kota</Label>
-            <Input 
-              id="kabupaten" 
-              value={config.kabupaten} 
-              onChange={e => setConfig({...config, kabupaten: e.target.value})}
-              className="bg-white/50 dark:bg-slate-900/50" 
+            <Input
+              id="kabupaten"
+              value={config.kabupaten}
+              onChange={(e) => setConfig({ ...config, kabupaten: e.target.value })}
+              className="bg-white/50 dark:bg-slate-900/50"
             />
           </div>
           <div className="pt-2">
             <Button type="submit" className="gap-2" disabled={saving}>
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Simpan Profil
             </Button>
           </div>

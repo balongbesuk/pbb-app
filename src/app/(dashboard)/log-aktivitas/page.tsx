@@ -1,45 +1,145 @@
 import { getAuditLogs } from "@/app/actions/log-actions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, UserCircle, Activity, Box, Search, Calendar, ShieldCheck, ArrowRightLeft, CheckCircle2, XCircle, LogIn } from "lucide-react";
+import {
+  FileText,
+  UserCircle,
+  Activity,
+  Box,
+  Search,
+  Calendar,
+  ShieldCheck,
+  ArrowRightLeft,
+  CheckCircle2,
+  XCircle,
+  LogIn,
+  History,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { LogSearch } from "@/components/log/log-search";
 import { LogPagination } from "@/components/log/log-pagination";
+import { cn } from "@/lib/utils";
 
 function getActionLabel(action: string, details?: string | null) {
-  switch (action) {
-    case "UPLOAD_TAX": return { label: "Upload Data", color: "bg-blue-600", icon: <FileText className="w-3 h-3" /> };
-    case "CLEAR_TAX": return { label: "Hapus Data Tahunan", color: "bg-red-600", icon: <Activity className="w-3 h-3" /> };
-    case "UPDATE_PAYMENT": {
-      const isLunas = details?.includes("LUNAS") && !details?.includes("BELUM_LUNAS");
-      const isUnpaid = details?.includes("BELUM_LUNAS");
+  const acts: Record<string, { label: string; color: string; icon: any; classes: string }> = {
+    UPLOAD_TAX: {
+      label: "Upload Data",
+      color: "sky",
+      icon: <FileText className="h-3.5 w-3.5" />,
+      classes:
+        "bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800",
+    },
+    CLEAR_TAX: {
+      label: "Kosongkan Data",
+      color: "rose",
+      icon: <Activity className="h-3.5 w-3.5" />,
+      classes:
+        "bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+    },
+    ASSIGN_TAX: {
+      label: "Tugaskan PBB",
+      color: "indigo",
+      icon: <UserCircle className="h-3.5 w-3.5" />,
+      classes:
+        "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800",
+    },
+    UPDATE_REGION: {
+      label: "Ubah Wilayah",
+      color: "amber",
+      icon: <Box className="h-3.5 w-3.5" />,
+      classes:
+        "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    },
+    RESTORE_TAX: {
+      label: "Restore Data",
+      color: "purple",
+      icon: <History className="h-3.5 w-3.5" />,
+      classes:
+        "bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800",
+    },
+    TRANSFER_REQUEST: {
+      label: "Minta Pindah",
+      color: "cyan",
+      icon: <ArrowRightLeft className="h-3.5 w-3.5" />,
+      classes:
+        "bg-cyan-50 dark:bg-cyan-950/30 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800",
+    },
+    LOGIN: {
+      label: "Login Sistem",
+      color: "blue",
+      icon: <LogIn className="h-3.5 w-3.5" />,
+      classes:
+        "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+    },
+    CREATE_USER: {
+      label: "Tambah User",
+      color: "emerald",
+      icon: <UserCircle className="h-3.5 w-3.5" />,
+      classes:
+        "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+    },
+    UPDATE_USER: {
+      label: "Ubah User",
+      color: "amber",
+      icon: <UserCircle className="h-3.5 w-3.5" />,
+      classes:
+        "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+    },
+    DELETE_USER: {
+      label: "Hapus User",
+      color: "rose",
+      icon: <UserCircle className="h-3.5 w-3.5" />,
+      classes:
+        "bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
+    },
+  };
 
-      return {
-        label: isLunas ? "Tandai Lunas" : isUnpaid ? "Tandai Belum Lunas" : "Ubah Status",
-        color: isLunas ? "bg-emerald-600" : isUnpaid ? "bg-rose-500" : "bg-slate-600",
-        icon: <ShieldCheck className="w-3 h-3" />
-      };
-    }
-    case "ASSIGN_TAX": return { label: "Tugaskan PBB", color: "bg-indigo-600", icon: <UserCircle className="w-3 h-3" /> };
-    case "UPDATE_REGION": return { label: "Ubah Wilayah RT/RW", color: "bg-amber-600", icon: <Box className="w-3 h-3" /> };
-    case "RESTORE_TAX": return { label: "Restore Data", color: "bg-purple-600", icon: <FileText className="w-3 h-3" /> };
-    case "TRANSFER_REQUEST": return { label: "Permintaan Pindah", color: "bg-sky-600", icon: <ArrowRightLeft className="w-3 h-3" /> };
-    case "TRANSFER_RESPONSE": {
-      const detailUpper = details?.toUpperCase() || "";
-      const isAccepted = detailUpper.includes("MENYETUJUI") || detailUpper.includes("ACCEPTED");
-      const isRejected = detailUpper.includes("MENOLAK") || detailUpper.includes("REJECTED");
-
-      return {
-        label: isAccepted ? "Permintaan Disetujui" : isRejected ? "Permintaan Ditolak" : "Respon Pindah",
-        color: isAccepted ? "bg-teal-600" : isRejected ? "bg-orange-600" : "bg-slate-600",
-        icon: isAccepted ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />
-      };
-    }
-    case "LOGIN": return { label: "Login Sistem", color: "bg-indigo-600", icon: <LogIn className="w-3 h-3" /> };
-    default: return { label: action, color: "bg-slate-600", icon: <Activity className="w-3 h-3" /> };
+  if (action === "UPDATE_PAYMENT") {
+    const isLunas = details?.includes("LUNAS") && !details?.includes("BELUM_LUNAS");
+    const isUnpaid = details?.includes("BELUM_LUNAS");
+    return {
+      label: isLunas ? "Setoran Lunas" : isUnpaid ? "Belum Lunas" : "Update Status",
+      color: isLunas ? "emerald" : isUnpaid ? "rose" : "slate",
+      icon: <ShieldCheck className="h-3.5 w-3.5" />,
+      classes: isLunas
+        ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+        : isUnpaid
+          ? "bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
+          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700",
+    };
   }
+
+  if (action === "TRANSFER_RESPONSE") {
+    const detailUpper = details?.toUpperCase() || "";
+    const isAccepted = detailUpper.includes("MENYETUJUI") || detailUpper.includes("ACCEPTED");
+    const isRejected = detailUpper.includes("MENOLAK") || detailUpper.includes("REJECTED");
+    return {
+      label: isAccepted ? "Pindah Disetujui" : isRejected ? "Pindah Ditolak" : "Respon Pindah",
+      color: isAccepted ? "emerald" : isRejected ? "orange" : "slate",
+      icon: isAccepted ? (
+        <CheckCircle2 className="h-3.5 w-3.5" />
+      ) : (
+        <XCircle className="h-3.5 w-3.5" />
+      ),
+      classes: isAccepted
+        ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+        : isRejected
+          ? "bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800"
+          : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700",
+    };
+  }
+
+  return (
+    acts[action] || {
+      label: action,
+      color: "slate",
+      icon: <Activity className="h-3.5 w-3.5" />,
+      classes:
+        "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700",
+    }
+  );
 }
 
 function getEntityLabel(entity: string) {
@@ -47,17 +147,21 @@ function getEntityLabel(entity: string) {
     case "TaxData":
     case "TaxMapping":
       return "Data Pajak (PBB)";
-    case "User": return "Pengguna";
-    case "DusunReference": return "Referensi Dusun";
-    case "VillageConfig": return "Pengaturan Desa";
-    default: return entity;
+    case "User":
+      return "Pengguna";
+    case "DusunReference":
+      return "Referensi Dusun";
+    case "VillageConfig":
+      return "Pengaturan Desa";
+    default:
+      return entity;
   }
 }
 
 export default async function AuditLogPage({
-  searchParams
+  searchParams,
 }: {
-  searchParams: Promise<{ q?: string, page?: string }>
+  searchParams: Promise<{ q?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const query = params.q || "";
@@ -68,11 +172,11 @@ export default async function AuditLogPage({
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Activity className="w-8 h-8 text-primary" />
+          <h1 className="flex items-center gap-2 text-3xl font-bold">
+            <Activity className="text-primary h-8 w-8" />
             Log Aktivitas (Audit Trail)
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -81,14 +185,14 @@ export default async function AuditLogPage({
         </div>
         <div className="flex items-center gap-2">
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <LogSearch defaultValue={query} />
           </div>
         </div>
       </div>
 
-      <Card className="glass border-none shadow-xl">
-        <CardHeader className="border-b border-border/50 pb-4">
+      <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
+        <CardHeader className="border-b border-zinc-50 px-6 pt-6 pb-5 dark:border-zinc-900/50">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Riwayat Sistem</CardTitle>
@@ -96,68 +200,101 @@ export default async function AuditLogPage({
                 {query ? `Hasil pencarian untuk "${query}"` : "Menampilkan aktivitas terbaru"}
               </CardDescription>
             </div>
-            <div className="text-xs font-medium px-2 py-1 bg-primary/10 text-primary rounded-full">
+            <div className="bg-primary/10 text-primary rounded-full px-2 py-1 text-xs font-medium">
               Total: {total.toLocaleString()}
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="divide-y divide-border/50 max-h-[70vh] overflow-y-auto">
+          <div className="divide-border/50 max-h-[70vh] divide-y overflow-y-auto">
             {logs.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground italic text-sm">Belum ada riwayat aktivitas tercatat.</div>
+              <div className="text-muted-foreground p-12 text-center text-sm italic">
+                Belum ada riwayat aktivitas tercatat.
+              </div>
             ) : (
               logs.map((log: any) => {
                 const badgeInfo = getActionLabel(log.action, log.details);
                 return (
-                  <div key={log.id} className="p-4 md:p-6 flex gap-4 hover:bg-muted/10 transition-colors">
-                    <div className="mt-1 hidden sm:block">
-                      <div className={`p-2 rounded-full text-white ${badgeInfo.color}`}>
+                  <div
+                    key={log.id}
+                    className="group flex gap-4 p-5 transition-all hover:bg-zinc-50/50 md:px-6 dark:hover:bg-zinc-900/30"
+                  >
+                    <div className="mt-1 hidden shrink-0 sm:block">
+                      <div
+                        className={cn(
+                          "flex h-10 w-10 items-center justify-center rounded-xl border transition-all",
+                          badgeInfo.classes,
+                          "bg-opacity-10 dark:bg-opacity-20"
+                        )}
+                      >
                         {badgeInfo.icon}
                       </div>
                     </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge className={`${badgeInfo.color} text-white hover:${badgeInfo.color} border-none`}>
+                    <div className="flex-1 space-y-3">
+                      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-widest uppercase shadow-sm transition-all",
+                              badgeInfo.classes
+                            )}
+                          >
                             {badgeInfo.label}
                           </Badge>
-                          <span className="text-sm font-semibold flex items-center gap-1.5 opacity-80">
-                            <UserCircle className="w-4 h-4 text-primary" />
-                            {log.user ? `${log.user.name} (${log.user.username})` : "Sistem Otomatis (Auto)"}
+                          <span className="flex items-center gap-1.5 text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                            <div className="h-1.5 w-1.5 rounded-full bg-zinc-300" />
+                            {log.user ? log.user.name : "Sistem Otomatis"}
                           </span>
                         </div>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium bg-muted/50 px-2 py-1 rounded-md w-fit">
-                          <Calendar className="w-3 h-3" />
+                        <span className="text-muted-foreground/60 flex items-center gap-1.5 text-[10px] font-bold tracking-wider uppercase">
+                          <Calendar className="h-3 w-3" />
                           {format(new Date(log.createdAt), "dd MMM yyyy • HH:mm", { locale: id })}
                         </span>
                       </div>
 
-                      <p className="text-sm text-foreground/80 leading-relaxed italic">
+                      <p className="text-foreground/80 text-sm leading-relaxed font-medium">
                         {log.action === "LOGIN" ? (
                           <>
-                            Melakukan akses masuk ke sistem pada modul <span className="font-semibold text-primary not-italic">{getEntityLabel(log.entity)}</span>
+                            Akses masuk ke sistem pada{" "}
+                            <span className="text-foreground font-black">
+                              {getEntityLabel(log.entity)}
+                            </span>
                           </>
                         ) : log.entity === "User" ? (
                           <>
-                            Aktivitas manajemen pada <span className="font-semibold text-primary not-italic">{getEntityLabel(log.entity)}</span>
+                            Manajemen pengguna pada{" "}
+                            <span className="text-foreground font-black">
+                              {getEntityLabel(log.entity)}
+                            </span>
                           </>
                         ) : log.entityId ? (
                           <>
-                            Melakukan perubahan pada <span className="font-semibold text-primary not-italic">{getEntityLabel(log.entity)}</span>
-                            <span className="not-italic">
-                              {log.entity === "TaxData" || log.entity === "TaxMapping" ? " untuk Wajib Pajak: " : " dengan ID: "}
-                              <code className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold text-xs">{log.entityId}</code>
+                            Perubahan pada{" "}
+                            <span className="text-foreground font-black">
+                              {getEntityLabel(log.entity)}
+                            </span>
+                            <span>
+                              {log.entity === "TaxData" || log.entity === "TaxMapping"
+                                ? " untuk WP: "
+                                : " ID: "}
+                              <code className="bg-primary/5 text-primary border-primary/10 rounded-md border px-1.5 py-0.5 text-[10px] font-black tracking-tight">
+                                {log.entityId}
+                              </code>
                             </span>
                           </>
                         ) : (
                           <>
-                            Menjalankan proses sistem pada modul <span className="font-semibold text-primary not-italic">{getEntityLabel(log.entity)}</span>
+                            Proses sistem pada{" "}
+                            <span className="text-foreground font-black">
+                              {getEntityLabel(log.entity)}
+                            </span>
                           </>
                         )}
                       </p>
 
                       {log.details && (
-                        <div className="bg-primary/5 border border-primary/10 rounded-lg p-3 text-xs font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap">
+                        <div className="text-muted-foreground/80 overflow-x-auto rounded-xl border border-zinc-100 bg-zinc-50 p-3 font-mono text-[10px] leading-relaxed whitespace-pre-wrap dark:border-zinc-800/50 dark:bg-zinc-900/50">
                           {log.details}
                         </div>
                       )}

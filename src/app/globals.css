@@ -27,7 +27,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -83,7 +83,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background transition-colors duration-300 font-sans antialiased text-foreground;
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-300;
   }
 }
 
@@ -113,7 +113,8 @@
     size: auto;
   }
 
-  html, body {
+  html,
+  body {
     height: auto !important;
     overflow: visible !important;
     background: white !important;
@@ -123,9 +124,9 @@
   }
 
   /* Target main wrappers to unleash their contents */
-  #__next, 
+  #__next,
   [data-reactroot],
-  .min-h-screen, 
+  .min-h-screen,
   .flex-1,
   main {
     height: auto !important;
@@ -138,27 +139,31 @@
     position: relative !important;
   }
 
-  .print-hidden, 
-  aside, 
-  nav, 
-  .no-print, 
-  button, 
+  .print-hidden,
+  aside,
+  nav,
+  .no-print,
+  button,
   [role="button"] {
     display: none !important;
   }
 
   /* Force cards and grids to be block for print stability */
-  .grid, .flex {
+  .grid,
+  .flex {
     display: block !important;
   }
 
-  .grid > *, .flex > * {
+  .grid > *,
+  .flex > * {
     width: 100% !important;
     margin-bottom: 2rem !important;
     page-break-inside: avoid !important;
   }
 
-  .card, .rounded-xl, .border {
+  .card,
+  .rounded-xl,
+  .border {
     border: 1px solid #e2e8f0 !important;
     background: #ffffff !important;
     box-shadow: none !important;
@@ -175,7 +180,8 @@
     border: 1px solid #ddd !important;
   }
 
-  th, td {
+  th,
+  td {
     border: 1px solid #ddd !important;
     padding: 8px !important;
     background: transparent !important;
@@ -191,6 +197,14 @@
   }
 
   /* Keep colors for badges */
-  .text-emerald-600, .text-emerald-700 { color: #059669 !important; font-weight: bold; }
-  .text-rose-600, .text-rose-700 { color: #e11d48 !important; font-weight: bold; }
+  .text-emerald-600,
+  .text-emerald-700 {
+    color: #059669 !important;
+    font-weight: bold;
+  }
+  .text-rose-600,
+  .text-rose-700 {
+    color: #e11d48 !important;
+    font-weight: bold;
+  }
 }

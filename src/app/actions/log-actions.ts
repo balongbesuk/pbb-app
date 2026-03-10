@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { requireAdmin } from "@/lib/server-auth";
 
 export async function createAuditLog(
   action: string,
@@ -34,10 +35,7 @@ export async function createAuditLog(
 
 export async function getAuditLogs(limit: number = 100, page: number = 1, searchQuery?: string) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
+    await requireAdmin();
 
     const where: any = {};
     if (searchQuery) {
@@ -63,7 +61,7 @@ export async function getAuditLogs(limit: number = 100, page: number = 1, search
           },
         },
       }),
-      prisma.auditLog.count({ where })
+      prisma.auditLog.count({ where }),
     ]);
 
     return { logs, total };

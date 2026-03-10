@@ -51,9 +51,19 @@ export function ChangePasswordForm() {
       <div className="space-y-2">
         <Label htmlFor="oldPassword">Password Lama</Label>
         <div className="relative">
-          <Input id="oldPassword" name="oldPassword" type={showOldPass ? "text" : "password"} required className="bg-white/50 pr-10" />
-          <button type="button" onClick={() => setShowOldPass(!showOldPass)} className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground focus:outline-none">
-            {showOldPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          <Input
+            id="oldPassword"
+            name="oldPassword"
+            type={showOldPass ? "text" : "password"}
+            required
+            className="bg-white/50 pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowOldPass(!showOldPass)}
+            className="text-muted-foreground hover:text-foreground absolute top-2.5 right-3 focus:outline-none"
+          >
+            {showOldPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
       </div>
@@ -61,9 +71,19 @@ export function ChangePasswordForm() {
       <div className="space-y-2">
         <Label htmlFor="newPassword">Password Baru</Label>
         <div className="relative">
-          <Input id="newPassword" name="newPassword" type={showNewPass ? "text" : "password"} required className="bg-white/50 pr-10" />
-          <button type="button" onClick={() => setShowNewPass(!showNewPass)} className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground focus:outline-none">
-            {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          <Input
+            id="newPassword"
+            name="newPassword"
+            type={showNewPass ? "text" : "password"}
+            required
+            className="bg-white/50 pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowNewPass(!showNewPass)}
+            className="text-muted-foreground hover:text-foreground absolute top-2.5 right-3 focus:outline-none"
+          >
+            {showNewPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
       </div>
@@ -71,16 +91,26 @@ export function ChangePasswordForm() {
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Konfirmasi Password Baru</Label>
         <div className="relative">
-          <Input id="confirmPassword" name="confirmPassword" type={showConfirmPass ? "text" : "password"} required className="bg-white/50 pr-10" />
-          <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground focus:outline-none">
-            {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            type={showConfirmPass ? "text" : "password"}
+            required
+            className="bg-white/50 pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPass(!showConfirmPass)}
+            className="text-muted-foreground hover:text-foreground absolute top-2.5 right-3 focus:outline-none"
+          >
+            {showConfirmPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
       </div>
 
       <div className="pt-2">
-        <Button type="submit" disabled={loading} className="gap-2 w-full md:w-auto">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+        <Button type="submit" disabled={loading} className="w-full gap-2 md:w-auto">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Ubah Password
         </Button>
       </div>

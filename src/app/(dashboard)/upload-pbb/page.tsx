@@ -7,9 +7,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { uploadTaxData, clearTaxData } from "@/app/actions/tax-actions";
 import { toast } from "sonner";
-import { Upload, FileSpreadsheet, Loader2, RefreshCcw, AlertCircle, Download, AlertTriangle } from "lucide-react";
+import {
+  Upload,
+  FileSpreadsheet,
+  Loader2,
+  RefreshCcw,
+  AlertCircle,
+  Download,
+  AlertTriangle,
+} from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function UploadPBBPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -29,7 +44,7 @@ export default function UploadPBBPage() {
         toast.success(`Data PBB tahun ${tahun} berhasil dibersihkan!`);
         setResetConfirmText("");
       } else {
-        toast.error(`Gagal mereset data: ${(res as any).message || 'Unknown error'}`);
+        toast.error(`Gagal mereset data: ${(res as any).message || "Unknown error"}`);
       }
     } catch (e: any) {
       toast.error("Terjadi kesalahan sistem saat mereset data");
@@ -91,47 +106,68 @@ export default function UploadPBBPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="mx-auto max-w-4xl space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-bold">Upload Data PBB</h1>
           <p className="text-muted-foreground">Import data dari file Excel ke dalam sistem</p>
         </div>
       </div>
 
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        <Card className="lg:col-span-2 glass border-none shadow-xl">
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm lg:col-span-2 dark:border-zinc-900 dark:bg-zinc-950">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-50 px-6 pt-6 pb-5 dark:border-zinc-900/50">
             <div>
-              <CardTitle>File Import</CardTitle>
-              <CardDescription>Pilih file Excel (.xlsx atau .xls) dari DHKP Pajak</CardDescription>
+              <CardTitle className="text-xl font-bold tracking-tight">File Import</CardTitle>
+              <CardDescription className="text-xs font-medium">
+                Impor data pajak dari file Excel (.xlsx)
+              </CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={() => window.open("/api/download-template", "_blank")}>
-              <Download className="w-4 h-4 mr-2" /> Format Excel
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open("/api/download-template", "_blank")}
+              className="h-9 rounded-xl border-zinc-100 text-[10px] font-bold hover:bg-zinc-50 sm:text-xs dark:border-zinc-800 dark:hover:bg-zinc-900"
+            >
+              <Download className="mr-2 h-4 w-4" /> Format Excel
             </Button>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Tahun Pajak</Label>
+          <CardContent className="space-y-6 p-6">
+            <div className="space-y-2.5">
+              <Label className="text-muted-foreground px-1 text-[10px] font-bold tracking-widest uppercase">
+                Tahun Pajak
+              </Label>
               <Input
                 type="number"
                 value={tahun}
                 onChange={(e) => setTahun(parseInt(e.target.value))}
-                className="w-32 bg-muted/30 border-primary/20"
+                className="h-10 w-32 rounded-xl border-zinc-100 bg-zinc-50 font-bold dark:border-zinc-800 dark:bg-zinc-900"
               />
             </div>
 
             <div
-              className={`border-2 border-dashed rounded-xl p-12 transition-all flex flex-col items-center justify-center gap-4 ${file ? "border-primary bg-primary/5" : "border-white/20 hover:border-primary/50"
-                }`}
+              className={`group flex flex-col items-center justify-center gap-6 rounded-3xl border-2 border-dashed p-10 transition-all hover:cursor-pointer ${
+                file
+                  ? "border-primary bg-primary/5"
+                  : "hover:border-primary/50 border-zinc-100 hover:bg-zinc-50/50 dark:border-zinc-900 dark:hover:bg-zinc-900/30"
+              }`}
+              onClick={() => document.getElementById("file-upload")?.click()}
             >
-              <div className="p-4 bg-primary/10 rounded-full">
-                {file ? <FileSpreadsheet className="w-10 h-10 text-primary" /> : <Upload className="w-10 h-10 text-muted-foreground" />}
+              <div className="rounded-2xl border border-zinc-100 bg-white p-5 shadow-sm transition-transform duration-500 group-hover:scale-110 dark:border-zinc-800 dark:bg-zinc-900">
+                {file ? (
+                  <FileSpreadsheet className="text-primary h-8 w-8" />
+                ) : (
+                  <Upload className="h-8 w-8 text-zinc-400" />
+                )}
               </div>
 
-              <div className="text-center">
-                <p className="font-bold text-foreground">{file ? file.name : "Klik atau seret file ke sini"}</p>
-                <p className="text-xs text-foreground/60 font-medium">Maksimal 20MB (.xlsx)</p>
+              <div className="space-y-1 text-center">
+                <p className="text-foreground text-sm font-bold">
+                  {file ? file.name : "Klik atau seret file ke sini"}
+                </p>
+                <p className="text-muted-foreground text-[10px] font-medium tracking-widest uppercase">
+                  Maksimal 20MB (.xlsx)
+                </p>
               </div>
 
               <Input
@@ -142,118 +178,142 @@ export default function UploadPBBPage() {
                 onChange={handleFileChange}
                 disabled={isUploading}
               />
-              <Label
-                htmlFor="file-upload"
-                className="cursor-pointer bg-primary text-primary-foreground px-6 py-2 rounded-lg font-bold hover:shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
-              >
-                Pilih File
-              </Label>
             </div>
 
             {isUploading && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Memproses data pajak...</span>
-                  <span>{progress}%</span>
+              <div className="space-y-3 pt-2">
+                <div className="flex items-end justify-between">
+                  <span className="text-primary text-[10px] font-bold tracking-widest uppercase">
+                    Memproses Data...
+                  </span>
+                  <span className="text-xs font-black">{progress}%</span>
                 </div>
-                <Progress value={progress} />
+                <Progress value={progress} className="h-1.5" />
               </div>
             )}
 
             <Button
-              className="w-full h-12 text-lg font-black shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-95"
+              className="shadow-primary/5 h-12 w-full rounded-2xl text-sm font-black shadow-xl transition-all duration-300 hover:scale-[1.01] active:scale-95"
               onClick={handleUpload}
               disabled={!file || isUploading}
             >
               {isUploading ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Sedang Mengimpor...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  MENYERAP DATA...
                 </>
               ) : (
-                "Mulai Import Sekarang"
+                "IMPORT DATA KE SISTEM"
               )}
             </Button>
           </CardContent>
         </Card>
 
         <div className="space-y-6">
-          <Card className="glass border-none shadow-xl bg-blue-50/50 dark:bg-blue-950/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-blue-500" />
-                Instruksi
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs space-y-3 text-foreground/80 font-medium">
-              <p>1. Pastikan urutan dan format kolom Excel sesuai standar.</p>
-              <p>2. Sistem akan otomatis mendeteksi RT/RW dari string Alamat.</p>
-              <p>3. <strong className="text-foreground">Sistem Rekam Jejak (Mapping):</strong> Perbaikan RT/RW dan Penugasan yang Anda lakukan tahun lalu akan otomatis diterapkan ulang.</p>
-              <p>4. <strong className="text-foreground">Anti Ganda (Deduplikasi):</strong> Mengunggah ulang (*re-upload*) data DHKP terbaru hanya akan menambah NOP yang benar-benar baru.</p>
-              <p>5. <strong className="text-foreground">Auto-Lunas Pintar:</strong> Jika pada Excel terbaru NOP tersebut sudah hilang/tidak terdaftar lagi, sistem akan otomatis menetapkan status NOP tersebut menjadi LUNAS.</p>
-            </CardContent>
+          <Card className="space-y-4 rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
+            <div className="w-fit rounded-xl bg-blue-500/5 p-2.5">
+              <AlertCircle className="h-5 w-5 text-blue-500" />
+            </div>
+            <div className="space-y-3">
+              <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+                Aturan Import
+              </p>
+              <ul className="text-foreground/70 space-y-2.5 text-[10px] font-bold tracking-tight">
+                <li className="flex gap-2">
+                  <div className="mt-1 h-1 w-1 shrink-0 rounded-full bg-blue-500" />
+                  Format kolom Excel harus sesuai template
+                </li>
+                <li className="flex gap-2">
+                  <div className="mt-1 h-1 w-1 shrink-0 rounded-full bg-blue-500" />
+                  Pemetaan wilayah otomatis dari string alamat
+                </li>
+                <li className="text-foreground flex gap-2 font-black">
+                  <div className="mt-1 h-1 w-1 shrink-0 rounded-full bg-blue-500" />
+                  Data tahun lalu akan otomatis diterapkan ulang
+                </li>
+              </ul>
+            </div>
           </Card>
 
-          <Card className="glass border-none shadow-xl bg-red-50/50 dark:bg-red-950/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <RefreshCcw className="w-4 h-4 text-red-500" />
-                Bersihkan Data
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground mb-4">Ingin mengulang import? Hapus semua data tahun ini.</p>
+          <Card className="space-y-5 rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
+            <div className="w-fit rounded-xl bg-rose-500/5 p-2.5">
+              <RefreshCcw className="h-5 w-5 text-rose-500" />
+            </div>
+            <div className="space-y-4">
+              <div>
+                <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+                  Reset Data
+                </p>
+                <p className="text-muted-foreground/60 text-[10px] font-medium">
+                  Hapus seluruh data pada tahun terpilih.
+                </p>
+              </div>
               <Button
-                variant="destructive"
+                variant="outline"
                 size="sm"
-                className="w-full relative transition-all"
+                className="h-10 w-full rounded-xl border-rose-100 text-[10px] font-bold text-rose-600 transition-all hover:bg-rose-50 dark:border-rose-900/50 dark:hover:bg-rose-950"
                 disabled={isClearing}
                 onClick={() => {
                   setResetConfirmText("");
                   setIsResetDialogOpen(true);
                 }}
               >
-                {isClearing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Reset Data Tahun {tahun}
+                {isClearing ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
+                HAPUS DATA TAHUN {tahun}
               </Button>
-            </CardContent>
+            </div>
           </Card>
         </div>
       </div>
 
-      <Dialog open={isResetDialogOpen} onOpenChange={(val) => { setIsResetDialogOpen(val); if (!val) setResetConfirmText(""); }}>
+      <Dialog
+        open={isResetDialogOpen}
+        onOpenChange={(val) => {
+          setIsResetDialogOpen(val);
+          if (!val) setResetConfirmText("");
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-rose-600">
-              <AlertTriangle className="w-5 h-5" />
+              <AlertTriangle className="h-5 w-5" />
               Peringatan Reset Data PBB
             </DialogTitle>
-            <DialogDescription className="pt-3 space-y-4">
-              <span className="block text-foreground/80">
-                Anda akan menghapus <strong>seluruh data PBB tahun {tahun}</strong> yang telah diimpor ke sistem.
-              </span>
-
-              <span className="block bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 p-3 rounded-md text-xs font-semibold">
-                Tindakan ini juga akan menghapus riwayat pembayaran, nama wajib pajak tersinkronisasi, tagihan, dan alokasi penagih pada tahun {tahun} tersebut. Data tidak dapat dikembalikan.
-              </span>
-
-              <span className="block space-y-2 pt-2">
-                <Label htmlFor="confirm-reset" className="text-foreground">
-                  Ketik <span className="font-bold select-all">RESET {tahun}</span> untuk konfirmasi:
-                </Label>
-                <Input
-                  id="confirm-reset"
-                  value={resetConfirmText}
-                  onChange={(e) => setResetConfirmText(e.target.value)}
-                  placeholder={`RESET ${tahun}`}
-                  className="bg-white/50"
-                  autoComplete="off"
-                />
-              </span>
+            <DialogDescription className="text-foreground/70 pt-1">
+              Anda akan menghapus <strong>seluruh data PBB tahun {tahun}</strong> yang telah diimpor
+              ke sistem.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="mt-4 gap-2 flex-col-reverse sm:flex-row">
-            <Button variant="outline" onClick={() => setIsResetDialogOpen(false)} className="w-full sm:w-auto">Batal</Button>
+
+          <div className="space-y-4 pt-1">
+            <div className="rounded-md bg-rose-100 p-3 text-xs font-semibold text-rose-700 dark:bg-rose-950/30 dark:text-rose-400">
+              Tindakan ini juga akan menghapus riwayat pembayaran, nama wajib pajak tersinkronisasi,
+              tagihan, dan alokasi penagih pada tahun {tahun} tersebut. Data tidak dapat
+              dikembalikan.
+            </div>
+
+            <div className="space-y-2.5">
+              <Label htmlFor="confirm-reset" className="text-foreground px-1 text-xs font-bold">
+                Ketik <span className="font-bold select-all">RESET {tahun}</span> untuk konfirmasi:
+              </Label>
+              <Input
+                id="confirm-reset"
+                value={resetConfirmText}
+                onChange={(e) => setResetConfirmText(e.target.value)}
+                placeholder={`RESET ${tahun}`}
+                className="rounded-xl border-zinc-100 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+          <DialogFooter className="mt-4 flex-col-reverse gap-2 sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => setIsResetDialogOpen(false)}
+              className="w-full sm:w-auto"
+            >
+              Batal
+            </Button>
             <Button
               variant="destructive"
               onClick={performReset}

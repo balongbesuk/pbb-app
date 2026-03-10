@@ -1,19 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Edit2, Save, X, CheckSquare } from "lucide-react";
-import { getWpByRegion, updateWpRegion, updateWpRegionBulk } from "@/app/actions/tax-update-actions";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  getWpByRegion,
+  updateWpRegion,
+  updateWpRegionBulk,
+} from "@/app/actions/tax-update-actions";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
 
@@ -64,7 +74,7 @@ export function RwWpDialog({ dusun, rw, tahun, count }: RwWpDialogProps) {
     if (selectedIds.size === data.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(data.map(d => d.id)));
+      setSelectedIds(new Set(data.map((d) => d.id)));
     }
   };
 
@@ -91,11 +101,15 @@ export function RwWpDialog({ dusun, rw, tahun, count }: RwWpDialogProps) {
     if (res.success) {
       toast.success("Berhasil memperbarui data wilayah WP");
       setEditingId(null);
-      
+
       // Update local state instead of refetching all
-      setData(data.map(item => 
-        item.id === id ? { ...item, dusun: editDusun || null, rt: editRt || null, rw: editRw || null } : item
-      ));
+      setData(
+        data.map((item) =>
+          item.id === id
+            ? { ...item, dusun: editDusun || null, rt: editRt || null, rw: editRw || null }
+            : item
+        )
+      );
     } else {
       toast.error(`Gagal memperbarui: ${res.message}`);
     }
@@ -103,20 +117,27 @@ export function RwWpDialog({ dusun, rw, tahun, count }: RwWpDialogProps) {
 
   const saveBulkEdit = async () => {
     if (selectedIds.size === 0) return;
-    
+
     setIsBulkEditing(true);
-    const res = await updateWpRegionBulk(Array.from(selectedIds), bulkDusun || null, bulkRt || null, bulkRw || null);
-    
+    const res = await updateWpRegionBulk(
+      Array.from(selectedIds),
+      bulkDusun || null,
+      bulkRt || null,
+      bulkRw || null
+    );
+
     if (res.success) {
       toast.success(`Berhasil memperbarui ${res.count} data wp`);
-      
+
       // Update local state
-      setData(data.map(item => 
-        selectedIds.has(item.id) 
-          ? { ...item, dusun: bulkDusun || null, rt: bulkRt || null, rw: bulkRw || null } 
-          : item
-      ));
-      
+      setData(
+        data.map((item) =>
+          selectedIds.has(item.id)
+            ? { ...item, dusun: bulkDusun || null, rt: bulkRt || null, rw: bulkRw || null }
+            : item
+        )
+      );
+
       setSelectedIds(new Set());
       setBulkDusun("");
       setBulkRt("");
@@ -127,57 +148,85 @@ export function RwWpDialog({ dusun, rw, tahun, count }: RwWpDialogProps) {
     setIsBulkEditing(false);
   };
 
-
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
       <DialogTrigger
         render={
-          <Button variant="link" className="p-0 h-auto font-bold text-primary hover:text-primary/80">
+          <Button
+            variant="link"
+            className="text-primary hover:text-primary/80 h-auto p-0 font-bold"
+          >
             {count}
           </Button>
         }
       />
-      <DialogContent className="max-w-[95vw] lg:max-w-7xl max-h-[90vh] flex flex-col">
+      <DialogContent className="flex max-h-[90vh] max-w-[95vw] flex-col lg:max-w-7xl">
         <DialogHeader>
-          <DialogTitle>Daftar Wajib Pajak - RW {rw || "N/A"} ({dusun || "N/A"})</DialogTitle>
+          <DialogTitle>
+            Daftar Wajib Pajak - RW {rw || "N/A"} ({dusun || "N/A"})
+          </DialogTitle>
         </DialogHeader>
 
         {!loading && data.length > 0 && (
-          <div className="flex flex-col md:flex-row md:items-center justify-between mt-2 p-3 bg-primary/5 rounded-lg border border-primary/20 gap-3 shrink-0">
+          <div className="bg-primary/5 border-primary/20 mt-2 flex shrink-0 flex-col justify-between gap-3 rounded-lg border p-3 md:flex-row md:items-center">
             <div className="flex items-center gap-2">
-              <Checkbox 
+              <Checkbox
                 checked={data.length > 0 && selectedIds.size === data.length}
                 onCheckedChange={toggleSelectAll}
                 id="select-all"
               />
-              <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+              <label htmlFor="select-all" className="cursor-pointer text-sm font-medium">
                 Pilih Semua ({selectedIds.size}/{data.length})
               </label>
             </div>
-            
+
             {selectedIds.size > 0 && (
-              <div className="flex flex-wrap items-center gap-2 animate-in fade-in zoom-in duration-200 w-full md:w-auto">
-                <Input value={bulkDusun} onChange={e => setBulkDusun(e.target.value)} placeholder="Dusun Baru" className="h-8 w-full sm:w-28 text-xs bg-background/50" />
-                <Input value={bulkRt} onChange={e => setBulkRt(e.target.value)} placeholder="RT" className="h-8 w-[calc(50%-0.5rem)] sm:w-16 text-xs bg-background/50" />
-                <Input value={bulkRw} onChange={e => setBulkRw(e.target.value)} placeholder="RW" className="h-8 w-[calc(50%-0.5rem)] sm:w-16 text-xs bg-background/50" />
-                <Button size="sm" onClick={saveBulkEdit} disabled={isBulkEditing} className="h-8 gap-1 w-full sm:w-auto">
-                  {isBulkEditing ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckSquare className="w-3 h-3" />}
+              <div className="animate-in fade-in zoom-in flex w-full flex-wrap items-center gap-2 duration-200 md:w-auto">
+                <Input
+                  value={bulkDusun}
+                  onChange={(e) => setBulkDusun(e.target.value)}
+                  placeholder="Dusun Baru"
+                  className="bg-background/50 h-8 w-full text-xs sm:w-28"
+                />
+                <Input
+                  value={bulkRt}
+                  onChange={(e) => setBulkRt(e.target.value)}
+                  placeholder="RT"
+                  className="bg-background/50 h-8 w-[calc(50%-0.5rem)] text-xs sm:w-16"
+                />
+                <Input
+                  value={bulkRw}
+                  onChange={(e) => setBulkRw(e.target.value)}
+                  placeholder="RW"
+                  className="bg-background/50 h-8 w-[calc(50%-0.5rem)] text-xs sm:w-16"
+                />
+                <Button
+                  size="sm"
+                  onClick={saveBulkEdit}
+                  disabled={isBulkEditing}
+                  className="h-8 w-full gap-1 sm:w-auto"
+                >
+                  {isBulkEditing ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <CheckSquare className="h-3 w-3" />
+                  )}
                   Terapkan Perubahan
                 </Button>
               </div>
             )}
           </div>
         )}
-        
-        <div className="flex-1 overflow-y-auto mt-2 pr-2">
+
+        <div className="mt-2 flex-1 overflow-y-auto pr-2">
           {loading ? (
             <div className="flex items-center justify-center p-8">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <Loader2 className="text-primary h-8 w-8 animate-spin" />
             </div>
           ) : data.length === 0 ? (
-            <div className="text-center p-8 text-muted-foreground">Tidak ada data ditemukan</div>
+            <div className="text-muted-foreground p-8 text-center">Tidak ada data ditemukan</div>
           ) : (
-            <div className="rounded-md border overflow-hidden">
+            <div className="overflow-hidden rounded-md border">
               <Table>
                 <TableHeader className="bg-muted/50">
                   <TableRow>
@@ -189,10 +238,15 @@ export function RwWpDialog({ dusun, rw, tahun, count }: RwWpDialogProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.map(item => (
-                    <TableRow key={item.id} className={editingId === item.id ? "bg-muted/30" : "hover:bg-muted/40 cursor-pointer"}>
+                  {data.map((item) => (
+                    <TableRow
+                      key={item.id}
+                      className={
+                        editingId === item.id ? "bg-muted/30" : "hover:bg-muted/40 cursor-pointer"
+                      }
+                    >
                       <TableCell className="text-center">
-                        <Checkbox 
+                        <Checkbox
                           checked={selectedIds.has(item.id)}
                           onCheckedChange={() => toggleSelect(item.id)}
                           onClick={(e) => e.stopPropagation()}
@@ -201,37 +255,72 @@ export function RwWpDialog({ dusun, rw, tahun, count }: RwWpDialogProps) {
                       <TableCell>
                         {editingId === item.id ? (
                           <div className="flex gap-1">
-                            <Button size="icon" variant="ghost" onClick={cancelEdit} className="h-7 w-7 text-muted-foreground hover:text-foreground">
-                              <X className="w-3.5 h-3.5" />
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              aria-label="Batalkan perubahan"
+                              onClick={cancelEdit}
+                              className="text-muted-foreground hover:text-foreground h-7 w-7"
+                            >
+                              <X className="h-3.5 w-3.5" />
                             </Button>
-                            <Button size="icon" variant="default" onClick={() => saveEdit(item.id)} className="h-7 w-7">
-                              <Save className="w-3.5 h-3.5" />
+                            <Button
+                              size="icon"
+                              variant="default"
+                              aria-label="Simpan perubahan"
+                              onClick={() => saveEdit(item.id)}
+                              className="h-7 w-7"
+                            >
+                              <Save className="h-3.5 w-3.5" />
                             </Button>
                           </div>
                         ) : (
-                          <Button size="icon" variant="ghost" onClick={() => startEdit(item)} className="h-7 w-7 text-muted-foreground hover:text-primary">
-                            <Edit2 className="w-3.5 h-3.5" />
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            aria-label={`Edit wilayah ${item.namaWp}`}
+                            onClick={() => startEdit(item)}
+                            className="text-muted-foreground hover:text-primary h-7 w-7"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
                           </Button>
                         )}
                       </TableCell>
                       <TableCell className="font-mono text-xs">{item.nop}</TableCell>
                       <TableCell>
-                        <div className="font-semibold text-sm">{item.namaWp}</div>
-                        <div className="text-xs text-muted-foreground break-words">{item.alamatObjek}</div>
+                        <div className="text-sm font-semibold">{item.namaWp}</div>
+                        <div className="text-muted-foreground text-xs break-words">
+                          {item.alamatObjek}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {editingId === item.id ? (
-                          <div className="grid grid-cols-3 gap-1.5 w-[250px]">
-                            <Input value={editDusun} onChange={e => setEditDusun(e.target.value)} placeholder="Dusun" className="h-7 text-xs px-1.5" />
-                            <Input value={editRt} onChange={e => setEditRt(e.target.value)} placeholder="RT" className="h-7 text-xs px-1.5" />
-                            <Input value={editRw} onChange={e => setEditRw(e.target.value)} placeholder="RW" className="h-7 text-xs px-1.5" />
+                          <div className="grid w-[250px] grid-cols-3 gap-1.5">
+                            <Input
+                              value={editDusun}
+                              onChange={(e) => setEditDusun(e.target.value)}
+                              placeholder="Dusun"
+                              className="h-7 px-1.5 text-xs"
+                            />
+                            <Input
+                              value={editRt}
+                              onChange={(e) => setEditRt(e.target.value)}
+                              placeholder="RT"
+                              className="h-7 px-1.5 text-xs"
+                            />
+                            <Input
+                              value={editRw}
+                              onChange={(e) => setEditRw(e.target.value)}
+                              placeholder="RW"
+                              className="h-7 px-1.5 text-xs"
+                            />
                           </div>
                         ) : (
                           <div className="flex flex-col gap-1">
-                            <span className="text-[10px] w-fit px-1.5 py-0.5 bg-primary/10 text-primary font-medium rounded border border-primary/20">
+                            <span className="bg-primary/10 text-primary border-primary/20 w-fit rounded border px-1.5 py-0.5 text-[10px] font-medium">
                               {item.dusun || "N/A"}
                             </span>
-                            <span className="text-[10px] text-muted-foreground font-mono">
+                            <span className="text-muted-foreground font-mono text-[10px]">
                               RT {item.rt || "0"} / RW {item.rw || "0"}
                             </span>
                           </div>

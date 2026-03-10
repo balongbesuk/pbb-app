@@ -16,23 +16,23 @@ export async function GET(req: NextRequest) {
 
     // Aggregate Data by Penarik and PaymentStatus
     const penarikStatsRaw = await prisma.taxData.groupBy({
-      by: ['penarikId', 'paymentStatus'],
+      by: ["penarikId", "paymentStatus"],
       where: { tahun },
       _count: { nop: true },
-      _sum: { ketetapan: true, pembayaran: true, sisaTagihan: true }
+      _sum: { ketetapan: true, pembayaran: true, sisaTagihan: true },
     });
 
     const penarikMapReduce = new Map<string, any>();
 
     penarikStatsRaw.forEach((stat) => {
-      const pId = stat.penarikId || 'unassigned';
+      const pId = stat.penarikId || "unassigned";
       if (!penarikMapReduce.has(pId)) {
         penarikMapReduce.set(pId, {
           penarikId: stat.penarikId,
           _count: { nop: 0 },
           _sum: { ketetapan: 0, pembayaran: 0, sisaTagihan: 0 },
           lunasCount: 0,
-          belumLunasCount: 0
+          belumLunasCount: 0,
         });
       }
 
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
       curr._sum.pembayaran += stat._sum.pembayaran || 0;
       curr._sum.sisaTagihan += stat._sum.sisaTagihan || 0;
 
-      if (stat.paymentStatus === 'LUNAS') {
+      if (stat.paymentStatus === "LUNAS") {
         curr.lunasCount += stat._count.nop;
       } else {
         curr.belumLunasCount += stat._count.nop;
@@ -52,27 +52,46 @@ export async function GET(req: NextRequest) {
     const penarikStatsFlat = Array.from(penarikMapReduce.values());
 
     const penarikUsers = await prisma.user.findMany({
-      where: { role: 'PENARIK' },
-      select: { id: true, name: true, dusun: true }
+      where: { role: "PENARIK" },
+      select: { id: true, name: true, dusun: true },
     });
 
     const penarikMap = new Map<string, { name: string | null; dusun: string | null }>(
       penarikUsers.map((u: { id: string; name: string | null; dusun: string | null }) => [u.id, u])
     );
 
-    const combinedStats = penarikStatsFlat.map((stat: any) => ({
-      ...stat,
-      penarikName: stat.penarikId ? (penarikMap.get(stat.penarikId as string)?.name || "Penarik Tidak Ditemukan") : "Belum Dialokasikan",
-      penarikDusun: stat.penarikId ? (penarikMap.get(stat.penarikId as string)?.dusun || "") : ""
-    })).sort((a: any, b: any) => a.penarikName.localeCompare(b.penarikName));
+    const combinedStats = penarikStatsFlat
+      .map((stat: any) => ({
+        ...stat,
+        penarikName: stat.penarikId
+          ? penarikMap.get(stat.penarikId as string)?.name || "Penarik Tidak Ditemukan"
+          : "Belum Dialokasikan",
+        penarikDusun: stat.penarikId ? penarikMap.get(stat.penarikId as string)?.dusun || "" : "",
+      }))
+      .sort((a: any, b: any) => a.penarikName.localeCompare(b.penarikName));
 
     // Calculate overall totals
     const totalWp = penarikStatsFlat.reduce((acc: number, curr: any) => acc + curr._count.nop, 0);
-    const totalWpLunas = penarikStatsFlat.reduce((acc: number, curr: any) => acc + curr.lunasCount, 0);
-    const totalWpBelumLunas = penarikStatsFlat.reduce((acc: number, curr: any) => acc + curr.belumLunasCount, 0);
-    const totalTarget = penarikStatsFlat.reduce((acc: number, curr: any) => acc + (curr._sum.ketetapan || 0), 0);
-    const totalRealisasi = penarikStatsFlat.reduce((acc: number, curr: any) => acc + (curr._sum.pembayaran || 0), 0);
-    const totalSisa = penarikStatsFlat.reduce((acc: number, curr: any) => acc + (curr._sum.sisaTagihan || 0), 0);
+    const totalWpLunas = penarikStatsFlat.reduce(
+      (acc: number, curr: any) => acc + curr.lunasCount,
+      0
+    );
+    const totalWpBelumLunas = penarikStatsFlat.reduce(
+      (acc: number, curr: any) => acc + curr.belumLunasCount,
+      0
+    );
+    const totalTarget = penarikStatsFlat.reduce(
+      (acc: number, curr: any) => acc + (curr._sum.ketetapan || 0),
+      0
+    );
+    const totalRealisasi = penarikStatsFlat.reduce(
+      (acc: number, curr: any) => acc + (curr._sum.pembayaran || 0),
+      0
+    );
+    const totalSisa = penarikStatsFlat.reduce(
+      (acc: number, curr: any) => acc + (curr._sum.sisaTagihan || 0),
+      0
+    );
     const overallPercent = totalTarget > 0 ? (totalRealisasi / totalTarget) * 100 : 0;
 
     const workbook = new ExcelJS.Workbook();
@@ -92,7 +111,7 @@ export async function GET(req: NextRequest) {
     ];
 
     sheet.getRow(1).font = { bold: true };
-    sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD3D3D3' } };
+    sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD3D3D3" } };
 
     let rowIndex = 2;
     combinedStats.forEach((stat, index) => {
@@ -104,7 +123,7 @@ export async function GET(req: NextRequest) {
       sheet.addRow({
         no: index + 1,
         penarikName: stat.penarikName,
-        wilayah: stat.penarikDusun || '-',
+        wilayah: stat.penarikDusun || "-",
         totalWp: stat._count.nop,
         lunas: stat.lunasCount,
         belum: stat.belumLunasCount,
@@ -119,9 +138,9 @@ export async function GET(req: NextRequest) {
     // Formatting currency and numbers
     const currencyFormat = '"Rp"#,##0;[Red]\-"Rp"#,##0';
     for (let current = 2; current <= rowIndex; current++) {
-       sheet.getCell(`G${current}`).numFmt = currencyFormat;
-       sheet.getCell(`H${current}`).numFmt = currencyFormat;
-       sheet.getCell(`I${current}`).numFmt = currencyFormat;
+      sheet.getCell(`G${current}`).numFmt = currencyFormat;
+      sheet.getCell(`H${current}`).numFmt = currencyFormat;
+      sheet.getCell(`I${current}`).numFmt = currencyFormat;
     }
 
     // Add Total Row
@@ -137,9 +156,9 @@ export async function GET(req: NextRequest) {
       sisa: totalSisa,
       persentase: parseFloat(overallPercent.toFixed(2)),
     });
-    
+
     totalRow.font = { bold: true };
-    totalRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } }; // Yellowish for total
+    totalRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFF00" } }; // Yellowish for total
     sheet.getCell(`G${rowIndex}`).numFmt = currencyFormat;
     sheet.getCell(`H${rowIndex}`).numFmt = currencyFormat;
     sheet.getCell(`I${rowIndex}`).numFmt = currencyFormat;
@@ -153,7 +172,6 @@ export async function GET(req: NextRequest) {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
     });
-
   } catch (error) {
     console.error("Export Error: ", error);
     return new NextResponse("Internal Server Error", { status: 500 });

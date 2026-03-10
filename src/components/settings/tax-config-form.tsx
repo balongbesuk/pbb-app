@@ -29,8 +29,8 @@ export function TaxConfigForm() {
     e.preventDefault();
     setSaving(true);
     const res = await updateVillageConfig({
-       ...rawConfig,
-       tahunPajak: tahun
+      ...rawConfig,
+      tahunPajak: tahun,
     });
     if (res.success) {
       toast.success("Konfigurasi sistem diperbarui");
@@ -46,28 +46,26 @@ export function TaxConfigForm() {
     <Card className="glass border-none shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <DatabaseZap className="w-5 h-5 text-primary" />
+          <DatabaseZap className="text-primary h-5 w-5" />
           Konfigurasi Pajak
         </CardTitle>
-        <CardDescription>
-          Atur pengaturan bawaan untuk tahun fiskal dan notifikasi.
-        </CardDescription>
+        <CardDescription>Atur pengaturan bawaan untuk tahun fiskal dan notifikasi.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleUpdate} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="tahun-aktif">Tahun Pajak Aktif Target</Label>
-            <Input 
-              id="tahun-aktif" 
-              type="number" 
+            <Input
+              id="tahun-aktif"
+              type="number"
               value={tahun}
-              onChange={e => setTahun(parseInt(e.target.value))}
-              className="bg-white/50 dark:bg-slate-900/50 max-w-xs" 
+              onChange={(e) => setTahun(parseInt(e.target.value))}
+              className="max-w-xs bg-white/50 dark:bg-slate-900/50"
             />
           </div>
           <div className="pt-2">
             <Button type="submit" className="gap-2" disabled={saving}>
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Perbarui Konfigurasi
             </Button>
           </div>

@@ -1,6 +1,6 @@
-import ExcelJS from 'exceljs';
-import { prisma } from './prisma';
-import { extractRTRW, detectDusun } from './address-parser';
+import ExcelJS from "exceljs";
+import { prisma } from "./prisma";
+import { extractRTRW, detectDusun } from "./address-parser";
 
 export interface ExcelRow {
   nop: string;
@@ -23,32 +23,33 @@ export async function parseExcel(buffer: Buffer | any): Promise<ExcelRow[]> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer as any);
   const worksheet = workbook.worksheets[0];
-  
+
   const data: ExcelRow[] = [];
-  
+
   worksheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) return; // Skip header
-    
+
     // Clean data Helper
-    const getNop = (val: any) => String(val || '').trim();
+    const getNop = (val: any) => String(val || "").trim();
     const getNum = (val: any) => {
       // Handle Excel Formula results
-      if (typeof val === 'object' && val !== null && 'result' in val) return Number((val as any).result || 0);
+      if (typeof val === "object" && val !== null && "result" in val)
+        return Number((val as any).result || 0);
       return Number(val || 0);
     };
     const getDate = (val: any) => {
       if (val instanceof Date) return val;
-      if (typeof val === 'string' && val.trim() !== '') return new Date(val);
+      if (typeof val === "string" && val.trim() !== "") return new Date(val);
       return null;
     };
 
     const nop = getNop(row.getCell(1).value);
-    if (!nop || nop === '') return; // Guard against empty rows
+    if (!nop || nop === "") return; // Guard against empty rows
 
     data.push({
       nop: nop,
-      namaWp: String(row.getCell(2).value || ''),
-      alamatObjek: String(row.getCell(3).value || ''),
+      namaWp: String(row.getCell(2).value || ""),
+      alamatObjek: String(row.getCell(3).value || ""),
       luasTanah: getNum(row.getCell(4).value),
       luasBangunan: getNum(row.getCell(5).value),
       ketetapan: getNum(row.getCell(6).value),
@@ -59,10 +60,10 @@ export async function parseExcel(buffer: Buffer | any): Promise<ExcelRow[]> {
       lebihBayar: getNum(row.getCell(11).value),
       tanggalBayar: getDate(row.getCell(12).value),
       sisaTagihan: getNum(row.getCell(13).value),
-      tempatBayar: String(row.getCell(14).value || ''),
+      tempatBayar: String(row.getCell(14).value || ""),
     });
   });
-  
+
   return data;
 }
 
@@ -74,23 +75,27 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
     prisma.taxMapping.findMany(),
     prisma.villageRegion.findMany(),
     prisma.$queryRawUnsafe(`SELECT * FROM "RegionOtomation"`) as Promise<any[]>,
-    prisma.taxData.findMany({ where: { tahun }, select: { nop: true, paymentStatus: true } })
+    prisma.taxData.findMany({ where: { tahun }, select: { nop: true, paymentStatus: true } }),
   ]);
 
   const dusunList = dusunRef.map((d: { name: string }) => d.name);
   const mappingMap = new Map<string, any>(mappings.map((m: any) => [m.nop, m]));
   const regionMap = new Map(regions.map((r: any) => [`${r.dusun}-${r.rt}-${r.rw}`, true]));
-  
-  const rwRuleMap = new Map(otomations.filter((o: any) => o.type === "RW").map((ru: any) => [ru.code, ru.dusun]));
-  const rtRuleMap = new Map(otomations.filter((o: any) => o.type === "RT").map((ru: any) => [ru.code, ru.dusun]));
-  
+
+  const rwRuleMap = new Map(
+    otomations.filter((o: any) => o.type === "RW").map((ru: any) => [ru.code, ru.dusun])
+  );
+  const rtRuleMap = new Map(
+    otomations.filter((o: any) => o.type === "RT").map((ru: any) => [ru.code, ru.dusun])
+  );
+
   // Set existing NOPs for this year
   const existingNopsSet = new Set(existingTaxes.map((t: any) => t.nop));
   const newExcelNopsSet = new Set(rows.map((r: any) => r.nop));
 
   // Reduced batch size for SQLite parameter limits on Windows
   // and ensured dates for createdAt/updatedAt
-  const BATCH_SIZE = 100; 
+  const BATCH_SIZE = 100;
   const processedData: any[] = [];
   const now = new Date();
 
@@ -160,7 +165,7 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
     const batch = processedData.slice(i, i + BATCH_SIZE);
     try {
       await prisma.taxData.createMany({
-        data: batch
+        data: batch,
       });
     } catch (e: any) {
       console.error(`Error in batch ${i}:`, e);
@@ -188,16 +193,16 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
     await prisma.taxData.updateMany({
       where: {
         tahun: tahun,
-        nop: { in: nopsToMarkLunas }
+        nop: { in: nopsToMarkLunas },
       },
       data: {
         paymentStatus: "LUNAS",
         pembayaran: 0,
-        sisaTagihan: 0
-      }
+        sisaTagihan: 0,
+      },
     });
   }
-  
+
   return processedData.length + nopsToMarkLunas.length;
 }
 
@@ -206,16 +211,21 @@ export async function processBackupAssignments(buffer: Buffer | any, tahun: numb
   await workbook.xlsx.load(buffer);
   const worksheet = workbook.worksheets[0];
 
-  const assignments: { username: string, nop: string, dusun: string, rt: string, rw: string }[] = [];
-  let currentUsername = '';
-  
+  const assignments: { username: string; nop: string; dusun: string; rt: string; rw: string }[] =
+    [];
+  let currentUsername = "";
+
   const getVal = (row: ExcelJS.Row, col: number) => {
     const v = row.getCell(col).value;
-    if (v === null || v === undefined) return '';
-    if (typeof v === 'object') {
-       if ('richText' in v && Array.isArray(v.richText)) return v.richText.map((rt: any) => rt.text).join('').trim();
-       if ('text' in v) return String(v.text).trim();
-       return '';
+    if (v === null || v === undefined) return "";
+    if (typeof v === "object") {
+      if ("richText" in v && Array.isArray(v.richText))
+        return v.richText
+          .map((rt: any) => rt.text)
+          .join("")
+          .trim();
+      if ("text" in v) return String(v.text).trim();
+      return "";
     }
     return String(v).trim();
   };
@@ -228,34 +238,34 @@ export async function processBackupAssignments(buffer: Buffer | any, tahun: numb
 
   worksheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) {
-       row.eachCell((cell, colNumber) => {
-         const val = String(cell.value || '').toLowerCase();
-         if (val.includes('username')) usernameCol = colNumber;
-         else if (val.includes('nop')) nopCol = colNumber;
-         else if (val === 'dusun') dusunCol = colNumber;
-         else if (val === 'rt') rtCol = colNumber;
-         else if (val === 'rw') rwCol = colNumber;
-       });
-       return;
+      row.eachCell((cell, colNumber) => {
+        const val = String(cell.value || "").toLowerCase();
+        if (val.includes("username")) usernameCol = colNumber;
+        else if (val.includes("nop")) nopCol = colNumber;
+        else if (val === "dusun") dusunCol = colNumber;
+        else if (val === "rt") rtCol = colNumber;
+        else if (val === "rw") rwCol = colNumber;
+      });
+      return;
     }
-    
+
     const username = getVal(row, usernameCol);
     const nop = getVal(row, nopCol);
     const dusun = getVal(row, dusunCol);
     const rt = getVal(row, rtCol);
     const rw = getVal(row, rwCol);
-    
+
     if (username) {
       currentUsername = username;
     }
-    
-    if (currentUsername && nop && nop !== '-' && nop.trim() !== '') {
-      assignments.push({ 
-        username: currentUsername, 
+
+    if (currentUsername && nop && nop !== "-" && nop.trim() !== "") {
+      assignments.push({
+        username: currentUsername,
         nop: nop.trim(),
         dusun: dusun,
         rt: rt,
-        rw: rw
+        rw: rw,
       });
     }
   });
@@ -267,11 +277,11 @@ export async function processBackupAssignments(buffer: Buffer | any, tahun: numb
 
   // Get all users
   const users = await prisma.user.findMany({
-    where: { role: 'PENARIK' },
-    select: { id: true, username: true }
+    where: { role: "PENARIK" },
+    select: { id: true, username: true },
   });
-  
-  const userMap = new Map(users.map(u => [u.username.toLowerCase(), u.id]));
+
+  const userMap = new Map(users.map((u) => [u.username.toLowerCase(), u.id]));
   let updatedCount = 0;
 
   // Group by user for efficiency
@@ -289,41 +299,44 @@ export async function processBackupAssignments(buffer: Buffer | any, tahun: numb
   // Fetch all existing NOPs for this year to do a flexible matching
   const existingTaxData = await prisma.taxData.findMany({
     where: { tahun },
-    select: { id: true, nop: true }
+    select: { id: true, nop: true },
   });
-  
+
   console.log(`DB has ${existingTaxData.length} tax records for year ${tahun}`);
-  
+
   // Map of cleaned NOP -> Database ID
-  const cleanToId = new Map(existingTaxData.map(t => [t.nop.replace(/[^0-9]/g, ''), t.id]));
-  const allNopsToMap = new Map<string, { nop: string, penarikId: string, dusun: string, rt: string, rw: string }>();
+  const cleanToId = new Map(existingTaxData.map((t) => [t.nop.replace(/[^0-9]/g, ""), t.id]));
+  const allNopsToMap = new Map<
+    string,
+    { nop: string; penarikId: string; dusun: string; rt: string; rw: string }
+  >();
 
   for (const [userId, items] of grouped.entries()) {
     const idsToUpdate: number[] = [];
-    
+
     for (const item of items) {
-       const cleanNop = item.nop.replace(/[^0-9]/g, '');
-       const dbId = cleanToId.get(cleanNop);
-       if (dbId) {
-         idsToUpdate.push(dbId);
-       }
-       
-       // Deduplicate by NOP - last one wins or first one wins? Let's keep the mapping
-       if (!allNopsToMap.has(item.nop)) {
-         allNopsToMap.set(item.nop, {
-           nop: item.nop,
-           penarikId: userId,
-           dusun: item.dusun || '',
-           rt: item.rt || '',
-           rw: item.rw || ''
-         });
-       }
+      const cleanNop = item.nop.replace(/[^0-9]/g, "");
+      const dbId = cleanToId.get(cleanNop);
+      if (dbId) {
+        idsToUpdate.push(dbId);
+      }
+
+      // Deduplicate by NOP - last one wins or first one wins? Let's keep the mapping
+      if (!allNopsToMap.has(item.nop)) {
+        allNopsToMap.set(item.nop, {
+          nop: item.nop,
+          penarikId: userId,
+          dusun: item.dusun || "",
+          rt: item.rt || "",
+          rw: item.rw || "",
+        });
+      }
     }
 
     if (idsToUpdate.length > 0) {
       const updateResult = await prisma.taxData.updateMany({
         where: { id: { in: idsToUpdate } },
-        data: { penarikId: userId }
+        data: { penarikId: userId },
       });
       updatedCount += updateResult.count;
       console.log(`Updated ${updateResult.count} records for user ${userId}`);
@@ -333,16 +346,16 @@ export async function processBackupAssignments(buffer: Buffer | any, tahun: numb
   // 2. Optimized TaxMapping Sync (Delete then CreateMany)
   const uniqueMappings = Array.from(allNopsToMap.values());
   if (uniqueMappings.length > 0) {
-    const nops = uniqueMappings.map(a => a.nop);
-    
+    const nops = uniqueMappings.map((a) => a.nop);
+
     try {
       await prisma.$transaction([
         prisma.taxMapping.deleteMany({
-          where: { nop: { in: nops } }
+          where: { nop: { in: nops } },
         }),
         prisma.taxMapping.createMany({
-          data: uniqueMappings
-        })
+          data: uniqueMappings,
+        }),
       ]);
       console.log(`Synced ${uniqueMappings.length} mappings to TaxMapping table`);
     } catch (txError) {
@@ -352,7 +365,7 @@ export async function processBackupAssignments(buffer: Buffer | any, tahun: numb
         await prisma.taxMapping.upsert({
           where: { nop: mapItem.nop },
           update: { ...mapItem },
-          create: { ...mapItem }
+          create: { ...mapItem },
         });
       }
     }

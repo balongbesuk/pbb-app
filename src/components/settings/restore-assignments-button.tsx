@@ -80,46 +80,49 @@ export function RestoreAssignmentsButton({ tahun }: { tahun: number }) {
 
       <Button
         variant="outline"
-        className="w-full gap-2 border-primary/20 hover:bg-primary/5"
+        className="border-primary/20 hover:bg-primary/5 w-full gap-2"
         onClick={() => fileInputRef.current?.click()}
         disabled={loading}
       >
-        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <History className="w-4 h-4" />}
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <History className="h-4 w-4" />}
         Restore Penugasan
       </Button>
 
       <Dialog open={isConfirmOpen} onOpenChange={(open) => !open && cancelRestore()}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="w-5 h-5" />
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
               Peringatan Pemulihan Penugasan
             </DialogTitle>
-            <DialogDescription className="pt-3 space-y-4 text-foreground/80">
-              <span className="block">
-                Anda akan mengimpor data penugasan dari file Excel. Tindakan ini berpotensi <strong>mengubah area tugas penarik pajak saat ini</strong> sesuai dengan isi file Excel tersebut.
-              </span>
-
-              <div className="bg-destructive/10 text-destructive p-3 rounded-md text-xs font-semibold">
-                Peringatan: Seluruh data penugasan yang ditimpa tidak dapat dikembalikan sesudahnya.
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <Label htmlFor="confirm-penugasan" className="text-foreground">
-                  Ketik <span className="font-bold select-all">RESTORE PENUGASAN</span> untuk konfirmasi:
-                </Label>
-                <Input
-                  id="confirm-penugasan"
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
-                  placeholder="Masukkan teks konfirmasi..."
-                  className="bg-white/50"
-                  autoComplete="off"
-                />
-              </div>
+            <DialogDescription className="text-foreground/70 pt-1">
+              Anda akan mengimpor data penugasan dari file Excel. Tindakan ini berpotensi{" "}
+              <strong>mengubah area tugas penarik pajak saat ini</strong> sesuai dengan isi file
+              Excel tersebut.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="mt-4 gap-2 flex-col-reverse sm:flex-row">
+
+          <div className="space-y-4 pt-1">
+            <div className="bg-destructive/10 text-destructive rounded-md p-3 text-xs font-semibold">
+              Peringatan: Seluruh data penugasan yang ditimpa tidak dapat dikembalikan sesudahnya.
+            </div>
+
+            <div className="space-y-2.5">
+              <Label htmlFor="confirm-penugasan" className="text-foreground text-xs font-bold">
+                Ketik <span className="font-bold select-all">RESTORE PENUGASAN</span> untuk
+                konfirmasi:
+              </Label>
+              <Input
+                id="confirm-penugasan"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder="Masukkan teks konfirmasi..."
+                className="rounded-xl border-zinc-100 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+          <DialogFooter className="mt-4 flex-col-reverse gap-2 sm:flex-row">
             <Button variant="outline" onClick={cancelRestore} className="w-full sm:w-auto">
               Batal
             </Button>
@@ -139,24 +142,32 @@ export function RestoreAssignmentsButton({ tahun }: { tahun: number }) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle2 className="w-5 h-5" />
+              <CheckCircle2 className="h-5 w-5" />
               Proses Berhasil
             </DialogTitle>
             <DialogDescription className="pt-2 text-base">
               Data penugasan telah berhasil dipulihkan secara massal ke dalam sistem.
             </DialogDescription>
           </DialogHeader>
-          <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg border border-green-100 dark:border-green-900/30">
-            <div className="flex justify-between items-center">
+          <div className="rounded-lg border border-green-100 bg-green-50 p-4 dark:border-green-900/30 dark:bg-green-950/20">
+            <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Total Data Terpindah:</span>
-              <span className="text-lg font-bold text-green-700 dark:text-green-400">{count} Baris</span>
+              <span className="text-lg font-bold text-green-700 dark:text-green-400">
+                {count} Baris
+              </span>
             </div>
-            <p className="text-[11px] text-green-600 dark:text-green-500 mt-2">
+            <p className="mt-2 text-[11px] text-green-600 dark:text-green-500">
               *Hanya NOP yang sudah ada di sistem (telah di-upload) yang akan mendapatkan penugasan.
             </p>
           </div>
           <DialogFooter>
-            <DialogClose render={<Button type="button" className="w-full">Selesai</Button>} />
+            <DialogClose
+              render={
+                <Button type="button" className="w-full">
+                  Selesai
+                </Button>
+              }
+            />
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { 
-  Database, 
-  CreditCard, 
-  CheckCircle2, 
+import {
+  Database,
+  CreditCard,
+  CheckCircle2,
   AlertCircle,
   TrendingUp,
   Target,
@@ -15,17 +15,18 @@ import {
   Map as MapIcon,
   Home as HomeIcon,
   Layers as LayersIcon,
-  Zap as ZapIcon
+  Zap as ZapIcon,
 } from "lucide-react";
-import { 
-  RWBarChart, 
-  StatusPieChart, 
-  LineTrendChart 
+import {
+  RWBarChart,
+  StatusPieChart,
+  LineTrendChart,
 } from "@/components/dashboard/dashboard-charts";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 async function getDashboardStats(tahun: number = new Date().getFullYear()) {
   const [
@@ -39,39 +40,47 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
     penarikStats,
     tanahTanpaBangunan,
     tanahDenganBangunan,
-    totalLuas
+    totalLuas,
   ] = await Promise.all([
     prisma.taxData.count({ where: { tahun } }),
     prisma.taxData.aggregate({ where: { tahun }, _sum: { ketetapan: true } }),
-    prisma.taxData.aggregate({ where: { tahun, paymentStatus: "LUNAS" }, _sum: { ketetapan: true, pembayaran: true }, _count: true }),
-    prisma.taxData.aggregate({ where: { tahun, paymentStatus: "BELUM_LUNAS" }, _sum: { ketetapan: true }, _count: true }),
+    prisma.taxData.aggregate({
+      where: { tahun, paymentStatus: "LUNAS" },
+      _sum: { ketetapan: true, pembayaran: true },
+      _count: true,
+    }),
+    prisma.taxData.aggregate({
+      where: { tahun, paymentStatus: "BELUM_LUNAS" },
+      _sum: { ketetapan: true },
+      _count: true,
+    }),
     prisma.taxData.count({ where: { tahun, paymentStatus: "TIDAK_TERBIT" } }),
-    
+
     prisma.taxData.groupBy({
-      by: ['rw'],
+      by: ["rw"],
       where: { tahun },
       _sum: { ketetapan: true, pembayaran: true },
-      _count: true
+      _count: true,
     }),
 
     prisma.taxData.groupBy({
-      by: ['tanggalBayar'],
-      where: { 
-        tahun, 
-        tanggalBayar: { not: null } 
+      by: ["tanggalBayar"],
+      where: {
+        tahun,
+        tanggalBayar: { not: null },
       },
       _sum: { pembayaran: true },
     }),
 
     prisma.taxData.groupBy({
-      by: ['penarikId'],
+      by: ["penarikId"],
       where: { tahun },
       _sum: { pembayaran: true, ketetapan: true },
     }),
 
     prisma.taxData.count({ where: { tahun, luasTanah: { gt: 0 }, luasBangunan: 0 } }),
     prisma.taxData.count({ where: { tahun, luasTanah: { gt: 0 }, luasBangunan: { gt: 0 } } }),
-    prisma.taxData.aggregate({ where: { tahun }, _sum: { luasTanah: true, luasBangunan: true } })
+    prisma.taxData.aggregate({ where: { tahun }, _sum: { luasTanah: true, luasBangunan: true } }),
   ]);
 
   const totalNominalValue = totalNominal._sum.ketetapan || 0;
@@ -79,19 +88,22 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
   const persentase = totalNominalValue > 0 ? (sudahDibayarValue / totalNominalValue) * 100 : 0;
 
   // Get penarik names
-  const penarikIds = penarikStats.map(s => s.penarikId).filter(Boolean) as string[];
+  const penarikIds = penarikStats.map((s) => s.penarikId).filter(Boolean) as string[];
   const penarikUsers = await prisma.user.findMany({
     where: { id: { in: penarikIds } },
-    select: { id: true, name: true }
+    select: { id: true, name: true },
   });
 
-  const penarikMap = new Map(penarikUsers.map(u => [u.id, u.name]));
+  const penarikMap = new Map(penarikUsers.map((u) => [u.id, u.name]));
   const topPenariks = penarikStats
-    .map(s => ({
+    .map((s) => ({
       name: s.penarikId ? penarikMap.get(s.penarikId) || "Petugas" : "Belum Alokasi",
       nominal: s._sum.pembayaran || 0,
       target: s._sum.ketetapan || 0,
-      percent: (s._sum.ketetapan || 0) > 0 ? ((s._sum.pembayaran || 0) / (s._sum.ketetapan || 0)) * 100 : 0
+      percent:
+        (s._sum.ketetapan || 0) > 0
+          ? ((s._sum.pembayaran || 0) / (s._sum.ketetapan || 0)) * 100
+          : 0,
     }))
     .sort((a, b) => b.nominal - a.nominal)
     .slice(0, 4);
@@ -105,34 +117,42 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
     belumDibayarValue: belumDibayar._sum.ketetapan || 0,
     tidakTerbit,
     persentase,
-    pajakPerRW: pajakPerRW.sort((a: any, b: any) => (a.rw || '').localeCompare(b.rw || '')),
+    pajakPerRW: pajakPerRW.sort((a: any, b: any) => (a.rw || "").localeCompare(b.rw || "")),
     trenPembayaran,
     topPenariks,
     tanahTanpaBangunan,
     tanahDenganBangunan,
     totalLuasTanah: totalLuas._sum.luasTanah || 0,
-    totalLuasBangunan: totalLuas._sum.luasBangunan || 0
+    totalLuasBangunan: totalLuas._sum.luasBangunan || 0,
   };
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ tahun?: string }> }) {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tahun?: string }>;
+}) {
   const params = await searchParams;
   const currentYear = parseInt(params.tahun || new Date().getFullYear().toString());
   const stats = await getDashboardStats(currentYear);
 
-  const formatCurrency = (val: number) => 
-    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+  const formatCurrency = (val: number) =>
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }).format(val);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="animate-in fade-in space-y-8 duration-700">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div className="space-y-1">
-          <h1 className="text-4xl font-extrabold tracking-tight text-primary">
+          <h1 className="text-primary text-4xl font-extrabold tracking-tight">
             Ringkasan Progress
           </h1>
           <p className="text-muted-foreground flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
+            <Calendar className="h-4 w-4" />
             Laporan Kinerja Penarikan PBB • Tahun {currentYear}
           </p>
         </div>
@@ -141,33 +161,33 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       {/* Main Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsHeroCard 
+        <StatsHeroCard
           title="Total Ketetapan"
           value={formatCurrency(stats.totalNominal)}
-          icon={<Wallet className="w-5 h-5" />}
+          icon={<Wallet className="h-5 w-5" />}
           description="Target anggaran desa"
           trend="+4.5%"
           color="indigo"
         />
-        <StatsHeroCard 
+        <StatsHeroCard
           title="Sudah Realisasi"
           value={formatCurrency(stats.sudahDibayarValue)}
-          icon={<CheckCircle2 className="w-5 h-5" />}
+          icon={<CheckCircle2 className="h-5 w-5" />}
           description={`${stats.persentase.toFixed(1)}% dari target`}
           percent={stats.persentase}
           color="emerald"
         />
-        <StatsHeroCard 
+        <StatsHeroCard
           title="Sisa Tagihan"
           value={formatCurrency(stats.belumDibayarValue)}
-          icon={<AlertCircle className="w-5 h-5" />}
+          icon={<AlertCircle className="h-5 w-5" />}
           description={`${stats.belumDibayarCount} WP belum lunas`}
           color="rose"
         />
-        <StatsHeroCard 
+        <StatsHeroCard
           title="Populasi WP"
-          value={stats.totalPajak.toLocaleString('id-ID')}
-          icon={<Users className="w-5 h-5" />}
+          value={stats.totalPajak.toLocaleString("id-ID")}
+          icon={<Users className="h-5 w-5" />}
           description="Total wajib pajak terdaftar"
           color="blue"
         />
@@ -176,87 +196,106 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {/* Analytics Group */}
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Charts Section */}
-        <div className="lg:col-span-8 space-y-6">
-          <Card className="glass shadow-2xl border-none overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between">
+        <div className="space-y-6 lg:col-span-8">
+          <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
               <div>
-                <CardTitle className="text-xl">Progress Per RW</CardTitle>
-                <CardDescription>Distribusi target dan realisasi tiap wilayah</CardDescription>
+                <CardTitle className="text-xl font-bold tracking-tight">Progress Per RW</CardTitle>
+                <CardDescription className="text-xs font-medium">
+                  Distribusi target dan realisasi tiap wilayah
+                </CardDescription>
               </div>
-              <TrendingUp className="text-muted-foreground w-5 h-5" />
+              <div className="rounded-xl bg-zinc-50 p-2 dark:bg-zinc-900">
+                <TrendingUp className="h-4 w-4 text-zinc-400" />
+              </div>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="pt-6">
               <RWBarChart data={stats.pajakPerRW} />
             </CardContent>
           </Card>
 
-          <Card className="glass shadow-2xl border-none overflow-hidden">
-            <CardHeader>
-               <CardTitle className="text-xl">Analisa Tren Bulanan</CardTitle>
-               <CardDescription>Fluktuasi penerimaan pajak sepanjang tahun</CardDescription>
+          <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
+            <CardHeader className="border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
+              <CardTitle className="text-xl font-bold tracking-tight">
+                Analisa Tren Bulanan
+              </CardTitle>
+              <CardDescription className="text-xs font-medium">
+                Fluktuasi penerimaan pajak sepanjang tahun
+              </CardDescription>
             </CardHeader>
-            <CardContent className="pt-2">
+            <CardContent className="pt-6">
               <LineTrendChart data={stats.trenPembayaran} />
             </CardContent>
           </Card>
         </div>
 
         {/* Sidebar Analytics */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="glass shadow-2xl border-none">
-            <CardHeader>
-               <CardTitle className="text-xl flex items-center gap-2 text-primary">
-                 <PieChartIcon className="w-5 h-5" />
-                 Pencapaian WP
-               </CardTitle>
+        <div className="space-y-6 lg:col-span-4">
+          <Card className="rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
+            <CardHeader className="border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
+              <CardTitle className="flex items-center gap-2 text-lg font-bold tracking-tight">
+                <div className="bg-primary/5 rounded-lg p-1.5">
+                  <PieChartIcon className="text-primary h-4 w-4" />
+                </div>
+                Pencapaian WP
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <StatusPieChart 
+            <CardContent className="pt-6">
+              <StatusPieChart
                 data={[
-                  { name: 'Lunas', value: stats.sudahDibayarCount, color: '#10b981' }, // Hijau
-                  { name: 'Belum', value: stats.belumDibayarCount, color: '#ef4444' }, // Merah
-                  { name: 'Tidak Terbit', value: stats.tidakTerbit, color: 'var(--foreground)' }, // Adaptif
-                ]} 
+                  { name: "Lunas", value: stats.sudahDibayarCount, color: "#10b981" },
+                  { name: "Belum", value: stats.belumDibayarCount, color: "#ef4444" },
+                  { name: "Tidak Terbit", value: "#71717a" },
+                ]}
               />
-              <div className="mt-4 space-y-3">
-                 <DashboardMiniStat label="Rasio Kelunasan" value={`${((stats.sudahDibayarCount / (stats.totalPajak || 1)) * 100).toFixed(1)}%`} />
-                 <DashboardMiniStat label="WP Belum Bayar" value={stats.belumDibayarCount.toString()} />
+              <div className="mt-6 space-y-2">
+                <DashboardMiniStat
+                  label="Rasio Kelunasan"
+                  value={`${((stats.sudahDibayarCount / (stats.totalPajak || 1)) * 100).toFixed(1)}%`}
+                />
+                <DashboardMiniStat
+                  label="WP Belum Bayar"
+                  value={stats.belumDibayarCount.toString()}
+                />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="glass shadow-2xl border-none">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl flex items-center gap-2 text-primary">
-                <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <Card className="rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
+            <CardHeader className="border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
+              <CardTitle className="flex items-center gap-2 text-lg font-bold tracking-tight">
+                <div className="rounded-lg bg-blue-500/5 p-1.5">
+                  <Target className="h-4 w-4 text-blue-500" />
+                </div>
                 Top Kolektor
               </CardTitle>
-              <CardDescription className="text-muted-foreground text-xs font-medium">Petugas dengan realisasi tertinggi</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6 pt-2">
+            <CardContent className="pt-6">
+              <div className="space-y-5">
                 {stats.topPenariks.map((p, i) => (
-                  <div key={i} className="flex flex-col gap-1.5">
-                    <div className="flex justify-between items-center text-sm font-bold">
-                      <span className="text-foreground">{p.name}</span>
-                      <span className="text-blue-600 dark:text-blue-400">{p.percent.toFixed(0)}%</span>
+                  <div key={i} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-foreground text-xs font-bold">{p.name}</span>
+                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-black text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                        {p.percent.toFixed(0)}%
+                      </span>
                     </div>
-                    <div className="w-full bg-muted rounded-full h-2 shadow-inner overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-full h-2 transition-all duration-700 ease-out" 
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-900">
+                      <div
+                        className="h-full rounded-full bg-blue-500 transition-all duration-700 ease-out"
                         style={{ width: `${Math.min(p.percent, 100)}%` }}
                       ></div>
-                    </div>
-                    <div className="flex justify-between items-center opacity-80">
-                       <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-tighter">Realisasi</span>
-                       <span className="text-[10px] text-foreground font-black">{formatCurrency(p.nominal)}</span>
                     </div>
                   </div>
                 ))}
               </div>
-              <Link href="/laporan" className="block mt-8">
-                <Button variant="outline" size="sm" className="w-full text-xs gap-2 border-primary/20 hover:bg-primary/10 transition-all font-bold">
-                  Lihat Semua Laporan <ChevronRight className="w-3 h-3" />
+              <Link href="/laporan" className="mt-8 block">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 w-full gap-2 rounded-xl border-zinc-100 text-[10px] font-bold transition-all hover:bg-zinc-50 sm:text-xs dark:border-zinc-800 dark:hover:bg-zinc-900"
+                >
+                  Lihat Semua Laporan <ChevronRight className="h-3 w-3" />
                 </Button>
               </Link>
             </CardContent>
@@ -267,34 +306,34 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {/* Physical Stats Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-           <MapIcon className="w-5 h-5 text-primary" />
-           <h2 className="text-xl font-bold">Statistik Fisik Objek Pajak</h2>
+          <MapIcon className="text-primary h-5 w-5" />
+          <h2 className="text-xl font-bold">Statistik Fisik Objek Pajak</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-           <PhysicalStatsCard 
-             title="Tanah Kosong" 
-             value={stats.tanahTanpaBangunan.toLocaleString('id-ID')} 
-             description="Bidang tanpa bangunan" 
-             icon={<MapIcon className="w-4 h-4 text-orange-500" />}
-           />
-           <PhysicalStatsCard 
-             title="Tanah & Bangunan" 
-             value={stats.tanahDenganBangunan.toLocaleString('id-ID')} 
-             description="Objek pajak lengkap" 
-             icon={<HomeIcon className="w-4 h-4 text-purple-500" />}
-           />
-           <PhysicalStatsCard 
-             title="Total Luas Tanah" 
-             value={`${stats.totalLuasTanah.toLocaleString('id-ID')} m²`} 
-             description="Kumulatif luas tanah" 
-             icon={<LayersIcon className="w-4 h-4 text-cyan-500" />}
-           />
-           <PhysicalStatsCard 
-             title="Total Luas Bangunan" 
-             value={`${stats.totalLuasBangunan.toLocaleString('id-ID')} m²`} 
-             description="Kumulatif luas bangunan" 
-             icon={<ZapIcon className="w-4 h-4 text-yellow-500" />}
-           />
+          <PhysicalStatsCard
+            title="Tanah Kosong"
+            value={stats.tanahTanpaBangunan.toLocaleString("id-ID")}
+            description="Bidang tanpa bangunan"
+            icon={<MapIcon className="h-4 w-4 text-orange-500" />}
+          />
+          <PhysicalStatsCard
+            title="Tanah & Bangunan"
+            value={stats.tanahDenganBangunan.toLocaleString("id-ID")}
+            description="Objek pajak lengkap"
+            icon={<HomeIcon className="h-4 w-4 text-purple-500" />}
+          />
+          <PhysicalStatsCard
+            title="Total Luas Tanah"
+            value={`${stats.totalLuasTanah.toLocaleString("id-ID")} m²`}
+            description="Kumulatif luas tanah"
+            icon={<LayersIcon className="h-4 w-4 text-cyan-500" />}
+          />
+          <PhysicalStatsCard
+            title="Total Luas Bangunan"
+            value={`${stats.totalLuasBangunan.toLocaleString("id-ID")} m²`}
+            description="Kumulatif luas bangunan"
+            icon={<ZapIcon className="h-4 w-4 text-yellow-500" />}
+          />
         </div>
       </div>
     </div>
@@ -303,15 +342,19 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
 function PhysicalStatsCard({ title, value, description, icon }: any) {
   return (
-    <Card className="glass border-none shadow-md hover:shadow-lg transition-shadow">
-      <CardContent className="p-4 flex items-center gap-4">
-        <div className="p-3 rounded-xl bg-background/50 border border-white/10 shadow-inner">
+    <Card className="hover:border-primary/20 overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-sm transition-all duration-300 dark:border-zinc-900 dark:bg-zinc-950">
+      <CardContent className="flex items-center gap-4 p-5">
+        <div className="text-foreground/50 rounded-xl border border-zinc-100 bg-zinc-50 p-2.5 dark:border-zinc-900 dark:bg-zinc-900">
           {icon}
         </div>
-        <div>
-          <p className="text-[10px] font-bold text-primary uppercase tracking-wider">{title}</p>
-          <div className="text-lg font-black text-foreground">{value}</div>
-          <p className="text-[9px] text-foreground/70 font-medium">{description}</p>
+        <div className="space-y-0.5">
+          <p className="text-muted-foreground text-[10px] font-bold tracking-[0.1em] uppercase">
+            {title}
+          </p>
+          <div className="text-foreground text-lg leading-none font-black tracking-tight">
+            {value}
+          </div>
+          <p className="text-muted-foreground/60 text-[9px] font-medium">{description}</p>
         </div>
       </CardContent>
     </Card>
@@ -320,43 +363,46 @@ function PhysicalStatsCard({ title, value, description, icon }: any) {
 
 function StatsHeroCard({ title, value, icon, description, percent, color }: any) {
   const colors: any = {
-    indigo: "from-indigo-500/20 to-indigo-500/5 text-indigo-600 dark:text-indigo-400",
-    emerald: "from-emerald-500/20 to-emerald-500/5 text-emerald-600 dark:text-emerald-400",
-    rose: "from-rose-500/20 to-rose-500/5 text-rose-600 dark:text-rose-400",
-    blue: "from-blue-500/20 to-blue-500/5 text-blue-600 dark:text-blue-400",
+    indigo: "bg-indigo-500/5 text-indigo-600 border-indigo-100 dark:border-indigo-900/50",
+    emerald: "bg-emerald-500/5 text-emerald-600 border-emerald-100 dark:border-emerald-900/50",
+    rose: "bg-rose-500/5 text-rose-600 border-rose-100 dark:border-rose-900/50",
+    blue: "bg-blue-500/5 text-blue-600 border-blue-100 dark:border-blue-900/50",
   };
 
   return (
-    <Card className="glass border-none shadow-xl relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
-      <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${colors[color]} rounded-bl-full -mr-8 -mt-8 opacity-50 group-hover:scale-125 transition-transform duration-500`} />
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div className={`p-2 rounded-xl bg-gradient-to-br ${colors[color]} mb-3`}>
-            {icon}
-          </div>
-          {percent !== undefined && (
-             <Badge variant="outline" className="border-emerald-500/50 text-emerald-600 bg-emerald-50/50 dark:bg-emerald-500/10 dark:text-emerald-400 text-[10px] px-1.5 py-0">
-               {percent.toFixed(0)}%
-             </Badge>
-          )}
+    <Card className="hover:border-primary/20 group space-y-4 rounded-3xl border border-zinc-100 bg-white p-6 shadow-sm transition-all duration-300 dark:border-zinc-900 dark:bg-zinc-950">
+      <div className="flex items-start justify-between">
+        <div className={cn("rounded-xl border p-2.5", colors[color])}>{icon}</div>
+        {percent !== undefined && (
+          <Badge
+            variant="outline"
+            className="rounded-full border-emerald-500/20 bg-emerald-500/5 px-2 py-0.5 text-[9px] font-black text-emerald-600"
+          >
+            {percent.toFixed(1)}%
+          </Badge>
+        )}
+      </div>
+      <div className="space-y-1">
+        <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+          {title}
+        </p>
+        <div className="text-foreground text-2xl leading-none font-black tracking-tighter">
+          {value}
         </div>
-        <CardTitle className="text-[10px] font-black text-foreground uppercase tracking-wider">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-black text-foreground">{value}</div>
-        <p className="text-[10px] text-foreground/80 mt-2 font-semibold flex items-center gap-1">
+        <p className="text-muted-foreground flex items-center gap-1.5 pt-1 text-[10px] leading-relaxed">
+          <span className="h-1 w-1 rounded-full bg-zinc-200" />
           {description}
         </p>
-      </CardContent>
+      </div>
     </Card>
   );
 }
 
-function DashboardMiniStat({ label, value }: { label: string, value: string }) {
+function DashboardMiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between items-center p-3 rounded-xl bg-muted/30 border border-border/20">
-      <span className="text-xs text-foreground font-bold">{label}</span>
-      <span className="text-sm font-black text-primary">{value}</span>
+    <div className="flex items-center justify-between rounded-xl border border-zinc-50 bg-zinc-50 px-4 py-3 dark:border-zinc-900/50 dark:bg-zinc-900/50">
+      <span className="text-muted-foreground text-xs font-bold">{label}</span>
+      <span className="text-foreground text-sm font-black tracking-tight">{value}</span>
     </div>
   );
 }

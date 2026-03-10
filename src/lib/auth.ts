@@ -35,15 +35,15 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as any).role;
-        token.id = user.id;
+        token.role = user.role;
+        token.id = user.id!;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).role = token.role;
-        (session.user as any).id = token.id;
+        session.user.role = token.role;
+        session.user.id = token.id;
       }
       return session;
     },
@@ -53,6 +53,21 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 8 * 60 * 60, // 8 jam
+  },
+  // ─── Cookie CSRF protection ─────────────────────────────────────────────
+  // Next-auth JWT menggunakan cookies HttpOnly + SameSite=Lax secara default.
+  // Konfigurasi di bawah mempertegas setting ini secara eksplisit.
+  cookies: {
+    sessionToken: {
+      name: "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",   // Blokir CSRF cross-site, izinkan navigasi top-level
+        path: "/",
+        secure: process.env.NODE_ENV === "production", // HTTPS di production
+      },
+    },
   },
   events: {
     async signIn({ user }) {
@@ -63,10 +78,10 @@ export const authOptions: NextAuthOptions = {
             entity: "User",
             entityId: user.id,
             details: `Pengguna ${user.name} berhasil login ke dalam sistem`,
-            userId: user.id
-          }
+            userId: user.id,
+          },
         });
       }
-    }
-  }
+    },
+  },
 };

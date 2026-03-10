@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch all users with role PENARIK and their assigned tax data for the year
     const penariks = await prisma.user.findMany({
-      where: { role: 'PENARIK' },
+      where: { role: "PENARIK" },
       include: {
         taxData: {
           where: { tahun },
@@ -24,16 +24,12 @@ export async function GET(req: NextRequest) {
             nop: true,
             dusun: true,
             rt: true,
-            rw: true
+            rw: true,
           },
-          orderBy: [
-            { dusun: 'asc' },
-            { rw: 'asc' },
-            { rt: 'asc' }
-          ]
-        }
+          orderBy: [{ dusun: "asc" }, { rw: "asc" }, { rt: "asc" }],
+        },
       },
-      orderBy: { name: 'asc' }
+      orderBy: { name: "asc" },
     });
 
     const workbook = new ExcelJS.Workbook();
@@ -51,11 +47,11 @@ export async function GET(req: NextRequest) {
 
     // Style Header
     sheet.getRow(1).font = { bold: true };
-    sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD3D3D3' } };
+    sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD3D3D3" } };
 
     penariks.forEach((p) => {
-      const areaInfo = `${p.dusun || 'Semua'} / RT ${p.rt || 'Semua'} / RW ${p.rw || 'Semua'}`;
-      
+      const areaInfo = `${p.dusun || "Semua"} / RT ${p.rt || "Semua"} / RW ${p.rw || "Semua"}`;
+
       if (p.taxData.length === 0) {
         sheet.addRow({
           penarikName: p.name,
@@ -89,7 +85,6 @@ export async function GET(req: NextRequest) {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
     });
-
   } catch (error) {
     console.error("Backup Error: ", error);
     return new NextResponse("Internal Server Error", { status: 500 });

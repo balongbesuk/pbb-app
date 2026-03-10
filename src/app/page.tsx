@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 
 export default async function IndexPage() {
   const session = await getServerSession(authOptions);
-  
+
   if (session) {
     redirect("/dashboard");
   } else {

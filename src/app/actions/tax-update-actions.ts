@@ -2,32 +2,30 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/server-auth";
 import { createAuditLog } from "./log-actions";
 import { TaxRegionUpdateSchema, formatZodError } from "@/lib/validations/schemas";
 import { z } from "zod";
 
 const statusSchema = z.object({
   id: z.union([z.string(), z.number()]),
-  paymentStatus: z.enum(["LUNAS", "BELUM_LUNAS", "TIDAK_TERBIT"])
+  paymentStatus: z.enum(["LUNAS", "BELUM_LUNAS", "TIDAK_TERBIT"]),
 });
 
-export async function updatePaymentStatus(id: string | number, paymentStatus: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT") {
+export async function updatePaymentStatus(
+  id: string | number,
+  paymentStatus: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT"
+) {
   try {
     statusSchema.parse({ id, paymentStatus });
-    const numId = typeof id === 'string' ? parseInt(id, 10) : id;
-    const session = await getServerSession(authOptions);
-    if (!session) throw new Error("Unauthorized");
-
-    const userRole = (session.user as any).role;
-    const userId = (session.user as any).id;
+    const numId = typeof id === "string" ? parseInt(id, 10) : id;
+    const { role, userId } = await requireAuth();
 
     const data = await prisma.taxData.findUnique({ where: { id: numId } });
     if (!data) throw new Error("Not found");
 
-    // Check permission
-    if (userRole === "PENARIK" && data.penarikId !== userId) {
+    // Check permission — PENARIK hanya bisa update miliknya
+    if (role === "PENARIK" && data.penarikId !== userId) {
       throw new Error("Anda tidak diperbolehkan mengubah data milik penarik lain.");
     }
 
@@ -49,11 +47,16 @@ export async function updatePaymentStatus(id: string | number, paymentStatus: "L
         paymentStatus,
         pembayaran,
         sisaTagihan: sisa,
-        tanggalBayar: paymentStatus === "LUNAS" ? now : null
-      }
+        tanggalBayar: paymentStatus === "LUNAS" ? now : null,
+      },
     });
 
-    await createAuditLog("UPDATE_PAYMENT", "TaxData", data.namaWp, `Ubah status pembayaran menjadi ${paymentStatus} (ID: ${numId})`);
+    await createAuditLog(
+      "UPDATE_PAYMENT",
+      "TaxData",
+      data.namaWp,
+      `Ubah status pembayaran menjadi ${paymentStatus} (ID: ${numId})`
+    );
 
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");
@@ -69,7 +72,7 @@ export async function getWpByRegion(dusun: string | null, rw: string | null, tah
       where: {
         tahun,
         dusun,
-        rw
+        rw,
       },
       select: {
         id: true,
@@ -82,8 +85,8 @@ export async function getWpByRegion(dusun: string | null, rw: string | null, tah
         ketetapan: true,
       },
       orderBy: {
-        namaWp: 'asc'
-      }
+        namaWp: "asc",
+      },
     });
     return { success: true, data };
   } catch (error: any) {
@@ -101,7 +104,7 @@ export async function getWpByPenarik(
   try {
     const whereClause: any = {
       tahun,
-      penarikId
+      penarikId,
     };
     if (paymentStatus) {
       whereClause.paymentStatus = paymentStatus;
@@ -122,14 +125,14 @@ export async function getWpByPenarik(
           paymentStatus: true,
         },
         orderBy: {
-          namaWp: 'asc'
+          namaWp: "asc",
         },
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
       prisma.taxData.count({
-        where: whereClause
-      })
+        where: whereClause,
+      }),
     ]);
     return { success: true, data, total };
   } catch (error: any) {
@@ -137,19 +140,20 @@ export async function getWpByPenarik(
   }
 }
 
-export async function updateWpRegion(id: number, dusun: string | null, rt: string | null, rw: string | null) {
+export async function updateWpRegion(
+  id: number,
+  dusun: string | null,
+  rt: string | null,
+  rw: string | null
+) {
   try {
     TaxRegionUpdateSchema.parse({ taxId: id, dusun, rt, rw });
-    const session = await getServerSession(authOptions);
-    if (!session) throw new Error("Unauthorized");
-
-    const userRole = (session.user as any).role;
-    const userId = (session.user as any).id;
+    const { role, userId } = await requireAuth();
 
     const data = await prisma.taxData.findUnique({ where: { id } });
     if (!data) throw new Error("Not found");
 
-    if (userRole === "PENARIK" && data.penarikId !== userId) {
+    if (role === "PENARIK" && data.penarikId !== userId) {
       throw new Error("Anda tidak diperbolehkan mengubah wilayah data milik penarik lain.");
     }
 
@@ -158,11 +162,16 @@ export async function updateWpRegion(id: number, dusun: string | null, rt: strin
       data: {
         dusun,
         rt,
-        rw
-      }
+        rw,
+      },
     });
 
-    await createAuditLog("UPDATE_REGION", "TaxData", data.namaWp, `Dusun: ${dusun}, RT: ${rt}, RW: ${rw} (ID: ${id})`);
+    await createAuditLog(
+      "UPDATE_REGION",
+      "TaxData",
+      data.namaWp,
+      `Dusun: ${dusun}, RT: ${rt}, RW: ${rw} (ID: ${id})`
+    );
 
     revalidatePath("/laporan");
     revalidatePath("/data-pajak");
@@ -172,21 +181,22 @@ export async function updateWpRegion(id: number, dusun: string | null, rt: strin
   }
 }
 
-export async function updateWpRegionBulk(ids: number[], dusun: string | null, rt: string | null, rw: string | null) {
+export async function updateWpRegionBulk(
+  ids: number[],
+  dusun: string | null,
+  rt: string | null,
+  rw: string | null
+) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) throw new Error("Unauthorized");
+    const { role, userId } = await requireAuth();
 
-    const userRole = (session.user as any).role;
-    const userId = (session.user as any).id;
-
-    if (userRole === "PENARIK") {
+    if (role === "PENARIK") {
       // Only allow updating if all IDs belong to this penarik
       const count = await prisma.taxData.count({
         where: {
           id: { in: ids },
-          penarikId: userId
-        }
+          penarikId: userId,
+        },
       });
       if (count !== ids.length) {
         throw new Error("Ada data pilihan yang bukan milik Anda.");
@@ -198,11 +208,16 @@ export async function updateWpRegionBulk(ids: number[], dusun: string | null, rt
       data: {
         dusun,
         rt,
-        rw
-      }
+        rw,
+      },
     });
 
-    await createAuditLog("UPDATE_REGION", "TaxData", null, `Ubah wilayah masal untuk ${ids.length} WP ke Dusun: ${dusun}, RT: ${rt}, RW: ${rw}`);
+    await createAuditLog(
+      "UPDATE_REGION",
+      "TaxData",
+      null,
+      `Ubah wilayah masal untuk ${ids.length} WP ke Dusun: ${dusun}, RT: ${rt}, RW: ${rw}`
+    );
 
     revalidatePath("/laporan");
     revalidatePath("/data-pajak");

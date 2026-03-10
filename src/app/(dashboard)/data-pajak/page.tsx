@@ -4,10 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export default async function DataPajakPage({ 
-  searchParams 
-}: { 
-  searchParams: Promise<{ q?: string; page?: string; tahun?: string; dusun?: string; rw?: string; rt?: string; penarik?: string }> 
+export default async function DataPajakPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    q?: string;
+    page?: string;
+    tahun?: string;
+    dusun?: string;
+    rw?: string;
+    rt?: string;
+    penarik?: string;
+    regionStatus?: string;
+  }>;
 }) {
   const session = await getServerSession(authOptions);
   const params = await searchParams;
@@ -18,16 +27,29 @@ export default async function DataPajakPage({
   const filterRw = params.rw || "";
   const filterRt = params.rt || "";
   const filterPenarik = params.penarik || "";
+  const regionStatus = params.regionStatus || "all";
   const pageSize = 50;
 
   const whereClause: any = {
     tahun,
-    OR: [
-      { nop: { contains: query } },
-      { namaWp: { contains: query } },
-      { alamatObjek: { contains: query } },
-    ]
+    AND: [],
   };
+
+  if (query) {
+    whereClause.AND.push({
+      OR: [
+        { nop: { contains: query } },
+        { namaWp: { contains: query } },
+        { alamatObjek: { contains: query } },
+      ],
+    });
+  }
+
+  if (regionStatus === "incomplete") {
+    whereClause.AND.push({
+      OR: [{ dusun: null }, { rw: null }, { rt: null }, { dusun: "" }, { rw: "" }, { rt: "" }],
+    });
+  }
 
   if (filterDusun) whereClause.dusun = filterDusun;
   if (filterRw) whereClause.rw = filterRw;
@@ -40,42 +62,53 @@ export default async function DataPajakPage({
     }
   }
 
+  if (whereClause.AND.length === 0) delete whereClause.AND;
+
   const [data, total, penariks, filterOptions, dusunRefsRaw] = await Promise.all([
     prisma.taxData.findMany({
       where: whereClause,
       include: {
-        penarik: true
+        penarik: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
     prisma.taxData.count({
-      where: whereClause
+      where: whereClause,
     }),
-    prisma.user.findMany({ where: { role: 'PENARIK' }, select: { id: true, name: true, dusun: true, rt: true, rw: true } }),
+    prisma.user.findMany({
+      where: { role: "PENARIK" },
+      select: { id: true, name: true, dusun: true, rt: true, rw: true },
+    }),
     prisma.taxData.findMany({
       where: { tahun },
       select: { dusun: true, rw: true, rt: true },
-      distinct: ['dusun', 'rw', 'rt']
+      distinct: ["dusun", "rw", "rt"],
     }),
     prisma.dusunReference.findMany({
       select: { name: true },
-      orderBy: { name: 'asc' }
-    })
+      orderBy: { name: "asc" },
+    }),
   ]);
 
   // Extract unique regions for filter dropdowns
-  const uniqueDusuns = Array.from(new Set(filterOptions.map((o: any) => o.dusun).filter(Boolean))) as string[];
-  const uniqueRws = Array.from(new Set(filterOptions.map((o: any) => o.rw).filter(Boolean))).sort() as string[];
-  const uniqueRts = Array.from(new Set(filterOptions.map((o: any) => o.rt).filter(Boolean))).sort() as string[];
+  const uniqueDusuns = Array.from(
+    new Set(filterOptions.map((o: any) => o.dusun).filter(Boolean))
+  ) as string[];
+  const uniqueRws = Array.from(
+    new Set(filterOptions.map((o: any) => o.rw).filter(Boolean))
+  ).sort() as string[];
+  const uniqueRts = Array.from(
+    new Set(filterOptions.map((o: any) => o.rt).filter(Boolean))
+  ).sort() as string[];
 
-  const availableFilters = { 
-    dusun: uniqueDusuns, 
-    rw: uniqueRws, 
+  const availableFilters = {
+    dusun: uniqueDusuns,
+    rw: uniqueRws,
     rt: uniqueRts,
     penarik: penariks.map((p: any) => ({ id: p.id, name: p.name })),
-    dusunRefs: dusunRefsRaw.map((d: any) => d.name)
+    dusunRefs: dusunRefsRaw.map((d: any) => d.name),
   };
 
   return (
@@ -92,11 +125,11 @@ export default async function DataPajakPage({
           <CardTitle>Daftar Wajib Pajak {tahun}</CardTitle>
         </CardHeader>
         <CardContent>
-          <TaxDataTable 
-            initialData={JSON.parse(JSON.stringify(data))} 
-            total={total} 
-            pageSize={pageSize} 
-            penariks={JSON.parse(JSON.stringify(penariks))} 
+          <TaxDataTable
+            initialData={JSON.parse(JSON.stringify(data))}
+            total={total}
+            pageSize={pageSize}
+            penariks={JSON.parse(JSON.stringify(penariks))}
             availableFilters={availableFilters}
             currentUser={session?.user as any}
           />

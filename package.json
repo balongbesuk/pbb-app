@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "lint:errors": "eslint src/ --quiet",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "audit:a11y": "node scripts/axe-audit.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
@@ -39,6 +44,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@axe-core/puppeteer": "^4.11.1",
     "@tailwindcss/postcss": "^4",
     "@types/adm-zip": "^0.5.7",
     "@types/exceljs": "^0.5.3",
@@ -49,8 +55,13 @@
     "autoprefixer": "^10.4.27",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
     "postcss": "^8.5.8",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "prisma": "^6.19.2",
+    "puppeteer": "^24.39.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5"

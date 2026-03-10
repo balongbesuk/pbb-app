@@ -10,7 +10,12 @@ import { TransferRequestSchema, formatZodError } from "@/lib/validations/schemas
 /**
  * Send a request to another penarik to take over or request a tax data
  */
-export async function sendTransferRequest(taxId: number, receiverId: string, type: "GIVE" | "TAKE" = "GIVE", message?: string) {
+export async function sendTransferRequest(
+  taxId: number,
+  receiverId: string,
+  type: "GIVE" | "TAKE" = "GIVE",
+  message?: string
+) {
   try {
     TransferRequestSchema.parse({ taxId, receiverId, type, message });
     const session = await getServerSession(authOptions);
@@ -20,7 +25,7 @@ export async function sendTransferRequest(taxId: number, receiverId: string, typ
     // 1. Verify tax data
     const taxData = await prisma.taxData.findUnique({
       where: { id: taxId },
-      include: { penarik: true }
+      include: { penarik: true },
     });
 
     if (!taxData) {
@@ -48,7 +53,7 @@ export async function sendTransferRequest(taxId: number, receiverId: string, typ
 
     // 2. Check if there's already a pending request for this tax item
     const existing = await prisma.transferRequest.findFirst({
-      where: { taxId, status: "PENDING" }
+      where: { taxId, status: "PENDING" },
     });
 
     if (existing) {
@@ -63,12 +68,15 @@ export async function sendTransferRequest(taxId: number, receiverId: string, typ
         receiverId,
         type,
         message,
-        status: "PENDING"
-      }
+        status: "PENDING",
+      },
     });
 
     // 5. Audit Log
-    const receiverUser = await prisma.user.findUnique({ where: { id: receiverId }, select: { name: true } });
+    const receiverUser = await prisma.user.findUnique({
+      where: { id: receiverId },
+      select: { name: true },
+    });
     const typeLabel = type === "GIVE" ? "penyerahan" : "pengambilan";
     await createAuditLog(
       "TRANSFER_REQUEST",
@@ -94,7 +102,7 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
 
     const request = await prisma.transferRequest.findUnique({
       where: { id: requestId },
-      include: { taxData: true, sender: true, receiver: true }
+      include: { taxData: true, sender: true, receiver: true },
     });
 
     if (!request || request.receiverId !== userId || request.status !== "PENDING") {
@@ -109,13 +117,13 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
       // 2. Perform the transfer
       await prisma.taxData.update({
         where: { id: request.taxId },
-        data: { penarikId: newPenarikId }
+        data: { penarikId: newPenarikId },
       });
 
       // 3. Update request status
       await prisma.transferRequest.update({
         where: { id: requestId },
-        data: { status: "ACCEPTED" }
+        data: { status: "ACCEPTED" },
       });
 
       // 4. Notify sender
@@ -123,15 +131,15 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
         data: {
           userId: request.senderId,
           title: "Permintaan Disetujui",
-          message: `${session.user?.name} telah menyetujui ${request.type === 'GIVE' ? 'penyerahan' : 'pengambilan'} data WP ${request.taxData.namaWp}.`,
+          message: `${session.user?.name} telah menyetujui ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`,
           type: "ACCEPTED",
-        }
+        },
       });
     } else {
       // 1. Update request status
       await prisma.transferRequest.update({
         where: { id: requestId },
-        data: { status: "REJECTED" }
+        data: { status: "REJECTED" },
       });
 
       // 2. Notify sender
@@ -139,9 +147,9 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
         data: {
           userId: request.senderId,
           title: "Permintaan Ditolak",
-          message: `${session.user?.name} menolak ${request.type === 'GIVE' ? 'penyerahan' : 'pengambilan'} data WP ${request.taxData.namaWp}.`,
+          message: `${session.user?.name} menolak ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`,
           type: "REJECTED",
-        }
+        },
       });
     }
 
@@ -162,7 +170,6 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
   }
 }
 
-
 /**
  * Get notifications for the current user
  */
@@ -174,7 +181,7 @@ export async function getNotifications() {
     return await prisma.notification.findMany({
       where: { userId: (session.user as any).id },
       orderBy: { createdAt: "desc" },
-      take: 10
+      take: 10,
     });
   } catch (error) {
     return [];
@@ -188,7 +195,7 @@ export async function markNotificationAsRead(id: string) {
   try {
     await prisma.notification.update({
       where: { id },
-      data: { isRead: true }
+      data: { isRead: true },
     });
     return { success: true };
   } catch (error) {
@@ -207,13 +214,13 @@ export async function getPendingRequests() {
     return await prisma.transferRequest.findMany({
       where: {
         receiverId: (session.user as any).id,
-        status: "PENDING"
+        status: "PENDING",
       },
       include: {
         taxData: true,
-        sender: true
+        sender: true,
       },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
     });
   } catch (error) {
     return [];

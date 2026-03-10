@@ -11,11 +11,8 @@ export function LaporanActionButtons({ tahun, currentUser }: { tahun: number; cu
   return (
     <div className="flex items-center gap-2 print:hidden">
       {currentUser?.role !== "PENGGUNA" && (
-        <Button 
-          className="gap-2 shadow-lg"
-          onClick={handleExport}
-        >
-          <Download className="w-4 h-4" />
+        <Button className="gap-2 shadow-lg" onClick={handleExport}>
+          <Download className="h-4 w-4" />
           Export Excel
         </Button>
       )}

@@ -4,23 +4,41 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
-  DialogClose
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { UserPlus, Loader2, Edit, Trash2, KeyRound } from "lucide-react";
 import { createUser, updateUser, resetPassword, deleteUser } from "@/app/actions/user-actions";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { ROLE_BADGE, type UserRoleKey } from "@/lib/role-config";
 
-export function UserDialog({ user, isEdit = false }: { user?: any, isEdit?: boolean }) {
+export function UserDialog({
+  user,
+  isEdit = false,
+  dusuns = [],
+}: {
+  user?: any;
+  isEdit?: boolean;
+  dusuns?: { id: string; name: string }[];
+}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string>(user?.role || "PENGGUNA");
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -35,14 +53,14 @@ export function UserDialog({ user, isEdit = false }: { user?: any, isEdit?: bool
     } else {
       result = await createUser(data);
     }
-    
+
     if (result.success) {
       toast.success(isEdit ? "Berhasil memperbarui pengguna" : "Berhasil menambahkan pengguna");
       setOpen(false);
     } else {
       toast.error(`Gagal menyimpan: ${result.message}`);
     }
-    
+
     setLoading(false);
   };
 
@@ -62,85 +80,204 @@ export function UserDialog({ user, isEdit = false }: { user?: any, isEdit?: bool
       <DialogTrigger
         render={
           isEdit ? (
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-primary">
-              <Edit className="w-4 h-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Edit profil pengguna"
+              className="hover:text-primary h-8 w-8"
+            >
+              <Edit className="h-4 w-4" />
             </Button>
           ) : (
             <Button className="gap-2">
-              <UserPlus className="w-4 h-4" />
+              <UserPlus className="h-4 w-4" />
               Tambah Akun
             </Button>
           )
         }
       />
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Pengguna" : "Tambah Akun Baru"}</DialogTitle>
-          <DialogDescription>
-            {isEdit ? "Ubah data akun form di bawah ini." : "Set password awal akan menggunakan 'pbb12345'"}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="overflow-hidden rounded-3xl border-none p-0 shadow-2xl sm:max-w-[480px]">
+        <div className="bg-primary/5 border-primary/10 border-b p-8">
+          <DialogHeader className="space-y-1">
+            <DialogTitle className="text-2xl font-bold tracking-tight">
+              {isEdit ? "Edit Profile Pengguna" : "Tambah Akun Baru"}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground/80 font-medium">
+              {isEdit
+                ? "Perbarui informasi akun di bawah ini."
+                : "Set password awal otomatis: 'pbb12345'"}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <form onSubmit={onSubmit} className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nama Lengkap</Label>
-            <Input id="name" name="name" required placeholder="Cth: Ach. Purnomo" defaultValue={user?.name || ""} />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input id="username" name="username" required placeholder="Cth: purnomo123" defaultValue={user?.username || ""} />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="role">Role / Peran</Label>
-            <select 
-              id="role" 
-              name="role" 
-              defaultValue={user?.role || "PENGGUNA"}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="PENGGUNA">Pengguna (View Only)</option>
-              <option value="PENARIK">Penarik (Lapangan)</option>
-              <option value="ADMIN">Admin Super</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 border-t border-border pt-4 mt-4">
+        <form onSubmit={onSubmit} className="space-y-6 p-8 pt-6">
+          <div className="grid gap-6">
             <div className="space-y-2">
-              <Label htmlFor="dusun">Dusun Area</Label>
-              <Input id="dusun" name="dusun" placeholder="Area Tugas" defaultValue={user?.dusun || ""} />
+              <Label
+                htmlFor="name"
+                className="text-muted-foreground ml-1 text-xs font-bold tracking-wider uppercase"
+              >
+                Nama Lengkap
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                required
+                placeholder="Cth: Ach. Purnomo"
+                defaultValue={user?.name || ""}
+                className="focus:ring-primary/20 h-11 rounded-xl border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+              />
             </div>
-            <div className="flex gap-2">
-              <div className="space-y-2 w-full">
-                <Label htmlFor="rt">RT</Label>
-                <Input id="rt" name="rt" placeholder="00" defaultValue={user?.rt || ""} />
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="username"
+                className="text-muted-foreground ml-1 text-xs font-bold tracking-wider uppercase"
+              >
+                Username
+              </Label>
+              <Input
+                id="username"
+                name="username"
+                required
+                placeholder="Cth: purnomo123"
+                defaultValue={user?.username || ""}
+                className="focus:ring-primary/20 h-11 rounded-xl border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="role"
+                className="text-muted-foreground ml-1 text-xs font-bold tracking-wider uppercase"
+              >
+                Role / Peran
+              </Label>
+              <Select
+                name="role"
+                defaultValue={user?.role || "PENGGUNA"}
+                onValueChange={setSelectedRole}
+              >
+                <SelectTrigger className="focus:ring-primary/20 h-11 w-full rounded-xl border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+                  <SelectValue placeholder="Pilih Peran" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PENGGUNA">Pengguna (View Only)</SelectItem>
+                  <SelectItem value="PENARIK">Penarik (Lapangan)</SelectItem>
+                  <SelectItem value="ADMIN">Admin Super</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* ─── Live badge preview ───────────────────────────── */}
+              {(() => {
+                const cfg = ROLE_BADGE[(selectedRole as UserRoleKey)] ?? ROLE_BADGE.PENGGUNA;
+                return (
+                  <div className="mt-2 flex items-center gap-2.5 rounded-xl border border-zinc-100 bg-zinc-50 px-3.5 py-2.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full border px-2.5 py-0.5",
+                        "text-[10px] font-black tracking-widest uppercase shadow-sm",
+                        cfg.badge
+                      )}
+                    >
+                      <span className={cn("h-1.5 w-1.5 rounded-full", cfg.dot)} aria-hidden="true" />
+                      {cfg.label}
+                    </Badge>
+                    <span className="text-muted-foreground text-xs">{cfg.desc}</span>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          <div className="space-y-4 rounded-2xl border border-zinc-100 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900">
+            <h4 className="text-muted-foreground/60 mb-2 px-1 text-[10px] font-black tracking-[0.2em] uppercase">
+              Wilayah Penugasan
+            </h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5 focus-within:ring-0">
+                <Label
+                  htmlFor="dusun"
+                  className="text-muted-foreground ml-1 text-[10px] font-bold uppercase"
+                >
+                  Dusun
+                </Label>
+                <Select name="dusun" defaultValue={user?.dusun || ""}>
+                  <SelectTrigger className="h-9 w-full rounded-lg border-zinc-200 bg-white text-xs dark:border-zinc-800 dark:bg-zinc-950">
+                    <SelectValue placeholder="Pilih Dusun" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Seluruh Dusun</SelectItem>
+                    {dusuns.map((d) => (
+                      <SelectItem key={d.id} value={d.name}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="space-y-2 w-full">
-                <Label htmlFor="rw">RW</Label>
-                <Input id="rw" name="rw" placeholder="00" defaultValue={user?.rw || ""} />
+              <div className="flex gap-2">
+                <div className="w-full space-y-1.5">
+                  <Label
+                    htmlFor="rt"
+                    className="text-muted-foreground ml-1 text-[10px] font-bold uppercase"
+                  >
+                    RT
+                  </Label>
+                  <Input
+                    id="rt"
+                    name="rt"
+                    placeholder="00"
+                    defaultValue={user?.rt || ""}
+                    className="h-9 rounded-lg bg-white text-xs dark:bg-zinc-950"
+                  />
+                </div>
+                <div className="w-full space-y-1.5">
+                  <Label
+                    htmlFor="rw"
+                    className="text-muted-foreground ml-1 text-[10px] font-bold uppercase"
+                  >
+                    RW
+                  </Label>
+                  <Input
+                    id="rw"
+                    name="rw"
+                    placeholder="00"
+                    defaultValue={user?.rw || ""}
+                    className="h-9 rounded-lg bg-white text-xs dark:bg-zinc-950"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="pt-4 flex flex-col-reverse sm:flex-row justify-between gap-3 border-t border-border mt-4">
+          <div className="flex flex-col items-center justify-between gap-4 pt-2 sm:flex-row">
             <div className="w-full sm:w-auto">
-               {isEdit && (
-                 <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full sm:w-auto gap-2 text-amber-600 hover:text-amber-700"
-                    onClick={handleResetPassword}
-                    disabled={resetting}
-                 >
-                   {resetting ? <Loader2 className="w-3 h-3 animate-spin"/> : <KeyRound className="w-3 h-3" />}
-                   Reset Password
-                 </Button>
-               )}
+              {isEdit && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full gap-2 rounded-xl text-amber-600 hover:bg-amber-50 hover:text-amber-700 sm:w-auto dark:hover:bg-amber-950/20"
+                  onClick={handleResetPassword}
+                  disabled={resetting}
+                >
+                  {resetting ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <KeyRound className="h-3 w-3" />
+                  )}
+                  Reset Password
+                </Button>
+              )}
             </div>
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-              {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="shadow-primary/20 h-11 w-full rounded-xl px-8 font-bold shadow-lg sm:w-auto"
+            >
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {isEdit ? "Simpan Perubahan" : "Simpan Akun"}
             </Button>
           </div>
@@ -168,27 +305,39 @@ export function DeleteUserButton({ id }: { id: string }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 disabled:pointer-events-none disabled:opacity-50 h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50"
-      >
-        <Trash2 className="w-4 h-4" />
+      <DialogTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-rose-950/50">
+        <Trash2 className="h-4 w-4" />
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[400px]">
-        <DialogHeader>
-          <DialogTitle className="text-destructive flex items-center gap-2">
-            <Trash2 className="w-5 h-5" />
-            Konfirmasi Penghapusan
-          </DialogTitle>
-          <DialogDescription>
-            Apakah Anda yakin ingin menghapus akun pengguna ini? Semua data terkait (seperti pembagian tugas) mungkin akan terpengaruh. Aksi ini tidak dapat dibatalkan.
-          </DialogDescription>
+      <DialogContent className="overflow-hidden rounded-3xl border-none p-8 shadow-2xl sm:max-w-[420px]">
+        <DialogHeader className="space-y-4">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-rose-50 text-rose-500 dark:bg-rose-950/30">
+            <Trash2 className="h-8 w-8" />
+          </div>
+          <div className="space-y-1 text-center">
+            <DialogTitle className="text-xl font-bold">Konfirmasi Hapus Akun</DialogTitle>
+            <DialogDescription className="text-muted-foreground/80 leading-relaxed font-medium">
+              Apakah Anda yakin ingin menghapus akun ini? Aksi ini akan menghapus akses pengguna
+              secara permanen dan tidak dapat dibatalkan.
+            </DialogDescription>
+          </div>
         </DialogHeader>
-        <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border">
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={loading}
+            className="h-11 rounded-xl border-zinc-200 px-8 font-bold dark:border-zinc-800"
+          >
             Batal
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={loading}>
-            {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={loading}
+            className="h-11 rounded-xl px-8 font-bold shadow-lg shadow-rose-500/20"
+          >
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Ya, Hapus Akun
           </Button>
         </div>
