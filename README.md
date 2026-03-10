@@ -20,16 +20,16 @@
 
 Sistem ini membagi batas wewenang ke dalam 3 level, demi menjaga integritas data pajak desa:
 
-1.  **SUPER_ADMIN (Kepala Desa / Sekdes / Kepala IT)**
-    *   **Wewenang:** Tertinggi. Memiliki akses penuh ke **Pusat Log Aktivitas** (Mata-mata sistem) dan fitur **Pengaturan Tingkat Lanjut** (Termasuk Backup & Restore Database, Reset Server, Hapus Total Data).
-    *   **Tugas:** Memantau siapa saja yang mengubah status pajak warga, memastikan integritas sistem lewat *Audit Trail*, dan menjaga ketersediaan arsip *(Backup)* ke Flashdisk.
-2.  **ADMIN (Kaur Keuangan / Admin PBB Desa)**
-    *   **Wewenang:** Menengah. Dapat mengelola **Data Pajak**, **Upload Excel DHKP**, **Download Laporan**, dan mengatur pembagian **Tugas Kolektor**.
-    *   **Batasan:** Tidak memiliki akses untuk melihat *Log Aktivitas*, tidak bisa melakukan hapus data massal *(Factory Reset)*, dan tidak bisa masuk ke menu Backup/Restore server.
-3.  **PETUGAS (Kepala Dusun / Perangkat Pengutip di Lapangan)**
-    *   **Wewenang:** Terendah, dirancang paling responsif di HP. Hanya dapat melihat daftar warga yang menjadi target wilayah tagihannya.
-    *   **Tugas:** Mengubah status dari **Belum Lunas** ➔ **Lunas**, melakukan pencarian nama warga saat *door-to-door*.
-    *   **Batasan:** Tidak mendapat porsi Dashboard luas, Laporan Excel, Upload Data PBB, apalagi Pengaturan Desa.
+1.  **ADMIN (Kepala Desa / Pejabat IT / Admin PBB)**
+    *   **Wewenang:** Tertinggi. Memiliki kendali penuh ke seluruh sistem aplikasi.
+    *   **Tugas:** Mengelola import Excel DHKP, mengatur distribusi wilayah *(Mapping RW)* ke tiap Penarik, memantau *Log Aktivitas*, serta melakukan operasional esensial seperti Backup Database dan Reset Tahun Pajak.
+2.  **PENARIK (Kepala Dusun / Ujung Tombak Lapangan)**
+    *   **Wewenang:** Khusus operasional penagihan, dirancang sangat ringan di perangkat Mobile (HP).
+    *   **Tugas:** Secara jemput-bola *(door-to-door)* mengubah status warga dari **Belum Lunas** ➔ **Lunas**. Dapat memantau dan mencari nama wajib pajak di dalam ruang lingkup teritorinya.
+    *   **Batasan:** Tidak memiliki akses masuk ke laman Pengaturan Server, tidak dapat mengunggah (Upload) raw data pajak keseluruhan.
+3.  **PENGGUNA (Akun Standar Baru / Staf)**
+    *   **Wewenang:** Hak akses terendah yang diberikan otomatis saat pendaftaran akun baru pertama kali.
+    *   **Batasan:** Belum memiliki izin (*Permission*) untuk mengubah transaksi pajak apapun hingga Sang ADMIN menaikkan pangkatnya menjadi PENARIK lapangan.
 
 ---
 

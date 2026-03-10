@@ -7,22 +7,23 @@ Selamat datang di PBB Manager, sebuah inovasi digital untuk mempercepat pendataa
 ## 👥 Pengenalan Hak Akses (*Roles*)
 Setiap pengguna diwajibkan untuk beroperasi sesuai jenis jabatannya.
 
-1. **👑 SUPER_ADMIN (Kepala Desa / Pejabat Tertinggi)**
+1. **👑 ADMIN (Kepala Desa / Pejabat IT / Admin Pusat)**
    - Dapat mereset, mem-backup, dan menghancurkan seluruh data.
-   - Mengendalikan pembuatan Akun Pengguna / Petugas.
-   - Dapat memata-matai semua aktivitas yang dilakukan bawahan di dalam sistem.
-2. **🛡️ ADMIN (Kaur Keuangan / Admin Pajak)**
-   - Eksekutor utama lapangan di depan komputer Balai Desa.
-   - Menguasai fitur Import DHKP dari Excel.
-   - Mengatur Pemetaan (Delegasi) RW/RT ke tiap *Petugas*.
-   - Mencetak laporan mutasi/penerimaan uang.
-3. **📱 PETUGAS (Kepala Dusun / Ujung Tombak)**
-   - Menggunakan sistem di genggaman HP.
-   - Hanya memiliki akses mengubah tombol **Belum Lunas** ➔ **Lunas**.
+   - Mengendalikan pembuatan Akun Pengguna / menaikkan jabatan Penarik.
+   - Dapat memata-matai semua aktivitas yang dilakukan bawahan di dalam sistem (*Log Audit*).
+   - Menguasai fitur Import DHKP dari Excel dan mencetak Laporan Kelurahan.
+   - Mengatur Pemetaan (Delegasi) RW/RT ke tiap *Penarik Pajak*.
+2. **📱 PENARIK (Kepala Dusun / Ujung Tombak)**
+   - Menggunakan sistem di genggaman HP secara responsif.
+   - Memiliki akses lapangan memungut uang dan mengubah tombol **Belum Lunas** ➔ **Lunas**.
+   - Hanya perlu berfokus pada nama warga di wilayah kewenangannya.
+3. **🛡️ PENGGUNA (Akun Baru / Standar)**
+   - Peran bawaan saat *User* baru pertama kali dibuat.
+   - Hak akses sangat minimal (hanya-baca) yang akan dipromosikan ke tingkat selanjutnya apabila dikonfirmasi oleh **ADMIN**.
 
 ---
 
-## 🚀 Panduan Admin & Super Admin (Operasi Balai Desa)
+## 🚀 Panduan Admin (Operasi Balai Desa)
 
 ### 1. Memulai Tahun Pajak Baru
 Setiap tahun baru, sebelum Excel PBB dibagikan ke warga, Admin harus menyiapkan database:
@@ -37,14 +38,14 @@ Apakah Anda ingin Kepala Dusun X cuma bisa menagih di RW 01?
 1. Masuk menu **Laporan**.
 2. Klik tab **Berdasarkan RW** atau **Berdasarkan RT**.
 3. Pada tabel wilayah tersebut, klik tombol ajaib biru bertulisan **Atur Penarik Masal**.
-4. Muncul *Popup*: Pilih jabatan/nama "Petugas" targetnya.
-5. Klik **Terapkan**. Ratusan NOP / surat tagihan otomatis masuk ke HP petugas tersebut secara kilat.
+4. Muncul *Popup*: Pilih jabatan/nama "Penarik" targetnya.
+5. Klik **Terapkan**. Ratusan NOP / surat tagihan otomatis masuk ke HP penarik tersebut secara kilat.
 
 ### 3. Mengawasi Dana & Operasional
 1. **Cek Pemasukan Real-Time**: Buka layar muka utama (Dashboard). Angka hijau persentase pencapaian serta klasemen "Top Kolektor" tidak bisa ditipu.
-2. **Mengusut Pelaku Penipuan/Kesalahan**: Buka layar **Log Aktivitas**. (Hanya Super Admin). 
+2. **Mengusut Pelaku Penipuan/Kesalahan**: Buka layar **Log Aktivitas**. 
    - Pilih *Action*: `MARK_PAID` atau `TRANSFER`.
-   - Cari kata kunci nama warga. Sistem akan memberitahu detail "Pada jam berapa Petugas siapa" yang memalsukan data.
+   - Cari kata kunci nama warga. Sistem akan memberitahu detail "Pada jam berapa Penarik siapa" yang memalsukan data.
 
 ### 4. Backup Data Mingguan (Darurat)
 1. Pergi ke **Pengaturan > Utilitas & Keamanan**.
@@ -53,7 +54,7 @@ Apakah Anda ingin Kepala Dusun X cuma bisa menagih di RW 01?
 
 ---
 
-## 📱 Panduan Petugas Penagih (Operasi Lapangan)
+## 📱 Panduan Penarik Pajak (Operasi Lapangan)
 
 ### 1. Menyimpan Aplikasi di HP Tanpa Sinyal (PWA / Offline)
 Sistem ini menggunakan kecerdasan aplikasi hibrida.
@@ -73,8 +74,8 @@ Ini pekerjaan utama Anda saat bertamu ke pintu warga.
 Jika si Wajib Pajak ternyata salah tempat dan bukan tanggung jawab Anda:
 1. Pada tabel Data Pajak tersebut, buka tombol titik tiga (`...`) di nama orangnya.
 2. Pilih **"Pindah Penugas / Alihkan Otoritas"**.
-3. Cari nama Petugas target sasaran Anda.
-4. Notifikasi akan diteruskan ke Petugas/Admin target untuk persetujuan (Acc).
+3. Cari nama Penarik target sasaran Anda.
+4. Notifikasi akan diteruskan ke Penarik/Admin target untuk persetujuan (Acc).
 
 ---
 *Manual ini disesuaikan untuk update terakhir - 2026*
