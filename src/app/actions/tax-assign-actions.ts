@@ -22,7 +22,8 @@ export async function assignPenarik(taxId: string, penarikId: string | null) {
       }
     });
 
-    await createAuditLog("ASSIGN_TAX", "TaxMapping", data.namaWp, `Ubah penugasan satu objek ke petugas UUID: ${penarikId || 'Dikosongkan'} (ID: ${taxId})`);
+    const penarik = penarikId ? await prisma.user.findUnique({ where: { id: penarikId }, select: { name: true } }) : null;
+    await createAuditLog("ASSIGN_TAX", "TaxMapping", data.namaWp, `Ubah penugasan objek WP ${data.namaWp} ke petugas: ${penarik?.name || 'Dikosongkan'}`);
 
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");
@@ -45,7 +46,8 @@ export async function assignPenarikBulk(taxIds: number[], penarikId: string | nu
       }
     });
 
-    await createAuditLog("ASSIGN_TAX", "TaxMapping", null, `Alokasi masal ${taxIds.length} WP ke petugas UUID: ${penarikId || 'Dikosongkan'}`);
+    const penarik = penarikId ? await prisma.user.findUnique({ where: { id: penarikId }, select: { name: true } }) : null;
+    await createAuditLog("ASSIGN_TAX", "TaxMapping", null, `Alokasi masal ${taxIds.length} WP ke petugas: ${penarik?.name || 'Dikosongkan'}`);
 
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");

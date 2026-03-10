@@ -137,6 +137,10 @@ export default async function AuditLogPage({
                           <>
                             Melakukan akses masuk ke sistem pada modul <span className="font-semibold text-primary not-italic">{getEntityLabel(log.entity)}</span>
                           </>
+                        ) : log.entity === "User" ? (
+                          <>
+                            Aktivitas manajemen pada <span className="font-semibold text-primary not-italic">{getEntityLabel(log.entity)}</span>
+                          </>
                         ) : log.entityId ? (
                           <>
                             Melakukan perubahan pada <span className="font-semibold text-primary not-italic">{getEntityLabel(log.entity)}</span>

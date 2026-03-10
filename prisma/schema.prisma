@@ -166,4 +166,8 @@ model AuditLog {
   entityId  String?  // e.g., TaxData ID or User ID being touched
   details   String?  // Additional JSON or string details
   createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
 }

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createAuditLog } from "./log-actions";
+import { TaxRegionUpdateSchema, formatZodError } from "@/lib/validations/schemas";
 import { z } from "zod";
 
 const statusSchema = z.object({
@@ -58,7 +59,7 @@ export async function updatePaymentStatus(id: string | number, paymentStatus: "L
     revalidatePath("/dashboard");
     return { success: true };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    return { success: false, message: formatZodError(error) };
   }
 }
 
@@ -86,7 +87,7 @@ export async function getWpByRegion(dusun: string | null, rw: string | null, tah
     });
     return { success: true, data };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    return { success: false, message: formatZodError(error) };
   }
 }
 
@@ -132,12 +133,13 @@ export async function getWpByPenarik(
     ]);
     return { success: true, data, total };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    return { success: false, message: formatZodError(error) };
   }
 }
 
 export async function updateWpRegion(id: number, dusun: string | null, rt: string | null, rw: string | null) {
   try {
+    TaxRegionUpdateSchema.parse({ taxId: id, dusun, rt, rw });
     const session = await getServerSession(authOptions);
     if (!session) throw new Error("Unauthorized");
 
@@ -166,7 +168,7 @@ export async function updateWpRegion(id: number, dusun: string | null, rt: strin
     revalidatePath("/data-pajak");
     return { success: true };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    return { success: false, message: formatZodError(error) };
   }
 }
 
@@ -206,6 +208,6 @@ export async function updateWpRegionBulk(ids: number[], dusun: string | null, rt
     revalidatePath("/data-pajak");
     return { success: true, count: ids.length };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    return { success: false, message: formatZodError(error) };
   }
 }

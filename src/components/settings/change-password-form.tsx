@@ -79,7 +79,7 @@ export function ChangePasswordForm() {
       </div>
 
       <div className="pt-2">
-        <Button disabled={loading} className="gap-2 w-full md:w-auto">
+        <Button type="submit" disabled={loading} className="gap-2 w-full md:w-auto">
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Ubah Password
         </Button>

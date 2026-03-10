@@ -78,7 +78,13 @@ Setelah setup selesai, sekarang kita siapkan tempat penyimpanan data:
 -   **Verifikasi Zod:** Seluruh input data divalidasi dengan ketat untuk mencegah kesalahan entri.
 -   **Audit Log:** Seluruh perubahan data penting terekam dengan jejak audit yang tidak bisa dihapus.
 -   **Database:** Seluruh data tersimpan secara aman di folder `prisma/dev.db`. Jangan hapus file tersebut.
--   **Backup:** Disarankan melakukan copy-paste folder seluruh aplikasi ke Flashdisk setiap minggu sebagai cadangan data.
+-   **Backup Keseluruhan:** Cadangan database berbentuk file `.zip`. Fitur ini difungsikan untuk menghindari kehilangan data jika suatu saat komputer desa rusak, terkena virus (seperti ransomware), atau perlu dipindahkan pelayanannya ke komputer yang baru (migrasi).
+    *   **Cara Pakai (Restore):** 
+        1. Ekstrak (Unzip) file backup yang telah diunduh (`pbb_backup_....zip`).
+        2. Di dalamnya terdapat file bernama `dev.db`.
+        3. Matikan aplikasi jika sedang berjalan (tekan `CTRL + C` di CMD).
+        4. Simpan file `dev.db` tersebut di dalam folder `prisma/` pada direktori instalasi aplikasi Anda, lalu timpa *(replace)* file lama yang ada di sana.
+        5. Nyalakan lagi aplikasinya. Seluruh data tagihan, pengguna, dan log seketika akan kembali seperti pada tanggal backup tersebut dilakukan.
 
 ---
 **Dibuat oleh Antigravity AI Assistant untuk Desa Terdigitalisasi - 2026**

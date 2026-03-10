@@ -5,12 +5,14 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createAuditLog } from "./log-actions";
+import { TransferRequestSchema, formatZodError } from "@/lib/validations/schemas";
 
 /**
  * Send a request to another penarik to take over or request a tax data
  */
 export async function sendTransferRequest(taxId: number, receiverId: string, type: "GIVE" | "TAKE" = "GIVE", message?: string) {
   try {
+    TransferRequestSchema.parse({ taxId, receiverId, type, message });
     const session = await getServerSession(authOptions);
     if (!session) throw new Error("Unauthorized");
     const senderId = (session.user as any).id;
@@ -77,7 +79,7 @@ export async function sendTransferRequest(taxId: number, receiverId: string, typ
 
     return { success: true };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    return { success: false, message: formatZodError(error) };
   }
 }
 
@@ -156,7 +158,7 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
 
     return { success: true };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    return { success: false, message: formatZodError(error) };
   }
 }
 

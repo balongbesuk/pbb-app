@@ -16,7 +16,7 @@ export async function deleteAllTaxData() {
     await prisma.$executeRawUnsafe('DELETE FROM "VillageRegion"');
     await prisma.$executeRawUnsafe('DELETE FROM "AddressLearning"');
     await prisma.$executeRawUnsafe('DELETE FROM "Notification"');
-    
+
     // Reset Village Config / Profile to empty defaults
     await prisma.$executeRawUnsafe('DELETE FROM "VillageConfig"');
     await prisma.$executeRawUnsafe(`
@@ -38,7 +38,7 @@ export async function getVillageConfig() {
   try {
     const config = await prisma.$queryRawUnsafe(`SELECT * FROM "VillageConfig" LIMIT 1`) as any[];
     if (config.length > 0) return config[0];
-    
+
     // If empty, create empty default and return it
     await prisma.$executeRawUnsafe(`
       INSERT OR IGNORE INTO "VillageConfig" (id, namaDesa, kecamatan, kabupaten, tahunPajak) 
@@ -51,14 +51,17 @@ export async function getVillageConfig() {
   }
 }
 
-export async function updateVillageConfig(data: { namaDesa: string, kecamatan: string, kabupaten: string, tahunPajak?: number }) {
+import { VillageConfigSchema, formatZodError } from "@/lib/validations/schemas";
+
+export async function updateVillageConfig(raw: any) {
   try {
+    const data = VillageConfigSchema.parse(raw);
     await prisma.$executeRawUnsafe(`
       UPDATE "VillageConfig" 
       SET namaDesa = ?, kecamatan = ?, kabupaten = ?
       WHERE id = 1
     `, data.namaDesa.toUpperCase(), data.kecamatan.toUpperCase(), data.kabupaten.toUpperCase());
-    
+
     if (data.tahunPajak) {
       await prisma.$executeRawUnsafe(`UPDATE "VillageConfig" SET tahunPajak = ? WHERE id = 1`, data.tahunPajak);
     }
@@ -66,7 +69,7 @@ export async function updateVillageConfig(data: { namaDesa: string, kecamatan: s
     revalidatePath("/settings");
     return { success: true };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    return { success: false, message: formatZodError(error) };
   }
 }
 
@@ -80,11 +83,11 @@ export async function addDusun(name: string) {
   try {
     const normalized = name.trim().toUpperCase();
     if (!normalized) throw new Error("Nama dusun tidak boleh kosong");
-    
+
     await prisma.dusunReference.create({
       data: { name: normalized }
     });
-    
+
     revalidatePath("/settings");
     return { success: true };
   } catch (error: any) {
@@ -120,10 +123,10 @@ export async function addRegionOtomation(type: "RT" | "RW", code: string, dusun:
   try {
     const normCode = code.trim().padStart(2, '0');
     if (!normCode || !dusun) throw new Error("Kode dan Dusun harus diisi");
-    
+
     // Manual Upsert using raw queries
     const existing = await prisma.$queryRawUnsafe(
-      `SELECT id FROM "RegionOtomation" WHERE code = ?`, 
+      `SELECT id FROM "RegionOtomation" WHERE code = ?`,
       normCode
     ) as any[];
 
@@ -139,7 +142,7 @@ export async function addRegionOtomation(type: "RT" | "RW", code: string, dusun:
         id, type, normCode, dusun
       );
     }
-    
+
     revalidatePath("/settings");
     return { success: true };
   } catch (error: any) {
