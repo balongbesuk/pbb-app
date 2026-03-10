@@ -143,14 +143,14 @@ export default async function LaporanPage({ searchParams }: { searchParams: Prom
             <Table className="print:w-full">
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableHead className="w-[200px] min-w-[150px]">Penarik / Kolektor</TableHead>
-                  <TableHead className="text-center">WP</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Lunas</TableHead>
-                  <TableHead className="text-center hidden sm:table-cell">Belum</TableHead>
-                  <TableHead className="text-right hidden md:table-cell">Target</TableHead>
-                  <TableHead className="text-right">Realisasi</TableHead>
-                  <TableHead className="text-right hidden lg:table-cell">Sisa</TableHead>
-                  <TableHead className="text-right">Progress</TableHead>
+                  <TableHead className="w-[200px] min-w-[150px] text-sm font-bold uppercase tracking-wider">Penarik / Kolektor</TableHead>
+                  <TableHead className="text-center text-sm font-bold uppercase tracking-wider">WP</TableHead>
+                  <TableHead className="text-center hidden sm:table-cell text-sm font-bold uppercase tracking-wider">Lunas</TableHead>
+                  <TableHead className="text-center hidden sm:table-cell text-sm font-bold uppercase tracking-wider">Belum</TableHead>
+                  <TableHead className="text-right hidden md:table-cell text-sm font-bold uppercase tracking-wider">Target</TableHead>
+                  <TableHead className="text-right text-sm font-bold uppercase tracking-wider">Realisasi</TableHead>
+                  <TableHead className="text-right hidden lg:table-cell text-sm font-bold uppercase tracking-wider">Sisa</TableHead>
+                  <TableHead className="text-right text-sm font-bold uppercase tracking-wider">Progress</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -162,18 +162,18 @@ export default async function LaporanPage({ searchParams }: { searchParams: Prom
                   
                   return (
                     <TableRow key={index} className="hover:bg-muted/30">
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                      <TableCell className="py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
                             {stat.penarikName.charAt(0)}
                           </div>
-                          <div>
-                            <div className="font-bold">{stat.penarikName}</div>
-                            {stat.penarikDusun && <div className="text-[10px] text-muted-foreground">Wilayah: {stat.penarikDusun}</div>}
+                          <div className="min-w-0">
+                            <div className="font-bold text-sm truncate">{stat.penarikName}</div>
+                            {stat.penarikDusun && <div className="text-xs text-muted-foreground truncate">Wilayah: {stat.penarikDusun}</div>}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center text-sm font-medium">
                         <PenarikWpDialog 
                           penarikId={stat.penarikId} 
                           penarikName={stat.penarikName} 
@@ -193,7 +193,7 @@ export default async function LaporanPage({ searchParams }: { searchParams: Prom
                           paymentStatus="LUNAS"
                           currentUser={currentUser}
                         >
-                          <div className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                          <div className="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
                             {stat.lunasCount}
                           </div>
                         </PenarikWpDialog>
@@ -208,17 +208,17 @@ export default async function LaporanPage({ searchParams }: { searchParams: Prom
                           paymentStatus="BELUM_LUNAS"
                           currentUser={currentUser}
                         >
-                          <div className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
+                          <div className="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
                             {stat.belumLunasCount}
                           </div>
                         </PenarikWpDialog>
                       </TableCell>
-                      <TableCell className="text-right hidden md:table-cell text-xs">{formatCurrency(target)}</TableCell>
-                      <TableCell className="text-right font-bold text-emerald-600 dark:text-emerald-400 text-xs">{formatCurrency(realisasi)}</TableCell>
-                      <TableCell className="text-right font-medium text-rose-600 hidden lg:table-cell text-xs">{formatCurrency(sisa)}</TableCell>
+                      <TableCell className="text-right hidden md:table-cell text-sm">{formatCurrency(target)}</TableCell>
+                      <TableCell className="text-right font-bold text-emerald-600 dark:text-emerald-400 text-sm">{formatCurrency(realisasi)}</TableCell>
+                      <TableCell className="text-right font-medium text-rose-600 hidden lg:table-cell text-sm">{formatCurrency(sisa)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex flex-col items-end gap-1">
-                          <span className="text-[10px] font-black">{percent.toFixed(0)}%</span>
+                          <span className="text-xs font-black">{percent.toFixed(0)}%</span>
                           <div className="w-12 sm:w-16 h-1.5 bg-muted rounded-full overflow-hidden">
                             <div 
                               className={`h-full ${percent >= 80 ? 'bg-emerald-500' : percent >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`}
@@ -232,21 +232,21 @@ export default async function LaporanPage({ searchParams }: { searchParams: Prom
                 })}
                 {combinedStats.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground text-sm">
                       Belum ada data pajak untuk tahun ini.
                     </TableCell>
                   </TableRow>
                 )}
                 {combinedStats.length > 0 && (
-                  <TableRow className="bg-primary/5 hover:bg-primary/10 transition-colors font-bold text-xs sm:text-sm">
-                    <TableCell>TOTAL</TableCell>
+                  <TableRow className="bg-primary/5 hover:bg-primary/10 transition-colors font-bold text-sm">
+                    <TableCell className="py-4">TOTAL</TableCell>
                     <TableCell className="text-center">{totalWp}</TableCell>
                     <TableCell className="text-center hidden sm:table-cell">{totalWpLunas}</TableCell>
                     <TableCell className="text-center hidden sm:table-cell">{totalWpBelumLunas}</TableCell>
                     <TableCell className="text-right hidden md:table-cell">{formatCurrency(totalTarget)}</TableCell>
-                    <TableCell className="text-right text-emerald-700 dark:text-emerald-400">{formatCurrency(totalRealisasi)}</TableCell>
-                    <TableCell className="text-right hidden lg:table-cell">{formatCurrency(totalSisa)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right text-emerald-700 dark:text-emerald-400 font-black">{formatCurrency(totalRealisasi)}</TableCell>
+                    <TableCell className="text-right hidden lg:table-cell text-rose-700 dark:text-rose-400">{formatCurrency(totalSisa)}</TableCell>
+                    <TableCell className="text-right font-black">
                       {((totalRealisasi / (totalTarget || 1)) * 100).toFixed(0)}%
                     </TableCell>
                   </TableRow>
