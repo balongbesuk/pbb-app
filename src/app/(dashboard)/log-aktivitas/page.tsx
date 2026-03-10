@@ -133,7 +133,11 @@ export default async function AuditLogPage({
                       </div>
 
                       <p className="text-sm text-foreground/80 leading-relaxed italic">
-                        {log.entityId ? (
+                        {log.action === "LOGIN" ? (
+                          <>
+                            Melakukan akses masuk ke sistem pada modul <span className="font-semibold text-primary not-italic">{getEntityLabel(log.entity)}</span>
+                          </>
+                        ) : log.entityId ? (
                           <>
                             Melakukan perubahan pada <span className="font-semibold text-primary not-italic">{getEntityLabel(log.entity)}</span>
                             <span className="not-italic">
