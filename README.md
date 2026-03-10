@@ -1,6 +1,3 @@
-<img width="2537" height="941" alt="image" src="https://github.com/user-attachments/assets/de9d301d-7095-49ca-b683-6cdc57a4ea22" />
-
-
 # 🏦 PBB Manager - Sistem Manajemen Pajak Desa
 
 **PBB Manager** adalah aplikasi web modern masa kini untuk membantu Pemerintah Desa/Kelurahan dalam mengelola pendataan, penagihan, dan pelaporan Pajak Bumi dan Bangunan (PBB) secara akurat, cepat, dan transparan.
@@ -9,11 +6,17 @@
 
 ## 🔥 Fitur Unggulan
 
--   **Dashboard Visual:** Pantau persentase penagihan harian dan grafik tren bulanan.
+-   **Dashboard Visual:** Pantau persentase penagihan harian dan grafik tren bulanan secara *real-time*.
 -   **Import Cepat:** Unggah ribuan data DHKP dari Excel dalam hitungan detik.
--   **Alokasi Otomatis:** Deteksi RT/RW dan Dusun dari alamat warga secara sitematis.
+-   **Alokasi Otomatis:** Deteksi RT/RW dan Dusun dari alamat warga secara sistematis.
 -   **Tugas Penarik:** Bagi daftar tagihan ke setiap petugas lapangan dengan satu klik.
--   **Audit Aktivitas:** Catat siapa yang melakukan transaksi lunas untuk mencegah selisih uang.
+-   **Audit Trail Lanjut:** 
+    *   **Pencatatan Aktivitas:** Rekam setiap aksi petugas (Lunas, Batal Lunas, Pindah Wilayah).
+    *   **Pencarian & Paginasi:** Cari aksi berdasarkan nama Wajib Pajak atau petugas dengan cepat.
+    *   **Log Login:** Pantau waktu masuk setiap petugas untuk keamanan sistem.
+-   **Notifikasi Pintar:**
+    *   **Penyaluran Pajak:** Terima atau tolak permintaan penyerahan data antar petugas langsung dari lonceng notifikasi.
+    *   **Mark All Read:** Bersihkan riwayat pemberitahuan dengan satu tombol.
 -   **Laporan Excel:** Cetak rekapitulasi lunas/belum lunas per RW yang siap dilaporkan ke Kecamatan.
 -   **Responsif:** Sangat nyaman dibuka melalui HP atau Tablet oleh petugas saat menagih ke rumah warga.
 
@@ -63,6 +66,8 @@ Untuk penggunaan sehari-hari di kantor, jalankan perintah berikut:
 ---
 
 ## 🔒 Keamanan & Pemeliharaan
+-   **Verifikasi Zod:** Seluruh input data divalidasi dengan ketat untuk mencegah kesalahan entri.
+-   **Audit Log:** Seluruh perubahan data penting terekam dengan jejak audit yang tidak bisa dihapus.
 -   **Database:** Seluruh data tersimpan secara aman di folder `prisma/dev.db`. Jangan hapus file tersebut.
 -   **Backup:** Disarankan melakukan copy-paste folder seluruh aplikasi ke Flashdisk setiap minggu sebagai cadangan data.
 
