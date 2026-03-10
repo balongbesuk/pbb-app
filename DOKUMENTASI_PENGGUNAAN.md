@@ -1,79 +1,183 @@
-# 📖 Buku Pintar & Panduan Penggunaan PBB Manager
+# 📖 Panduan Penggunaan PBB Manager
 
-Selamat datang di PBB Manager, sebuah inovasi digital untuk mempercepat pendataan dan penarikan pajak di Desa secara transparan dan aman.
-
----
-
-## 👥 Pengenalan Hak Akses (*Roles*)
-Setiap pengguna diwajibkan untuk beroperasi sesuai jenis jabatannya.
-
-1. **👑 ADMIN (Kepala Desa / Pejabat IT / Admin Pusat)**
-   - Dapat mereset, mem-backup, dan menghancurkan seluruh data.
-   - Mengendalikan pembuatan Akun Pengguna / menaikkan jabatan Penarik.
-   - Dapat memata-matai semua aktivitas yang dilakukan bawahan di dalam sistem (*Log Audit*).
-   - Menguasai fitur Import DHKP dari Excel dan mencetak Laporan Kelurahan.
-   - Mengatur Pemetaan (Delegasi) RW/RT ke tiap *Penarik Pajak*.
-2. **📱 PENARIK (Kepala Dusun / Ujung Fokus Lapangan)**
-   - Menggunakan sistem di genggaman HP secara responsif.
-   - Memiliki akses lapangan memungut uang dan mengubah tombol **Belum Lunas** ➔ **Lunas**.
-   - Hanya perlu berfokus pada nama warga di wilayah kewenangannya.
-3. **🛡️ PENGGUNA (Akun Baru / Standar)**
-   - Peran bawaan saat *User* baru pertama kali dibuat.
-   - Hak akses sangat minimal (hanya-baca) yang akan dipromosikan ke tingkat selanjutnya apabila dikonfirmasi oleh **ADMIN**.
+Selamat datang di **PBB Manager** — sistem digital untuk mempercepat pendataan dan penarikan Pajak Bumi dan Bangunan secara transparan dan terkoordinasi.
 
 ---
 
-## 🚀 Panduan Admin (Operasi Balai Desa)
+## 👥 Pengenalan Peran Pengguna
 
-### 1. Memulai Tahun Pajak Baru
-Setiap tahun baru, sebelum Excel PBB dibagikan ke warga, Admin harus menyiapkan database:
-1. Pastikan menu **Pengaturan > Referensi Dusun** sudah diisi dengan nama persis sesuai yang sering diketik orang di Excel.
-2. Buka menu **Upload Data PBB**.
-3. Di sana, Anda bisa klik tombol "Format Excel" jika bingung bentuk kolom urutan data aslinya.
-4. Tentukan **Tahun Pajak** (Misal: 2026).
-5. Masukkan file Excel (maksimal puluhan ribu baris) lalu klik **Mulai Import**.
+Setiap pengguna beroperasi sesuai peran yang ditetapkan oleh Admin.
 
-### 2. Membagi Rombongan Wajib Pajak (Mapping Area)
-Apakah Anda ingin Kepala Dusun X cuma bisa menagih di RW 01?
-1. Masuk menu **Laporan**.
-2. Klik tab **Berdasarkan RW** atau **Berdasarkan RT**.
-3. Pada tabel wilayah tersebut, klik tombol ajaib biru bertulisan **Atur Penarik Masal**.
-4. Muncul *Popup*: Pilih jabatan/nama "Penarik" targetnya.
-5. Klik **Terapkan**. Ratusan NOP / surat tagihan otomatis masuk ke penarik tersebut secara kilat.
-
-### 3. Mengawasi Dana & Operasional
-1. **Cek Pemasukan Real-Time**: Buka layar muka utama (Dashboard). Angka hijau persentase pencapaian serta klasemen "Top Kolektor" tidak bisa ditipu.
-2. **Mengusut Pelaku Penipuan/Kesalahan**: Buka layar **Log Aktivitas**. 
-   - Pilih *Action*: `MARK_PAID` atau `TRANSFER`.
-   - Cari kata kunci nama warga. Sistem akan memberitahu detail "Pada jam berapa Penarik siapa" yang memalsukan data.
-
-### 4. Backup Data Mingguan (Darurat)
-1. Pergi ke **Pengaturan > Utilitas & Keamanan**.
-2. Tekan **Unduh File Backup**.
-3. Sistem akan membuat bungkusan `pbb_backup_...zip`. Simpan ini di Flashdisk / Google Drive.
+| Peran | Lambang | Akses |
+|---|---|---|
+| **ADMIN** | 👑 | Penuh — kelola semua fitur sistem |
+| **PENARIK** | 📱 | Lapangan — tagih WP di wilayah sendiri |
+| **PENGGUNA** | 🛡️ | Hanya-baca — belum punya izin operasional |
 
 ---
 
-## 📱 Panduan Penarik Pajak (Operasi Lapangan)
+## 👑 Panduan Admin
+
+### 1. Login & Keamanan Akun
+
+1. Buka aplikasi di browser, masukkan **username** dan **password**
+2. Setelah login pertama kali, segera ganti password di **Pengaturan > Profil > Ganti Password**
+3. Sesi akan otomatis berakhir setelah **8 jam** tidak aktif
+
+> ⚠️ Sistem membatasi **10 percobaan login gagal** per 15 menit untuk mencegah akses tidak sah.
+
+---
+
+### 2. Memulai Tahun Pajak Baru
+
+Setiap awal tahun, lakukan langkah berikut sebelum Excel DHKP dibagikan:
+
+**A. Siapkan Referensi Dusun**
+1. Buka menu **Pengaturan > Referensi Dusun**
+2. Tambahkan nama semua dusun yang ada persis sesuai penulisan di file Excel
+3. Daftar ini digunakan sistem untuk mendeteksi dan memetakan alamat secara otomatis
+
+**B. Upload Data PBB**
+1. Buka menu **Upload Data PBB**
+2. Klik **Unduh Format Excel** jika butuh contoh format kolom yang benar
+3. Pilih **Tahun Pajak** (contoh: 2026)
+4. Pilih file Excel DHKP (.xlsx) lalu klik **Mulai Import**
+5. Tunggu proses selesai — sistem akan menampilkan ringkasan hasil import
+
+---
+
+### 3. Membagi Wilayah & Mendelegasikan Penarik
+
+**Bulk Assign (Satu Area ke Satu Penarik):**
+1. Buka menu **Laporan**
+2. Pilih tab **Berdasarkan RW** atau **Berdasarkan RT**
+3. Klik tombol **Atur Penarik** pada baris wilayah yang ingin didelegasikan
+4. Pilih nama Penarik dari daftar lalu klik **Terapkan**
+
+**Assign Per-WP:**
+1. Buka menu **Data Pajak**
+2. Temukan nama WP yang ingin dialihkan
+3. Klik ikon **Edit** pada baris tersebut dan pilih penarik yang tepat
+
+---
+
+### 4. Mengelola Akun Pengguna
+
+1. Buka menu **Pengguna**
+2. Klik **Tambah Akun** untuk membuat pengguna baru
+   - Password awal: sesuai konfigurasi (default: `pbb12345`)
+   - Informasikan password ini ke pengguna bersangkutan untuk segera diganti
+3. Klik ikon ✏️ pada kartu pengguna untuk mengubah data atau peran
+4. Klik ikon 🔑 di dalam form edit untuk **Reset Password** ke password default
+5. Klik ikon 🗑️ untuk menghapus akun (khusus non-Admin)
+
+---
+
+### 5. Memantau Aktivitas Sistem
+
+1. Buka menu **Log Aktivitas**
+2. Gunakan kolom pencarian untuk mencari berdasarkan:
+   - Nama pengguna
+   - Jenis aksi (contoh: `LOGIN`, `UPDATE_PAYMENT`, `DELETE_USER`)
+   - Nama WP atau entitas terkait
+3. Setiap perubahan tercatat lengkap: **siapa, apa, kapan**
+
+---
+
+### 6. Backup & Restore Data
+
+**Backup Rutin (disarankan seminggu sekali):**
+1. Buka **Pengaturan > Utilitas & Keamanan**
+2. Klik **Unduh File Backup** — file SQL akan otomatis terunduh
+3. Simpan file backup di lokasi aman (flashdisk / cloud storage)
+
+**Restore Database:**
+1. Di halaman yang sama, klik **Pulihkan Database**
+2. Pilih file backup (.sql) yang ingin dipulihkan
+3. Konfirmasi — data saat ini akan diganti dengan isi backup
+
+**⚠️ Hapus Seluruh Data (Reset Tahun Pajak):**
+1. Klik **Hapus Seluruh Data** — hanya untuk pergantian tahun pajak
+2. Ketik **`HAPUS SEMUA DATA`** di kolom konfirmasi
+3. Klik **Ya, Bersihkan Database**
+4. Tindakan ini **tidak dapat dibatalkan** — pastikan backup sudah ada
+
+---
+
+## 📱 Panduan Penarik Pajak
 
 ### 1. Membuka Aplikasi di HP
-Aplikasi ini dirancang responsif untuk memudahkan penggunaan di perangkat mobile.
-1. Buka Chrome Android / Safari iPhone, lalu masukkan Link yang diberikan Kepala Desa (contoh: `192.168.1.1:3000`).
-2. Masukkan Username dan Password Anda untuk masuk ke sistem.
 
-### 2. Melatih Jempol Mengutip Pajak
-Ini pekerjaan utama Anda saat bertamu ke pintu warga.
-1. Klik dan masuk ke **Data Pajak**.
-2. Anda bisa mengetik nama pak RT, atau nama spesifik Mbah di kotak pensil (Pencarian).
-3. Jika bapak/ibu tersebut sudah bayar uang lembaran rupiahnya ke Anda, tekan status tagihan berwarna Merah (**Belum Lunas**).
-4. Kotak persetujuan kecil akan muncul, lalu tekan **"Tandai Lunas"**. 
-
-### 3. Oper Over Tagihan (Memindah Warga)
-Jika si Wajib Pajak ternyata salah tempat dan bukan tanggung jawab Anda:
-1. Pada tabel Data Pajak tersebut, buka tombol titik tiga (`...`) di nama orangnya.
-2. Pilih **"Pindah Penugas / Alihkan Otoritas"**.
-3. Cari nama Penarik target sasaran Anda.
-4. Notifikasi akan diteruskan ke Penarik/Admin target untuk persetujuan (Acc).
+1. Buka browser (Chrome/Safari), masukkan alamat yang diberikan Admin  
+   Contoh: `http://192.168.1.1:3000`
+2. Masukkan **username** dan **password** yang diberikan oleh Admin
+3. Setelah login, segera ganti password di **Pengaturan > Profil**
 
 ---
-*Manual ini disesuaikan untuk update terakhir - 2026*
+
+### 2. Menandai Wajib Pajak Sudah Lunas
+
+Ini adalah tugas utama saat bertemu langsung dengan warga:
+
+1. Buka menu **Data Pajak**
+2. Cari nama warga menggunakan kotak pencarian (nama, NOP, atau alamat)
+3. Klik badge status **Belum Lunas** (warna merah) pada baris warga yang sudah membayar
+4. Konfirmasi di dialog yang muncul → klik **Tandai Lunas**
+5. Status berubah menjadi **Lunas** (hijau) dan tercatat otomatis dengan waktu pembayaran
+
+---
+
+### 3. Mengalihkan Tagihan ke Penarik Lain
+
+Jika Wajib Pajak ternyata bukan di wilayah tanggung jawab Anda:
+
+1. Di tabel **Data Pajak**, klik ikon **⇄ Transfer** pada baris WP tersebut
+2. Pilih jenis: **Serahkan** (kirim ke penarik lain) atau **Ambil Alih** (minta dari penarik lain)
+3. Pilih nama Penarik tujuan dan tulis pesan opsional
+4. Klik **Kirim Permintaan** — Penarik tujuan akan mendapat notifikasi untuk menyetujui/menolak
+
+---
+
+### 4. Melihat Notifikasi Transfer
+
+1. Klik ikon 🔔 di sudut kanan atas
+2. Notifikasi transfer masuk akan tampil di sini
+3. Buka detail untuk **Setujui** atau **Tolak** permintaan
+
+---
+
+## 🛡️ Panduan Pengguna (Akun Baru)
+
+Akun baru secara default mendapat peran **PENGGUNA** dengan akses hanya-baca.
+
+Yang bisa dilakukan:
+- Melihat data pajak (tidak bisa mengubah)
+- Melihat laporan
+- Mengubah password sendiri di **Pengaturan > Profil**
+
+Untuk mendapatkan akses lebih, hubungi **Admin** untuk menaikkan peran menjadi **PENARIK**.
+
+---
+
+## ❓ FAQ & Troubleshooting
+
+**Q: Saya lupa password, bagaimana cara reset?**  
+Hubungi Admin untuk melakukan reset password. Admin bisa mereset password dari menu **Pengguna > Edit**.
+
+**Q: Login terus gagal padahal username & password sudah benar?**  
+Pastikan tidak ada spasi di awal/akhir username. Jika muncul pesan *"Terlalu banyak percobaan"*, tunggu 15 menit sebelum mencoba lagi.
+
+**Q: Status WP tidak berubah setelah ditandai Lunas?**  
+Coba refresh halaman. Jika masih tidak berubah, pastikan koneksi internet stabil dan coba lagi.
+
+**Q: Error saat upload Excel?**  
+- Pastikan format file adalah `.xlsx` (bukan `.xls` atau `.csv`)
+- Pastikan kolom di Excel sesuai dengan format template yang bisa diunduh
+- Pastikan tidak ada baris kosong di tengah data
+
+**Q: Aplikasi lambat di HP?**  
+Coba close tab browser lain. Gunakan Chrome versi terbaru untuk performa optimal.
+
+---
+
+*Dokumentasi terakhir diperbarui: Maret 2026*
