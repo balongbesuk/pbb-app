@@ -5,6 +5,8 @@ import type { NextRequest } from "next/server";
  * proxy.ts — Rate limiting untuk endpoint auth (login).
  * (Renamed dari middleware.ts sesuai konvensi Next.js 16)
  *
+ * Ekspor fungsi harus bernama 'proxy' (bukan 'middleware') di Next.js 16.
+ *
  * Aturan:
  *  - Max 10 percobaan login per 15 menit per IP
  *  - Request lain diteruskan tanpa batasan
@@ -26,7 +28,7 @@ function getClientIp(req: NextRequest): string {
   );
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Hanya terapkan rate limit pada POST ke endpoint login
