@@ -127,7 +127,7 @@ export default function UploadPBBPage() {
               variant="outline"
               size="sm"
               onClick={() => window.open("/api/download-template", "_blank")}
-              className="h-9 rounded-xl border-zinc-100 text-[10px] font-bold hover:bg-zinc-50 sm:text-xs dark:border-zinc-800 dark:hover:bg-zinc-900"
+              className="h-9 rounded-xl border-zinc-100 text-xs font-bold hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
             >
               <Download className="mr-2 h-4 w-4" /> Format Excel
             </Button>
@@ -165,7 +165,7 @@ export default function UploadPBBPage() {
                 <p className="text-foreground text-sm font-bold">
                   {file ? file.name : "Klik atau seret file ke sini"}
                 </p>
-                <p className="text-muted-foreground text-[10px] font-medium tracking-widest uppercase">
+                <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">
                   Maksimal 20MB (.xlsx)
                 </p>
               </div>
@@ -183,7 +183,7 @@ export default function UploadPBBPage() {
             {isUploading && (
               <div className="space-y-3 pt-2">
                 <div className="flex items-end justify-between">
-                  <span className="text-primary text-[10px] font-bold tracking-widest uppercase">
+                  <span className="text-primary text-xs font-bold tracking-widest uppercase">
                     Memproses Data...
                   </span>
                   <span className="text-xs font-black">{progress}%</span>
@@ -215,10 +215,10 @@ export default function UploadPBBPage() {
               <AlertCircle className="h-5 w-5 text-blue-500" />
             </div>
             <div className="space-y-3">
-              <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+              <p className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
                 Aturan Import
               </p>
-              <ul className="text-foreground/70 space-y-2.5 text-[10px] font-bold tracking-tight">
+              <ul className="text-foreground/70 space-y-2.5 text-xs font-bold tracking-tight">
                 <li className="flex gap-2">
                   <div className="mt-1 h-1 w-1 shrink-0 rounded-full bg-blue-500" />
                   Format kolom Excel harus sesuai template
@@ -241,17 +241,17 @@ export default function UploadPBBPage() {
             </div>
             <div className="space-y-4">
               <div>
-                <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+                <p className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
                   Reset Data
                 </p>
-                <p className="text-muted-foreground/60 text-[10px] font-medium">
+                <p className="text-muted-foreground/60 text-xs font-medium">
                   Hapus seluruh data pada tahun terpilih.
                 </p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-10 w-full rounded-xl border-rose-100 text-[10px] font-bold text-rose-600 transition-all hover:bg-rose-50 dark:border-rose-900/50 dark:hover:bg-rose-950"
+                className="h-10 w-full rounded-xl border-rose-100 text-xs font-bold text-rose-600 transition-all hover:bg-rose-50 dark:border-rose-900/50 dark:hover:bg-rose-950"
                 disabled={isClearing}
                 onClick={() => {
                   setResetConfirmText("");

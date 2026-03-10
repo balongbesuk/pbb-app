@@ -86,7 +86,7 @@ export default async function DaftarPenggunaPage() {
 
               <div className="mt-auto flex items-center justify-between border-t border-zinc-50 pt-5 dark:border-zinc-900">
                 <div className="space-y-0.5">
-                  <p className="text-muted-foreground/60 text-[10px] font-bold tracking-wider uppercase">
+                  <p className="text-muted-foreground/60 text-xs font-bold tracking-wider uppercase">
                     Pajak Aktif
                   </p>
                   <p className="text-foreground text-lg font-black tracking-tighter">

@@ -115,7 +115,7 @@ export function DusunManager() {
 
           {/* ─── List ─────────────────────────────────────────────────────── */}
           <div className="space-y-3">
-            <Label className="text-muted-foreground/50 px-1 text-[10px] font-black tracking-[0.2em] uppercase">
+            <Label className="text-muted-foreground/50 px-1 text-xs font-black tracking-[0.2em] uppercase">
               Daftar Dusun Terdaftar
             </Label>
 

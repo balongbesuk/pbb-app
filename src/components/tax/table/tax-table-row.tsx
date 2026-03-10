@@ -72,7 +72,7 @@ export function TaxTableRow({
           <MapPin className="text-primary h-3 w-3" />
           <span>{item.dusun || "-"}</span>
         </div>
-        <div className="text-muted-foreground text-[10px]">
+        <div className="text-muted-foreground text-xs">
           RT {item.rt || "?"} / RW {item.rw || "?"}
         </div>
       </TableCell>
@@ -86,14 +86,14 @@ export function TaxTableRow({
                 ? "warning"
                 : "outline") as any
           }
-          className="text-[10px]"
+          className="text-xs font-bold"
         >
           {item.paymentStatus}
         </Badge>
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
-          <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold">
+          <div className="bg-primary/10 text-primary flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold">
             {item.penarik?.name?.charAt(0) || <User className="h-3 w-3" />}
           </div>
           <span className="truncate text-xs">{item.penarik?.name || "Belum Ada"}</span>

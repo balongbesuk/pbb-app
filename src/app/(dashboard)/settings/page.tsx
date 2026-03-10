@@ -53,11 +53,11 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-6 p-6">
               <div className="space-y-3">
-                <p className="text-muted-foreground px-1 text-[10px] font-bold tracking-widest uppercase">
+                <p className="text-muted-foreground px-1 text-xs font-bold tracking-widest uppercase">
                   Integritas Data
                 </p>
                 <div className="space-y-3 rounded-2xl border border-rose-100 bg-rose-500/5 p-4 dark:border-rose-900/50">
-                  <p className="px-1 text-[10px] leading-relaxed font-bold text-rose-700 dark:text-rose-400">
+                  <p className="px-1 text-xs leading-relaxed font-bold text-rose-700 dark:text-rose-400">
                     Menghapus seluruh daftar Wajib Pajak, riwayat pembayaran, dan alokasi penarik.
                     Gunakan hanya jika diperlukan.
                   </p>
