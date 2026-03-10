@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * middleware.ts — Rate limiting untuk endpoint auth (login).
+ * proxy.ts — Rate limiting untuk endpoint auth (login).
+ * (Renamed dari middleware.ts sesuai konvensi Next.js 16)
  *
  * Aturan:
  *  - Max 10 percobaan login per 15 menit per IP
@@ -13,7 +14,7 @@ import type { NextRequest } from "next/server";
 // CATATAN: Untuk production multi-instance gunakan Redis/Upstash.
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 
-const LOGIN_LIMIT = 10;      // max percobaan login
+const LOGIN_LIMIT = 10; // max percobaan login
 const WINDOW_MS = 15 * 60 * 1000; // 15 menit
 
 function getClientIp(req: NextRequest): string {
