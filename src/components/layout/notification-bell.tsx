@@ -1,20 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  Bell, 
-  Check, 
-  X, 
+import {
+  Bell,
+  Check,
+  X,
   ArrowRight,
   Info,
   CalendarDays
 } from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
@@ -75,6 +75,15 @@ export function NotificationBell() {
     fetchAll();
   };
 
+  const onMarkAllRead = async () => {
+    setLoading(true);
+    // We'll need a new action for this or just loop. Loop is easier for now but less efficient.
+    // Let's assume we want a single action for efficiency.
+    await Promise.all(notifications.filter(n => !n.isRead).map(n => markNotificationAsRead(n.id)));
+    fetchAll();
+    setLoading(false);
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="relative group p-2 rounded-md hover:bg-muted transition-colors cursor-pointer outline-none">
@@ -90,35 +99,53 @@ export function NotificationBell() {
           <DropdownMenuGroup>
             <DropdownMenuLabel className="p-0 text-emerald-700 dark:text-emerald-400 font-bold flex items-center justify-between">
               <span>Pemberitahuan</span>
-              {unreadCount > 0 && <Badge variant="secondary" className="bg-emerald-500 text-white border-none">{unreadCount} Baru</Badge>}
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && <Badge variant="secondary" className="bg-emerald-500 text-white border-none text-[10px] h-5">{unreadCount} Baru</Badge>}
+                {notifications.some(n => !n.isRead) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-[9px] px-1.5 hover:bg-emerald-500/20"
+                    onClick={onMarkAllRead}
+                    disabled={loading}
+                  >
+                    Baca Semua
+                  </Button>
+                )}
+              </div>
             </DropdownMenuLabel>
           </DropdownMenuGroup>
         </div>
 
         <div className="max-h-[400px] overflow-y-auto">
           {pendingRequests.length > 0 && (
-            <div className="p-2 space-y-2 bg-emerald-50/50 dark:bg-emerald-950/20 border-b border-emerald-500/10 dark:border-emerald-500/20">
-              <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 px-2 flex items-center gap-1 uppercase tracking-wider">
+            <div className="p-2 space-y-2 bg-emerald-500/5 dark:bg-emerald-950/20 border-b border-emerald-500/10 dark:border-emerald-500/20">
+              <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 px-2 flex items-center gap-1 uppercase tracking-wider mb-1">
                 <ArrowRight className="w-3 h-3" />
-                Permintaan Penyaluran
+                Butuh Persetujuan
               </p>
               {pendingRequests.map(req => (
-                <div key={req.id} className="p-3 bg-white dark:bg-background/80 backdrop-blur-sm border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg shadow-sm">
-                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">{req.taxData.namaWp}</p>
-                  <p className="text-[10px] text-muted-foreground mb-2">Dari: {req.sender.name}</p>
+                <div key={req.id} className="p-3 bg-white/80 dark:bg-background/80 backdrop-blur-sm border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg shadow-sm">
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-gray-900 dark:text-gray-100 truncate">{req.taxData.namaWp}</p>
+                      <p className="text-[10px] text-muted-foreground">Oleh: {req.sender.name}</p>
+                    </div>
+                    <Badge className="bg-sky-500 text-[8px] h-4">Transfer</Badge>
+                  </div>
                   <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      className="h-7 text-[10px] flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold"
+                    <Button
+                      size="sm"
+                      className="h-7 text-[10px] flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold text-white shadow-sm"
                       onClick={() => onResponse(req.id, "ACCEPTED")}
                       disabled={loading}
                     >
                       <Check className="w-3 h-3 mr-1" /> Terima
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="outline"
-                      className="h-7 text-[10px] flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/50 font-bold"
+                      className="h-7 text-[10px] flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/50 font-bold shadow-sm"
                       onClick={() => onResponse(req.id, "REJECTED")}
                       disabled={loading}
                     >
@@ -139,24 +166,24 @@ export function NotificationBell() {
             </div>
           ) : (
             notifications.map(notif => (
-              <DropdownMenuItem 
-                key={notif.id} 
+              <DropdownMenuItem
+                key={notif.id}
                 className={`p-4 flex flex-col items-start gap-1 border-b last:border-0 border-border/40 focus:bg-emerald-50/50 dark:focus:bg-emerald-900/20 cursor-pointer ${!notif.isRead ? 'bg-emerald-50/20 dark:bg-emerald-950/30' : ''}`}
                 onClick={() => onMarkRead(notif.id)}
               >
                 <div className="flex w-full justify-between items-start gap-2">
-                  <p className={`text-xs font-bold ${!notif.isRead ? 'text-primary' : 'text-foreground'}`}>
+                  <div className={`text-xs font-bold ${!notif.isRead ? 'text-primary' : 'text-foreground'}`}>
                     {notif.type === 'REJECTED' && <Badge variant="destructive" className="mr-2 text-[8px] h-4">Ditolak</Badge>}
-                    {notif.type === 'ACCEPTED' && <Badge className="mr-2 bg-emerald-500 hover:bg-emerald-600 text-[8px] h-4">Berhasil</Badge>}
+                    {notif.type === 'ACCEPTED' && <Badge className="mr-2 bg-teal-500 hover:bg-teal-600 text-[8px] h-4">Berhasil</Badge>}
                     {notif.type === 'INFO' && <Info className="w-3 h-3 inline mr-1 text-blue-500" />}
                     {notif.title}
-                  </p>
+                  </div>
                   {!notif.isRead && <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 mt-1" />}
                 </div>
-                {notif.message && <p className="text-[11px] text-muted-foreground line-clamp-2">{notif.message}</p>}
-                <div className="flex items-center gap-1 mt-1 opacity-60">
-                   <CalendarDays className="w-3 h-3 text-[10px]" />
-                   <span className="text-[9px] font-medium">{new Date(notif.createdAt).toLocaleDateString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                {notif.message && <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">{notif.message}</p>}
+                <div className="flex items-center gap-1 mt-2 opacity-60">
+                  <CalendarDays className="w-3 h-3 text-[10px]" />
+                  <span className="text-[9px] font-medium">{new Date(notif.createdAt).toLocaleDateString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
               </DropdownMenuItem>
             ))

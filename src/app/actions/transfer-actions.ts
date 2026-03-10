@@ -65,22 +65,6 @@ export async function sendTransferRequest(taxId: number, receiverId: string, typ
       }
     });
 
-    // 4. Create notification for receiver
-    const notificationTitle = type === "GIVE" ? "Permintaan Penyerahan Pajak" : "Permintaan Pengambilan Pajak";
-    const notificationMsg = type === "GIVE"
-      ? `${session.user?.name} ingin menyerahkan data WP ${taxData.namaWp} kepada Anda.`
-      : `${session.user?.name} meminta data WP ${taxData.namaWp} yang sedang Anda kelola.`;
-
-    await prisma.notification.create({
-      data: {
-        userId: receiverId,
-        title: notificationTitle,
-        message: notificationMsg,
-        type: "REQUEST",
-        link: "/data-pajak"
-      }
-    });
-
     // 5. Audit Log
     const receiverUser = await prisma.user.findUnique({ where: { id: receiverId }, select: { name: true } });
     const typeLabel = type === "GIVE" ? "penyerahan" : "pengambilan";
