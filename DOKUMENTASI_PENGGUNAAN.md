@@ -1,6 +1,6 @@
 # 📖 Buku Pintar & Panduan Penggunaan PBB Manager
 
-Selamat datang di PBB Manager, sebuah inovasi digital untuk mempercepat pendataan dan penarikan pajak di Desa secara transparan dan aman (*Progressive Web App*).
+Selamat datang di PBB Manager, sebuah inovasi digital untuk mempercepat pendataan dan penarikan pajak di Desa secara transparan dan aman.
 
 ---
 
@@ -13,7 +13,7 @@ Setiap pengguna diwajibkan untuk beroperasi sesuai jenis jabatannya.
    - Dapat memata-matai semua aktivitas yang dilakukan bawahan di dalam sistem (*Log Audit*).
    - Menguasai fitur Import DHKP dari Excel dan mencetak Laporan Kelurahan.
    - Mengatur Pemetaan (Delegasi) RW/RT ke tiap *Penarik Pajak*.
-2. **📱 PENARIK (Kepala Dusun / Ujung Tombak)**
+2. **📱 PENARIK (Kepala Dusun / Ujung Fokus Lapangan)**
    - Menggunakan sistem di genggaman HP secara responsif.
    - Memiliki akses lapangan memungut uang dan mengubah tombol **Belum Lunas** ➔ **Lunas**.
    - Hanya perlu berfokus pada nama warga di wilayah kewenangannya.
@@ -56,11 +56,10 @@ Apakah Anda ingin Kepala Dusun X cuma bisa menagih di RW 01?
 
 ## 📱 Panduan Penarik Pajak (Operasi Lapangan)
 
-### 1. Menyimpan Aplikasi di HP Tanpa Sinyal (PWA / Offline)
-Sistem ini menggunakan kecerdasan aplikasi hibrida.
+### 1. Membuka Aplikasi di HP
+Aplikasi ini dirancang responsif untuk memudahkan penggunaan di perangkat mobile.
 1. Buka Chrome Android / Safari iPhone, lalu masukkan Link yang diberikan Kepala Desa (contoh: `192.168.1.1:3000`).
-2. Tunggu beberapa saat, akan muncul perintah jendela (pop-up) **"Tambah PBB Manager ke Layar Utama"**. Setujui!
-3. Aplikasinya akan memiliki ikon sendiri di deretan aplikasi WhatsApp / Facebook Anda.
+2. Masukkan Username dan Password Anda untuk masuk ke sistem.
 
 ### 2. Melatih Jempol Mengutip Pajak
 Ini pekerjaan utama Anda saat bertamu ke pintu warga.

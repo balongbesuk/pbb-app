@@ -3,7 +3,7 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Printer } from "lucide-react";
+import { Search, Printer, Loader2 } from "lucide-react";
 
 interface TaxTableFiltersProps {
     search: string;
@@ -20,6 +20,7 @@ interface TaxTableFiltersProps {
     availableFilters: any;
     onPrint: () => void;
     showPrint: boolean;
+    isFetching?: boolean;
 }
 
 export function TaxTableFilters({
@@ -36,20 +37,31 @@ export function TaxTableFilters({
     onPenarikChange,
     availableFilters,
     onPrint,
-    showPrint
+    showPrint,
+    isFetching
 }: TaxTableFiltersProps) {
     return (
         <div className="space-y-4">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <form onSubmit={onSearchSubmit} className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Cari NOP atau Nama..."
-                        className="pl-10 h-9 text-xs transition-all focus:ring-primary/20"
-                        value={search}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                    />
-                </form>
+                <div className="relative w-full max-w-sm flex items-center gap-2">
+                    <form onSubmit={onSearchSubmit} className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Cari NOP atau Nama..."
+                            className="pl-10 h-9 text-xs transition-all focus:ring-primary/20"
+                            value={search}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                        />
+                    </form>
+                    {isFetching && (
+                        <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-300">
+                            <div className="flex items-center justify-center p-1.5 bg-primary/10 rounded-full shadow-inner">
+                                <Loader2 className="h-3 w-3 text-primary animate-spin" />
+                            </div>
+                            <span className="text-[10px] font-bold text-primary tracking-tight whitespace-nowrap">Sinkronisasi...</span>
+                        </div>
+                    )}
+                </div>
                 <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                     <Select value={filterDusun} onValueChange={(v) => onDusunChange(v || "all")}>
                         <SelectTrigger className="w-[130px] h-9 text-xs font-medium">

@@ -17,6 +17,8 @@ import { TaxTableRow } from "./table/tax-table-row";
 import { TaxTableFilters } from "./table/tax-table-filters";
 import { TaxTablePagination } from "./table/tax-table-pagination";
 import { TaxDetailDialog } from "./table/tax-detail-dialog";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 export function TaxDataTable({
   initialData,
@@ -36,18 +38,52 @@ export function TaxDataTable({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
-  const [search, setSearch] = useState(searchParams.get("q") || "");
-  const [filterDusun, setFilterDusun] = useState(searchParams.get("dusun") || "all");
-  const [filterRw, setFilterRw] = useState(searchParams.get("rw") || "all");
-  const [filterRt, setFilterRt] = useState(searchParams.get("rt") || "all");
-  const [filterPenarik, setFilterPenarik] = useState(searchParams.get("penarik") || "all");
+  // Query parameters from URL
+  const q = searchParams.get("q") || "";
+  const page = searchParams.get("page") || "1";
+  const tahun = searchParams.get("tahun") || new Date().getFullYear().toString();
+  const dusun = searchParams.get("dusun") || "";
+  const rw = searchParams.get("rw") || "";
+  const rt = searchParams.get("rt") || "";
+  const penarik = searchParams.get("penarik") || "";
+
+  const { data: queryData, isLoading, isFetching } = useQuery({
+    queryKey: ["tax-data", { q, page, tahun, dusun, rw, rt, penarik }],
+    queryFn: async () => {
+      const params = new URLSearchParams(searchParams);
+      const res = await fetch(`/api/tax?${params.toString()}`);
+      if (!res.ok) throw new Error("Gagal mengambil data");
+      return res.json();
+    },
+    initialData: { data: initialData, total: total, page: parseInt(page), pageSize },
+    staleTime: 1000 * 60, // 1 minute
+  });
+
+  const displayData = queryData?.data || [];
+  const displayTotal = queryData?.total || 0;
+
+  const [search, setSearch] = useState(q);
+  const [filterDusun, setFilterDusun] = useState(dusun || "all");
+  const [filterRw, setFilterRw] = useState(rw || "all");
+  const [filterRt, setFilterRt] = useState(rt || "all");
+  const [filterPenarik, setFilterPenarik] = useState(penarik || "all");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isAssigning, setIsAssigning] = useState(false);
   const [selectedDetailItem, setSelectedDetailItem] = useState<any | null>(null);
 
-  const totalPages = Math.ceil(total / pageSize);
-  const currentPage = parseInt(searchParams.get("page") || "1");
+  const totalPages = Math.ceil(displayTotal / pageSize);
+  const currentPage = parseInt(page);
+
+  // Update local state when URL changes (for back/forward buttons)
+  useEffect(() => {
+    setSearch(q);
+    setFilterDusun(dusun || "all");
+    setFilterRw(rw || "all");
+    setFilterRt(rt || "all");
+    setFilterPenarik(penarik || "all");
+  }, [q, dusun, rw, rt, penarik]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,14 +121,18 @@ export function TaxDataTable({
 
   const handleUpdateStatus = async (id: string, status: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT") => {
     const res = await updatePaymentStatus(id, status);
-    if (res.success) toast.success(`Status diperbarui`);
-    else toast.error(`Gagal: ${res.message}`);
+    if (res.success) {
+      toast.success(`Status diperbarui`);
+      queryClient.invalidateQueries({ queryKey: ["tax-data"] });
+    } else toast.error(`Gagal: ${res.message}`);
   };
 
   const handleAssignPenarik = async (taxId: string, penarikId: string | null) => {
     const res = await assignPenarik(taxId, penarikId);
-    if (res.success) toast.success("Penarik diatur");
-    else toast.error(res.message);
+    if (res.success) {
+      toast.success("Penarik diatur");
+      queryClient.invalidateQueries({ queryKey: ["tax-data"] });
+    } else toast.error(res.message);
   };
 
   const handleBulkAssign = async (penarikId: string | null) => {
@@ -102,6 +142,7 @@ export function TaxDataTable({
     if (res.success) {
       toast.success(`Berhasil mengalokasikan ${res.count} data`);
       setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ["tax-data"] });
     } else toast.error(res.message);
     setIsAssigning(false);
   };
@@ -113,8 +154,8 @@ export function TaxDataTable({
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === initialData.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(initialData.map(d => d.id)));
+    if (selectedIds.size === displayData.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(displayData.map((d: any) => d.id)));
   };
 
   const toggleSelect = (id: number) => {
@@ -134,6 +175,7 @@ export function TaxDataTable({
         availableFilters={availableFilters}
         onPrint={handlePrint}
         showPrint={currentUser?.role !== "PENGGUNA"}
+        isFetching={isFetching && !isLoading}
       />
 
       {selectedIds.size > 0 && currentUser?.role !== "PENGGUNA" && (
@@ -183,7 +225,7 @@ export function TaxDataTable({
               {currentUser?.role !== "PENGGUNA" && (
                 <TableHead className="w-[40px]">
                   <Checkbox
-                    checked={initialData.length > 0 && selectedIds.size === initialData.length}
+                    checked={displayData.length > 0 && selectedIds.size === displayData.length}
                     onCheckedChange={toggleSelectAll}
                   />
                 </TableHead>
@@ -198,12 +240,21 @@ export function TaxDataTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {initialData.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="h-40 text-center">
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Memuat data...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : displayData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="h-40 text-center text-muted-foreground text-sm italic">Data tidak ditemukan</TableCell>
               </TableRow>
             ) : (
-              initialData.map((item) => (
+              displayData.map((item: any) => (
                 <TaxTableRow
                   key={item.id}
                   item={item}
@@ -224,7 +275,7 @@ export function TaxDataTable({
       </div>
 
       <TaxTablePagination
-        currentPage={currentPage} totalPages={totalPages} total={total} shownCount={initialData.length}
+        currentPage={currentPage} totalPages={totalPages} total={displayTotal} shownCount={displayData.length}
         onPageChange={(p) => {
           const params = new URLSearchParams(searchParams);
           params.set("page", p.toString());

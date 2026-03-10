@@ -1,13 +1,12 @@
 # 🏦 PBB Manager - Sistem Manajemen Pajak Desa
 
-**PBB Manager** adalah aplikasi web modern (*Progressive Web App*) untuk menunjang Pemerintah Desa/Kelurahan dalam tata kelola pendataan, penagihan, dan pelaporan Pajak Bumi dan Bangunan (PBB) secara akurat, cepat, dan transparan.
+**PBB Manager** adalah aplikasi web modern untuk menunjang Pemerintah Desa/Kelurahan dalam tata kelola pendataan, penagihan, dan pelaporan Pajak Bumi dan Bangunan (PBB) secara akurat, cepat, dan transparan.
 
 ---
 
 ## 🔥 Fitur Unggulan
 
 -   **Dashboard VIP:** Pantau tren realisasi harian, statistik wilayah, dan performa petugas secara *real-time* dengan balutan UI/UX setingkat Enterprise (Menggunakan font premium *Outfit*).
--   **Offline Mode (PWA):** Dapat di-*install* langsung ke layar utama HP (Home Screen) layaknya aplikasi *Native* dan dapat dibuka saat koneksi internet balai desa sedang tidak terhubung (memanfaatkan Workbox Caching).
 -   **Sistem Import Pintar:** Unggah format DHKP Excel (.xlsx) dengan proteksi anti-ganda, sinkronisasi otomatis status Lunas untuk warga yang pindah/hilang, serta pemetaan (mapping) Dusun/RT/RW secara cerdas berdasarkan string alamat.
 -   **Delegasi Penarik:** Distribusikan daftar tagihan WP ke para Kepala Dusun/Petugas Lapangan dengan sangat spesifik hanya dalam satu klik (Bulk Assign).
 -   **Security Lapis Ganda:** Modul *Reset Database* dilengkapi fitur proteksi validasi kewaspadaan tipe GitHub (Ketik "RESET 2026") mencegah salah sentuh.
@@ -61,8 +60,8 @@ Aplikasi ini tidak butuh XAMPP/MySQL. Database disimpan mulus secara lokal dalam
     npx prisma db seed
     ```
 
-### 4. Menjalankan Mode Produksi (Wajib untuk PWA)
-Agar aplikasi dapat berjalan super cepat, bebas galat *Linting*, dan fitur **Mode Offline (Instal ke HP)** menyala, Anda wajib melakukan proses kompilasi *(build)*:
+### 4. Menjalankan Mode Produksi
+Agar aplikasi dapat berjalan super cepat dan bebas galat *Linting*, Anda wajib melakukan proses kompilasi *(build)*:
 ```bash
 npm run build --webpack
 ```
