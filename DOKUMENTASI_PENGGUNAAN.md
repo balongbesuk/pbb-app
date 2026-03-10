@@ -39,7 +39,7 @@ Apakah Anda ingin Kepala Dusun X cuma bisa menagih di RW 01?
 2. Klik tab **Berdasarkan RW** atau **Berdasarkan RT**.
 3. Pada tabel wilayah tersebut, klik tombol ajaib biru bertulisan **Atur Penarik Masal**.
 4. Muncul *Popup*: Pilih jabatan/nama "Penarik" targetnya.
-5. Klik **Terapkan**. Ratusan NOP / surat tagihan otomatis masuk ke HP penarik tersebut secara kilat.
+5. Klik **Terapkan**. Ratusan NOP / surat tagihan otomatis masuk ke penarik tersebut secara kilat.
 
 ### 3. Mengawasi Dana & Operasional
 1. **Cek Pemasukan Real-Time**: Buka layar muka utama (Dashboard). Angka hijau persentase pencapaian serta klasemen "Top Kolektor" tidak bisa ditipu.
@@ -68,7 +68,6 @@ Ini pekerjaan utama Anda saat bertamu ke pintu warga.
 2. Anda bisa mengetik nama pak RT, atau nama spesifik Mbah di kotak pensil (Pencarian).
 3. Jika bapak/ibu tersebut sudah bayar uang lembaran rupiahnya ke Anda, tekan status tagihan berwarna Merah (**Belum Lunas**).
 4. Kotak persetujuan kecil akan muncul, lalu tekan **"Tandai Lunas"**. 
-5. Uang pun telah sah secara virtual!
 
 ### 3. Oper Over Tagihan (Memindah Warga)
 Jika si Wajib Pajak ternyata salah tempat dan bukan tanggung jawab Anda:
