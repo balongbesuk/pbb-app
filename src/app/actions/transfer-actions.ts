@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { createAuditLog } from "./log-actions";
 
 /**
  * Send a request to another penarik to take over or request a tax data
@@ -66,7 +67,7 @@ export async function sendTransferRequest(taxId: number, receiverId: string, typ
 
     // 4. Create notification for receiver
     const notificationTitle = type === "GIVE" ? "Permintaan Penyerahan Pajak" : "Permintaan Pengambilan Pajak";
-    const notificationMsg = type === "GIVE" 
+    const notificationMsg = type === "GIVE"
       ? `${session.user?.name} ingin menyerahkan data WP ${taxData.namaWp} kepada Anda.`
       : `${session.user?.name} meminta data WP ${taxData.namaWp} yang sedang Anda kelola.`;
 
@@ -79,6 +80,8 @@ export async function sendTransferRequest(taxId: number, receiverId: string, typ
         link: "/data-pajak"
       }
     });
+
+    await createAuditLog("TRANSFER_REQUEST", "TaxData", taxData.namaWp, `Kirim permintaan ${type} data WP ${taxData.namaWp} ke penarik ID: ${receiverId}`);
 
     return { success: true };
   } catch (error: any) {
@@ -149,6 +152,9 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
     }
 
     revalidatePath("/data-pajak");
+
+    await createAuditLog("TRANSFER_RESPONSE", "TaxData", request.taxData.namaWp, `${status} permintaan ${request.type} data WP ${request.taxData.namaWp} dari penarik ID: ${request.senderId}`);
+
     return { success: true };
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -163,7 +169,7 @@ export async function getNotifications() {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return [];
-    
+
     return await prisma.notification.findMany({
       where: { userId: (session.user as any).id },
       orderBy: { createdAt: "desc" },
@@ -196,9 +202,9 @@ export async function getPendingRequests() {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return [];
-    
+
     return await prisma.transferRequest.findMany({
-      where: { 
+      where: {
         receiverId: (session.user as any).id,
         status: "PENDING"
       },

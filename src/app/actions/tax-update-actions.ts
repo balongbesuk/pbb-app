@@ -5,13 +5,20 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createAuditLog } from "./log-actions";
+import { z } from "zod";
+
+const statusSchema = z.object({
+  id: z.union([z.string(), z.number()]),
+  paymentStatus: z.enum(["LUNAS", "BELUM_LUNAS", "TIDAK_TERBIT"])
+});
 
 export async function updatePaymentStatus(id: string | number, paymentStatus: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT") {
   try {
+    statusSchema.parse({ id, paymentStatus });
     const numId = typeof id === 'string' ? parseInt(id, 10) : id;
     const session = await getServerSession(authOptions);
     if (!session) throw new Error("Unauthorized");
-    
+
     const userRole = (session.user as any).role;
     const userId = (session.user as any).id;
 
@@ -84,9 +91,9 @@ export async function getWpByRegion(dusun: string | null, rw: string | null, tah
 }
 
 export async function getWpByPenarik(
-  penarikId: string | null, 
-  tahun: number, 
-  page: number = 1, 
+  penarikId: string | null,
+  tahun: number,
+  page: number = 1,
   pageSize: number = 50,
   paymentStatus?: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT"
 ) {
@@ -133,7 +140,7 @@ export async function updateWpRegion(id: number, dusun: string | null, rt: strin
   try {
     const session = await getServerSession(authOptions);
     if (!session) throw new Error("Unauthorized");
-    
+
     const userRole = (session.user as any).role;
     const userId = (session.user as any).id;
 
@@ -167,7 +174,7 @@ export async function updateWpRegionBulk(ids: number[], dusun: string | null, rt
   try {
     const session = await getServerSession(authOptions);
     if (!session) throw new Error("Unauthorized");
-    
+
     const userRole = (session.user as any).role;
     const userId = (session.user as any).id;
 
@@ -192,6 +199,8 @@ export async function updateWpRegionBulk(ids: number[], dusun: string | null, rt
         rw
       }
     });
+
+    await createAuditLog("UPDATE_REGION", "TaxData", null, `Ubah wilayah masal untuk ${ids.length} WP ke Dusun: ${dusun}, RT: ${rt}, RW: ${rw}`);
 
     revalidatePath("/laporan");
     revalidatePath("/data-pajak");

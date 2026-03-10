@@ -28,26 +28,42 @@ export async function createAuditLog(
   }
 }
 
-export async function getAuditLogs(limit: number = 100) {
+export async function getAuditLogs(limit: number = 100, page: number = 1, searchQuery?: string) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || (session.user as any).role !== "ADMIN") {
       throw new Error("Unauthorized");
     }
 
-    const logs = await prisma.auditLog.findMany({
-      take: limit,
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: { name: true, role: true, username: true },
+    const where: any = {};
+    if (searchQuery) {
+      where.OR = [
+        { action: { contains: searchQuery } },
+        { entity: { contains: searchQuery } },
+        { details: { contains: searchQuery } },
+        { user: { name: { contains: searchQuery } } },
+        { user: { username: { contains: searchQuery } } },
+      ];
+    }
+
+    const [logs, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        take: limit,
+        skip: (page - 1) * limit,
+        orderBy: { createdAt: "desc" },
+        include: {
+          user: {
+            select: { name: true, role: true, username: true },
+          },
         },
-      },
-    });
-    
-    return logs;
+      }),
+      prisma.auditLog.count({ where })
+    ]);
+
+    return { logs, total };
   } catch (error) {
     console.error("Gagal memuat log aktivitas:", error);
-    return [];
+    return { logs: [], total: 0 };
   }
 }
