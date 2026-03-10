@@ -28,9 +28,11 @@ function getActionLabel(action: string, details?: string | null) {
     case "TRANSFER_REQUEST": return { label: "Permintaan Pindah", color: "bg-sky-600", icon: <ArrowRightLeft className="w-3 h-3" /> };
     case "TRANSFER_RESPONSE": {
       const isAccepted = details?.includes("Menyetujui");
+      const isRejected = details?.includes("Menolak");
+
       return {
-        label: isAccepted ? "Permintaan Disetujui" : "Permintaan Ditolak",
-        color: isAccepted ? "bg-teal-600" : "bg-orange-600",
+        label: isAccepted ? "Permintaan Disetujui" : isRejected ? "Permintaan Ditolak" : "Respon Pindah",
+        color: isAccepted ? "bg-teal-600" : isRejected ? "bg-orange-600" : "bg-slate-600",
         icon: isAccepted ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />
       };
     }
