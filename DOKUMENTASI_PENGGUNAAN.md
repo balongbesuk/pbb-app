@@ -1,84 +1,80 @@
-# 📖 Panduan Penggunaan Aplikasi PBB Manager
+# 📖 Buku Pintar & Panduan Penggunaan PBB Manager
 
-Dokumen ini adalah panduan langkah-demi-langkah bagi Admin Desa dan Petugas Penarik untuk mengoperasikan aplikasi Pajak Bumi dan Bangunan (PBB) dengan benar.
-
----
-
-## 🚀 Bab 1: Persiapan Akun (Admin)
-
-### 1. Masuk ke Sistem (Login)
--   Buka alamat aplikasi (misal: `http://localhost:3000`).
--   Masukkan **Username**: `admin` dan **Password**: `admin123` (Akun bawaan default).
--   Disarankan segera mengubah password di menu **Pengaturan > Akun** demi keamanan data warga.
-
-### 2. Melengkapi Profil Pemerintahan
--   Klik menu **Pengaturan** di sebelah kiri.
--   Pilih **Profil Instansi**.
--   Isi Nama Desa, Kecamatan, dan Kabupaten/Kota.
--   **Mengapa penting?** Karena data ini akan muncul otomatis di kepala (kop) laporan Excel yang akan Anda serahkan ke atasan.
+Selamat datang di PBB Manager, sebuah inovasi digital untuk mempercepat pendataan dan penarikan pajak di Desa secara transparan dan aman (*Progressive Web App*).
 
 ---
 
-## 📂 Bab 2: Manajemen Data Pajak (Admin)
+## 👥 Pengenalan Hak Akses (*Roles*)
+Setiap pengguna diwajibkan untuk beroperasi sesuai jenis jabatannya.
 
-### 1. Pendaftaran Nama-Nama Dusun
-Ini adalah langkah paling penting sebelum upload data.
--   Masuk ke **Pengaturan > Referensi Dusun**.
--   Tambahkan semua nama dusun di desa Anda satu per satu.
--   Tanpa daftar ini, aplikasi tidak bisa memisahkan warga per dusun secara otomatis.
-
-### 2. Mengunggah Data DHKP (Excel)
-Ini dilakukan setiap setahun sekali atau saat ada pembaruan data.
--   Pilih menu **Upload Data PBB**.
--   Pilih Tahun Pajak (misal: 2026).
--   Pilih file Excel DHKP Anda.
--   Klik **Mulai Import**. Tunggu sampai muncul notifikasi "Berhasil".
--   Aplikasi secara pintar akan membagi warga ke dalam RT dan RW berdasarkan alamat di Excel.
-
----
-
-## 👮 Bab 3: Pembagian Tugas Petugas (Mapping)
-
-Jangan lelah membagi tugas satu per satu. Gunakan fitur **Masal** (Cepat):
-1.  Klik menu **Laporan**.
-2.  Pilih Tab **Wilayah** (Misal: RW 01).
-3.  Klik tombol biru **"Atur Penarik Masal"**.
-4.  Pilih nama Kepala Dusun atau Petugas lapangan.
-5.  **Hasil:** Semua warga di RW tersebut akan muncul di HP/Tablet petugas tersebut saat mereka login.
+1. **👑 SUPER_ADMIN (Kepala Desa / Pejabat Tertinggi)**
+   - Dapat mereset, mem-backup, dan menghancurkan seluruh data.
+   - Mengendalikan pembuatan Akun Pengguna / Petugas.
+   - Dapat memata-matai semua aktivitas yang dilakukan bawahan di dalam sistem.
+2. **🛡️ ADMIN (Kaur Keuangan / Admin Pajak)**
+   - Eksekutor utama lapangan di depan komputer Balai Desa.
+   - Menguasai fitur Import DHKP dari Excel.
+   - Mengatur Pemetaan (Delegasi) RW/RT ke tiap *Petugas*.
+   - Mencetak laporan mutasi/penerimaan uang.
+3. **📱 PETUGAS (Kepala Dusun / Ujung Tombak)**
+   - Menggunakan sistem di genggaman HP.
+   - Hanya memiliki akses mengubah tombol **Belum Lunas** ➔ **Lunas**.
 
 ---
 
-## 💳 Bab 4: Pelaporan Pembayaran (Petugas Lapangan)
+## 🚀 Panduan Admin & Super Admin (Operasi Balai Desa)
 
-### 1. Mencari Nama Warga
-Petugas cukup membawa HP saat menagih ke rumah warga:
--   Klik menu **Data Pajak**.
--   Ketik nama warga atau nomor NOP di kotak pencarian.
--   Gunakan filter RT atau RW agar daftar lebih pendek.
+### 1. Memulai Tahun Pajak Baru
+Setiap tahun baru, sebelum Excel PBB dibagikan ke warga, Admin harus menyiapkan database:
+1. Pastikan menu **Pengaturan > Referensi Dusun** sudah diisi dengan nama persis sesuai yang sering diketik orang di Excel.
+2. Buka menu **Upload Data PBB**.
+3. Di sana, Anda bisa klik tombol "Format Excel" jika bingung bentuk kolom urutan data aslinya.
+4. Tentukan **Tahun Pajak** (Misal: 2026).
+5. Masukkan file Excel (maksimal puluhan ribu baris) lalu klik **Mulai Import**.
 
-### 2. Menandai Lunas
--   Jika warga membayar, klik label berwarna Merah bertuliskan **"Belum Lunas"**.
--   Status akan berubah menjadi Hijau **"Lunas"**.
--   Data ini langsung masuk ke laporan Admin secara *real-time*.
+### 2. Membagi Rombongan Wajib Pajak (Mapping Area)
+Apakah Anda ingin Kepala Dusun X cuma bisa menagih di RW 01?
+1. Masuk menu **Laporan**.
+2. Klik tab **Berdasarkan RW** atau **Berdasarkan RT**.
+3. Pada tabel wilayah tersebut, klik tombol ajaib biru bertulisan **Atur Penarik Masal**.
+4. Muncul *Popup*: Pilih jabatan/nama "Petugas" targetnya.
+5. Klik **Terapkan**. Ratusan NOP / surat tagihan otomatis masuk ke HP petugas tersebut secara kilat.
 
----
+### 3. Mengawasi Dana & Operasional
+1. **Cek Pemasukan Real-Time**: Buka layar muka utama (Dashboard). Angka hijau persentase pencapaian serta klasemen "Top Kolektor" tidak bisa ditipu.
+2. **Mengusut Pelaku Penipuan/Kesalahan**: Buka layar **Log Aktivitas**. (Hanya Super Admin). 
+   - Pilih *Action*: `MARK_PAID` atau `TRANSFER`.
+   - Cari kata kunci nama warga. Sistem akan memberitahu detail "Pada jam berapa Petugas siapa" yang memalsukan data.
 
-## 🔍 Bab 5: Monitoring & Keamanan (Admin)
-
-### 1. Pantau Lewat Dashboard
--   Buka halaman **Dashboard** untuk melihat uang yang sudah terkumpul.
--   Lihat grafik **Top Kolektor** untuk tahu siapa petugas yang paling rajin menagih.
-
-### 2. Log Aktivitas (Audit)
--   Gunakan menu **Log Aktivitas** untuk memantau transaksi.
--   Jika ada warga protes sudah bayar tapi di sistem belum, Anda bisa cek di sini siapa petugas yang terakhir kali mengubah data tersebut.
-
----
-
-## 💾 Bab 6: Penutupan & Backup data
-
--   **Ekspor Laporan:** Setiap bulan, buka menu **Laporan**, lalu pilih **Excel Laporan Lunas** untuk disimpan sebagai arsip fisik kantor.
--   **Backup Sistem:** Copy folder aplikasi ini ke Flashdisk secara rutin agar jika komputer rusak, data pajak desa tidak hilang.
+### 4. Backup Data Mingguan (Darurat)
+1. Pergi ke **Pengaturan > Utilitas & Keamanan**.
+2. Tekan **Unduh File Backup**.
+3. Sistem akan membuat bungkusan `pbb_backup_...zip`. Simpan ini di Flashdisk / Google Drive.
 
 ---
-*Panduan ini dibuat eksklusif untuk kemajuan Desa Anda - 2026*
+
+## 📱 Panduan Petugas Penagih (Operasi Lapangan)
+
+### 1. Menyimpan Aplikasi di HP Tanpa Sinyal (PWA / Offline)
+Sistem ini menggunakan kecerdasan aplikasi hibrida.
+1. Buka Chrome Android / Safari iPhone, lalu masukkan Link yang diberikan Kepala Desa (contoh: `192.168.1.1:3000`).
+2. Tunggu beberapa saat, akan muncul perintah jendela (pop-up) **"Tambah PBB Manager ke Layar Utama"**. Setujui!
+3. Aplikasinya akan memiliki ikon sendiri di deretan aplikasi WhatsApp / Facebook Anda.
+
+### 2. Melatih Jempol Mengutip Pajak
+Ini pekerjaan utama Anda saat bertamu ke pintu warga.
+1. Klik dan masuk ke **Data Pajak**.
+2. Anda bisa mengetik nama pak RT, atau nama spesifik Mbah di kotak pensil (Pencarian).
+3. Jika bapak/ibu tersebut sudah bayar uang lembaran rupiahnya ke Anda, tekan status tagihan berwarna Merah (**Belum Lunas**).
+4. Kotak persetujuan kecil akan muncul, lalu tekan **"Tandai Lunas"**. 
+5. Uang pun telah sah secara virtual!
+
+### 3. Oper Over Tagihan (Memindah Warga)
+Jika si Wajib Pajak ternyata salah tempat dan bukan tanggung jawab Anda:
+1. Pada tabel Data Pajak tersebut, buka tombol titik tiga (`...`) di nama orangnya.
+2. Pilih **"Pindah Penugas / Alihkan Otoritas"**.
+3. Cari nama Petugas target sasaran Anda.
+4. Notifikasi akan diteruskan ke Petugas/Admin target untuk persetujuan (Acc).
+
+---
+*Manual ini disesuaikan untuk update terakhir - 2026*
