@@ -27,8 +27,9 @@ function getActionLabel(action: string, details?: string | null) {
     case "RESTORE_TAX": return { label: "Restore Data", color: "bg-purple-600", icon: <FileText className="w-3 h-3" /> };
     case "TRANSFER_REQUEST": return { label: "Permintaan Pindah", color: "bg-sky-600", icon: <ArrowRightLeft className="w-3 h-3" /> };
     case "TRANSFER_RESPONSE": {
-      const isAccepted = details?.includes("Menyetujui");
-      const isRejected = details?.includes("Menolak");
+      const detailUpper = details?.toUpperCase() || "";
+      const isAccepted = detailUpper.includes("MENYETUJUI") || detailUpper.includes("ACCEPTED");
+      const isRejected = detailUpper.includes("MENOLAK") || detailUpper.includes("REJECTED");
 
       return {
         label: isAccepted ? "Permintaan Disetujui" : isRejected ? "Permintaan Ditolak" : "Respon Pindah",
