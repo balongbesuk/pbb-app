@@ -40,6 +40,7 @@ export async function getAuditLogs(limit: number = 100, page: number = 1, search
       where.OR = [
         { action: { contains: searchQuery } },
         { entity: { contains: searchQuery } },
+        { entityId: { contains: searchQuery } },
         { details: { contains: searchQuery } },
         { user: { name: { contains: searchQuery } } },
         { user: { username: { contains: searchQuery } } },
