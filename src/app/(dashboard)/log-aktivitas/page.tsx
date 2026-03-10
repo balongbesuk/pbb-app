@@ -1,7 +1,7 @@
 import { getAuditLogs } from "@/app/actions/log-actions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, UserCircle, Activity, Box, Search, Calendar, ShieldCheck } from "lucide-react";
+import { FileText, UserCircle, Activity, Box, Search, Calendar, ShieldCheck, ArrowRightLeft, CheckCircle2, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -25,6 +25,15 @@ function getActionLabel(action: string, details?: string | null) {
     case "ASSIGN_TAX": return { label: "Tugaskan PBB", color: "bg-indigo-600", icon: <UserCircle className="w-3 h-3" /> };
     case "UPDATE_REGION": return { label: "Ubah Wilayah RT/RW", color: "bg-amber-600", icon: <Box className="w-3 h-3" /> };
     case "RESTORE_TAX": return { label: "Restore Data", color: "bg-purple-600", icon: <FileText className="w-3 h-3" /> };
+    case "TRANSFER_REQUEST": return { label: "Permintaan Pindah", color: "bg-sky-600", icon: <ArrowRightLeft className="w-3 h-3" /> };
+    case "TRANSFER_RESPONSE": {
+      const isAccepted = details?.includes("Menyetujui");
+      return {
+        label: isAccepted ? "Permintaan Disetujui" : "Permintaan Ditolak",
+        color: isAccepted ? "bg-teal-600" : "bg-orange-600",
+        icon: isAccepted ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />
+      };
+    }
     default: return { label: action, color: "bg-slate-600", icon: <Activity className="w-3 h-3" /> };
   }
 }

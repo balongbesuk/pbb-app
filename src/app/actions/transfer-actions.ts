@@ -81,7 +81,15 @@ export async function sendTransferRequest(taxId: number, receiverId: string, typ
       }
     });
 
-    await createAuditLog("TRANSFER_REQUEST", "TaxData", taxData.namaWp, `Kirim permintaan ${type} data WP ${taxData.namaWp} ke penarik ID: ${receiverId}`);
+    // 5. Audit Log
+    const receiverUser = await prisma.user.findUnique({ where: { id: receiverId }, select: { name: true } });
+    const typeLabel = type === "GIVE" ? "penyerahan" : "pengambilan";
+    await createAuditLog(
+      "TRANSFER_REQUEST",
+      "TaxData",
+      taxData.namaWp,
+      `Mengajukan ${typeLabel} data WP ${taxData.namaWp} kepada petugas: ${receiverUser?.name || receiverId}`
+    );
 
     return { success: true };
   } catch (error: any) {
@@ -153,7 +161,14 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
 
     revalidatePath("/data-pajak");
 
-    await createAuditLog("TRANSFER_RESPONSE", "TaxData", request.taxData.namaWp, `${status} permintaan ${request.type} data WP ${request.taxData.namaWp} dari penarik ID: ${request.senderId}`);
+    const statusLabel = status === "ACCEPTED" ? "Menyetujui" : "Menolak";
+    const typeLabel = request.type === "GIVE" ? "penyerahan" : "pengambilan";
+    await createAuditLog(
+      "TRANSFER_RESPONSE",
+      "TaxData",
+      request.taxData.namaWp,
+      `${statusLabel} permintaan ${typeLabel} data WP ${request.taxData.namaWp} dari petugas: ${request.sender.name || request.senderId}`
+    );
 
     return { success: true };
   } catch (error: any) {
