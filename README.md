@@ -33,8 +33,8 @@ Pastikan komputer Anda sudah terinstall:
 
 ### 2. Cara Download & Setup
 1.  **Download Project:** Klik tombol hijau bertuliskan **"Code"** di atas, lalu pilih **"Download ZIP"**. Ekstrak hasilnya ke folder pilihan Anda (Misal di `D:\PBB-APP`).
-2.  **Buka Command Prompt (CMD):** Klik Start, ketik `CMD`, tekan Enter.
-3.  **Masuk ke Folder:** Ketik perintah ini (Sesuaikan dengan folder Anda):
+2.  **Buka Command Prompt (CMD):** Klik Start (Pojok kiri bawah), ketik `CMD`, lalu klik kanan dan pilih **"Run as Administrator"** jika perlu.
+3.  **Masuk ke Folder:** Ketik perintah ini dan tekan Enter:
     ```cmd
     cd /d D:\PBB-APP
     ```
@@ -42,26 +42,35 @@ Pastikan komputer Anda sudah terinstall:
     ```cmd
     npm install
     ```
-5.  **Buka File Konfigurasi:** Cari file bernama `.env.example`, ubah namanya menjadi `.env`. Isi bagian `NEXTAUTH_SECRET` dengan kode rahasia bebas.
+5.  **Setup Konfigurasi (.env):** 
+    Agar sistem bisa berjalan, kita perlu membuat file konfigurasi. Ikuti langkah ini pelan-pelan:
+    *   **Duplikat File:** Di CMD, ketik perintah ini lalu Enter:
+        ```cmd
+        copy .env.example .env
+        ```
+    *   **Edit dengan Notepad:** Masih di CMD, ketik perintah ini untuk membuka file tersebut:
+        ```cmd
+        notepad .env
+        ```
+    *   **Simpan:** Di jendela Notepad yang muncul, cari tulisan `NEXTAUTH_SECRET`, Anda boleh ganti kodenya atau biarkan saja. Kemudian klik menu **File > Save**, lalu tutup Notepadnya.
 
-### 3. Menjalankan Mode Produksi (Siap Pakai)
-Untuk penggunaan sehari-hari di kantor, jalankan perintah berikut:
-1.  **Siapkan Database:**
+### 3. Menyiapkan Database & Menjalankan Aplikasi
+Setelah setup selesai, sekarang kita siapkan tempat penyimpanan data:
+1.  **Siapkan Database:** Di CMD, ketik dua perintah ini satu persatu (Enter di setiap baris):
     ```cmd
     npx prisma db push
     npx prisma db seed
     ```
-2.  **Kompilasi Aplikasi (Hanya Sekali):**
+2.  **Nyalakan Aplikasi (Mode Produksi):**
+    Agar aplikasi berjalan cepat dan stabil, ketik perintah ini:
     ```cmd
     npm run build
-    ```
-3.  **Jalankan Aplikasi:**
-    ```cmd
     npm run start
     ```
-4.  **Akses:** Buka Google Chrome dan ketik alamat: `http://localhost:3000`
+3.  **Akses Aplikasi:** Buka **Google Chrome** dan ketik alamat: `http://localhost:3000`
     -   **Username Default:** `admin`
     -   **Password Default:** `admin123`
+    -   *Kiat: Tekan tombol `CTRL + C` di CMD untuk mematikan sistem.*
 
 ---
 
