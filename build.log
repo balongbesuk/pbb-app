@@ -1,0 +1,51 @@
+ΓÜá `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+ΓÜá Invalid next.config.ts options detected: 
+ΓÜá     Unrecognized key(s) in object: 'eslint'
+ΓÜá See more info here: https://nextjs.org/docs/messages/invalid-next-config
+Γû▓ Next.js 16.1.6 (webpack)
+- Environments: .env
+
+  Creating an optimized production build ...
+ Γ£ô (pwa) Compiling for server...
+ Γ£ô (pwa) Compiling for server...
+ Γ£ô (pwa) Compiling for client (static)...
+ Γùï (pwa) Service worker: F:\Projek Vibe Koding\pbb-app\public\sw.js
+ Γùï (pwa)   URL: /sw.js
+ Γùï (pwa)   Scope: /
+Γ£ô Compiled successfully in 21.1s
+  Skipping validation of types
+  Collecting page data using 5 workers ...
+  Generating static pages using 5 workers (0/20) ...
+  Generating static pages using 5 workers (5/20) 
+prisma:query SELECT `main`.`User`.`id`, `main`.`User`.`name`, `main`.`User`.`email`, `main`.`User`.`username`, `main`.`User`.`password`, `main`.`User`.`role`, `main`.`User`.`dusun`, `main`.`User`.`rt`, `main`.`User`.`rw`, `main`.`User`.`createdAt`, `main`.`User`.`updatedAt`, COALESCE(`aggr_selection_0_TaxData`.`_aggr_count_taxData`, 0) AS `_aggr_count_taxData` FROM `main`.`User` LEFT JOIN (SELECT `main`.`TaxData`.`penarikId`, COUNT(*) AS `_aggr_count_taxData` FROM `main`.`TaxData` WHERE `main`.`TaxData`.`tahun` = ? GROUP BY `main`.`TaxData`.`penarikId`) AS `aggr_selection_0_TaxData` ON (`main`.`User`.`id` = `aggr_selection_0_TaxData`.`penarikId`) WHERE 1=1 ORDER BY `main`.`User`.`role` ASC LIMIT ? OFFSET ?
+  Generating static pages using 5 workers (10/20) 
+  Generating static pages using 5 workers (15/20) 
+Γ£ô Generating static pages using 5 workers (20/20) in 515.4ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+Γöî ╞Æ /
+Γö£ Γùï /_not-found
+Γö£ ╞Æ /api/auth/[...nextauth]
+Γö£ ╞Æ /api/backup
+Γö£ ╞Æ /api/backup-assignments
+Γö£ ╞Æ /api/download-template
+Γö£ ╞Æ /api/export-laporan-excel
+Γö£ ╞Æ /api/export-tax
+Γö£ ╞Æ /api/restore
+Γö£ ╞Æ /dashboard
+Γö£ ╞Æ /data-pajak
+Γö£ ╞Æ /laporan
+Γö£ ╞Æ /log-aktivitas
+Γö£ Γùï /login
+Γö£ Γùï /manifest.webmanifest
+Γö£ ╞Æ /pengguna
+Γö£ ╞Æ /settings
+Γö£ ╞Æ /settings/profile
+Γöö ╞Æ /upload-pbb
+
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+
