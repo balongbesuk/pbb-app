@@ -17,6 +17,7 @@ import {
   getPendingRequests,
   handleTransferResponse,
   markNotificationAsRead,
+  markAllNotificationsRead,
 } from "@/app/actions/transfer-actions";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -40,8 +41,8 @@ export function NotificationBell() {
   useEffect(() => {
     setMounted(true);
     fetchAll();
-    // Poll for notifications every 30 seconds
-    const interval = setInterval(fetchAll, 30000);
+    // Poll for notifications every 20 seconds
+    const interval = setInterval(fetchAll, 20000);
     return () => clearInterval(interval);
   }, []);
 
@@ -73,11 +74,7 @@ export function NotificationBell() {
 
   const onMarkAllRead = async () => {
     setLoading(true);
-    // We'll need a new action for this or just loop. Loop is easier for now but less efficient.
-    // Let's assume we want a single action for efficiency.
-    await Promise.all(
-      notifications.filter((n) => !n.isRead).map((n) => markNotificationAsRead(n.id))
-    );
+    await markAllNotificationsRead();
     fetchAll();
     setLoading(false);
   };

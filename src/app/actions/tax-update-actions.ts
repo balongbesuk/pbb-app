@@ -58,6 +58,32 @@ export async function updatePaymentStatus(
       `Ubah status pembayaran menjadi ${paymentStatus} (ID: ${numId})`
     );
 
+    // Kirim notifikasi ke semua Admin jika status berubah ke LUNAS
+    if (paymentStatus === "LUNAS") {
+      const penarikName = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true },
+      });
+
+      // Ambil semua user Admin & Pengguna untuk dikirim notif
+      const admins = await prisma.user.findMany({
+        where: { role: { in: ["ADMIN", "PENGGUNA"] } },
+        select: { id: true },
+      });
+
+      if (admins.length > 0) {
+        await prisma.notification.createMany({
+          data: admins.map((admin) => ({
+            userId: admin.id,
+            title: "✅ Setoran PBB Lunas",
+            message: `${penarikName?.name || "Penarik"} mengkonfirmasi WP ${data.namaWp} (${data.dusun || ""}, RT ${data.rt || "-"}/RW ${data.rw || "-"}) telah membayar.`,
+            type: "ACCEPTED",
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");
     return { success: true };

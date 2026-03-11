@@ -178,10 +178,20 @@ export async function getNotifications() {
     const session = await getServerSession(authOptions);
     if (!session) return [];
 
+    // Hapus notifikasi yang lebih dari 7 hari (cleanup otomatis)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    await prisma.notification.deleteMany({
+      where: {
+        userId: (session.user as any).id,
+        createdAt: { lt: sevenDaysAgo },
+      },
+    });
+
     return await prisma.notification.findMany({
       where: { userId: (session.user as any).id },
       orderBy: { createdAt: "desc" },
-      take: 10,
+      take: 20,
     });
   } catch (error) {
     return [];
@@ -195,6 +205,21 @@ export async function markNotificationAsRead(id: string) {
   try {
     await prisma.notification.update({
       where: { id },
+      data: { isRead: true },
+    });
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
+export async function markAllNotificationsRead() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return { success: false };
+
+    await prisma.notification.updateMany({
+      where: { userId: (session.user as any).id, isRead: false },
       data: { isRead: true },
     });
     return { success: true };
