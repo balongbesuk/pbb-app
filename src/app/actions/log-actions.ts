@@ -70,24 +70,3 @@ export async function getAuditLogs(limit: number = 100, page: number = 1, search
     return { logs: [], total: 0 };
   }
 }
-
-export async function getWpPaymentHistory(namaWp: string) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) return [];
-
-    return await prisma.auditLog.findMany({
-      where: {
-        entityId: namaWp,
-        action: { in: ["UPDATE_PAYMENT", "UPDATE_REGION"] },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-      include: {
-        user: { select: { name: true, role: true } },
-      },
-    });
-  } catch {
-    return [];
-  }
-}
