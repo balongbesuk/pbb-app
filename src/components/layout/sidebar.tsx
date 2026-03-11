@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn, toTitleCase } from "@/lib/utils";
 import {
   LayoutDashboard,
   UploadCloud,
@@ -84,7 +84,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
 
       <aside
         className={cn(
-          "fixed top-0 z-40 flex h-screen flex-col border-r border-zinc-100 bg-white transition-all duration-300 md:sticky dark:border-zinc-900 dark:bg-zinc-950",
+          "fixed top-0 z-40 flex h-screen flex-col border-r border-border bg-background transition-all duration-300 md:sticky",
           isCollapsed ? "w-20" : "w-64",
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
@@ -108,7 +108,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
             </div>
             {!isCollapsed && (
               <span className="text-foreground truncate text-sm font-bold leading-tight tracking-tight">
-                {villageConfig.namaDesa || "PBB Manager"}
+                {toTitleCase(villageConfig.namaDesa)}
               </span>
             )}
           </div>
@@ -137,7 +137,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
                   )}
                 >
                   {isActive && (
-                    <div className="bg-primary absolute left-0 h-5 w-1 rounded-r-full" />
+                    <div className="bg-primary absolute left-0 h-5 w-1.5 rounded-r-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]" />
                   )}
                   <item.icon
                     className={cn(
@@ -152,12 +152,12 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
           })}
         </nav>
 
-        <div className="hidden border-t border-zinc-100 p-4 md:block dark:border-zinc-900">
+        <div className="hidden border-t border-border p-4 md:block">
           <Button
             variant="ghost"
             size="icon"
             aria-label={isCollapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
-            className="h-10 w-full justify-center text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+            className="h-10 w-full justify-center text-muted-foreground hover:bg-muted/50 transition-colors"
             onClick={() => setIsCollapsed(!isCollapsed)}
           >
             <ChevronLeft

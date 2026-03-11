@@ -58,7 +58,7 @@ export function TaxTableFilters({
             <Search className="absolute top-1/2 left-3.5 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
             <Input
               placeholder="Cari NOP atau Nama..."
-              className="focus-visible:ring-primary/20 h-10 rounded-xl border-zinc-100 bg-zinc-50 pl-10 text-xs font-medium transition-all dark:border-zinc-800 dark:bg-zinc-900"
+              className="focus-visible:ring-primary/20 h-10 rounded-xl border-border bg-muted/20 pl-10 text-xs font-medium transition-all"
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
             />
@@ -68,12 +68,12 @@ export function TaxTableFilters({
             value={filterRegionStatus}
             onValueChange={(v) => onRegionStatusChange(v || "all")}
           >
-            <SelectTrigger className="h-10 w-[160px] rounded-xl border-zinc-100 bg-white text-xs font-bold shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+            <SelectTrigger className="h-10 w-[160px] rounded-xl border-border bg-card text-xs font-bold shadow-sm">
               <span className="flex flex-1 truncate text-left">
                 {filterRegionStatus === "all" ? "Semua Wilayah" : "⚠️ Belum Lengkap"}
               </span>
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-zinc-100 shadow-2xl dark:border-zinc-900">
+            <SelectContent className="rounded-xl border-border shadow-2xl">
               <SelectItem value="all">Semua Wilayah</SelectItem>
               <SelectItem value="incomplete" className="text-destructive font-black">
                 ⚠️ Belum Lengkap
@@ -92,12 +92,12 @@ export function TaxTableFilters({
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto">
           <Select value={filterDusun} onValueChange={(v) => onDusunChange(v || "all")}>
-            <SelectTrigger className="h-10 flex-1 rounded-xl border-zinc-100 bg-white text-[10px] font-bold shadow-sm sm:text-xs lg:w-[130px] dark:border-zinc-800 dark:bg-zinc-950">
+            <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[130px]">
               <span className="flex flex-1 truncate text-left">
                 {filterDusun === "all" ? "Semua Dusun" : filterDusun}
               </span>
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-zinc-100 shadow-2xl dark:border-zinc-900">
+            <SelectContent className="rounded-xl border-border shadow-2xl">
               <SelectItem value="all" className="font-bold">
                 Semua Dusun
               </SelectItem>
@@ -110,12 +110,12 @@ export function TaxTableFilters({
           </Select>
 
           <Select value={filterRw} onValueChange={(v) => onRwChange(v || "all")}>
-            <SelectTrigger className="h-10 flex-1 rounded-xl border-zinc-100 bg-white text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px] dark:border-zinc-800 dark:bg-zinc-950">
+            <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px]">
               <span className="flex flex-1 truncate text-left">
                 {filterRw === "all" ? "Semua RW" : `RW ${filterRw}`}
               </span>
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-zinc-100 shadow-2xl dark:border-zinc-900">
+            <SelectContent className="rounded-xl border-border shadow-2xl">
               <SelectItem value="all" className="font-bold">
                 Semua RW
               </SelectItem>
@@ -128,12 +128,12 @@ export function TaxTableFilters({
           </Select>
 
           <Select value={filterRt} onValueChange={(v) => onRtChange(v || "all")}>
-            <SelectTrigger className="h-10 flex-1 rounded-xl border-zinc-100 bg-white text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px] dark:border-zinc-800 dark:bg-zinc-950">
+            <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px]">
               <span className="flex flex-1 truncate text-left">
                 {filterRt === "all" ? "Semua RT" : `RT ${filterRt}`}
               </span>
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-zinc-100 shadow-2xl dark:border-zinc-900">
+            <SelectContent className="rounded-xl border-border shadow-2xl">
               <SelectItem value="all" className="font-bold">
                 Semua RT
               </SelectItem>
@@ -146,7 +146,7 @@ export function TaxTableFilters({
           </Select>
 
           <Select value={filterPenarik} onValueChange={(v) => onPenarikChange(v || "all")}>
-            <SelectTrigger className="h-10 flex-1 rounded-xl border-zinc-100 bg-white text-[10px] font-bold shadow-sm sm:text-xs lg:w-[160px] dark:border-zinc-800 dark:bg-zinc-950">
+            <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[160px]">
               <span className="flex flex-1 truncate text-left">
                 {filterPenarik === "all"
                   ? "Semua Penarik"
@@ -156,7 +156,7 @@ export function TaxTableFilters({
                       "Pilih"}
               </span>
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-zinc-100 shadow-2xl dark:border-zinc-900">
+            <SelectContent className="rounded-xl border-border shadow-2xl">
               <SelectItem value="all" className="font-bold">
                 Semua Penarik
               </SelectItem>
@@ -178,7 +178,7 @@ export function TaxTableFilters({
             onClick={onPrint}
             variant="outline"
             size="sm"
-            className="h-9 w-full gap-2 rounded-xl border-zinc-100 bg-zinc-50 text-[10px] font-bold tracking-widest text-zinc-600 uppercase shadow-sm hover:bg-zinc-100 sm:w-auto dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
+            className="h-9 w-full gap-2 rounded-xl border-border bg-muted/20 text-[10px] font-bold tracking-widest text-muted-foreground uppercase shadow-sm transition-colors hover:bg-muted/30 sm:w-auto"
           >
             <Printer className="h-3.5 w-3.5" /> Cetak / Export Data
           </Button>

@@ -41,7 +41,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
   if (!mounted) {
     return (
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-100 bg-white/80 px-4 backdrop-blur-md md:px-6 dark:border-zinc-900 dark:bg-zinc-950/80">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">
         <div className="flex-1" />
       </header>
     );
@@ -50,7 +50,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const initials = session?.user?.name?.charAt(0)?.toUpperCase() || "A";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-100 bg-white/80 px-4 backdrop-blur-md md:px-6 dark:border-zinc-900 dark:bg-zinc-950/80">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">
       <div className="flex flex-1 items-center gap-2 md:gap-4">
         <Button
           variant="ghost"
@@ -97,7 +97,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-64 rounded-2xl border border-zinc-100 bg-white p-2 shadow-2xl dark:border-zinc-900 dark:bg-zinc-950"
+              className="w-64 rounded-2xl border border-border bg-card p-2 shadow-2xl"
             >
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="px-3 py-2">

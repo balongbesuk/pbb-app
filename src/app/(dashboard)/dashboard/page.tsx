@@ -26,9 +26,9 @@ import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { getVillageConfig } from "@/app/actions/settings-actions";
+import { formatCurrency, toTitleCase, cn } from "@/lib/utils";
+import Image from "next/image";
 
 async function getDashboardStats(tahun: number = new Date().getFullYear()) {
   const [
@@ -141,12 +141,6 @@ export default async function DashboardPage({
     getVillageConfig(),
   ]);
 
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      maximumFractionDigits: 0,
-    }).format(val);
 
   return (
     <div className="animate-in fade-in space-y-8 duration-700">
@@ -155,7 +149,7 @@ export default async function DashboardPage({
         <div className="flex items-center gap-4">
           {/* Village Logo */}
           {villageConfig.logoUrl && (
-            <div className="hidden h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:flex items-center justify-center">
+            <div className="hidden h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:bg-zinc-100 sm:flex items-center justify-center">
               <Image
                 src={`${villageConfig.logoUrl}?v=1`}
                 alt="Logo Desa"
@@ -173,7 +167,7 @@ export default async function DashboardPage({
             <p className="text-muted-foreground flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               {villageConfig.namaDesa
-                ? `Laporan PBB Desa ${villageConfig.namaDesa} • Tahun ${currentYear}`
+                ? `Laporan PBB Desa ${toTitleCase(villageConfig.namaDesa)} • Tahun ${currentYear}`
                 : `Laporan Kinerja Penarikan PBB • Tahun ${currentYear}`}
             </p>
           </div>
@@ -365,9 +359,9 @@ export default async function DashboardPage({
 
 function PhysicalStatsCard({ title, value, description, icon }: any) {
   return (
-    <Card className="hover:border-primary/20 overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-sm transition-all duration-300 dark:border-zinc-900 dark:bg-zinc-950">
+    <Card className="hover:border-primary/20 overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300">
       <CardContent className="flex items-center gap-4 p-5">
-        <div className="text-foreground/50 rounded-xl border border-zinc-100 bg-zinc-50 p-2.5 dark:border-zinc-900 dark:bg-zinc-900">
+        <div className="text-foreground/50 rounded-xl border border-border bg-muted/30 p-2.5">
           {icon}
         </div>
         <div className="space-y-0.5">
@@ -386,14 +380,14 @@ function PhysicalStatsCard({ title, value, description, icon }: any) {
 
 function StatsHeroCard({ title, value, icon, description, percent, color }: any) {
   const colors: any = {
-    indigo: "bg-indigo-500/5 text-indigo-600 border-indigo-100 dark:border-indigo-900/50",
-    emerald: "bg-emerald-500/5 text-emerald-600 border-emerald-100 dark:border-emerald-900/50",
-    rose: "bg-rose-500/5 text-rose-600 border-rose-100 dark:border-rose-900/50",
-    blue: "bg-blue-500/5 text-blue-600 border-blue-100 dark:border-blue-900/50",
+    indigo: "bg-indigo-500/5 text-indigo-600 border-indigo-100 dark:border-indigo-900/40",
+    emerald: "bg-emerald-500/5 text-emerald-600 border-emerald-100 dark:border-emerald-900/40",
+    rose: "bg-rose-500/5 text-rose-600 border-rose-100 dark:border-rose-900/40",
+    blue: "bg-blue-500/5 text-blue-600 border-blue-100 dark:border-blue-900/40",
   };
 
   return (
-    <Card className="hover:border-primary/20 group space-y-4 rounded-3xl border border-zinc-100 bg-white p-6 shadow-sm transition-all duration-300 dark:border-zinc-900 dark:bg-zinc-950">
+    <Card className="hover:border-primary/20 group space-y-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300">
       <div className="flex items-start justify-between">
         <div className={cn("rounded-xl border p-2.5", colors[color])}>{icon}</div>
         {percent !== undefined && (
@@ -423,7 +417,7 @@ function StatsHeroCard({ title, value, icon, description, percent, color }: any)
 
 function DashboardMiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-zinc-50 bg-zinc-50 px-4 py-3 dark:border-zinc-900/50 dark:bg-zinc-900/50">
+    <div className="flex items-center justify-between rounded-xl border border-border bg-muted/20 px-4 py-3">
       <span className="text-muted-foreground text-xs font-bold">{label}</span>
       <span className="text-foreground text-sm font-black tracking-tight">{value}</span>
     </div>
