@@ -82,22 +82,37 @@ function LoginForm() {
     ? `Kec. ${village.kecamatan}, Kab. ${village.kabupaten}`
     : "Sistem Manajemen Pajak Bumi & Bangunan";
 
-  // Dynamic color classes based on theme — avoids broken public-dark: Tailwind variant
-  const cardBg = isDark ? "bg-[#0A192F]/60 border-white/5 backdrop-blur-xl shadow-[#02060D]/60" : "bg-white border-zinc-100 shadow-zinc-200/60";
-  const cardHeaderBg = isDark ? "bg-[#0F203B]/80 border-white/5" : "bg-primary/[0.03] border-zinc-50";
+  // Dynamic color classes based on theme — hardcoded to avoid CSS variable cascade issues from next-themes
+  const cardBg = isDark
+    ? "bg-[#0A192F]/60 border-white/5 backdrop-blur-xl shadow-[#02060D]/60"
+    : "bg-white border-zinc-200 shadow-zinc-300/60";
+  const cardHeaderBg = isDark
+    ? "bg-[#0F203B]/80 border-white/5"
+    : "bg-zinc-50 border-zinc-100";
   const inputCls = isDark
     ? "border-white/10 bg-[#050B14] text-blue-50 focus:border-blue-500/50 focus:bg-[#050B14]/80 placeholder:text-blue-200/20"
-    : "border-zinc-200 bg-zinc-50 text-zinc-900 focus:border-primary/30 focus:bg-white";
-  const cardFooterBorder = isDark ? "border-white/5" : "border-zinc-50";
+    : "border-zinc-300 bg-white text-zinc-900 focus:border-blue-400 focus:bg-white placeholder:text-zinc-400";
+  const cardFooterBorder = isDark ? "border-white/5" : "border-zinc-100";
   const backBtnCls = isDark
     ? "bg-[#0A192F]/50 text-blue-100 border-white/10 hover:bg-[#0A192F] hover:text-blue-50"
-    : "bg-white/50 text-zinc-600 border-zinc-200 hover:bg-white hover:text-primary";
-  const ringColor = isDark ? "ring-zinc-800" : "ring-zinc-100";
-  const logoCardBorder = isDark ? "ring-white/10 border-white/10 bg-[#0A192F]" : "ring-white bg-white border-zinc-100";
-  const featureBadgeCls = isDark ? "bg-primary/10 border-zinc-800 text-primary" : "bg-primary/5 border-zinc-100 text-primary";
-  const gridOpacity = isDark ? "opacity-[0.03]" : "opacity-[0.015]";
-  const blob1Bg = isDark ? "bg-blue-500/10" : "bg-primary/10";
-  const nameCls = isDark ? "text-white" : "text-foreground";
+    : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900";
+  const ringColor = isDark ? "ring-zinc-800" : "ring-zinc-200";
+  const logoCardBorder = isDark
+    ? "ring-white/10 border-white/10 bg-[#0A192F]"
+    : "ring-zinc-100 bg-white border-zinc-100";
+  const featureBadgeCls = isDark
+    ? "bg-blue-500/10 border-blue-900/50 text-blue-300"
+    : "bg-blue-50 border-blue-100 text-blue-700";
+  const gridOpacity = isDark ? "opacity-[0.03]" : "opacity-[0.02]";
+  const blob1Bg = isDark ? "bg-blue-500/10" : "bg-blue-300/20";
+  const nameCls = isDark ? "text-white" : "text-zinc-900";
+  const mutedCls = isDark ? "text-blue-200/60" : "text-zinc-500";
+  const subtitleCls = isDark ? "text-blue-200/70" : "text-zinc-600";
+  const submitBtnCls = isDark
+    ? "bg-blue-600 hover:bg-blue-700 text-white"
+    : "bg-zinc-900 hover:bg-zinc-800 text-white";
+  const labelCls = isDark ? "text-blue-200/70" : "text-zinc-600";
+
 
   return (
     <div className="relative flex min-h-screen overflow-hidden">
@@ -131,7 +146,7 @@ function LoginForm() {
               {displayName}
             </span>
             {village.kecamatan && (
-              <span className="text-muted-foreground block text-xs font-medium">
+              <span className={`block text-xs font-medium ${mutedCls}`}>
                 {subName}
               </span>
             )}
@@ -157,7 +172,7 @@ function LoginForm() {
               <br />
               Bangunan
             </h1>
-            <p className="text-muted-foreground max-w-sm text-base leading-relaxed">
+            <p className={`max-w-sm text-base leading-relaxed ${subtitleCls}`}>
               Platform terintegrasi untuk penarikan, pemantauan, dan pelaporan PBB tingkat desa secara real-time.
             </p>
           </div>
@@ -174,7 +189,7 @@ function LoginForm() {
         </div>
 
         {/* Footer */}
-        <p className="text-muted-foreground/50 text-xs">
+        <p className={`text-xs opacity-50 ${nameCls}`}>
           &copy; {new Date().getFullYear()} Pemerintah Desa {village.namaDesa || ""}. All rights reserved.
         </p>
       </div>
@@ -213,7 +228,7 @@ function LoginForm() {
             </div>
 
             <h2 className={`text-2xl font-black tracking-tight ${nameCls}`}>Masuk ke Sistem</h2>
-            <p className="text-muted-foreground mt-1 text-sm font-medium">
+            <p className={`mt-1 text-sm font-medium ${subtitleCls}`}>
               Masukkan kredensial Anda untuk melanjutkan
             </p>
           </div>
@@ -221,7 +236,7 @@ function LoginForm() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5 px-8 py-7">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-muted-foreground text-xs font-black tracking-widest uppercase">
+              <Label htmlFor="username" className={`text-xs font-black tracking-widest uppercase ${labelCls}`}>
                 Username
               </Label>
               <div className="relative">
@@ -243,7 +258,7 @@ function LoginForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-muted-foreground text-xs font-black tracking-widest uppercase">
+              <Label htmlFor="password" className={`text-xs font-black tracking-widest uppercase ${labelCls}`}>
                 Password
               </Label>
               <div className="relative">
@@ -276,7 +291,7 @@ function LoginForm() {
             <Button
               type="submit"
               disabled={isLoading || !username.trim() || !password.trim()}
-              className="shadow-primary/20 mt-2 h-12 w-full rounded-xl font-bold shadow-lg transition-all duration-200 hover:shadow-xl hover:shadow-primary/25 disabled:opacity-60"
+              className={`mt-2 h-12 w-full rounded-xl font-bold shadow-lg transition-all duration-200 hover:shadow-xl disabled:opacity-60 ${submitBtnCls}`}
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
@@ -291,7 +306,7 @@ function LoginForm() {
 
           {/* Card footer */}
           <div className={`border-t px-8 py-5 relative z-10 ${cardFooterBorder}`}>
-            <p className="text-muted-foreground/50 text-center text-xs leading-relaxed">
+            <p className={`text-center text-xs leading-relaxed opacity-50 ${mutedCls}`}>
               Sistem ini hanya untuk pengguna yang berwenang.
               <br />
               Akses tidak sah akan dicatat dan dilaporkan.
@@ -300,7 +315,7 @@ function LoginForm() {
         </div>
 
         {/* Mobile footer */}
-        <p className="text-muted-foreground/40 absolute bottom-6 text-center text-xs lg:hidden">
+        <p className={`absolute bottom-6 text-center text-xs lg:hidden opacity-40 ${nameCls}`}>
           &copy; {new Date().getFullYear()} Pemerintah Desa {village.namaDesa || ""}. All rights reserved.
         </p>
       </div>

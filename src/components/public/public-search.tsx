@@ -48,7 +48,7 @@ export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
     : "bg-white border-zinc-200 text-zinc-900 focus-visible:ring-primary";
   const btnCls = isDark
     ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/40"
-    : "shadow-primary/20";
+    : "bg-zinc-900 hover:bg-zinc-800 text-white shadow-zinc-900/20";
   const disclaimerCls = isDark
     ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
     : "border-amber-200/60 bg-amber-50/50 text-amber-800";
@@ -58,10 +58,10 @@ export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
   const cardHeaderBgCls = isDark
     ? "from-[#0F203B] to-[#0A192F]/50 border-white/5"
     : "from-zinc-50 to-white border-zinc-50";
-  const nopCls = isDark ? "text-blue-300/80" : "text-muted-foreground";
+  const nopCls = isDark ? "text-blue-300/80" : "text-zinc-500";
   const nameCls = isDark ? "text-blue-50" : "text-zinc-900";
   const bodyTextCls = isDark ? "text-blue-100" : "text-zinc-700";
-  const mutedLabelCls = isDark ? "text-blue-200/50" : "text-muted-foreground";
+  const mutedLabelCls = isDark ? "text-blue-200/50" : "text-zinc-500";
   const addressCls = isDark ? "text-blue-100/90" : "text-zinc-900";
   const cardFooterCls = isDark ? "bg-[#050B14]/40 border-white/5" : "bg-zinc-50 border-zinc-100";
   const waaBtnCls = isDark
