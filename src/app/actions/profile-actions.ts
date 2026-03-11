@@ -32,7 +32,7 @@ export async function updateUserProfile(data: { name: string; phoneNumber: strin
       "UPDATE_PROFILE",
       "USER",
       userId,
-      `Memperbarui profil: Nama=${data.name}, Email=${data.email}, Kontak=${data.phoneNumber}`
+      `Berhasil memperbarui informasi profil: Nama, Email, dan Nomor Kontak.`
     );
 
     return { success: true };

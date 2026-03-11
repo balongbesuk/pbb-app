@@ -55,12 +55,6 @@ next-env.d.ts
 # Templates (Always keep)
 !/public/template-pbb.xlsx
 
-# PWA generated files
-public/sw.js
-public/sw.js.map
-public/workbox-*.js
-public/workbox-*.js.map
-public/fallback-*.js
 
 # App build logs
 build.log

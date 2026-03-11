@@ -94,6 +94,20 @@ function getActionLabel(action: string, details?: string | null) {
       classes:
         "bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800",
     },
+    UPDATE_PROFILE: {
+      label: "Perbarui Profil",
+      color: "indigo",
+      icon: <ShieldCheck className="h-3.5 w-3.5" />,
+      classes:
+        "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800",
+    },
+    UPDATE_AVATAR: {
+      label: "Foto Profil",
+      color: "teal",
+      icon: <UserCircle className="h-3.5 w-3.5" />,
+      classes:
+        "bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800",
+    },
   };
 
   if (action === "UPDATE_PAYMENT") {
@@ -148,6 +162,7 @@ function getEntityLabel(entity: string) {
     case "TaxMapping":
       return "Data Pajak (PBB)";
     case "User":
+    case "USER":
       return "Pengguna";
     case "DusunReference":
       return "Referensi Dusun";
@@ -261,7 +276,14 @@ export default async function AuditLogPage({
                               {getEntityLabel(log.entity)}
                             </span>
                           </>
-                        ) : log.entity === "User" ? (
+                        ) : log.action === "UPDATE_PROFILE" || log.action === "UPDATE_AVATAR" ? (
+                          <>
+                            Berhasil memperbarui profil akun{" "}
+                            <span className="text-primary font-black">
+                              {log.user && log.entityId === log.user.id ? "sendiri" : `(ID: ${log.entityId})`}
+                            </span>
+                          </>
+                        ) : log.entity === "User" || log.entity === "USER" ? (
                           <>
                             Manajemen pengguna pada{" "}
                             <span className="text-foreground font-black">

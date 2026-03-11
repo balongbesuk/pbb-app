@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       "UPDATE_AVATAR",
       "USER",
       userId,
-      `Memperbarui foto profil ke ${avatarUrl}`
+      "Berhasil memperbarui foto profil."
     );
 
     return NextResponse.json({ success: true, avatarUrl });

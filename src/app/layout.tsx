@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import QueryProvider from "@/components/query-provider";
 
+import { getVillageConfig } from "@/app/actions/settings-actions";
+
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
@@ -17,10 +19,21 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export const metadata: Metadata = {
-  title: "PBB Manager | Sistem Manajemen Penarikan Pajak",
-  description: "Aplikasi Manajemen Penarikan Pajak Bumi Bangunan (PBB) Desa",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await getVillageConfig();
+  const villageName = config?.namaDesa || "";
+  
+  return {
+    title: villageName 
+      ? `PBB Manager | ${villageName}` 
+      : "PBB Manager | Sistem Manajemen Penarikan Pajak",
+    description: `Aplikasi Manajemen Penarikan Pajak Bumi Bangunan (PBB) Desa ${villageName}`,
+    icons: {
+      icon: config?.logoUrl || "/favicon.ico",
+    },
+  };
+}
+
 
 export default function RootLayout({
   children,
