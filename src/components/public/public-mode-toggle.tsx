@@ -2,10 +2,10 @@
 
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { usePublicTheme } from "@/hooks/use-public-theme";
+import { usePublicThemeContext } from "@/components/public/public-theme-provider";
 
 export function PublicModeToggle() {
-  const { theme, toggleTheme } = usePublicTheme();
+  const { theme, toggleTheme } = usePublicThemeContext();
   const isDark = theme === "dark";
 
   return (
@@ -25,7 +25,9 @@ export function PublicModeToggle() {
       ) : (
         <Moon className="h-[1.2rem] w-[1.2rem]" />
       )}
-      <span className="sr-only">{isDark ? "Ganti ke tema terang" : "Ganti ke tema gelap"}</span>
+      <span className="sr-only">
+        {isDark ? "Ganti ke tema terang" : "Ganti ke tema gelap"}
+      </span>
     </Button>
   );
 }

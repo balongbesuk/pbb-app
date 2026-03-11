@@ -132,15 +132,6 @@
   }
 }
 
-/* Override: body inside public-light area should not apply dark background */
-body:has(.public-light) {
-  background-color: oklch(0.985 0.001 106.423) !important;
-  color: oklch(0.145 0.012 45.057) !important;
-}
-
-body:has(.public-dark) {
-  background-color: #050B14 !important;
-}
 
 .glass {
   background: rgba(255, 255, 255, 0.7);

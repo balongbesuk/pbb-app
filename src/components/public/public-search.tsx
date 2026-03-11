@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info } from "lucide-react";
-import { usePublicTheme } from "@/hooks/use-public-theme";
+import { usePublicThemeContext } from "@/components/public/public-theme-provider";
 
 export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
   const [query, setQuery] = useState("");
@@ -15,8 +15,9 @@ export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
   const [results, setResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [message, setMessage] = useState("");
-  const { theme } = usePublicTheme();
+  const { theme } = usePublicThemeContext();
   const isDark = theme === "dark";
+
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();

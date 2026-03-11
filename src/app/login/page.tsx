@@ -12,9 +12,19 @@ import { Building2, Lock, User, Eye, EyeOff, Loader2, ShieldCheck, ArrowLeft } f
 import Image from "next/image";
 import { PublicThemeWrapper } from "@/components/public/public-theme-wrapper";
 import { PublicModeToggle } from "@/components/public/public-mode-toggle";
-import { usePublicTheme } from "@/hooks/use-public-theme";
+import { usePublicThemeContext } from "@/components/public/public-theme-provider";
 
+// Outer page: provides the PublicThemeProvider via PublicThemeWrapper
 export default function LoginPage() {
+  return (
+    <PublicThemeWrapper>
+      <LoginForm />
+    </PublicThemeWrapper>
+  );
+}
+
+// Inner form: can safely consume usePublicThemeContext
+function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +36,7 @@ export default function LoginPage() {
     logoUrl: string | null;
   }>({ namaDesa: "", kecamatan: "", kabupaten: "", logoUrl: null });
   const router = useRouter();
-  const { theme } = usePublicTheme();
+  const { theme } = usePublicThemeContext();
   const isDark = theme === "dark";
 
   useEffect(() => {
@@ -90,7 +100,6 @@ export default function LoginPage() {
   const nameCls = isDark ? "text-white" : "text-foreground";
 
   return (
-    <PublicThemeWrapper>
     <div className="relative flex min-h-screen overflow-hidden">
       {/* ─── Ambient background blobs ───────────────────────────────────── */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -296,6 +305,5 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
-    </PublicThemeWrapper>
   );
 }
