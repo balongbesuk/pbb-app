@@ -166,7 +166,7 @@ export default function UploadPBBPage() {
                   {file ? file.name : "Klik atau seret file ke sini"}
                 </p>
                 <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">
-                  Maksimal 20MB (.xlsx)
+                  Maksimal 5MB (.xlsx)
                 </p>
               </div>
 
