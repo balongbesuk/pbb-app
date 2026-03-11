@@ -19,13 +19,13 @@
 | Fitur | Deskripsi |
 |---|---|
 | **Dashboard Real-Time** | Pantau tren realisasi harian, statistik wilayah, dan performa petugas secara langsung |
+| **Portal Warga Modern** | Pencarian tagihan publik dengan efek *glassmorphism*, pencarian cepat, dan desain premium |
+| **Branding Dinamis** | Ubah logo desa, nama desa, kecamatan, dan kabupaten langsung dari menu Pengaturan |
 | **Import Excel Pintar** | Unggah format DHKP (.xlsx) dengan proteksi anti-duplikat, pemetaan Dusun/RT/RW otomatis |
 | **Delegasi Penarik** | Distribusikan tagihan Wajib Pajak ke petugas lapangan dengan *Bulk Assign* satu klik |
-| **Transfer Tagihan** | Petugas bisa mengalihkan WP ke penarik lain, dengan sistem persetujuan & notifikasi |
-| **Laporan Excel** | Ekspor rekapitulasi realisasi pajak per RW siap serah ke Kecamatan |
 | **Audit Trail** | Rekam seluruh aktivitas: login, perubahan status, rotasi hak akses — tidak bisa dimanipulasi |
+| **Desa-First UX** | Nama desa, kecamatan, dan kabupaten otomatis diformat Title Case agar tampilan rapi & profesional |
 | **Backup & Restore** | Unduh backup database sewaktu-waktu; pulihkan jika terjadi kesalahan |
-| **Keamanan Berlapis** | Rate limiting login, cookie HttpOnly + SameSite, sesi otomatis expire 8 jam |
 
 ---
 
@@ -34,8 +34,9 @@
 Tiga level akses untuk menjaga integritas data pajak:
 
 ### 👑 ADMIN — Kepala Desa / Petugas IT / Admin PBB
-- Kontrol penuh terhadap seluruh sistem
+- Kontrol penuh terhadap seluruh sistem & pengaturan profil instansi
 - Mengelola akun pengguna (buat, edit, reset password, hapus)
+- Update Logo Desa, Nama Desa, Kec, dan Kab untuk branding portal & login
 - Import Excel DHKP & atur distribusi wilayah ke penarik
 - Memantau Log Aktivitas seluruh pengguna
 - Backup, restore, dan reset database

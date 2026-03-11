@@ -23,6 +23,7 @@ Setiap pengguna beroperasi sesuai peran yang ditetapkan oleh Admin.
 1. Buka aplikasi di browser, masukkan **username** dan **password**
 2. Setelah login pertama kali, segera ganti password di **Pengaturan > Profil > Ganti Password**
 3. Sesi akan otomatis berakhir setelah **8 jam** tidak aktif
+4. **Branding & Logo**: Identitas portal warga diatur di menu **Pengaturan > Profil Instansi**. Logo dan nama yang diubah di sana akan otomatis muncul di halaman depan dan halaman login.
 
 > ⚠️ Sistem membatasi **10 percobaan login gagal** per 15 menit untuk mencegah akses tidak sah.
 
@@ -104,6 +105,16 @@ Setiap awal tahun, lakukan langkah berikut sebelum Excel DHKP dibagikan:
 
 ---
 
+### 7. Pengaturan Branding & Portal Warga
+
+Portal depan adalah wajah layanan publik Anda. Admin bisa menyesuaikannya:
+1. Buka **Pengaturan > Profil Instansi**
+2. **Ganti Logo**: Upload file gambar logo desa (rekomendasi: .png transparan).
+3. **Nama Desa/Kec/Kab**: Sesuaikan penulisan. Tips: Tuliskan dengan format Title Case agar tampil cantik di web.
+4. Simpan Perubahan. Logo dan identitas baru akan langsung aktif di **Halaman Depan** dan **Halaman Login**.
+
+---
+
 ## 📱 Panduan Penarik Pajak
 
 ### 1. Membuka Aplikasi di HP
@@ -180,4 +191,4 @@ Coba close tab browser lain. Gunakan Chrome versi terbaru untuk performa optimal
 
 ---
 
-*Dokumentasi terakhir diperbarui: Maret 2026*
+*Dokumentasi terakhir diperbarui: 12 Maret 2026 (Branding & UI Update)*
