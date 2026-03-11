@@ -37,7 +37,7 @@ export function LogSearch({ defaultValue }: { defaultValue: string }) {
   return (
     <Input
       placeholder="Cari aktivitas, user, atau data..."
-      className="focus-visible:ring-primary/20 border-none bg-white/50 pl-10 shadow-none focus-visible:ring-1"
+      className="focus-visible:ring-primary/20 border-none bg-white/50 dark:bg-slate-900/50 pl-10 shadow-none focus-visible:ring-1"
       value={value}
       onChange={(e) => setValue(e.target.value)}
     />
