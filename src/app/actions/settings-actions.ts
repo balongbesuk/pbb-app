@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/server-auth";
@@ -37,7 +38,7 @@ export async function deleteAllTaxData() {
   }
 }
 
-export async function getVillageConfig() {
+export const getVillageConfig = cache(async () => {
   try {
     const config = (await prisma.$queryRawUnsafe(`SELECT * FROM "VillageConfig" LIMIT 1`)) as any[];
     if (config.length > 0) return config[0];
@@ -52,7 +53,7 @@ export async function getVillageConfig() {
     console.error(e);
     return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026, logoUrl: null };
   }
-}
+});
 
 import { VillageConfigSchema, formatZodError } from "@/lib/validations/schemas";
 
