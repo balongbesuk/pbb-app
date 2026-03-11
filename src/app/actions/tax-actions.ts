@@ -4,11 +4,16 @@ import { parseExcel, processTaxData, processBackupAssignments } from "@/lib/exce
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createAuditLog } from "./log-actions";
+import { requireAdmin } from "@/lib/server-auth";
 
 export async function uploadTaxData(formData: FormData, tahun: number) {
   try {
+    await requireAdmin();
     const file = formData.get("file") as File;
     if (!file) throw new Error("File tidak ditemukan");
+
+    // Batasi maksimum file Excel 5MB (Mencegah OOM/Crash Memory)
+    if (file.size > 5 * 1024 * 1024) throw new Error("Ukuran file terlalu besar. Maksimal 5MB.");
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const rows = await parseExcel(buffer);
@@ -34,8 +39,12 @@ export async function uploadTaxData(formData: FormData, tahun: number) {
 
 export async function restoreAssignments(formData: FormData, tahun: number) {
   try {
+    await requireAdmin();
     const file = formData.get("file") as File;
     if (!file) throw new Error("File tidak ditemukan");
+
+    // Batasi maksimum file Excel 5MB
+    if (file.size > 5 * 1024 * 1024) throw new Error("Ukuran file terlalu besar. Maksimal 5MB.");
 
     const buffer = Buffer.from(await file.arrayBuffer());
     console.log("Starting restore for year:", tahun);
@@ -64,6 +73,7 @@ export async function restoreAssignments(formData: FormData, tahun: number) {
 
 export async function clearTaxData(tahun: number) {
   try {
+    await requireAdmin();
     await prisma.taxData.deleteMany({
       where: { tahun },
     });

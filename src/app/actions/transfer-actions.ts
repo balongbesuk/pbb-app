@@ -203,8 +203,15 @@ export async function getNotifications() {
  */
 export async function markNotificationAsRead(id: string) {
   try {
-    await prisma.notification.update({
-      where: { id },
+    const session = await getServerSession(authOptions);
+    if (!session) return { success: false };
+
+    // Gunakan updateMany untuk memfilter owner secara aman tanpa error not found, dsb. (Celah IDOR ditutup)
+    await prisma.notification.updateMany({
+      where: { 
+        id, 
+        userId: (session.user as any).id 
+      },
       data: { isRead: true },
     });
     return { success: true };
