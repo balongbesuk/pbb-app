@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
@@ -9,13 +9,27 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Building2, Lock, User, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [village, setVillage] = useState<{
+    namaDesa: string;
+    kecamatan: string;
+    kabupaten: string;
+    logoUrl: string | null;
+  }>({ namaDesa: "", kecamatan: "", kabupaten: "", logoUrl: null });
   const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/village-config")
+      .then((r) => r.json())
+      .then((d) => setVillage(d))
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +59,14 @@ export default function LoginPage() {
     }
   };
 
+  const displayName = village.namaDesa
+    ? `Desa ${village.namaDesa}`
+    : "PBB Manager";
+
+  const subName = village.kecamatan && village.kabupaten
+    ? `Kec. ${village.kecamatan}, Kab. ${village.kabupaten}`
+    : "Sistem Manajemen Pajak Bumi & Bangunan";
+
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       {/* ─── Ambient background blobs ───────────────────────────────────── */}
@@ -72,23 +94,54 @@ export default function LoginPage() {
 
       {/* ─── Left panel — branding (hidden on mobile) ────────────────────── */}
       <div className="relative z-10 hidden flex-col justify-between p-12 lg:flex lg:w-[45%]">
-        {/* Logo */}
+        {/* Logo + App name */}
         <div className="flex items-center gap-3">
-          <div className="bg-primary flex h-10 w-10 items-center justify-center rounded-2xl shadow-md">
-            <Building2 className="text-primary-foreground h-5 w-5" />
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-zinc-100 dark:ring-zinc-800">
+            {village.logoUrl ? (
+              <Image
+                src={`${village.logoUrl}?v=1`}
+                alt="Logo Desa"
+                width={48}
+                height={48}
+                className="h-full w-full object-contain p-1"
+                unoptimized
+              />
+            ) : (
+              <Building2 className="text-primary h-6 w-6" />
+            )}
           </div>
-          <span className="text-foreground text-lg font-black tracking-tight">PBB Manager</span>
+          <div>
+            <span className="text-foreground block text-lg font-black leading-tight tracking-tight">
+              {displayName}
+            </span>
+            {village.kecamatan && (
+              <span className="text-muted-foreground block text-xs font-medium">
+                {subName}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Center content */}
         <div className="space-y-8">
-          {/* Large decorative icon */}
-          <div className="bg-primary/5 dark:bg-primary/10 inline-flex h-20 w-20 items-center justify-center rounded-3xl border border-zinc-100 shadow-sm dark:border-zinc-800">
-            <Building2 className="text-primary h-10 w-10" />
+          {/* Large decorative logo */}
+          <div className="inline-flex h-28 w-28 items-center justify-center overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+            {village.logoUrl ? (
+              <Image
+                src={`${village.logoUrl}?v=1`}
+                alt="Logo Desa"
+                width={112}
+                height={112}
+                className="h-full w-full object-contain p-3"
+                unoptimized
+              />
+            ) : (
+              <Building2 className="text-primary h-14 w-14" />
+            )}
           </div>
 
           <div className="space-y-3">
-            <h1 className="text-foreground text-4xl font-black tracking-tighter leading-tight">
+            <h1 className="text-foreground text-4xl font-black leading-tight tracking-tighter">
               Sistem Manajemen
               <br />
               <span className="text-primary">Pajak Bumi</span> &amp;
@@ -122,7 +175,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-muted-foreground/50 text-xs">
-          &copy; {new Date().getFullYear()} Pemerintah Desa. All rights reserved.
+          &copy; {new Date().getFullYear()} Pemerintah Desa {village.namaDesa || ""}. All rights reserved.
         </p>
       </div>
 
@@ -134,11 +187,22 @@ export default function LoginPage() {
           <div className="bg-primary/[0.03] border-b border-zinc-50 px-8 pt-8 pb-6 dark:border-zinc-800/50 dark:bg-white/[0.02]">
             {/* Mobile logo (shown only on mobile) */}
             <div className="mb-6 flex items-center gap-3 lg:hidden">
-              <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-xl shadow">
-                <Building2 className="text-primary-foreground h-4 w-4" />
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white shadow ring-1 ring-zinc-100 dark:ring-zinc-800">
+                {village.logoUrl ? (
+                  <Image
+                    src={`${village.logoUrl}?v=1`}
+                    alt="Logo Desa"
+                    width={36}
+                    height={36}
+                    className="h-full w-full object-contain p-0.5"
+                    unoptimized
+                  />
+                ) : (
+                  <Building2 className="text-primary h-5 w-5" />
+                )}
               </div>
               <span className="text-foreground text-base font-black tracking-tight">
-                PBB Manager
+                {displayName}
               </span>
             </div>
 
@@ -258,7 +322,7 @@ export default function LoginPage() {
 
         {/* Mobile footer */}
         <p className="text-muted-foreground/40 absolute bottom-6 text-center text-xs lg:hidden">
-          &copy; {new Date().getFullYear()} Pemerintah Desa. All rights reserved.
+          &copy; {new Date().getFullYear()} Pemerintah Desa {village.namaDesa || ""}. All rights reserved.
         </p>
       </div>
     </div>

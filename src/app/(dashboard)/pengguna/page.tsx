@@ -38,8 +38,16 @@ export default async function DaftarPenggunaPage() {
           >
             <CardHeader className="px-6 pt-6 pb-4">
               <div className="flex items-start justify-between">
-                <div className="text-primary group-hover:bg-primary flex h-14 w-14 items-center justify-center rounded-2xl border border-zinc-100 bg-zinc-50 text-xl font-black transition-colors duration-500 group-hover:text-white dark:border-zinc-800 dark:bg-zinc-900">
-                  {user.name?.charAt(0)}
+                <div className="text-primary group-hover:bg-primary relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-100 bg-zinc-50 text-xl font-black transition-colors duration-500 group-hover:text-white dark:border-zinc-800 dark:bg-zinc-900">
+                  {user.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    user.name?.charAt(0)
+                  )}
                 </div>
                 {/* ─── Role Badge ───────────────────────────── */}
                 {(() => {

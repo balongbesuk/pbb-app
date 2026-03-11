@@ -11,22 +11,33 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Bell, User, LogOut } from "lucide-react";
+import { User, LogOut, Menu } from "lucide-react";
 import { NotificationBell } from "./notification-bell";
 import { ModeToggle } from "@/components/mode-toggle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-import { Menu } from "lucide-react";
+import Image from "next/image";
 
 export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const { data: session } = useSession();
   const [mounted, setMounted] = React.useState(false);
+  const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
   const router = useRouter();
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch user's avatar from API every time session changes
+  React.useEffect(() => {
+    if (!session?.user) return;
+    fetch("/api/me/avatar")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.avatarUrl) setAvatarUrl(d.avatarUrl + "?t=" + Date.now());
+      })
+      .catch(() => {});
+  }, [session]);
 
   if (!mounted) {
     return (
@@ -35,6 +46,8 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
       </header>
     );
   }
+
+  const initials = session?.user?.name?.charAt(0)?.toUpperCase() || "A";
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-100 bg-white/80 px-4 backdrop-blur-md md:px-6 dark:border-zinc-900 dark:bg-zinc-950/80">
@@ -68,8 +81,18 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
           <DropdownMenu>
             <DropdownMenuTrigger className="hover:ring-primary/5 h-9 w-9 cursor-pointer rounded-full p-0 transition-all outline-none hover:ring-4">
-              <div className="bg-primary/5 dark:bg-primary/10 text-primary border-primary/10 flex h-9 w-9 items-center justify-center rounded-full border text-sm font-black">
-                {session?.user?.name?.charAt(0) || "A"}
+              <div className="bg-primary/5 dark:bg-primary/10 text-primary border-primary/10 relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border text-sm font-black">
+                {avatarUrl ? (
+                  <Image
+                    src={avatarUrl}
+                    alt="Foto profil"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <span>{initials}</span>
+                )}
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -78,12 +101,32 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
             >
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="px-3 py-2">
-                  <p className="text-foreground text-sm leading-none font-bold">
-                    {session?.user?.name || "User"}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-[10px] tracking-widest uppercase">
-                    {(session?.user as any)?.role || "User"}
-                  </p>
+                  {/* Mini avatar in dropdown header */}
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-primary/10">
+                      {avatarUrl ? (
+                        <Image
+                          src={avatarUrl}
+                          alt="Foto profil"
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-black text-primary">
+                          {initials}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-foreground text-sm leading-none font-bold">
+                        {session?.user?.name || "User"}
+                      </p>
+                      <p className="text-muted-foreground mt-1 text-[10px] tracking-widest uppercase">
+                        {(session?.user as any)?.role || "User"}
+                      </p>
+                    </div>
+                  </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-border/50" />
                 <DropdownMenuItem
@@ -91,7 +134,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                   onClick={() => router.push("/settings/profile")}
                 >
                   <User className="mr-2 h-4 w-4" />
-                  <span>Profil & Password</span>
+                  <span>Profil &amp; Password</span>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator className="bg-border/50" />

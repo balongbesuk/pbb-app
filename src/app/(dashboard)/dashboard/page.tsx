@@ -27,6 +27,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { getVillageConfig } from "@/app/actions/settings-actions";
 
 async function getDashboardStats(tahun: number = new Date().getFullYear()) {
   const [
@@ -134,7 +136,10 @@ export default async function DashboardPage({
 }) {
   const params = await searchParams;
   const currentYear = parseInt(params.tahun || new Date().getFullYear().toString());
-  const stats = await getDashboardStats(currentYear);
+  const [stats, villageConfig] = await Promise.all([
+    getDashboardStats(currentYear),
+    getVillageConfig(),
+  ]);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat("id-ID", {
@@ -147,17 +152,35 @@ export default async function DashboardPage({
     <div className="animate-in fade-in space-y-8 duration-700">
       {/* Header Section */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div className="space-y-1">
-          <h1 className="text-primary text-4xl font-extrabold tracking-tight">
-            Ringkasan Progress
-          </h1>
-          <p className="text-muted-foreground flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Laporan Kinerja Penarikan PBB • Tahun {currentYear}
-          </p>
+        <div className="flex items-center gap-4">
+          {/* Village Logo */}
+          {villageConfig.logoUrl && (
+            <div className="hidden h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:flex items-center justify-center">
+              <Image
+                src={`${villageConfig.logoUrl}?v=1`}
+                alt="Logo Desa"
+                width={56}
+                height={56}
+                className="h-full w-full object-contain p-1"
+                unoptimized
+              />
+            </div>
+          )}
+          <div className="space-y-1">
+            <h1 className="text-primary text-4xl font-extrabold tracking-tight">
+              Ringkasan Progress
+            </h1>
+            <p className="text-muted-foreground flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              {villageConfig.namaDesa
+                ? `Laporan PBB Desa ${villageConfig.namaDesa} • Tahun ${currentYear}`
+                : `Laporan Kinerja Penarikan PBB • Tahun ${currentYear}`}
+            </p>
+          </div>
         </div>
         <DashboardFilters />
       </div>
+
 
       {/* Main Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -6,6 +6,7 @@ import { RegionOtomationManager } from "@/components/settings/region-otomation-m
 import { ProfileForm } from "@/components/settings/profile-form";
 import { TaxConfigForm } from "@/components/settings/tax-config-form";
 import { BackupToolCard } from "@/components/settings/backup-tool-card";
+import { LogoUploadForm } from "@/components/settings/logo-upload-form";
 import { Button } from "@/components/ui/button";
 
 export default function SettingsPage() {
@@ -27,6 +28,8 @@ export default function SettingsPage() {
         {/* Kolom Kiri - Profil & Umum */}
         <div className="space-y-6 lg:col-span-2">
           <ProfileForm />
+
+          <LogoUploadForm />
 
           <DusunManager />
 

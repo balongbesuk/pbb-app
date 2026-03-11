@@ -13,9 +13,12 @@ import {
   ChevronLeft,
   Building2,
   Activity,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 const menuItems = [
   {
@@ -42,14 +45,28 @@ const menuItems = [
   { icon: Settings, label: "Pengaturan", href: "/settings", allowedRoles: ["ADMIN"] },
 ];
 
-import { useSession } from "next-auth/react";
-import { X } from "lucide-react";
-
 export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: session } = useSession();
   const userRole = (session?.user as any)?.role || "PENGGUNA";
+
+  const [villageConfig, setVillageConfig] = useState<{
+    namaDesa: string;
+    logoUrl: string | null;
+  }>({ namaDesa: "PBB Manager", logoUrl: null });
+
+  useEffect(() => {
+    fetch("/api/village-config")
+      .then((r) => r.json())
+      .then((d) => {
+        setVillageConfig({
+          namaDesa: d.namaDesa || "PBB Manager",
+          logoUrl: d.logoUrl || null,
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   const filteredMenuItems = menuItems.filter((item) => item.allowedRoles.includes(userRole));
 
@@ -71,19 +88,33 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
         )}
       >
         <div className="flex items-center justify-between gap-3 p-6">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
-              <Building2 className="text-primary h-6 w-6" />
+          <div className="flex min-w-0 items-center gap-3">
+            {/* Logo area */}
+            <div className="bg-primary/5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
+              {villageConfig.logoUrl ? (
+                <Image
+                  src={`${villageConfig.logoUrl}?v=1`}
+                  alt="Logo Desa"
+                  width={40}
+                  height={40}
+                  className="h-full w-full object-contain p-0.5"
+                  unoptimized
+                />
+              ) : (
+                <Building2 className="text-primary h-6 w-6" />
+              )}
             </div>
             {!isCollapsed && (
-              <span className="text-foreground text-xl font-bold tracking-tight">PBB Manager</span>
+              <span className="text-foreground truncate text-sm font-bold leading-tight tracking-tight">
+                {villageConfig.namaDesa || "PBB Manager"}
+              </span>
             )}
           </div>
           <Button
             variant="ghost"
             size="icon"
             aria-label="Tutup menu"
-            className="h-8 w-8 md:hidden"
+            className="h-8 w-8 shrink-0 md:hidden"
             onClick={onClose}
           >
             <X className="h-4 w-4" />

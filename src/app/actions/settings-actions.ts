@@ -23,8 +23,8 @@ export async function deleteAllTaxData() {
     // Reset Village Config / Profile to empty defaults
     await prisma.$executeRawUnsafe('DELETE FROM "VillageConfig"');
     await prisma.$executeRawUnsafe(`
-      INSERT INTO "VillageConfig" (id, namaDesa, kecamatan, kabupaten, tahunPajak) 
-      VALUES (1, '', '', '', 2026)
+      INSERT INTO "VillageConfig" (id, namaDesa, kecamatan, kabupaten, tahunPajak, logoUrl) 
+      VALUES (1, '', '', '', 2026, NULL)
     `);
 
     revalidatePath("/data-pajak");
@@ -47,10 +47,10 @@ export async function getVillageConfig() {
       INSERT OR IGNORE INTO "VillageConfig" (id, namaDesa, kecamatan, kabupaten, tahunPajak) 
       VALUES (1, '', '', '', 2026)
     `);
-    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026 };
+    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026, logoUrl: null };
   } catch (e) {
     console.error(e);
-    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026 };
+    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026, logoUrl: null };
   }
 }
 
