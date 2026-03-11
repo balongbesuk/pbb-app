@@ -115,7 +115,7 @@ export async function resetPassword(id: string) {
       id,
       `Mereset password pengguna: ${user.name} (${user.username})`
     );
-    return { success: true, message: `Password direset ke: ${process.env.DEFAULT_USER_PASSWORD ?? "pbb12345"}` };
+    return { success: true, message: `Password ${user.name} berhasil direset ke password default.` };
   } catch (error: any) {
     return { success: false, message: formatZodError(error) };
   }

@@ -170,7 +170,7 @@ export async function updateWpRegion(
       "UPDATE_REGION",
       "TaxData",
       data.namaWp,
-      `Dusun: ${dusun}, RT: ${rt}, RW: ${rw} (ID: ${id})`
+      `Memperbarui lokasi WP ${data.namaWp} ke wilayah Dusun ${dusun || "-"}, RT ${rt || "-"}/RW ${rw || "-"}`
     );
 
     revalidatePath("/laporan");
@@ -216,7 +216,7 @@ export async function updateWpRegionBulk(
       "UPDATE_REGION",
       "TaxData",
       null,
-      `Ubah wilayah masal untuk ${ids.length} WP ke Dusun: ${dusun}, RT: ${rt}, RW: ${rw}`
+      `Memperbarui lokasi ${ids.length} WP ke wilayah Dusun ${dusun || "-"}, RT ${rt || "-"}/RW ${rw || "-"}`
     );
 
     revalidatePath("/laporan");

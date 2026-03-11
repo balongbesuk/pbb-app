@@ -142,7 +142,11 @@ export function TaxDetailDialog({
                   }
                   className="rounded-full px-3 py-1 text-[9px] font-black uppercase"
                 >
-                  {item.paymentStatus}
+                  {item.paymentStatus === "LUNAS"
+                    ? "Lunas"
+                    : item.paymentStatus === "BELUM_LUNAS"
+                      ? "Belum Lunas"
+                      : "Tdk Terbit"}
                 </Badge>
               </div>
 

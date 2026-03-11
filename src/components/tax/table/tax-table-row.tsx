@@ -88,7 +88,11 @@ export function TaxTableRow({
           }
           className="text-xs font-bold"
         >
-          {item.paymentStatus}
+          {item.paymentStatus === "LUNAS"
+            ? "Lunas"
+            : item.paymentStatus === "BELUM_LUNAS"
+              ? "Belum Lunas"
+              : "Tdk Terbit"}
         </Badge>
       </TableCell>
       <TableCell>
