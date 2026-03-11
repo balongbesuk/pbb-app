@@ -9,12 +9,20 @@ import { PublicModeToggle } from "@/components/public/public-mode-toggle";
 // Always fetch fresh data (logo, village name, etc) on every request
 export const dynamic = "force-dynamic";
 
+/** Convert "BALONGBESUK" → "Balongbesuk", "DIWEK" → "Diwek" */
+function toTitleCase(str: string) {
+  return str
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export default async function IndexPage() {
   const config = await getVillageConfig();
-  const namaDesa = config?.namaDesa || "Belum Diatur";
+  const rawNamaDesa = config?.namaDesa || "Belum Diatur";
+  const namaDesa = toTitleCase(rawNamaDesa);
   const tahunPajak = config?.tahunPajak || new Date().getFullYear();
-  const kecamatan = config?.kecamatan || "";
-  const kabupaten = config?.kabupaten || "";
+  const kecamatan = config?.kecamatan ? toTitleCase(config.kecamatan) : "";
+  const kabupaten = config?.kabupaten ? toTitleCase(config.kabupaten) : "";
 
   return (
     // PublicThemeWrapper itself IS the background — it has inline style with backgroundImage

@@ -74,12 +74,16 @@ function LoginForm() {
     }
   };
 
+  /** Convert "BALONGBESUK" → "Balongbesuk" */
+  const toTitleCase = (str: string) =>
+    str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
   const displayName = village.namaDesa
-    ? `Desa ${village.namaDesa}`
+    ? `Desa ${toTitleCase(village.namaDesa)}`
     : "PBB Manager";
 
   const subName = village.kecamatan && village.kabupaten
-    ? `Kec. ${village.kecamatan}, Kab. ${village.kabupaten}`
+    ? `Kec. ${toTitleCase(village.kecamatan)}, Kab. ${toTitleCase(village.kabupaten)}`
     : "Sistem Manajemen Pajak Bumi & Bangunan";
 
   // Dynamic color classes based on theme — hardcoded to avoid CSS variable cascade issues from next-themes
