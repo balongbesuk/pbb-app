@@ -69,7 +69,7 @@ export default function LoginPage() {
     : "Sistem Manajemen Pajak Bumi & Bangunan";
 
   return (
-    <div className="dark text-foreground relative flex min-h-screen overflow-hidden bg-[#050B14] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0F203B] via-[#050B14] to-[#02060D] shadow-inner selection:bg-blue-500/30">
+    <div className="text-foreground relative flex min-h-screen overflow-hidden gradient-bg dark:bg-[#050B14] dark:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] dark:from-[#0F203B] dark:via-[#050B14] dark:to-[#02060D] shadow-inner selection:bg-primary/20 dark:selection:bg-blue-500/30 transition-colors duration-500">
       {/* ─── Ambient background blobs ───────────────────────────────────── */}
       <div
         aria-hidden="true"
