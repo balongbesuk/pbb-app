@@ -69,7 +69,7 @@ export default function LoginPage() {
     : "Sistem Manajemen Pajak Bumi & Bangunan";
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <div className="relative flex min-h-screen overflow-hidden gradient-bg shadow-inner">
       {/* ─── Ambient background blobs ───────────────────────────────────── */}
       <div
         aria-hidden="true"
