@@ -59,25 +59,27 @@ export async function updatePaymentStatus(
     );
 
     // Kirim notifikasi ke semua Admin jika status berubah ke LUNAS
-    if (paymentStatus === "LUNAS") {
+    if (paymentStatus === "LUNAS" || paymentStatus === "BELUM_LUNAS") {
       const penarikName = await prisma.user.findUnique({
         where: { id: userId },
         select: { name: true },
       });
 
-      // Ambil semua user Admin & Pengguna untuk dikirim notif
       const admins = await prisma.user.findMany({
         where: { role: { in: ["ADMIN", "PENGGUNA"] } },
         select: { id: true },
       });
 
       if (admins.length > 0) {
+        const isLunas = paymentStatus === "LUNAS";
         await prisma.notification.createMany({
           data: admins.map((admin) => ({
             userId: admin.id,
-            title: "✅ Setoran PBB Lunas",
-            message: `${penarikName?.name || "Penarik"} mengkonfirmasi WP ${data.namaWp} (${data.dusun || ""}, RT ${data.rt || "-"}/RW ${data.rw || "-"}) telah membayar.`,
-            type: "ACCEPTED",
+            title: isLunas ? "✅ Setoran PBB Lunas" : "⚠️ Status Dibatalkan",
+            message: isLunas
+              ? `${penarikName?.name || "Penarik"} mengkonfirmasi WP ${data.namaWp} (${data.dusun || ""}, RT ${data.rt || "-"}/RW ${data.rw || "-"}) telah membayar.`
+              : `${penarikName?.name || "Penarik"} membatalkan pelunasan WP ${data.namaWp} (${data.dusun || ""}, RT ${data.rt || "-"}/RW ${data.rw || "-"}) menjadi Belum Lunas.`,
+            type: isLunas ? "ACCEPTED" : "INFO",
           })),
         });
       }
