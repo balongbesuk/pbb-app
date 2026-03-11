@@ -3,6 +3,7 @@
 /* @plugin "tailwindcss-animate"; */
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant public-dark (&:is(.public-dark *));
 
 @theme {
   --font-sans: var(--font-outfit);
