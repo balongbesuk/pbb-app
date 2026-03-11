@@ -5,6 +5,7 @@ import { id as localeId } from "date-fns/locale";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { PrintButtons } from "@/components/laporan/print-buttons";
 
 export default async function CetakLaporanPage({
   searchParams,
@@ -141,33 +142,8 @@ export default async function CetakLaporanPage({
         `}</style>
       </head>
       <body>
-        {/* Print button — only visible on screen */}
-        <div className="no-print" style={{
-          position: "fixed", top: "16px", right: "16px", zIndex: 100,
-          display: "flex", gap: "8px"
-        }}>
-          <button
-            onClick={() => window.print()}
-            style={{
-              padding: "10px 20px", background: "#1d4ed8", color: "#fff",
-              border: "none", borderRadius: "8px", cursor: "pointer",
-              fontFamily: "sans-serif", fontSize: "14px", fontWeight: "bold",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.2)"
-            }}
-          >
-            🖨️ Cetak / Simpan PDF
-          </button>
-          <button
-            onClick={() => window.close()}
-            style={{
-              padding: "10px 20px", background: "#6b7280", color: "#fff",
-              border: "none", borderRadius: "8px", cursor: "pointer",
-              fontFamily: "sans-serif", fontSize: "14px"
-            }}
-          >
-            ✕ Tutup
-          </button>
-        </div>
+        {/* Print buttons — Client Component */}
+        <PrintButtons />
 
         <div className="page">
           {/* KOP SURAT */}
