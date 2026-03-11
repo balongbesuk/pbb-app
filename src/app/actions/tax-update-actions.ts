@@ -79,7 +79,6 @@ export async function updatePaymentStatus(
             message: `${penarikName?.name || "Penarik"} mengkonfirmasi WP ${data.namaWp} (${data.dusun || ""}, RT ${data.rt || "-"}/RW ${data.rw || "-"}) telah membayar.`,
             type: "ACCEPTED",
           })),
-          skipDuplicates: true,
         });
       }
     }
