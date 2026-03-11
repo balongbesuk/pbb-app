@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone } from "lucide-react";
+import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info } from "lucide-react";
 
 export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
   const [query, setQuery] = useState("");
@@ -59,6 +59,13 @@ export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Cari Data"}
             </Button>
           </form>
+
+          <div className="mt-5 flex items-start gap-3 rounded-2xl border border-amber-200/60 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/20 p-4 text-[11px] sm:text-xs text-amber-800 dark:text-amber-400">
+            <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
+            <p className="leading-relaxed font-medium">
+              <strong className="font-bold">Disclaimer:</strong> Status pelunasan pajak di portal desa berpotensi berbeda (delay) dengan sistem Pemerintah Kabupaten (DISPENDA/BAPENDA). Pembaruan data di sini bergantung penuh pada <strong className="font-bold">konfirmasi setoran manual</strong> oleh Petugas Penarik Pajak ke kas Desa.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
