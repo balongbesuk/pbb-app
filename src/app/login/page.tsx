@@ -69,7 +69,7 @@ export default function LoginPage() {
     : "Sistem Manajemen Pajak Bumi & Bangunan";
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden gradient-bg shadow-inner">
+    <div className="dark text-foreground relative flex min-h-screen overflow-hidden bg-[#050B14] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0F203B] via-[#050B14] to-[#02060D] shadow-inner selection:bg-blue-500/30">
       {/* ─── Ambient background blobs ───────────────────────────────────── */}
       <div
         aria-hidden="true"
@@ -126,7 +126,7 @@ export default function LoginPage() {
         {/* Center content */}
         <div className="space-y-8">
           {/* Large decorative logo */}
-          <div className="inline-flex h-28 w-28 items-center justify-center overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="inline-flex h-28 w-28 items-center justify-center overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-md dark:border-white/10 dark:bg-[#0A192F]">
             {village.logoUrl ? (
               <Image
                 src={`${village.logoUrl}?v=1`}
@@ -187,7 +187,7 @@ export default function LoginPage() {
         <div className="absolute top-6 right-6 lg:top-10 lg:right-10 z-20">
           <Link
             href="/"
-            className="group flex items-center gap-2 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md text-zinc-600 dark:text-zinc-300 px-4 py-2 rounded-full font-bold text-xs uppercase tracking-widest border border-zinc-200 dark:border-zinc-800 shadow-sm hover:bg-white dark:hover:bg-zinc-800 hover:text-primary dark:hover:text-primary transition-all hover:scale-105 active:scale-95"
+            className="group flex items-center gap-2 bg-white/50 dark:bg-[#0A192F]/50 backdrop-blur-md text-zinc-600 dark:text-blue-100 px-4 py-2 rounded-full font-bold text-xs uppercase tracking-widest border border-zinc-200 dark:border-white/10 shadow-sm hover:bg-white dark:hover:bg-[#0A192F] hover:text-primary dark:hover:text-blue-50 transition-all hover:scale-105 active:scale-95"
           >
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
             Portal Warga
@@ -195,12 +195,12 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="w-full max-w-[420px] overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-xl shadow-zinc-200/60 dark:border-zinc-800 dark:bg-zinc-950 dark:shadow-zinc-900/60">
+        <div className="w-full max-w-[420px] overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-xl shadow-zinc-200/60 dark:border-white/5 dark:bg-[#0A192F]/60 dark:backdrop-blur-xl dark:shadow-[#02060D]/60 relative">
           {/* Card Header strip */}
-          <div className="bg-primary/[0.03] border-b border-zinc-50 px-8 pt-8 pb-6 dark:border-zinc-800/50 dark:bg-white/[0.02]">
+          <div className="bg-primary/[0.03] border-b border-zinc-50 px-8 pt-8 pb-6 dark:border-white/5 dark:bg-[#0F203B]/80">
             {/* Mobile logo (shown only on mobile) */}
             <div className="mb-6 flex items-center gap-3 lg:hidden">
-              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white shadow ring-1 ring-zinc-100 dark:ring-zinc-800">
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white shadow ring-1 ring-zinc-100 dark:ring-white/10">
                 {village.logoUrl ? (
                   <Image
                     src={`${village.logoUrl}?v=1`}
@@ -247,7 +247,7 @@ export default function LoginPage() {
                   className={cn(
                     "h-12 rounded-xl border-zinc-200 bg-zinc-50 pl-10 text-sm font-medium",
                     "focus:border-primary/30 focus:bg-white focus:ring-2 focus:ring-offset-0",
-                    "dark:border-zinc-800 dark:bg-zinc-900 dark:focus:bg-zinc-900/80",
+                    "dark:border-white/10 dark:bg-[#050B14] dark:focus:bg-[#050B14]/80 dark:focus:border-blue-500/50 dark:text-blue-50",
                     "transition-all duration-200"
                   )}
                   value={username}
@@ -279,7 +279,7 @@ export default function LoginPage() {
                   className={cn(
                     "h-12 rounded-xl border-zinc-200 bg-zinc-50 pr-12 pl-10 text-sm font-medium",
                     "focus:border-primary/30 focus:bg-white focus:ring-2 focus:ring-offset-0",
-                    "dark:border-zinc-800 dark:bg-zinc-900 dark:focus:bg-zinc-900/80",
+                    "dark:border-white/10 dark:bg-[#050B14] dark:focus:bg-[#050B14]/80 dark:focus:border-blue-500/50 dark:text-blue-50",
                     "transition-all duration-200"
                   )}
                   value={password}
@@ -324,7 +324,7 @@ export default function LoginPage() {
           </form>
 
           {/* Card footer */}
-          <div className="border-t border-zinc-50 px-8 py-5 dark:border-zinc-800/50">
+          <div className="border-t border-zinc-50 px-8 py-5 dark:border-white/5 relative z-10">
             <p className="text-muted-foreground/50 text-center text-xs leading-relaxed">
               Sistem ini hanya untuk pengguna yang berwenang.
               <br />
