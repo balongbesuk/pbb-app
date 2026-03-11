@@ -64,3 +64,9 @@ public/fallback-*.js
 
 # App build logs
 build.log
+
+# User Uploads
+/public/uploads/*
+!/public/uploads/.gitkeep
+/public/uploads/avatars/*
+!/public/uploads/avatars/.gitkeep
