@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Building2, Lock, User, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
+import { Building2, Lock, User, Eye, EyeOff, Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
@@ -180,7 +181,19 @@ export default function LoginPage() {
       </div>
 
       {/* ─── Right panel — login form ────────────────────────────────────── */}
-      <div className="relative z-10 flex flex-1 items-center justify-center p-6 lg:p-16">
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center p-6 lg:p-16">
+        
+        {/* Back to Portal Button */}
+        <div className="absolute top-6 right-6 lg:top-10 lg:right-10 z-20">
+          <Link
+            href="/"
+            className="group flex items-center gap-2 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md text-zinc-600 dark:text-zinc-300 px-4 py-2 rounded-full font-bold text-xs uppercase tracking-widest border border-zinc-200 dark:border-zinc-800 shadow-sm hover:bg-white dark:hover:bg-zinc-800 hover:text-primary dark:hover:text-primary transition-all hover:scale-105 active:scale-95"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+            Portal Warga
+          </Link>
+        </div>
+
         {/* Card */}
         <div className="w-full max-w-[420px] overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-xl shadow-zinc-200/60 dark:border-zinc-800 dark:bg-zinc-950 dark:shadow-zinc-900/60">
           {/* Card Header strip */}
