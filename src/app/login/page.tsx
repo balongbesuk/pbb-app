@@ -184,7 +184,12 @@ function LoginForm() {
           {/* Feature badges */}
           <div className="flex flex-wrap gap-2">
             {["Multi-pengguna", "Laporan Excel", "Alokasi Otomatis", "Audit Log"].map((f) => (
-              <span key={f} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${featureBadgeCls}`}>
+              <span
+                key={f}
+                className={`inline-flex cursor-default items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold transition-all hover:scale-105 ${featureBadgeCls} ${
+                  isDark ? "hover:bg-blue-500/20" : "hover:bg-blue-100"
+                }`}
+              >
                 <ShieldCheck className="h-3 w-3" />
                 {f}
               </span>
