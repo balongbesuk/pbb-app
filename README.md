@@ -8,7 +8,7 @@
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
 [![Prisma](https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma)](https://prisma.io)
 [![Node](https://img.shields.io/badge/Node.js-%3E%3D20-green?logo=node.js)](https://nodejs.org)
-[![License](https://img.shields.io/badge/License-Private-red)](.)
+[![License](https://img.shields.io/badge/License-MIT-blue)](./LICENSE)
 
 **PBB Manager** adalah aplikasi web modern untuk membantu Pemerintah Desa/Kelurahan dalam tata kelola pendataan, penagihan, dan pelaporan Pajak Bumi dan Bangunan (PBB) secara akurat, cepat, dan transparan.
 
