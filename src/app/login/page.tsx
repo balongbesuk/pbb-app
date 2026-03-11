@@ -194,7 +194,7 @@ function LoginForm() {
 
         {/* Footer */}
         <p className={`text-xs opacity-50 ${nameCls}`}>
-          &copy; {new Date().getFullYear()} Pemerintah Desa {village.namaDesa || ""}. All rights reserved.
+          &copy; {new Date().getFullYear()} Pemerintah Desa {village.namaDesa ? toTitleCase(village.namaDesa) : ""}. All rights reserved.
         </p>
       </div>
 
@@ -320,7 +320,7 @@ function LoginForm() {
 
         {/* Mobile footer */}
         <p className={`absolute bottom-6 text-center text-xs lg:hidden opacity-40 ${nameCls}`}>
-          &copy; {new Date().getFullYear()} Pemerintah Desa {village.namaDesa || ""}. All rights reserved.
+          &copy; {new Date().getFullYear()} Pemerintah Desa {village.namaDesa ? toTitleCase(village.namaDesa) : ""}. All rights reserved.
         </p>
       </div>
     </div>
