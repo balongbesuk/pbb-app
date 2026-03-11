@@ -18,23 +18,32 @@ export default async function IndexPage() {
     // No separate wrapper div needed
     <PublicThemeWrapper className="relative flex flex-col items-center pt-24 pb-12 px-6 sm:px-10 font-sans">
       <nav className="fixed top-0 w-full p-4 sm:p-6 flex justify-between items-center z-50">
-        <div className="public-nav-pill flex items-center gap-3 backdrop-blur-md px-4 py-2 rounded-full shadow-sm transition hover:shadow-md">
-          {config?.logoUrl ? (
-            <Image
-              src={config.logoUrl}
-              alt={`Logo ${namaDesa}`}
-              width={28}
-              height={28}
-              className="object-contain"
-            />
-          ) : (
-            <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs" style={{background: "var(--primary)", color: "var(--primary-foreground)"}}>
-              M
-            </div>
-          )}
-          <span className="public-nav-name font-bold text-sm tracking-tight">
-            {namaDesa}
-          </span>
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-white/20">
+            {config?.logoUrl ? (
+              <Image
+                src={config.logoUrl}
+                alt={`Logo ${namaDesa}`}
+                width={44}
+                height={44}
+                className="h-full w-full object-contain p-1"
+              />
+            ) : (
+              <div className="w-full h-full rounded-2xl flex items-center justify-center font-black text-xs" style={{background: "var(--primary)", color: "var(--primary-foreground)"}}>
+                M
+              </div>
+            )}
+          </div>
+          <div>
+            <span className="public-nav-name block text-base font-black leading-tight tracking-tight">
+              Desa {namaDesa}
+            </span>
+            {kecamatan && kabupaten && (
+              <span className="public-nav-sub block text-[11px] font-medium opacity-60">
+                Kec. {kecamatan}, Kab. {kabupaten}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
