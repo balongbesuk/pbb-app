@@ -9,7 +9,7 @@ export function LaporanActionButtons({ tahun, currentUser }: { tahun: number; cu
   };
 
   const handlePrint = () => {
-    window.open(`/cetak-laporan?tahun=${tahun}`, "_blank");
+    window.open(`/api/cetak-laporan?tahun=${tahun}`, "_blank");
   };
 
   return (
