@@ -31,7 +31,7 @@ export function DashboardFilters() {
           Tahun Pajak
         </Label>
         <Select value={currentYear} onValueChange={(val) => handleYearChange(val || "")}>
-          <SelectTrigger className="h-9 w-[100px] border-none bg-white/50 dark:bg-white/10 dark:text-white shadow-none focus:ring-0">
+          <SelectTrigger className="h-9 w-[100px] border-none bg-white/50 dark:bg-[#111827]/50 dark:text-white shadow-none focus:ring-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

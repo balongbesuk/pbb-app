@@ -73,7 +73,7 @@ export function ProfileForm() {
                 id="nama-desa"
                 value={config.namaDesa}
                 onChange={(e) => setConfig({ ...config, namaDesa: e.target.value })}
-                className="bg-white/50 dark:bg-slate-900/50"
+                className="bg-white/50 dark:bg-[#111827]/50"
               />
             </div>
             <div className="space-y-2">
@@ -82,7 +82,7 @@ export function ProfileForm() {
                 id="kecamatan"
                 value={config.kecamatan}
                 onChange={(e) => setConfig({ ...config, kecamatan: e.target.value })}
-                className="bg-white/50 dark:bg-slate-900/50"
+                className="bg-white/50 dark:bg-[#111827]/50"
               />
             </div>
           </div>
@@ -92,7 +92,7 @@ export function ProfileForm() {
               id="kabupaten"
               value={config.kabupaten}
               onChange={(e) => setConfig({ ...config, kabupaten: e.target.value })}
-              className="bg-white/50 dark:bg-slate-900/50"
+              className="bg-white/50 dark:bg-[#111827]/50"
             />
           </div>
           <div className="pt-2">

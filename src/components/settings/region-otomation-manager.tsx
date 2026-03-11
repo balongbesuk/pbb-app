@@ -91,7 +91,7 @@ export function RegionOtomationManager() {
       <CardContent className="space-y-4">
         <form onSubmit={handleAdd} className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
           <Select value={type} onValueChange={(val: any) => setType(val)}>
-            <SelectTrigger className="bg-white/50 dark:bg-slate-900/50 dark:text-white">
+            <SelectTrigger className="bg-white/50 dark:bg-[#111827]/50 dark:text-white">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -104,11 +104,11 @@ export function RegionOtomationManager() {
             placeholder={`No ${type} (Misal: 001)`}
             value={newCode}
             onChange={(e) => setNewCode(e.target.value)}
-            className="bg-white/50 dark:bg-slate-900/50 dark:text-white dark:placeholder:text-gray-500"
+            className="bg-white/50 dark:bg-[#111827]/50 dark:text-white dark:placeholder:text-gray-500"
           />
 
           <Select value={selectedDusun} onValueChange={(val) => setSelectedDusun(val || "")}>
-            <SelectTrigger className="bg-white/50 dark:bg-slate-900/50 dark:text-white">
+            <SelectTrigger className="bg-white/50 dark:bg-[#111827]/50 dark:text-white">
               <SelectValue placeholder="Pilih Dusun..." />
             </SelectTrigger>
             <SelectContent>

@@ -56,7 +56,7 @@ export function ChangePasswordForm() {
             name="oldPassword"
             type={showOldPass ? "text" : "password"}
             required
-            className="bg-white/50 dark:bg-slate-900/50 pr-10"
+            className="bg-white/50 dark:bg-[#111827]/50 pr-10"
           />
           <button
             type="button"
@@ -76,7 +76,7 @@ export function ChangePasswordForm() {
             name="newPassword"
             type={showNewPass ? "text" : "password"}
             required
-            className="bg-white/50 dark:bg-slate-900/50 pr-10"
+            className="bg-white/50 dark:bg-[#111827]/50 pr-10"
           />
           <button
             type="button"
@@ -96,7 +96,7 @@ export function ChangePasswordForm() {
             name="confirmPassword"
             type={showConfirmPass ? "text" : "password"}
             required
-            className="bg-white/50 dark:bg-slate-900/50 pr-10"
+            className="bg-white/50 dark:bg-[#111827]/50 pr-10"
           />
           <button
             type="button"

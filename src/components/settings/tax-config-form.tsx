@@ -60,7 +60,7 @@ export function TaxConfigForm() {
               type="number"
               value={tahun}
               onChange={(e) => setTahun(parseInt(e.target.value))}
-              className="max-w-xs bg-white/50 dark:bg-slate-900/50"
+              className="max-w-xs bg-white/50 dark:bg-[#111827]/50"
             />
           </div>
           <div className="pt-2">
