@@ -45,8 +45,7 @@ export default function RootLayout({
       <body className={`${outfit.className} ${outfit.variable}`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
           disableTransitionOnChange
         >
           <QueryProvider>

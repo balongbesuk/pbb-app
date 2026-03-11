@@ -6,21 +6,26 @@ import { usePublicTheme } from "@/hooks/use-public-theme";
 
 export function PublicModeToggle() {
   const { theme, toggleTheme } = usePublicTheme();
+  const isDark = theme === "dark";
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      aria-label={`Ganti ke tema ${theme === "dark" ? "terang" : "gelap"}`}
-      className="rounded-full bg-white/10 hover:bg-white/20 public-dark:bg-black/10 public-dark:hover:bg-black/20 border border-white/10"
+      aria-label={isDark ? "Ganti ke tema terang" : "Ganti ke tema gelap"}
+      className={`rounded-full border transition-all ${
+        isDark
+          ? "bg-[#0A192F]/70 hover:bg-[#0F203B] border-white/10 text-yellow-400 hover:text-yellow-300"
+          : "bg-white/60 hover:bg-white border-zinc-200 text-zinc-700 hover:text-zinc-900"
+      }`}
       onClick={toggleTheme}
     >
-      {theme === "dark" ? (
-        <Sun className="h-[1.2rem] w-[1.2rem] text-yellow-400" />
+      {isDark ? (
+        <Sun className="h-[1.2rem] w-[1.2rem]" />
       ) : (
-        <Moon className="h-[1.2rem] w-[1.2rem] text-zinc-700" />
+        <Moon className="h-[1.2rem] w-[1.2rem]" />
       )}
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">{isDark ? "Ganti ke tema terang" : "Ganti ke tema gelap"}</span>
     </Button>
   );
 }
