@@ -2,8 +2,8 @@
 
 /* @plugin "tailwindcss-animate"; */
 
-@custom-variant dark (&:is(.dark *):not(:is(.public-light *)));
-@custom-variant public-dark (&:is(.public-dark *));
+@custom-variant dark (&:is(.dark *));
+
 
 @theme {
   --font-sans: var(--font-outfit);
