@@ -44,7 +44,7 @@ Tiga level akses untuk menjaga integritas data pajak:
 - Antarmuka mobile-friendly, ringan di HP
 - Mengubah status WP: **Belum Lunas** → **Lunas**
 - Mengalihkan tagihan ke penarik lain (dengan persetujuan)
-- Hanya mengakses data di wilayah yang sudah ditugaskan
+- Request tagihan ke penarik lain (dengan persetujuan)
 
 ### 🛡️ PENGGUNA — Staf / Akun Baru
 - Peran default saat akun pertama kali dibuat
@@ -112,12 +112,6 @@ npx prisma db seed
 
 ### 4. Menjalankan Aplikasi
 
-**Mode Development (lokal):**
-```bash
-npm run dev
-```
-Akses di: `http://localhost:3000`
-
 **Mode Production:**
 ```bash
 # Build bundle
@@ -126,7 +120,7 @@ npm run build
 # Jalankan server
 npm run start
 ```
-Akses dari jaringan lokal: `http://<IP_PERANGKAT>:3000`
+Akses di: `http://localhost:3000`
 
 ---
 
