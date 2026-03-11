@@ -6,6 +6,9 @@ import { ArrowRight, MapPin } from "lucide-react";
 import { PublicThemeWrapper } from "@/components/public/public-theme-wrapper";
 import { PublicModeToggle } from "@/components/public/public-mode-toggle";
 
+// Always fetch fresh data (logo, village name, etc) on every request
+export const dynamic = "force-dynamic";
+
 export default async function IndexPage() {
   const config = await getVillageConfig();
   const namaDesa = config?.namaDesa || "Belum Diatur";
@@ -22,11 +25,12 @@ export default async function IndexPage() {
           <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-white/20">
             {config?.logoUrl ? (
               <Image
-                src={config.logoUrl}
+                src={`${config.logoUrl}?v=${Date.now()}`}
                 alt={`Logo ${namaDesa}`}
                 width={44}
                 height={44}
                 className="h-full w-full object-contain p-1"
+                unoptimized
               />
             ) : (
               <div className="w-full h-full rounded-2xl flex items-center justify-center font-black text-xs" style={{background: "var(--primary)", color: "var(--primary-foreground)"}}>
