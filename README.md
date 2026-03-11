@@ -43,8 +43,8 @@ Tiga level akses untuk menjaga integritas data pajak:
 ### 📱 PENARIK — Kepala Dusun / Petugas Lapangan
 - Antarmuka mobile-friendly, ringan di HP
 - Mengubah status WP: **Belum Lunas** → **Lunas**
-- Mengalihkan tagihan ke penarik lain (dengan persetujuan)
-- Request tagihan ke penarik lain (dengan persetujuan)
+- Mengalihkan Wajib Pajak ke penarik lain (dengan persetujuan)
+- Request Wajib Pajak dari penarik lain (dengan persetujuan)
 
 ### 🛡️ PENGGUNA — Staf / Akun Baru
 - Peran default saat akun pertama kali dibuat
