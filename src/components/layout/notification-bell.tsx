@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Check, X, ArrowRight, Info, CalendarDays } from "lucide-react";
+import { Bell, Check, X, ArrowRight, Info, CalendarDays, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,7 @@ import {
   handleTransferResponse,
   markNotificationAsRead,
   markAllNotificationsRead,
+  deleteAllNotifications,
 } from "@/app/actions/transfer-actions";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -41,8 +42,8 @@ export function NotificationBell() {
   useEffect(() => {
     setMounted(true);
     fetchAll();
-    // Poll for notifications every 20 seconds
-    const interval = setInterval(fetchAll, 20000);
+    // Poll for notifications every 60 seconds (1 minute) to reduce database load
+    const interval = setInterval(fetchAll, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -75,6 +76,14 @@ export function NotificationBell() {
   const onMarkAllRead = async () => {
     setLoading(true);
     await markAllNotificationsRead();
+    fetchAll();
+    setLoading(false);
+  };
+
+  const onDeleteAll = async () => {
+    setLoading(true);
+    await deleteAllNotifications();
+    toast.success("Semua notifikasi dibersihkan.");
     fetchAll();
     setLoading(false);
   };
@@ -115,6 +124,18 @@ export function NotificationBell() {
                     disabled={loading}
                   >
                     Baca Semua
+                  </Button>
+                )}
+                {notifications.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-rose-500 hover:bg-rose-500/20 hover:text-rose-600 dark:hover:bg-rose-950/50"
+                    onClick={onDeleteAll}
+                    disabled={loading}
+                    title="Hapus Semua Riwayat"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 )}
               </div>

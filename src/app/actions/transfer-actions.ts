@@ -235,6 +235,20 @@ export async function markAllNotificationsRead() {
   }
 }
 
+export async function deleteAllNotifications() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return { success: false };
+
+    await prisma.notification.deleteMany({
+      where: { userId: (session.user as any).id },
+    });
+    return { success: true };
+  } catch (error) {
+    return { success: false };
+  }
+}
+
 /**
  * Get pending requests for the current user (receiver)
  */
