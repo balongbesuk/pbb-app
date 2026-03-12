@@ -164,6 +164,7 @@ model VillageConfig {
   tahunPajak        Int     @default(2026)
   logoUrl           String?
   showNominalPajak  Boolean @default(false)
+  updatedAt         DateTime @default(now()) @updatedAt
 }
 
 model AuditLog {

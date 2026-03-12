@@ -156,7 +156,7 @@ export default async function DashboardPage({
           {villageConfig.logoUrl && (
             <div className="hidden h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:bg-zinc-100 sm:flex items-center justify-center">
               <Image
-                src={`${villageConfig.logoUrl}?v=1`}
+                src={`${villageConfig.logoUrl}?t=${villageConfig.updatedAt?.getTime() || Date.now()}`}
                 alt="Logo Desa"
                 width={56}
                 height={56}

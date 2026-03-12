@@ -52,12 +52,15 @@ export default function GantiPasswordPage() {
     if (result.success) {
       setSuccess(true);
       toast.success("Password berhasil diubah!");
+      // Refresh data rute dulu
+      router.refresh();
       // Refresh session agar mustChangePassword terupdate di JWT
       await updateSession();
-      // Redirect ke dashboard setelah 1.5 detik
+      
+      // Redirect ke dashboard setelah delay singkat agar user sempat melihat pesan sukses
       setTimeout(() => {
-        router.push("/dashboard");
-        router.refresh();
+        // Gunakan window.location.href sebagai fallback jika router.push stuck
+        window.location.href = "/dashboard";
       }, 1500);
     } else {
       toast.error(`Gagal: ${result.message}`);

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { revalidatePath } from "next/cache";
 import { createAuditLog } from "@/app/actions/log-actions";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -58,6 +59,11 @@ export async function POST(req: NextRequest) {
       where: { id: userId },
       data: { avatarUrl },
     });
+    
+    // Paksa refresh cache halaman yang menampilkan profil
+    revalidatePath("/settings");
+    revalidatePath("/dashboard");
+    revalidatePath("/");
 
     await createAuditLog(
       "UPDATE_AVATAR",

@@ -69,7 +69,7 @@ export const getVillageConfig = cache(async () => {
     });
   } catch (e) {
     console.error(e);
-    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026, logoUrl: null, showNominalPajak: false };
+    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026, logoUrl: null, showNominalPajak: false, updatedAt: new Date() };
   }
 });
 

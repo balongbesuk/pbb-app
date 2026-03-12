@@ -78,7 +78,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",   // Blokir CSRF cross-site, izinkan navigasi top-level
         path: "/",
-        secure: process.env.NODE_ENV === "production", // HTTPS di production
+        secure: false, // Matikan kewajiban HTTPS agar login tidak stuck di HTTP
       },
     },
   },
