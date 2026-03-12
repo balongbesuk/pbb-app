@@ -92,7 +92,7 @@ export function BulkRegionDialog({
         <div className="space-y-6 p-6">
           <div className="bg-amber-50/50 border-amber-200/50 rounded-2xl border p-4 dark:bg-amber-950/10 dark:border-amber-900/30">
             <p className="text-amber-700 dark:text-amber-400 text-[11px] font-bold leading-relaxed italic">
-              "Isi bagian yang ingin diubah saja. Kolom yang dibiarkan kosong tidak akan mengubah data lama."
+              &quot;Isi bagian yang ingin diubah saja. Kolom yang dibiarkan kosong tidak akan mengubah data lama.&quot;
             </p>
           </div>
 

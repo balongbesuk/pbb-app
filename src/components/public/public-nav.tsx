@@ -30,7 +30,7 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNav
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const logoSrc = mounted && logoUrl ? `${logoUrl}?v=${Date.now()}` : (logoUrl || "");
+  const logoSrc = mounted && logoUrl ? logoUrl : (logoUrl || "");
 
   return (
     <nav
