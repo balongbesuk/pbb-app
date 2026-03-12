@@ -106,6 +106,24 @@ Jika berhasil, akan muncul tulisan:
 
 ---
 
+## 🚀 Langkah 6: Running Production (Mode Stabil)
+
+Jika Anda ingin menjalankan aplikasi secara resmi (untuk penggunaan harian yang lebih cepat dan stabil), gunakan perintah ini:
+
+1. **Matikan aplikasi** yang sedang jalan (Tekan `Ctrl + C` di Command Prompt).
+2. **Build Aplikasi:**
+   ```bash
+   npm run build
+   ```
+3. **Jalankan Mode Produksi:**
+   ```bash
+   npm run start
+   ```
+
+Sekarang aplikasi berjalan dalam mode **Production** yang jauh lebih ringan dan responsif.
+
+---
+
 ## 🔑 Data Login Default
 Gunakan akun ini untuk masuk pertama kali:
 - **Username:** `admin`

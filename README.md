@@ -75,8 +75,12 @@ npx prisma generate
 npx prisma db push
 npx prisma db seed
 
-# 4. Run Development
+# 4a. Run Development
 npm run dev
+
+# 4b. Run Production (Stable)
+npm run build
+npm run start
 ```
 
 **Akun Default:** `admin` / `admin123`
