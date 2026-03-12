@@ -1,3 +1,5 @@
+<img width="2536" height="923" alt="image" src="https://github.com/user-attachments/assets/d540a662-121b-41d0-8882-5cb8455aa37b" />
+
 # 🏦 PBB Manager — Sistem Manajemen Pajak Desa `v2.0`
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
