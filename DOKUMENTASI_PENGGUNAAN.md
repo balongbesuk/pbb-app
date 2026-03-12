@@ -102,10 +102,22 @@ Setiap awal tahun, lakukan langkah berikut sebelum Excel DHKP dibagikan:
 2. Klik **Unduh File Backup** — file SQL akan otomatis terunduh
 3. Simpan file backup di lokasi aman (flashdisk / cloud storage)
 
+**Backup Alokasi Penarik (Sangat Penting):**
+1. Buka menu **Pengaturan > Konfigurasi & Backup**
+2. Klik **Backup Alokasi Penarik (Excel)**
+3. File Excel yang terunduh berisi daftar Wajib Pajak lengkap dengan petugasnya saat ini. Simpan file ini sebagai referensi alokasi tahun depan.
+
 **Restore Database:**
-1. Di halaman yang sama, klik **Pulihkan Database**
+1. Di halaman Utilitas, klik **Pulihkan Database**
 2. Pilih file backup (.sql) yang ingin dipulihkan
 3. Konfirmasi — data saat ini akan diganti dengan isi backup
+
+**Memulihkan Alokasi Penarik (Restore Alokasi):**
+Jika Anda baru saja mengimpor data PBB tahun baru dan datanya masih kosong (Tanpa Petugas), gunakan fitur ini:
+1. Buka menu **Pengaturan > Konfigurasi & Backup**
+2. Klik **Backup & Restore Alokasi**
+3. Pilih file Excel backup alokasi yang pernah Anda buat sebelumnya.
+4. Klik **Pulihkan Alokasi** — sistem akan memetakan ulang petugas berdasarkan NOP secara otomatis.
 
 **⚠️ Hapus Seluruh Data (Reset Tahun Pajak):**
 1. Klik **Hapus Seluruh Data** — hanya untuk pergantian tahun pajak
