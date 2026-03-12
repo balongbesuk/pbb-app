@@ -38,12 +38,17 @@ Setiap awal tahun, lakukan langkah berikut sebelum Excel DHKP dibagikan:
 2. Tambahkan nama semua dusun yang ada persis sesuai penulisan di file Excel
 3. Daftar ini digunakan sistem untuk mendeteksi dan memetakan alamat secara otomatis
 
-**B. Upload Data PBB**
+**B. Upload Data PBB (Smart Sync)**
 1. Buka menu **Upload Data PBB**
-2. Klik **Unduh Format Excel** jika butuh contoh format kolom yang benar
-3. Pilih **Tahun Pajak** (contoh: 2026)
-4. Pilih file Excel DHKP (.xlsx) lalu klik **Mulai Import**
-5. Tunggu proses selesai — sistem akan menampilkan ringkasan hasil import
+2. Pilih **Tahun Pajak** (contoh: 2026)
+3. Pilih file Excel DHKP (.xlsx atau .xls)
+4. Klik **Mulai Sinkronisasi**
+5. **Fitur Smart Sync**: 
+   - Sistem otomatis mendeteksi jika data sudah ada.
+   - **Update Otomatis**: Jika data sudah ada, status di sistem akan diperbarui mengikuti file terbaru.
+   - **Proteksi Data**: Data lama yang *tidak ada* di file baru akan tetap aman (tidak dihapus/tidak berubah status).
+   - **Autoproses**: Data yang sudah hilang dari DHKP terbaru otomatis ditandai Lunas dengan nilai pembayaran penuh.
+6. Tunggu proses selesai — sistem akan menampilkan ringkasan hasil sinkronisasi.
 
 ---
 
@@ -55,10 +60,15 @@ Setiap awal tahun, lakukan langkah berikut sebelum Excel DHKP dibagikan:
 3. Klik tombol **Atur Penarik** pada baris wilayah yang ingin didelegasikan
 4. Pilih nama Penarik dari daftar lalu klik **Terapkan**
 
-**Assign Per-WP:**
+**Assign Per-WP & Smart Selection:**
 1. Buka menu **Data Pajak**
-2. Temukan nama WP yang ingin dialihkan
-3. Klik ikon **Edit** pada baris tersebut dan pilih penarik yang tepat
+2. **Assign Per Baris**: Temukan nama WP, klik ikon **Edit** (titik tiga atau pensil) dan pilih penarik yang tepat.
+3. **Smart Selection (Alokasi Masal)**:
+   - Gunakan filter (Dusun/RT/RW/Cari Nama) untuk memunculkan kelompok data tertentu.
+   - Klik ceklist pada judul tabel untuk memilih semua data di halaman tersebut.
+   - Klik tombol **"Pilih seluruh [X] data sesuai filter"** yang muncul di bar biru atas.
+   - Klik **Alokasikan** dan pilih nama petugas — seluruh data hasil filter akan dialihkan sekaligus tanpa terbatas paginasi.
+4. **Update Wilayah Masal**: Gunakan cara yang sama, lalu pilih **Atur Wilayah** untuk memperbaiki nama Dusun/RT/RW secara serentak.
 
 ---
 
@@ -191,4 +201,4 @@ Coba close tab browser lain. Gunakan Chrome versi terbaru untuk performa optimal
 
 ---
 
-*Dokumentasi terakhir diperbarui: 12 Maret 2026 (Branding & UI Update)*
+*Dokumentasi terakhir diperbarui: 13 Maret 2026 (v2.0 - Smart Sync & Bulk Allocation Update)*
