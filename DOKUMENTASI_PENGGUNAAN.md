@@ -195,21 +195,30 @@ Untuk mendapatkan akses lebih, hubungi **Admin** untuk menaikkan peran menjadi *
 ## ❓ FAQ & Troubleshooting
 
 **Q: Saya lupa password, bagaimana cara reset?**  
-Hubungi Admin untuk melakukan reset password. Admin bisa mereset password dari menu **Pengguna > Edit**.
+Hubungi Admin untuk melakukan reset password. Admin bisa mereset password dari menu **Pengguna > Edit** dengan menekan ikon kunci 🔑.
 
-**Q: Login terus gagal padahal username & password sudah benar?**  
-Pastikan tidak ada spasi di awal/akhir username. Jika muncul pesan *"Terlalu banyak percobaan"*, tunggu 15 menit sebelum mencoba lagi.
+**Q: Apakah data saya akan hilang jika saya upload file Excel baru?**  
+**TIDAK.** Dengan fitur *Smart Sync* v2.0, sistem hanya akan memperbarui data yang ada di file Excel. Data lama yang sudah ada di sistem tapi tidak ada di file Excel baru akan tetap aman (tidak dihapus).
 
-**Q: Status WP tidak berubah setelah ditandai Lunas?**  
-Coba refresh halaman. Jika masih tidak berubah, pastikan koneksi internet stabil dan coba lagi.
+**Q: Jenis file Excel apa yang didukung?**  
+Sistem mendukung file format modern `.xlsx` dan juga format lama `.xls` (DHKP dari sistem lama).
+
+**Q: Bisa tidak saya memindahkan ratusan WP ke petugas lain sekaligus?**  
+**BISA.** Gunakan fitur *Smart Selection* di menu **Data Pajak**. Filter data yang diinginkan, klik ceklist di judul tabel, lalu klik *"Pilih seluruh [X] data sesuai filter"* untuk melakukan alokasi masal.
+
+**Q: Bagaimana jika saya salah mengalokasikan ratusan data?**  
+Tenang, gunakan filter yang sama, pilih semua data lagi, lalu klik **Alokasikan** ke petugas yang benar. Sistem akan menimpa data petugas lama dengan yang baru.
+
+**Q: Apakah aman jika saya menggunakan WiFi umum?**  
+Sistem dilengkapi enkripsi sesi dan audit trail. Namun, disarankan tetap menggunakan koneksi pribadi dan selalu klik **Logout** setelah selesai menggunakan aplikasi.
 
 **Q: Error saat upload Excel?**  
-- Pastikan format file adalah `.xlsx` (bukan `.xls` atau `.csv`)
-- Pastikan kolom di Excel sesuai dengan format template yang bisa diunduh
-- Pastikan tidak ada baris kosong di tengah data
+- Pastikan kolom di Excel sesuai dengan format template (bisa diunduh di menu Upload).
+- Pastikan tidak ada karakter aneh atau baris yang benar-benar kosong di tengah data.
+- Pastikan Tahun Pajak yang dipilih sudah sesuai.
 
 **Q: Aplikasi lambat di HP?**  
-Coba close tab browser lain. Gunakan Chrome versi terbaru untuk performa optimal.
+Tampilan v2.0 sudah dioptimalkan. Jika terasa lambat, coba bersihkan *cache* browser atau gunakan Google Chrome versi terbaru.
 
 ---
 
