@@ -4,84 +4,104 @@ import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/server-auth";
+import { VillageConfigSchema, formatZodError } from "@/lib/validations/schemas";
+import { z } from "zod";
 
 export async function deleteAllTaxData() {
   try {
     await requireAdmin();
 
     // Delete related transactional records
-    await prisma.$executeRawUnsafe('DELETE FROM "TransferRequest"');
+    await prisma.transferRequest.deleteMany();
     await prisma.taxData.deleteMany();
 
     // Delete configuration and settings records based on user request
-    await prisma.$executeRawUnsafe('DELETE FROM "DusunReference"');
-    await prisma.$executeRawUnsafe('DELETE FROM "RegionOtomation"');
-    await prisma.$executeRawUnsafe('DELETE FROM "TaxMapping"');
-    await prisma.$executeRawUnsafe('DELETE FROM "VillageRegion"');
-    await prisma.$executeRawUnsafe('DELETE FROM "AddressLearning"');
-    await prisma.$executeRawUnsafe('DELETE FROM "Notification"');
+    await prisma.dusunReference.deleteMany();
+    await prisma.regionOtomation.deleteMany();
+    await prisma.taxMapping.deleteMany();
+    await prisma.villageRegion.deleteMany();
+    await prisma.addressLearning.deleteMany();
+    await prisma.notification.deleteMany();
 
     // Reset Village Config / Profile to empty defaults
-    await prisma.$executeRawUnsafe('DELETE FROM "VillageConfig"');
-    await prisma.$executeRawUnsafe(`
-      INSERT INTO "VillageConfig" (id, namaDesa, kecamatan, kabupaten, tahunPajak, logoUrl) 
-      VALUES (1, '', '', '', 2026, NULL)
-    `);
+    await prisma.villageConfig.deleteMany();
+    await prisma.villageConfig.create({
+      data: {
+        id: 1,
+        namaDesa: "",
+        kecamatan: "",
+        kabupaten: "",
+        tahunPajak: 2026,
+        logoUrl: null,
+      },
+    });
 
     revalidatePath("/data-pajak");
     revalidatePath("/settings");
     revalidatePath("/dashboard");
     revalidatePath("/laporan");
     return { success: true };
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error) {
+    return { success: false, message: formatZodError(error) };
   }
 }
 
 export const getVillageConfig = cache(async () => {
   try {
-    const config = (await prisma.$queryRawUnsafe(`SELECT * FROM "VillageConfig" LIMIT 1`)) as any[];
-    if (config.length > 0) return config[0];
+    const config = await prisma.villageConfig.findFirst({
+      where: { id: 1 },
+    });
+
+    if (config) return config;
 
     // If empty, create empty default and return it
-    await prisma.$executeRawUnsafe(`
-      INSERT OR IGNORE INTO "VillageConfig" (id, namaDesa, kecamatan, kabupaten, tahunPajak) 
-      VALUES (1, '', '', '', 2026)
-    `);
-    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026, logoUrl: null };
+    return await prisma.villageConfig.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        id: 1,
+        namaDesa: "",
+        kecamatan: "",
+        kabupaten: "",
+        tahunPajak: 2026,
+        showNominalPajak: false,
+      },
+    });
   } catch (e) {
     console.error(e);
-    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026, logoUrl: null };
+    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026, logoUrl: null, showNominalPajak: false };
   }
 });
 
-import { VillageConfigSchema, formatZodError } from "@/lib/validations/schemas";
+
 
 export async function updateVillageConfig(raw: any) {
   try {
     await requireAdmin();
     const data = VillageConfigSchema.parse(raw);
-    await prisma.$executeRawUnsafe(
-      `
-      UPDATE "VillageConfig" 
-      SET namaDesa = ?, kecamatan = ?, kabupaten = ?
-      WHERE id = 1
-    `,
-      data.namaDesa.toUpperCase(),
-      data.kecamatan.toUpperCase(),
-      data.kabupaten.toUpperCase()
-    );
+
+    const updateData: any = {
+      namaDesa: data.namaDesa.toUpperCase(),
+      kecamatan: data.kecamatan.toUpperCase(),
+      kabupaten: data.kabupaten.toUpperCase(),
+    };
 
     if (data.tahunPajak) {
-      await prisma.$executeRawUnsafe(
-        `UPDATE "VillageConfig" SET tahunPajak = ? WHERE id = 1`,
-        data.tahunPajak
-      );
+      updateData.tahunPajak = data.tahunPajak;
     }
+
+    if (data.showNominalPajak !== undefined) {
+      updateData.showNominalPajak = data.showNominalPajak;
+    }
+
+    await prisma.villageConfig.update({
+      where: { id: 1 },
+      data: updateData,
+    });
 
     revalidatePath("/settings");
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -104,9 +124,10 @@ export async function addDusun(name: string) {
 
     revalidatePath("/settings");
     return { success: true };
-  } catch (error: any) {
-    if (error.code === "P2002") return { success: false, message: "Nama dusun sudah ada" };
-    return { success: false, message: error.message };
+  } catch (error) {
+    const err = error as any;
+    if (err?.code === "P2002") return { success: false, message: "Nama dusun sudah ada" };
+    return { success: false, message: formatZodError(error) };
   }
 }
 
@@ -118,22 +139,21 @@ export async function deleteDusun(id: string) {
     });
     revalidatePath("/settings");
     return { success: true };
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error) {
+    return { success: false, message: formatZodError(error) };
   }
 }
 
-// Fallback to Raw Queries because Prisma Generate might fail on Windows due to file locks
 export async function getRegionOtomations(): Promise<
   { id: string; code: string; dusun: string; type: string }[]
 > {
   try {
-    const rows = await prisma.$queryRawUnsafe(
-      `SELECT * FROM "RegionOtomation" ORDER BY type ASC, code ASC`
-    );
-    return rows as { id: string; code: string; dusun: string; type: string }[];
+    const rows = await prisma.regionOtomation.findMany({
+      orderBy: [{ type: "asc" }, { code: "asc" }],
+    });
+    return rows;
   } catch (e) {
-    console.error("Raw Query Error:", e);
+    console.error("Region Otomation Query Error:", e);
     return [];
   }
 }
@@ -141,49 +161,55 @@ export async function getRegionOtomations(): Promise<
 export async function addRegionOtomation(type: "RT" | "RW", code: string, dusun: string) {
   try {
     await requireAdmin();
-    const normCode = code.trim().padStart(2, "0");
+    const normCode = parseInt(code.trim(), 10).toString().padStart(2, "0");
     if (!normCode || !dusun) throw new Error("Kode dan Dusun harus diisi");
 
-    // Manual Upsert using raw queries
-    const existing = (await prisma.$queryRawUnsafe(
-      `SELECT id FROM "RegionOtomation" WHERE code = ?`,
-      normCode
-    )) as any[];
-
-    if (existing && existing.length > 0) {
-      await prisma.$executeRawUnsafe(
-        `UPDATE "RegionOtomation" SET dusun = ?, type = ? WHERE code = ?`,
-        dusun,
-        type,
-        normCode
-      );
-    } else {
-      const id = crypto.randomUUID();
-      await prisma.$executeRawUnsafe(
-        `INSERT INTO "RegionOtomation" (id, type, code, dusun) VALUES (?, ?, ?, ?)`,
-        id,
-        type,
-        normCode,
-        dusun
-      );
-    }
+    // Upsert menggunakan Prisma Client (code is @unique)
+    await prisma.regionOtomation.upsert({
+      where: { code: normCode },
+      update: { dusun, type },
+      create: { type, code: normCode, dusun },
+    });
 
     revalidatePath("/settings");
     return { success: true };
-  } catch (error: any) {
-    console.error("Raw Add Error:", error);
-    return { success: false, message: error.message };
+  } catch (error) {
+    console.error("Add Region Otomation Error:", error);
+    return { success: false, message: formatZodError(error) };
   }
 }
 
 export async function deleteRegionOtomation(id: string) {
   try {
     await requireAdmin();
-    await prisma.$executeRawUnsafe(`DELETE FROM "RegionOtomation" WHERE id = ?`, id);
+    await prisma.regionOtomation.delete({
+      where: { id },
+    });
     revalidatePath("/settings");
     return { success: true };
-  } catch (error: any) {
-    console.error("Raw Delete Error:", error);
-    return { success: false, message: error.message };
+  } catch (error) {
+    console.error("Delete Region Otomation Error:", error);
+    return { success: false, message: formatZodError(error) };
+  }
+}
+
+export async function checkImportRequirements(tahun: number) {
+  try {
+    const dusunCount = await prisma.dusunReference.count();
+    const otomationCount = await prisma.regionOtomation.count();
+
+    const taxCount = await prisma.taxData.count({
+      where: { tahun },
+    });
+
+    return {
+      success: true,
+      dusunCount,
+      otomationCount,
+      taxCount,
+    };
+  } catch (error) {
+    console.error("Check Requirements Error:", error);
+    return { success: false, message: "Gagal mengecek persyaratan import" };
   }
 }

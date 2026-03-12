@@ -29,16 +29,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import type { PenarikInfo, AppUser, TaxDataItem } from "@/types/app";
 
 interface PenarikWpDialogProps {
   penarikId: string | null;
   penarikName: string;
   tahun: number;
   count: number;
-  allPenariks: any[];
+  allPenariks: PenarikInfo[];
   paymentStatus?: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT";
   children?: React.ReactNode;
-  currentUser?: any;
+  currentUser?: AppUser;
 }
 
 export function PenarikWpDialog({
@@ -53,7 +54,8 @@ export function PenarikWpDialog({
 }: PenarikWpDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<any[]>([]);
+  type WpSummary = Pick<TaxDataItem, "id" | "nop" | "namaWp" | "alamatObjek" | "dusun" | "rt" | "rw" | "ketetapan" | "paymentStatus">;
+  const [data, setData] = useState<WpSummary[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isAssigning, setIsAssigning] = useState(false);
 

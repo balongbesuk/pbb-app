@@ -16,13 +16,16 @@ import { updateWpRegion } from "@/app/actions/tax-update-actions";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatCurrency } from "@/lib/utils";
+import type { TaxDataItem, AppUser, AvailableFilters } from "@/types/app";
+import type { PaymentStatus } from "@prisma/client";
 
 interface TaxDetailDialogProps {
-  item: any;
+  item: TaxDataItem | null;
   onClose: () => void;
-  availableFilters: any;
-  currentUser: any;
-  onUpdateStatus: (id: string, status: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT") => void;
+  availableFilters: AvailableFilters;
+  currentUser: AppUser | undefined;
+  onUpdateStatus: (id: string, status: PaymentStatus) => void;
 }
 
 export function TaxDetailDialog({
@@ -52,8 +55,19 @@ export function TaxDetailDialog({
   if (!item) return null;
 
   const handleUpdate = async () => {
+    // Normalize RT/RW to 2 digits (e.g., "1" -> "01")
+    const normalizeNum = (val: string) => {
+      if (!val) return val;
+      const num = val.replace(/\D/g, "");
+      if (!num) return "";
+      return num.padStart(2, "0").slice(-2);
+    };
+
+    const finalRt = normalizeNum(editRt);
+    const finalRw = normalizeNum(editRw);
+
     setIsUpdating(true);
-    const res = await updateWpRegion(item.id, editDusun || null, editRt || null, editRw || null);
+    const res = await updateWpRegion(item.id, editDusun || null, finalRt || null, finalRw || null);
     if (res.success) {
       toast.success("Wilayah berhasil diperbarui");
       setIsEditing(false);
@@ -75,12 +89,7 @@ export function TaxDetailDialog({
     }
   };
 
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      maximumFractionDigits: 0,
-    }).format(val);
+
 
   return (
     <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
@@ -196,12 +205,12 @@ export function TaxDetailDialog({
                     Dusun
                   </span>
                   {isEditing ? (
-                    <Select value={editDusun} onValueChange={(v) => setEditDusun(v)}>
+                    <Select value={editDusun} onValueChange={(v) => setEditDusun(v || "")}>
                       <SelectTrigger className="h-9 rounded-xl border-zinc-200 bg-white text-xs dark:bg-zinc-950">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {(availableFilters.dusunRefs || availableFilters.dusun).map((d: string) => (
+                        {(availableFilters.dusunRefs ?? availableFilters.dusun).map((d: string) => (
                           <SelectItem key={d} value={d}>
                             {d}
                           </SelectItem>
@@ -221,12 +230,13 @@ export function TaxDetailDialog({
                     {isEditing ? (
                       <Input
                         value={editRt}
-                        onChange={(e) => setEditRt(e.target.value)}
+                        onChange={(e) => setEditRt(e.target.value.replace(/\D/g, "").slice(0, 2))}
                         className="h-9 rounded-xl border-zinc-200 bg-white text-xs dark:bg-zinc-950"
+                        placeholder="01"
                       />
                     ) : (
                       <p className="text-foreground font-mono text-base font-bold">
-                        {item.rt || "00"}
+                        {item.rt || "01"}
                       </p>
                     )}
                   </div>
@@ -237,12 +247,13 @@ export function TaxDetailDialog({
                     {isEditing ? (
                       <Input
                         value={editRw}
-                        onChange={(e) => setEditRw(e.target.value)}
+                        onChange={(e) => setEditRw(e.target.value.replace(/\D/g, "").slice(0, 2))}
                         className="h-9 rounded-xl border-zinc-200 bg-white text-xs dark:bg-zinc-950"
+                        placeholder="Contoh: 01"
                       />
                     ) : (
                       <p className="text-foreground font-mono text-base font-bold">
-                        {item.rw || "00"}
+                        {item.rw || "01"}
                       </p>
                     )}
                   </div>

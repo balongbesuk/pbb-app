@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
+import { toTitleCase } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -74,9 +75,7 @@ function LoginForm() {
     }
   };
 
-  /** Convert "BALONGBESUK" → "Balongbesuk" */
-  const toTitleCase = (str: string) =>
-    str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
 
   const displayName = village.namaDesa
     ? `Desa ${toTitleCase(village.namaDesa)}`

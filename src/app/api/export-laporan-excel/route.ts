@@ -17,10 +17,16 @@ export async function GET(req: NextRequest) {
     const tahun = parseInt(searchParams.get("tahun") || new Date().getFullYear().toString());
 
     // Fetch village config for header
-    const configRows = (await prisma.$queryRawUnsafe(
-      `SELECT namaDesa, kecamatan, kabupaten, logoUrl FROM "VillageConfig" LIMIT 1`
-    )) as any[];
-    const villageConfig = configRows[0] || {
+    const configRow = await prisma.villageConfig.findFirst({
+      where: { id: 1 },
+      select: {
+        namaDesa: true,
+        kecamatan: true,
+        kabupaten: true,
+        logoUrl: true,
+      },
+    });
+    const villageConfig = configRow || {
       namaDesa: "",
       kecamatan: "",
       kabupaten: "",
@@ -35,34 +41,42 @@ export async function GET(req: NextRequest) {
       _sum: { ketetapan: true, pembayaran: true, sisaTagihan: true },
     });
 
-    const penarikMapReduce = new Map<string, any>();
+    interface PenarikStat {
+      penarikId: string | null;
+      nop: number;
+      ketetapan: number;
+      pembayaran: number;
+      sisaTagihan: number;
+      lunas: number;
+      belum: number;
+      name?: string;
+      dusun?: string;
+    }
 
-    penarikStatsRaw.forEach((stat) => {
-      const pId = stat.penarikId || "unassigned";
-      if (!penarikMapReduce.has(pId)) {
-        penarikMapReduce.set(pId, {
-          penarikId: stat.penarikId,
-          _count: { nop: 0 },
-          _sum: { ketetapan: 0, pembayaran: 0, sisaTagihan: 0 },
-          lunasCount: 0,
-          belumLunasCount: 0,
+    const map = new Map<string, PenarikStat>();
+    penarikStatsRaw.forEach((s) => {
+      const pId = s.penarikId || "unassigned";
+      if (!map.has(pId)) {
+        map.set(pId, { 
+          penarikId: s.penarikId, 
+          nop: 0, 
+          ketetapan: 0, 
+          pembayaran: 0, 
+          sisaTagihan: 0, 
+          lunas: 0, 
+          belum: 0 
         });
       }
-
-      const curr = penarikMapReduce.get(pId);
-      curr._count.nop += stat._count.nop;
-      curr._sum.ketetapan += stat._sum.ketetapan || 0;
-      curr._sum.pembayaran += stat._sum.pembayaran || 0;
-      curr._sum.sisaTagihan += stat._sum.sisaTagihan || 0;
-
-      if (stat.paymentStatus === "LUNAS") {
-        curr.lunasCount += stat._count.nop;
-      } else {
-        curr.belumLunasCount += stat._count.nop;
-      }
+      const c = map.get(pId)!;
+      c.nop += s._count.nop;
+      c.ketetapan += s._sum.ketetapan || 0;
+      c.pembayaran += s._sum.pembayaran || 0;
+      c.sisaTagihan += s._sum.sisaTagihan || 0;
+      if (s.paymentStatus === "LUNAS") c.lunas += s._count.nop;
+      else c.belum += s._count.nop;
     });
 
-    const penarikStatsFlat = Array.from(penarikMapReduce.values());
+    const penarikStatsFlat = Array.from(map.values());
 
     const penarikUsers = await prisma.user.findMany({
       where: { role: "PENARIK" },
@@ -74,37 +88,37 @@ export async function GET(req: NextRequest) {
     );
 
     const combinedStats = penarikStatsFlat
-      .map((stat: any) => ({
+      .map((stat: PenarikStat) => ({
         ...stat,
-        penarikName: stat.penarikId
+        name: stat.penarikId
           ? penarikMap.get(stat.penarikId as string)?.name || "Penarik Tidak Ditemukan"
           : "Belum Dialokasikan",
-        penarikDusun: stat.penarikId
+        dusun: stat.penarikId
           ? penarikMap.get(stat.penarikId as string)?.dusun || ""
           : "",
       }))
-      .sort((a: any, b: any) => a.penarikName.localeCompare(b.penarikName));
+      .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
     // Calculate overall totals
-    const totalWp = penarikStatsFlat.reduce((acc: number, curr: any) => acc + curr._count.nop, 0);
-    const totalWpLunas = penarikStatsFlat.reduce(
-      (acc: number, curr: any) => acc + curr.lunasCount,
+    const totalWp = combinedStats.reduce((acc: number, curr: PenarikStat) => acc + curr.nop, 0);
+    const totalWpLunas = combinedStats.reduce(
+      (acc: number, curr: PenarikStat) => acc + curr.lunas,
       0
     );
-    const totalWpBelumLunas = penarikStatsFlat.reduce(
-      (acc: number, curr: any) => acc + curr.belumLunasCount,
+    const totalWpBelumLunas = combinedStats.reduce(
+      (acc: number, curr: PenarikStat) => acc + curr.belum,
       0
     );
-    const totalTarget = penarikStatsFlat.reduce(
-      (acc: number, curr: any) => acc + (curr._sum.ketetapan || 0),
+    const totalTarget = combinedStats.reduce(
+      (acc: number, curr: PenarikStat) => acc + (curr.ketetapan || 0),
       0
     );
-    const totalRealisasi = penarikStatsFlat.reduce(
-      (acc: number, curr: any) => acc + (curr._sum.pembayaran || 0),
+    const totalRealisasi = combinedStats.reduce(
+      (acc: number, curr: PenarikStat) => acc + (curr.pembayaran || 0),
       0
     );
-    const totalSisa = penarikStatsFlat.reduce(
-      (acc: number, curr: any) => acc + (curr._sum.sisaTagihan || 0),
+    const totalSisa = combinedStats.reduce(
+      (acc: number, curr: PenarikStat) => acc + (curr.sisaTagihan || 0),
       0
     );
     const overallPercent = totalTarget > 0 ? (totalRealisasi / totalTarget) * 100 : 0;
@@ -227,18 +241,18 @@ export async function GET(req: NextRequest) {
     // ─── DATA ROWS ────────────────────────────────────────────────────────
     let rowIndex = headerRowNum + 1;
     combinedStats.forEach((stat, index) => {
-      const target = stat._sum.ketetapan || 0;
-      const realisasi = stat._sum.pembayaran || 0;
-      const sisa = stat._sum.sisaTagihan || 0;
+      const target = stat.ketetapan || 0;
+      const realisasi = stat.pembayaran || 0;
+      const sisa = stat.sisaTagihan || 0;
       const percent = target > 0 ? (realisasi / target) * 100 : 0;
 
       const row = sheet.addRow({
         no: index + 1,
-        penarikName: stat.penarikName,
-        wilayah: stat.penarikDusun || "-",
-        totalWp: stat._count.nop,
-        lunas: stat.lunasCount,
-        belum: stat.belumLunasCount,
+        penarikName: stat.name,
+        wilayah: stat.dusun || "-",
+        totalWp: stat.nop,
+        lunas: stat.lunas,
+        belum: stat.belum,
         target,
         realisasi,
         sisa,

@@ -26,13 +26,22 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
+import { useRouter } from "next/navigation";
+import { checkImportRequirements } from "@/app/actions/settings-actions";
+import { Checkbox } from "@/components/ui/checkbox";
+
 export default function UploadPBBPage() {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [tahun, setTahun] = useState(new Date().getFullYear());
   const [isUploading, setIsUploading] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isRequirementWarningOpen, setIsRequirementWarningOpen] = useState(false);
+  const [isDataExistsWarningOpen, setIsDataExistsWarningOpen] = useState(false);
+  const [requirements, setRequirements] = useState<{ dusunCount: number, otomationCount: number, taxCount: number } | null>(null);
   const [resetConfirmText, setResetConfirmText] = useState("");
+  const [readInstructions, setReadInstructions] = useState({ 1: false, 2: false, 3: false });
   const [progress, setProgress] = useState(0);
 
   const performReset = async () => {
@@ -66,6 +75,33 @@ export default function UploadPBBPage() {
       return;
     }
 
+    // Periksa persyaratan referensi data dlu
+    const reqRes = await checkImportRequirements(tahun) as any;
+    if (reqRes.success) {
+      if (reqRes.dusunCount === 0 || reqRes.otomationCount === 0) {
+        setRequirements({
+          dusunCount: reqRes.dusunCount,
+          otomationCount: reqRes.otomationCount,
+          taxCount: reqRes.taxCount,
+        });
+        setIsRequirementWarningOpen(true);
+        return;
+      }
+
+      // Jika data sudah terisi, munculkan peringatan update
+      if (reqRes.taxCount && reqRes.taxCount > 0) {
+        setIsDataExistsWarningOpen(true);
+        return;
+      }
+    }
+
+    startActualUpload();
+  };
+
+  const startActualUpload = async () => {
+    if (!file) return;
+    setIsDataExistsWarningOpen(false);
+    setReadInstructions({ 1: false, 2: false, 3: false }); // Reset checkboxes
     setIsUploading(true);
     setProgress(10);
 
@@ -120,7 +156,7 @@ export default function UploadPBBPage() {
             <div>
               <CardTitle className="text-xl font-bold tracking-tight">File Import</CardTitle>
               <CardDescription className="text-xs font-medium">
-                Impor data pajak dari file Excel (.xlsx)
+                Impor data pajak dari file Excel (.xlsx) atau CSV (.csv)
               </CardDescription>
             </div>
             <Button
@@ -166,13 +202,13 @@ export default function UploadPBBPage() {
                   {file ? file.name : "Klik atau seret file ke sini"}
                 </p>
                 <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">
-                  Maksimal 5MB (.xlsx)
+                  Maksimal 5MB (.xlsx, .csv)
                 </p>
               </div>
 
               <Input
                 type="file"
-                accept=".xlsx, .xls"
+                accept=".xlsx, .xls, .csv"
                 className="hidden"
                 id="file-upload"
                 onChange={handleFileChange}
@@ -321,6 +357,155 @@ export default function UploadPBBPage() {
               className="w-full sm:w-auto"
             >
               Ya, Reset Data Tahun {tahun}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Requirement Warning Dialog */}
+      <Dialog open={isRequirementWarningOpen} onOpenChange={setIsRequirementWarningOpen}>
+        <DialogContent className="max-w-md rounded-3xl border-none shadow-2xl">
+          <DialogHeader className="space-y-3">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 dark:bg-amber-950/30">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <div className="space-y-1 text-center">
+              <DialogTitle className="text-xl font-bold">Data Referensi Belum Lengkap</DialogTitle>
+              <DialogDescription className="text-foreground/70 leading-relaxed">
+                Sistem mendeteksi bahwa data referensi berikut belum diisi di Pengaturan:
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-3 py-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <div className="flex items-center gap-3">
+                  <div className={`h-2 w-2 rounded-full ${requirements?.dusunCount === 0 ? "bg-rose-500" : "bg-emerald-500"}`} />
+                  <span className="text-sm font-semibold">Data Referensi Dusun</span>
+                </div>
+                <span className={`text-xs font-bold ${requirements?.dusunCount === 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                  {requirements?.dusunCount === 0 ? "Belum Ada" : "Sudah Ada"}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                <div className="flex items-center gap-3">
+                  <div className={`h-2 w-2 rounded-full ${requirements?.otomationCount === 0 ? "bg-rose-500" : "bg-emerald-500"}`} />
+                  <span className="text-sm font-semibold">Otomasi Wilayah ke Dusun</span>
+                </div>
+                <span className={`text-xs font-bold ${requirements?.otomationCount === 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                  {requirements?.otomationCount === 0 ? "Belum Ada" : "Sudah Ada"}
+                </span>
+              </div>
+            </div>
+            
+            <p className="text-muted-foreground bg-amber-50/50 border-amber-100 rounded-xl border p-3 text-center text-[10px] italic leading-relaxed dark:bg-amber-950/10 dark:border-amber-900/30">
+              Penting: Data ini diperlukan agar sistem dapat memilah wilayah RT/RW secara otomatis saat file Excel diimpor.
+            </p>
+          </div>
+
+          <DialogFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-center">
+            <Button
+              variant="outline"
+              onClick={() => setIsRequirementWarningOpen(false)}
+              className="h-11 w-full sm:min-w-[120px] sm:w-auto rounded-xl font-bold border-zinc-200"
+            >
+              Nanti Saja
+            </Button>
+            <Button
+              onClick={() => {
+                setIsRequirementWarningOpen(false);
+                router.push("/settings");
+              }}
+              className="h-11 w-full sm:flex-1 max-w-[240px] rounded-xl font-bold shadow-lg shadow-primary/20"
+            >
+              Lengkapi di Pengaturan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Data Exists Warning Dialog */}
+      <Dialog open={isDataExistsWarningOpen} onOpenChange={setIsDataExistsWarningOpen}>
+        <DialogContent className="max-w-md rounded-3xl border-none shadow-2xl">
+          <DialogHeader className="space-y-3">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-500 dark:bg-blue-950/30">
+              <RefreshCcw className="h-6 w-6" />
+            </div>
+            <div className="space-y-1 text-center">
+              <DialogTitle className="text-xl font-bold">Sinkronisasi Data</DialogTitle>
+              <DialogDescription className="text-foreground/70 leading-relaxed font-semibold">
+                Sistem mendeteksi data pajak tahun {tahun} sudah ada.
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="bg-blue-50/50 border-blue-200 border rounded-2xl p-4 text-sm space-y-4 dark:bg-blue-950/20 dark:border-blue-900/40">
+              <p className="font-bold text-blue-900 dark:text-blue-400 text-xs uppercase tracking-wider">Fitur Sinkronisasi Smart (Smart Sync):</p>
+              
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <Checkbox 
+                    id="ins-1" 
+                    checked={readInstructions[1]} 
+                    onCheckedChange={(checked) => setReadInstructions(p => ({ ...p, 1: !!checked }))}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="ins-1" className="text-xs font-bold leading-normal cursor-pointer text-blue-800 dark:text-blue-500 flex-1">
+                    <span>Sistem akan melakukan <span className="font-black italic">Sinkronisasi</span> & <span className="font-black italic">Update</span> otomatis berdasarkan NOP.</span>
+                  </Label>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Checkbox 
+                    id="ins-2" 
+                    checked={readInstructions[2]} 
+                    onCheckedChange={(checked) => setReadInstructions(p => ({ ...p, 2: !!checked }))}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="ins-2" className="text-xs font-bold leading-normal cursor-pointer text-blue-800 dark:text-blue-500 flex-1">
+                    <span>Data yang sudah ada di sistem akan diperbarui statusnya mengikuti isi file Excel <span className="text-emerald-700 font-extrabold uppercase">Terbaru</span>.</span>
+                  </Label>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Checkbox 
+                    id="ins-3" 
+                    checked={readInstructions[3]} 
+                    onCheckedChange={(checked) => setReadInstructions(p => ({ ...p, 3: !!checked }))}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="ins-3" className="text-xs font-black leading-normal cursor-pointer text-blue-700 dark:text-blue-400 flex-1">
+                    <span>SAYA MENGERTI: Data lama yang <span className="underline">TIDAK ADA</span> di file baru akan tetap aman (tidak berubah statusnya).</span>
+                  </Label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-center">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDataExistsWarningOpen(false);
+                setReadInstructions({ 1: false, 2: false, 3: false });
+              }}
+              className="h-11 w-full sm:w-auto rounded-xl font-bold border-zinc-200"
+            >
+              Batalkan
+            </Button>
+            <Button
+              onClick={startActualUpload}
+              disabled={
+                !readInstructions[1] || 
+                !readInstructions[2] || 
+                !readInstructions[3]
+              }
+              className="h-11 w-full sm:w-auto rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
+            >
+              Ya, Sinkronkan Data
             </Button>
           </DialogFooter>
         </DialogContent>

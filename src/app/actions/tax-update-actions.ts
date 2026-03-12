@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/lib/server-auth";
 import { createAuditLog } from "./log-actions";
@@ -88,7 +89,7 @@ export async function updatePaymentStatus(
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -116,7 +117,7 @@ export async function getWpByRegion(dusun: string | null, rw: string | null, tah
       },
     });
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -129,7 +130,7 @@ export async function getWpByPenarik(
   paymentStatus?: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT"
 ) {
   try {
-    const whereClause: any = {
+    const whereClause: Prisma.TaxDataWhereInput = {
       tahun,
       penarikId,
     };
@@ -162,7 +163,7 @@ export async function getWpByPenarik(
       }),
     ]);
     return { success: true, data, total };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -188,8 +189,8 @@ export async function updateWpRegion(
       where: { id },
       data: {
         dusun,
-        rt,
-        rw,
+        rt: rt ? parseInt(rt, 10).toString().padStart(2, "0") : null,
+        rw: rw ? parseInt(rw, 10).toString().padStart(2, "0") : null,
       },
     });
 
@@ -203,7 +204,7 @@ export async function updateWpRegion(
     revalidatePath("/laporan");
     revalidatePath("/data-pajak");
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -234,8 +235,8 @@ export async function updateWpRegionBulk(
       where: { id: { in: ids } },
       data: {
         dusun,
-        rt,
-        rw,
+        rt: rt ? parseInt(rt, 10).toString().padStart(2, "0") : null,
+        rw: rw ? parseInt(rw, 10).toString().padStart(2, "0") : null,
       },
     });
 
@@ -249,7 +250,7 @@ export async function updateWpRegionBulk(
     revalidatePath("/laporan");
     revalidatePath("/data-pajak");
     return { success: true, count: ids.length };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }

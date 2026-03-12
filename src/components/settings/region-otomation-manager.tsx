@@ -90,7 +90,7 @@ export function RegionOtomationManager() {
       </CardHeader>
       <CardContent className="space-y-4">
         <form onSubmit={handleAdd} className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          <Select value={type} onValueChange={(val: any) => setType(val)}>
+          <Select value={type} onValueChange={(val) => val && setType(val as "RT" | "RW")}>
             <SelectTrigger className="bg-white/50 dark:bg-[#111827]/50 dark:text-white">
               <SelectValue />
             </SelectTrigger>
@@ -101,7 +101,7 @@ export function RegionOtomationManager() {
           </Select>
 
           <Input
-            placeholder={`No ${type} (Misal: 001)`}
+            placeholder={`No ${type} (Misal: 01)`}
             value={newCode}
             onChange={(e) => setNewCode(e.target.value)}
             className="bg-white/50 dark:bg-[#111827]/50 dark:text-white dark:placeholder:text-gray-500"

@@ -12,23 +12,39 @@ export function normalizeAddress(address: string): string {
 export function extractRTRW(address: string) {
   const norm = normalizeAddress(address);
 
-  // RT detection: RT\s*[:.]?\s*(\d{1,3})
-  const rtRegex = /RT\s*(\d{1,3})/i;
-  const rwRegex = /RW\s*(\d{1,2})/i;
+  // RT detection: RT\s*[:.-]?\s*(\d{1,3})
+  const rtRegex = /RT\s*[:.-]*\s*(\d{1,3})/i;
+  const rwRegex = /RW\s*[:.-]*\s*(\d{1,3})/i;
 
   const rtMatch = norm.match(rtRegex);
   const rwMatch = norm.match(rwRegex);
 
-  let rt = rtMatch ? rtMatch[1].padStart(3, "0") : null;
-  let rw = rwMatch ? rwMatch[1].padStart(2, "0") : null;
+  const normalizeNum = (val: string | null) => {
+    if (!val) return null;
+    const num = parseInt(val, 10);
+    if (isNaN(num)) return null;
+    // Format to 2 digits (e.g., 1 -> 01, 10 -> 10, 001 -> 01)
+    return num.toString().padStart(2, "0").slice(-2);
+  };
+
+  let rt = normalizeNum(rtMatch ? rtMatch[1] : null);
+  let rw = normalizeNum(rwMatch ? rwMatch[1] : null);
 
   // Alternative detection for "001/01" patterns
   if (!rt || !rw) {
-    const splashRegex = /(\d{1,3})\s?\/\s?(\d{1,2})/;
+    const splashRegex = /(\d{1,3})\s?\/\s?(\d{1,3})/;
     const splashMatch = norm.match(splashRegex);
     if (splashMatch) {
-      if (!rt) rt = splashMatch[1].padStart(3, "0");
-      if (!rw) rw = splashMatch[2].padStart(2, "0");
+      if (!rt) rt = normalizeNum(splashMatch[1]);
+      if (!rw) rw = normalizeNum(splashMatch[2]);
+    }
+  }
+
+  // Last resort: find standalone 3-digit numbers if RT is missing
+  if (!rt) {
+    const standaloneDigitMatch = norm.match(/\b(\d{3})\b/);
+    if (standaloneDigitMatch) {
+      rt = normalizeNum(standaloneDigitMatch[1]);
     }
   }
 

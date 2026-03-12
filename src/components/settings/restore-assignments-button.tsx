@@ -45,7 +45,6 @@ export function RestoreAssignmentsButton({ tahun }: { tahun: number }) {
 
     try {
       const result = await restoreAssignments(formData, tahun);
-      console.log("Restore Result Client:", result);
       if (result.success) {
         setCount(result.count || 0);
         setShowSuccess(true);
@@ -75,7 +74,7 @@ export function RestoreAssignmentsButton({ tahun }: { tahun: number }) {
         ref={fileInputRef}
         onChange={handleFileChange}
         className="hidden"
-        accept=".xlsx"
+        accept=".xlsx, .csv"
       />
 
       <Button
@@ -96,9 +95,9 @@ export function RestoreAssignmentsButton({ tahun }: { tahun: number }) {
               Peringatan Pemulihan Penugasan
             </DialogTitle>
             <DialogDescription className="text-foreground/70 pt-1">
-              Anda akan mengimpor data penugasan dari file Excel. Tindakan ini berpotensi{" "}
+              Anda akan mengimpor data penugasan dari file Excel/CSV. Tindakan ini berpotensi{" "}
               <strong>mengubah area tugas penarik pajak saat ini</strong> sesuai dengan isi file
-              Excel tersebut.
+              tersebut.
             </DialogDescription>
           </DialogHeader>
 

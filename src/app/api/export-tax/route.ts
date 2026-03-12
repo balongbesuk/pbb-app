@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import ExcelJS from "exceljs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
     const tahun = parseInt(searchParams.get("tahun") || new Date().getFullYear().toString());
 
     // Build Where Clause
-    const whereClause: any = { tahun };
+    const whereClause: Prisma.TaxDataWhereInput = { tahun };
 
     if (search) {
       whereClause.OR = [{ nop: { contains: search } }, { namaWp: { contains: search } }];

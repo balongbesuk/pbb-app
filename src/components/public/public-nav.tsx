@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Building2 } from "lucide-react";
 import { PublicModeToggle } from "./public-mode-toggle";
 import { usePublicThemeContext } from "./public-theme-provider";
 import { cn } from "@/lib/utils";
@@ -51,7 +51,7 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNav
           {logoUrl ? (
             <Image
               src={logoSrc}
-              alt={`Logo ${namaDesa}`}
+              alt={namaDesa ? `Logo Desa ${namaDesa}` : "Logo PBB Manager"}
               width={44}
               height={44}
               className="h-full w-full object-contain p-1"
@@ -59,16 +59,16 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNav
             />
           ) : (
             <div
-              className="w-full h-full rounded-2xl flex items-center justify-center font-black text-xs text-white"
-              style={{ background: "var(--primary)" }}
+              className="w-full h-full rounded-2xl flex items-center justify-center text-white"
+              style={{ background: "linear-gradient(135deg, var(--primary) 0%, #4338ca 100%)" }}
             >
-              M
+              <Building2 className="h-6 w-6" />
             </div>
           )}
         </div>
         <div className="flex flex-col">
           <span className="public-nav-name block text-base font-black leading-tight tracking-tight">
-            Desa {namaDesa}
+            {namaDesa ? `Desa ${namaDesa}` : "PBB Manager"}
           </span>
           {kecamatan && kabupaten && (
             <span className="public-nav-sub block text-[11px] font-medium opacity-60">

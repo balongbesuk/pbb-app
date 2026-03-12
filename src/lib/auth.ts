@@ -28,15 +28,27 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           email: user.email,
           role: user.role,
+          mustChangePassword: user.mustChangePassword,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.role = user.role;
         token.id = user.id!;
+        token.mustChangePassword = user.mustChangePassword;
+      }
+      // Saat session di-update (setelah ganti password), refresh flag dari DB
+      if (trigger === "update") {
+        const freshUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { mustChangePassword: true },
+        });
+        if (freshUser) {
+          token.mustChangePassword = freshUser.mustChangePassword;
+        }
       }
       return token;
     },
@@ -44,6 +56,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.role = token.role;
         session.user.id = token.id;
+        session.user.mustChangePassword = token.mustChangePassword;
       }
       return session;
     },

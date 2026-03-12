@@ -86,7 +86,7 @@ export async function sendTransferRequest(
     );
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -165,7 +165,7 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
     );
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }

@@ -25,6 +25,7 @@ export async function createUser(raw: any) {
         rt: data.rt || null,
         rw: data.rw || null,
         role: data.role || "PENARIK",
+        mustChangePassword: true,
       },
     });
 
@@ -36,7 +37,7 @@ export async function createUser(raw: any) {
     );
     revalidatePath("/pengguna");
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -72,7 +73,7 @@ export async function updateUser(id: string, raw: any) {
     );
     revalidatePath("/pengguna");
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -92,7 +93,7 @@ export async function deleteUser(id: string) {
     );
     revalidatePath("/pengguna");
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -107,7 +108,10 @@ export async function resetPassword(id: string) {
     const hashedPassword = await bcrypt.hash(DEFAULT_PASS, 12);
     await prisma.user.update({
       where: { id },
-      data: { password: hashedPassword },
+      data: {
+        password: hashedPassword,
+        mustChangePassword: true,
+      },
     });
     await createAuditLog(
       "RESET_PASSWORD",
@@ -116,7 +120,7 @@ export async function resetPassword(id: string) {
       `Mereset password pengguna: ${user.name} (${user.username})`
     );
     return { success: true, message: `Password ${user.name} berhasil direset ke password default.` };
-  } catch (error: any) {
+  } catch (error) {
     return { success: false, message: formatZodError(error) };
   }
 }

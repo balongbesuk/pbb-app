@@ -30,6 +30,7 @@ export const VillageConfigSchema = z.object({
   kecamatan: z.string().min(1, "Kecamatan harus diisi"),
   kabupaten: z.string().min(1, "Kabupaten harus diisi"),
   tahunPajak: z.number().int().min(2000).max(2100).optional(),
+  showNominalPajak: z.boolean().optional(),
 });
 
 export const PaymentStatusSchema = z.object({
@@ -37,25 +38,29 @@ export const PaymentStatusSchema = z.object({
   paymentStatus: z.enum(["LUNAS", "BELUM_LUNAS", "TIDAK_TERBIT"]),
 });
 
-export function formatZodError(error: any): string {
-  if (error instanceof z.ZodError || error?.name === "ZodError") {
-    const issues = error.issues || error.errors || [];
-    if (issues.length > 0) {
-      return issues.map((e: any) => e.message).join(", ");
-    }
+export function formatZodError(error: unknown): string {
+  if (error instanceof z.ZodError) {
+    return error.issues.map((e) => e.message).join(", ");
+  }
+
+  // Handle errors that looks like ZodError but lost instance (e.g. through IPC/actions)
+  const err = error as any;
+  if (err?.name === "ZodError" && Array.isArray(err?.issues || err?.errors)) {
+    const issues = err.issues || err.errors;
+    return issues.map((e: any) => e.message).join(", ");
   }
 
   // Fallback: If Zod serialized the error message as a JSON array string
-  try {
-    if (error?.message && error.message.startsWith("[")) {
-      const parsed = JSON.parse(error.message);
+  if (typeof err?.message === "string" && err.message.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(err.message);
       if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].message) {
         return parsed.map((e: any) => e.message).join(", ");
       }
+    } catch (e) {
+      // ignore JSON parse error
     }
-  } catch (e) {
-    // ignore JSON parse error
   }
 
-  return error?.message || "Terjadi kesalahan sistem";
+  return err?.message || "Terjadi kesalahan sistem";
 }

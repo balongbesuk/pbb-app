@@ -25,13 +25,14 @@ import { createUser, updateUser, resetPassword, deleteUser } from "@/app/actions
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ROLE_BADGE, type UserRoleKey } from "@/lib/role-config";
+import type { UserListItem } from "@/types/app";
 
 export function UserDialog({
   user,
   isEdit = false,
   dusuns = [],
 }: {
-  user?: any;
+  user?: UserListItem;
   isEdit?: boolean;
   dusuns?: { id: string; name: string }[];
 }) {
@@ -65,6 +66,7 @@ export function UserDialog({
   };
 
   const handleResetPassword = async () => {
+    if (!user) return;
     setResetting(true);
     const result = await resetPassword(user.id);
     if (result.success) {
@@ -156,7 +158,7 @@ export function UserDialog({
               <Select
                 name="role"
                 defaultValue={user?.role || "PENGGUNA"}
-                onValueChange={setSelectedRole}
+                onValueChange={(v) => v && setSelectedRole(v)}
               >
                 <SelectTrigger className="focus:ring-primary/20 h-11 w-full rounded-xl border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
                   <SelectValue placeholder="Pilih Peran" />
@@ -228,7 +230,7 @@ export function UserDialog({
                   <Input
                     id="rt"
                     name="rt"
-                    placeholder="00"
+                    placeholder="01"
                     defaultValue={user?.rt || ""}
                     className="h-9 rounded-lg bg-white text-xs dark:bg-zinc-950"
                   />
@@ -243,7 +245,7 @@ export function UserDialog({
                   <Input
                     id="rw"
                     name="rw"
-                    placeholder="00"
+                    placeholder="01"
                     defaultValue={user?.rw || ""}
                     className="h-9 rounded-lg bg-white text-xs dark:bg-zinc-950"
                   />

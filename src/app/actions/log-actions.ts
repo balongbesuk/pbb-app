@@ -2,8 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions } from "@/lib/auth"; // Keep this as it's used by createAuditLog
+import { formatZodError } from "@/lib/validations/schemas"; // Add this import
 import { requireAdmin } from "@/lib/server-auth";
+import { Prisma } from "@prisma/client";
 
 export async function createAuditLog(
   action: string,
@@ -29,6 +31,8 @@ export async function createAuditLog(
       },
     });
   } catch (error) {
+    // For internal audit log creation, just logging the error is often sufficient,
+    // as it shouldn't prevent the main operation from completing.
     console.error("Gagal membuat audit log:", error);
   }
 }
@@ -37,7 +41,7 @@ export async function getAuditLogs(limit: number = 100, page: number = 1, search
   try {
     await requireAdmin();
 
-    const where: any = {};
+    const where: Prisma.AuditLogWhereInput = {}; // Use proper Prisma type
     if (searchQuery) {
       where.OR = [
         { action: { contains: searchQuery } },
@@ -64,9 +68,10 @@ export async function getAuditLogs(limit: number = 100, page: number = 1, search
       prisma.auditLog.count({ where }),
     ]);
 
-    return { logs, total };
-  } catch (error) {
+    return { logs, total, success: true }; // Added success: true for consistency
+  } catch (error) { // Removed : any as formatZodError now handles unknown
     console.error("Gagal memuat log aktivitas:", error);
-    return { logs: [], total: 0 };
+    // Return a consistent error structure for client-side handling
+    return { logs: [], total: 0, success: false, message: formatZodError(error) };
   }
 }

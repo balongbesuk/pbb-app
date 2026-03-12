@@ -3,7 +3,8 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, User, MoreHorizontal, FileText, CheckCircle, Clock } from "lucide-react";
+import { MapPin, User } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,15 +13,17 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { TaxTableActions } from "@/components/tax/table/tax-table-actions";
+import type { TaxDataItem, AppUser, PenarikInfo } from "@/types/app";
+import type { PaymentStatus } from "@prisma/client";
 
 interface TaxTableRowProps {
-  item: any;
+  item: TaxDataItem;
   selected: boolean;
   onToggle: (id: number) => void;
-  onOpenDetail: (item: any) => void;
-  currentUser: any;
-  penariks: any[];
-  onUpdateStatus: (id: string, status: any) => void;
+  onOpenDetail: (item: TaxDataItem) => void;
+  currentUser: AppUser | undefined;
+  penariks: PenarikInfo[];
+  onUpdateStatus: (id: string, status: PaymentStatus) => void;
   onAssignPenarik: (taxId: string, penarikId: string | null) => void;
   onTransferRequest: (taxId: number, receiverId: string, type: "GIVE" | "TAKE") => void;
   role: string;
@@ -38,12 +41,6 @@ export function TaxTableRow({
   onTransferRequest,
   role,
 }: TaxTableRowProps) {
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      maximumFractionDigits: 0,
-    }).format(val);
 
   return (
     <TableRow

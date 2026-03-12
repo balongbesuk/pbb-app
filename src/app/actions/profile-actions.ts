@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
 import { createAuditLog } from "./log-actions";
+import { formatZodError } from "@/lib/validations/schemas";
 
 // Validasi server-side untuk profil
 function validateProfileData(data: { name: string; phoneNumber: string; email: string }) {
@@ -58,8 +59,8 @@ export async function updateUserProfile(data: { name: string; phoneNumber: strin
     );
 
     return { success: true };
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error) {
+    return { success: false, message: formatZodError(error) };
   }
 }
 
@@ -94,11 +95,14 @@ export async function changeOwnPassword(oldPass: string, newPass: string) {
 
     await prisma.user.update({
       where: { id: userId },
-      data: { password: hashedPassword },
+      data: {
+        password: hashedPassword,
+        mustChangePassword: false,
+      },
     });
 
     return { success: true };
-  } catch (error: any) {
-    return { success: false, message: error.message };
+  } catch (error) {
+    return { success: false, message: formatZodError(error) };
   }
 }

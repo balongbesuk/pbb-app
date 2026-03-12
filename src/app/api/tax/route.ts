@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -18,13 +19,14 @@ export async function GET(req: NextRequest) {
   const regionStatus = searchParams.get("regionStatus") || "all";
   const pageSize = 50;
 
-  const whereClause: any = {
+  const whereClause: Prisma.TaxDataWhereInput = {
     tahun,
-    AND: [],
   };
 
+  const andFilters: Prisma.TaxDataWhereInput[] = [];
+
   if (query) {
-    whereClause.AND.push({
+    andFilters.push({
       OR: [
         { nop: { contains: query } },
         { namaWp: { contains: query } },
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (regionStatus === "incomplete") {
-    whereClause.AND.push({
+    andFilters.push({
       OR: [{ dusun: null }, { rw: null }, { rt: null }, { dusun: "" }, { rw: "" }, { rt: "" }],
     });
   }
@@ -50,7 +52,9 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  if (whereClause.AND.length === 0) delete whereClause.AND;
+  if (andFilters.length > 0) {
+    whereClause.AND = andFilters;
+  }
 
   const [data, total] = await Promise.all([
     prisma.taxData.findMany({

@@ -1,4 +1,5 @@
 import { getVillageConfig } from "@/app/actions/settings-actions";
+import { toTitleCase } from "@/lib/utils";
 import { PublicSearch } from "@/components/public/public-search";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,17 +11,12 @@ import { PublicNav } from "@/components/public/public-nav";
 // Always fetch fresh data (logo, village name, etc) on every request
 export const dynamic = "force-dynamic";
 
-/** Convert "BALONGBESUK" → "Balongbesuk", "DIWEK" → "Diwek" */
-function toTitleCase(str: string) {
-  return str
-    .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
+
 
 export default async function IndexPage() {
   const config = await getVillageConfig();
-  const rawNamaDesa = config?.namaDesa || "Belum Diatur";
-  const namaDesa = toTitleCase(rawNamaDesa);
+  const rawNamaDesa = config?.namaDesa || "";
+  const namaDesa = rawNamaDesa ? toTitleCase(rawNamaDesa) : "";
   const tahunPajak = config?.tahunPajak || new Date().getFullYear();
   const kecamatan = config?.kecamatan ? toTitleCase(config.kecamatan) : "";
   const kabupaten = config?.kabupaten ? toTitleCase(config.kabupaten) : "";
@@ -46,18 +42,23 @@ export default async function IndexPage() {
             Cek Tagihan &amp; Bayar <span className="public-heading-accent block sm:inline mt-1 sm:mt-0 px-2 bg-clip-text text-transparent pb-2 font-black">PBB</span> Lebih Mudah.
           </h1>
           <p className="public-subtext text-base sm:text-lg font-medium">
-            Sistem Informasi Pelayanan Pajak Desa {namaDesa}, Kecamatan {kecamatan}, {kabupaten}. Cukup ketik nama atau NOP Anda.
+            {namaDesa 
+              ? `Sistem Informasi Pelayanan Pajak Desa ${namaDesa}, Kecamatan ${kecamatan}, ${kabupaten}.` 
+              : "Sistem Informasi Pelayanan Pajak Bumi dan Bangunan (PBB Manager)."} Cukup ketik nama atau NOP Anda.
           </p>
         </div>
 
         <div className="w-full animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200 fill-mode-both">
-          <PublicSearch tahunPajak={tahunPajak} />
+          <PublicSearch 
+            tahunPajak={tahunPajak} 
+            showNominalPajak={config?.showNominalPajak || false} 
+          />
         </div>
       </main>
 
       <footer className="mt-auto pt-24 text-center pb-6 opacity-60 hover:opacity-100 transition-opacity">
         <p className="public-footer-text text-xs font-bold uppercase tracking-widest mb-1.5">PBB Manager &copy; {new Date().getFullYear()}</p>
-        <p className="public-footer-text text-[10px] font-medium">Pemerintah Desa {namaDesa}</p>
+        <p className="public-footer-text text-[10px] font-medium">{namaDesa ? `Pemerintah Desa ${namaDesa}` : "PBB Manager"}</p>
       </footer>
     </PublicThemeWrapper>
   );

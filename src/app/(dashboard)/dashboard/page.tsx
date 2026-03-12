@@ -119,7 +119,12 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
     belumDibayarValue: belumDibayar._sum.ketetapan || 0,
     tidakTerbit,
     persentase,
-    pajakPerRW: pajakPerRW.sort((a: any, b: any) => (a.rw || "").localeCompare(b.rw || "")),
+    pajakPerRW: pajakPerRW
+      .sort((a, b) => (a.rw || "").localeCompare(b.rw || ""))
+      .map((item) => ({
+        rw: item.rw || "?",
+        _sum: { ketetapan: item._sum.ketetapan || 0, pembayaran: item._sum.pembayaran || 0 },
+      })),
     trenPembayaran,
     topPenariks,
     tanahTanpaBangunan,
@@ -262,7 +267,7 @@ export default async function DashboardPage({
                 data={[
                   { name: "Lunas", value: stats.sudahDibayarCount, color: "#10b981" },
                   { name: "Belum", value: stats.belumDibayarCount, color: "#ef4444" },
-                  { name: "Tidak Terbit", value: "#71717a" },
+                  { name: "Tidak Terbit", value: stats.tidakTerbit, color: "#71717a" },
                 ]}
               />
               <div className="mt-6 space-y-2">

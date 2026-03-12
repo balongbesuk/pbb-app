@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -104,12 +105,6 @@ export default async function LaporanPage({
     0
   );
 
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      maximumFractionDigits: 0,
-    }).format(val);
 
   return (
     <div className="space-y-6">

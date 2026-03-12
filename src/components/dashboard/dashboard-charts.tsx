@@ -15,8 +15,19 @@ import {
   Line,
   Legend,
 } from "recharts";
+import type { RWBarChartItem, StatusPieChartItem } from "@/types/app";
 
-export function RWBarChart({ data }: { data: any[] }) {
+interface RwGroupStat {
+  rw: string;
+  _sum: { ketetapan: number; pembayaran: number };
+}
+
+interface MonthlyPayment {
+  tanggalBayar: Date | string | null;
+  _sum: { pembayaran: number | null };
+}
+
+export function RWBarChart({ data }: { data: RwGroupStat[] }) {
   const chartData = data.map((item) => ({
     name: `RW ${item.rw || "?"}`,
     target: item._sum.ketetapan || 0,
@@ -43,7 +54,7 @@ export function RWBarChart({ data }: { data: any[] }) {
               border: "none",
               boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
             }}
-            formatter={(value: any) =>
+            formatter={(value) =>
               new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(
                 Number(value || 0)
               )
@@ -58,7 +69,7 @@ export function RWBarChart({ data }: { data: any[] }) {
   );
 }
 
-export function StatusPieChart({ data }: { data: any[] }) {
+export function StatusPieChart({ data }: { data: StatusPieChartItem[] }) {
   return (
     <div className="h-[350px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -83,7 +94,7 @@ export function StatusPieChart({ data }: { data: any[] }) {
   );
 }
 
-export function LineTrendChart({ data }: { data: any[] }) {
+export function LineTrendChart({ data }: { data: MonthlyPayment[] }) {
   const monthlyData = new Array(12).fill(0).map((_, i) => ({
     name: new Intl.DateTimeFormat("id-ID", { month: "short" }).format(new Date(2000, i, 1)),
     nominal: 0,
@@ -110,7 +121,7 @@ export function LineTrendChart({ data }: { data: any[] }) {
               border: "none",
               boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
             }}
-            formatter={(value: any) =>
+            formatter={(value) =>
               new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(
                 Number(value || 0)
               )

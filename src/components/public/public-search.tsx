@@ -6,15 +6,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info } from "lucide-react";
+import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert } from "lucide-react";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
+import { formatCurrency } from "@/lib/utils";
 
-export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
+export function PublicSearch({ 
+  tahunPajak, 
+  showNominalPajak = false 
+}: { 
+  tahunPajak: number;
+  showNominalPajak?: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [message, setMessage] = useState("");
+  const [isRateLimited, setIsRateLimited] = useState(false);
   const { theme } = usePublicThemeContext();
   const isDark = theme === "dark";
 
@@ -25,18 +33,21 @@ export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
     setLoading(true);
     setHasSearched(true);
     setMessage("");
+    setIsRateLimited(false);
     const res = await searchPublicTaxData(query, tahunPajak);
     if (res.success) {
       setResults(res.data || []);
     } else {
       setResults([]);
       setMessage(res.message || "Terjadi kesalahan sistem.");
+      if ((res as any).rateLimited) {
+        setIsRateLimited(true);
+      }
     }
     setLoading(false);
   };
 
-  const formatIDR = (val: number) =>
-    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(val);
+
 
   // Theme-aware class helpers
   const cardCls = isDark
@@ -97,8 +108,7 @@ export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
           <div className={`mt-5 flex items-start gap-3 rounded-2xl border p-4 text-[11px] sm:text-xs ${disclaimerCls}`}>
             <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
             <p className="leading-relaxed font-medium">
-              <strong className="font-bold">Disclaimer:</strong> Status pelunasan pajak di portal desa berpotensi berbeda (delay) dengan sistem Pemerintah Kabupaten (DISPENDA/BAPENDA). Pembaruan data di sini bergantung penuh pada{" "}
-              <strong className="font-bold">konfirmasi Pembayaran</strong> oleh Petugas Penarik Pajak Desa.
+              <strong className="font-bold">Info:</strong> Data pelunasan diperbarui secara manual oleh petugas desa. Untuk status resmi, silakan cek sistem BAPENDA Kabupaten.
             </p>
           </div>
         </CardContent>
@@ -107,7 +117,16 @@ export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
       {hasSearched && (
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {message && (
-            <div className={`p-4 border rounded-2xl text-center text-sm font-semibold ${msgBgCls}`}>
+            <div className={`p-4 border rounded-2xl text-center text-sm font-semibold ${
+              isRateLimited
+                ? isDark
+                  ? "bg-rose-950/40 border-rose-500/30 text-rose-400"
+                  : "bg-rose-50 border-rose-200 text-rose-700"
+                : msgBgCls
+            }`}>
+              {isRateLimited && (
+                <ShieldAlert className="inline-block w-4 h-4 mr-2 -mt-0.5" />
+              )}
               {message}
             </div>
           )}
@@ -128,7 +147,7 @@ export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
                     )}
                   </Badge>
                 </CardHeader>
-                <CardContent className={`p-5 grid gap-4 sm:grid-cols-2 text-sm ${bodyTextCls}`}>
+                <CardContent className={`p-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-sm ${bodyTextCls}`}>
                   <div className="space-y-1">
                     <div className={`flex items-center gap-1.5 mb-0.5 ${mutedLabelCls}`}>
                       <MapPin className="w-3.5 h-3.5" />
@@ -136,6 +155,19 @@ export function PublicSearch({ tahunPajak }: { tahunPajak: number }) {
                     </div>
                     <p className={`font-semibold ${addressCls}`}>{item.alamat}</p>
                   </div>
+                  
+                  {showNominalPajak && (
+                    <div className="space-y-1">
+                      <div className={`flex items-center gap-1.5 mb-0.5 ${mutedLabelCls}`}>
+                        <Wallet className="w-3.5 h-3.5" />
+                        <span className="text-[10px] uppercase font-bold tracking-wider">Nominal PBB</span>
+                      </div>
+                      <p className={`text-lg font-black tracking-tight ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
+                        {formatCurrency(item.tagihan)}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="space-y-1">
                     <div className={`flex items-center gap-1.5 mb-0.5 ${mutedLabelCls}`}>
                       <User className="w-3.5 h-3.5" />

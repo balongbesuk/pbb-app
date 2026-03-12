@@ -27,13 +27,25 @@ export async function GET(req: NextRequest) {
     _sum: { ketetapan: true, pembayaran: true, sisaTagihan: true },
   });
 
-  const map = new Map<string, any>();
+  interface PenarikStat {
+    penarikId: string | null;
+    nop: number;
+    ketetapan: number;
+    pembayaran: number;
+    sisaTagihan: number;
+    lunas: number;
+    belum: number;
+    name?: string;
+    dusun?: string;
+  }
+
+  const map = new Map<string, PenarikStat>();
   penarikStatsRaw.forEach((s) => {
     const pId = s.penarikId || "unassigned";
     if (!map.has(pId)) {
       map.set(pId, { penarikId: s.penarikId, nop: 0, ketetapan: 0, pembayaran: 0, sisaTagihan: 0, lunas: 0, belum: 0 });
     }
-    const c = map.get(pId);
+    const c = map.get(pId)!;
     c.nop += s._count.nop;
     c.ketetapan += s._sum.ketetapan || 0;
     c.pembayaran += s._sum.pembayaran || 0;
@@ -54,14 +66,14 @@ export async function GET(req: NextRequest) {
       name: s.penarikId ? penarikMap.get(s.penarikId)?.name || "Tidak Ditemukan" : "Belum Dialokasikan",
       dusun: s.penarikId ? penarikMap.get(s.penarikId)?.dusun || "-" : "-",
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
-  const totalWp = stats.reduce((a, c) => a + c.nop, 0);
-  const totalLunas = stats.reduce((a, c) => a + c.lunas, 0);
-  const totalBelum = stats.reduce((a, c) => a + c.belum, 0);
-  const totalTarget = stats.reduce((a, c) => a + c.ketetapan, 0);
-  const totalRealisasi = stats.reduce((a, c) => a + c.pembayaran, 0);
-  const totalSisa = stats.reduce((a, c) => a + c.sisaTagihan, 0);
+  const totalWp = stats.reduce((a, c: PenarikStat) => a + c.nop, 0);
+  const totalLunas = stats.reduce((a, c: PenarikStat) => a + c.lunas, 0);
+  const totalBelum = stats.reduce((a, c: PenarikStat) => a + c.belum, 0);
+  const totalTarget = stats.reduce((a, c: PenarikStat) => a + c.ketetapan, 0);
+  const totalRealisasi = stats.reduce((a, c: PenarikStat) => a + c.pembayaran, 0);
+  const totalSisa = stats.reduce((a, c: PenarikStat) => a + c.sisaTagihan, 0);
   const totalPct = totalTarget > 0 ? ((totalRealisasi / totalTarget) * 100).toFixed(1) : "0.0";
 
   const fmt = (val: number) =>

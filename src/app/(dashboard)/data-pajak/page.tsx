@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { TaxDataTable } from "@/components/tax/tax-data-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServerSession } from "next-auth";
@@ -30,13 +31,14 @@ export default async function DataPajakPage({
   const regionStatus = params.regionStatus || "all";
   const pageSize = 50;
 
-  const whereClause: any = {
+  const whereClause: Prisma.TaxDataWhereInput = {
     tahun,
-    AND: [],
   };
 
+  const andFilters: Prisma.TaxDataWhereInput[] = [];
+
   if (query) {
-    whereClause.AND.push({
+    andFilters.push({
       OR: [
         { nop: { contains: query } },
         { namaWp: { contains: query } },
@@ -46,7 +48,7 @@ export default async function DataPajakPage({
   }
 
   if (regionStatus === "incomplete") {
-    whereClause.AND.push({
+    andFilters.push({
       OR: [{ dusun: null }, { rw: null }, { rt: null }, { dusun: "" }, { rw: "" }, { rt: "" }],
     });
   }
@@ -62,7 +64,9 @@ export default async function DataPajakPage({
     }
   }
 
-  if (whereClause.AND.length === 0) delete whereClause.AND;
+  if (andFilters.length > 0) {
+    whereClause.AND = andFilters;
+  }
 
   const [data, total, penariks, filterOptions, dusunRefsRaw] = await Promise.all([
     prisma.taxData.findMany({

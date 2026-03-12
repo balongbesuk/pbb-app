@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Search, Printer, Loader2 } from "lucide-react";
+import type { AvailableFilters } from "@/types/app";
 
 interface TaxTableFiltersProps {
   search: string;
@@ -25,7 +26,7 @@ interface TaxTableFiltersProps {
   onPenarikChange: (val: string) => void;
   filterRegionStatus: string;
   onRegionStatusChange: (val: string) => void;
-  availableFilters: any;
+  availableFilters: AvailableFilters;
   onPrint: () => void;
   showPrint: boolean;
   isFetching?: boolean;
@@ -151,8 +152,8 @@ export function TaxTableFilters({
                 {filterPenarik === "all"
                   ? "Semua Penarik"
                   : filterPenarik === "none"
-                    ? "Unassigned"
-                    : availableFilters.penarik?.find((p: any) => p.id === filterPenarik)?.name ||
+                    ? "Tanpa Petugas"
+                    : availableFilters.penarik?.find((p) => p.id === filterPenarik)?.name ||
                       "Pilih"}
               </span>
             </SelectTrigger>
@@ -161,9 +162,9 @@ export function TaxTableFilters({
                 Semua Penarik
               </SelectItem>
               <SelectItem value="none" className="text-destructive font-black">
-                Tanpa Penarik
+                Tanpa Petugas
               </SelectItem>
-              {availableFilters.penarik?.map((p: any) => (
+              {availableFilters.penarik?.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.name}
                 </SelectItem>

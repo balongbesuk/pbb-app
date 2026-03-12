@@ -31,6 +31,7 @@ model User {
   rt            String?
   rw            String?
   avatarUrl     String?
+  mustChangePassword Boolean @default(true)
   
   taxData       TaxData[] @relation("PenarikPajak")
   taxMappings   TaxMapping[]
@@ -71,7 +72,7 @@ model TaxData {
   paymentStatus   PaymentStatus @default(BELUM_LUNAS)
 
   penarikId       String?
-  penarik         User?     @relation("PenarikPajak", fields: [penarikId], references: [id])
+  penarik         User?     @relation("PenarikPajak", fields: [penarikId], references: [id], onDelete: SetNull)
 
   transferRequests TransferRequest[]
 
@@ -85,12 +86,14 @@ model TaxData {
   @@index([paymentStatus])
   @@index([penarikId])
   @@index([tahun, penarikId])
+  @@index([tahun, dusun])
+  @@index([tahun, paymentStatus])
 }
 
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   message   String?
   type      String   // INFO, REQUEST, REJECTED, ACCEPTED
@@ -102,11 +105,11 @@ model Notification {
 model TransferRequest {
   id          String   @id @default(cuid())
   taxId       Int
-  taxData     TaxData  @relation(fields: [taxId], references: [id])
+  taxData     TaxData  @relation(fields: [taxId], references: [id], onDelete: Cascade)
   senderId    String
-  sender      User     @relation("Sender", fields: [senderId], references: [id])
+  sender      User     @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
   receiverId  String
-  receiver    User     @relation("Receiver", fields: [receiverId], references: [id])
+  receiver    User     @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
   type        String   @default("GIVE") // GIVE (Sender gives to Receiver), TAKE (Sender takes from Receiver)
   status      String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
   message     String?
@@ -135,7 +138,7 @@ model TaxMapping {
   rw         String
   dusun      String
   penarikId  String?
-  penarik    User?  @relation(fields: [penarikId], references: [id])
+  penarik    User?  @relation(fields: [penarikId], references: [id], onDelete: SetNull)
 }
 
 model AddressLearning {
@@ -154,18 +157,19 @@ model RegionOtomation {
   dusun String
 }
 model VillageConfig {
-  id        Int    @id @default(1)
-  namaDesa  String @default("")
-  kecamatan String @default("")
-  kabupaten String @default("")
-  tahunPajak Int @default(2026)
-  logoUrl   String?
+  id                Int     @id @default(1)
+  namaDesa          String  @default("")
+  kecamatan         String  @default("")
+  kabupaten         String  @default("")
+  tahunPajak        Int     @default(2026)
+  logoUrl           String?
+  showNominalPajak  Boolean @default(false)
 }
 
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String?  // Optional in case of system actions
-  user      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   action    String   // e.g., "UPDATE_PAYMENT", "UPDATE_REGION", "UPLOAD_EXCEL", "CLEAR_DATA"
   entity    String   // e.g., "TaxData", "DusunReference"
   entityId  String?  // e.g., TaxData ID or User ID being touched
@@ -175,4 +179,5 @@ model AuditLog {
   @@index([action])
   @@index([entity])
   @@index([createdAt])
+  @@index([userId])
 }

@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Download, Printer } from "lucide-react";
+import type { AppUser } from "@/types/app";
 
-export function LaporanActionButtons({ tahun, currentUser }: { tahun: number; currentUser?: any }) {
+export function LaporanActionButtons({ tahun, currentUser }: { tahun: number; currentUser?: AppUser }) {
   const handleExport = () => {
     window.location.href = `/api/export-laporan-excel?tahun=${tahun}`;
   };

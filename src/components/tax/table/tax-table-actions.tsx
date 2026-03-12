@@ -12,11 +12,12 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, User, UserMinus, ArrowRight, Handshake } from "lucide-react";
+import type { TaxDataItem, AppUser, PenarikInfo } from "@/types/app";
 
 interface TaxTableActionsProps {
-  item: any;
-  penariks: any[];
-  currentUser: any;
+  item: TaxDataItem;
+  penariks: PenarikInfo[];
+  currentUser: AppUser | undefined;
   onAssignPenarik: (taxId: string, penarikId: string | null) => void;
   onTransferRequest: (taxId: number, receiverId: string, type: "GIVE" | "TAKE") => void;
 }
@@ -57,7 +58,7 @@ export function TaxTableActions({
                   className="text-destructive focus:text-destructive mb-1 cursor-pointer gap-2 font-medium"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onAssignPenarik(item.id, null);
+                    onAssignPenarik(item.id.toString(), null);
                   }}
                 >
                   <UserMinus className="h-4 w-4" />
@@ -65,17 +66,17 @@ export function TaxTableActions({
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <div className="max-h-[300px] overflow-y-auto">
-                  {penariks.map((p: any) => (
+                  {penariks.map((p) => (
                     <DropdownMenuItem
                       key={p.id}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onAssignPenarik(item.id, p.id);
+                        onAssignPenarik(item.id.toString(), p.id);
                       }}
                       className="flex cursor-pointer items-center gap-2 py-2"
                     >
                       <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
-                        {p.name.charAt(0)}
+                        {(p.name || "?").charAt(0)}
                       </div>
                       <div className="flex flex-col truncate">
                         <span className="truncate text-sm font-semibold">{p.name}</span>
@@ -102,8 +103,8 @@ export function TaxTableActions({
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent>
                     {penariks
-                      .filter((p: any) => p.id !== currentUser.id)
-                      .map((p: any) => (
+                      .filter((p) => p.id !== currentUser?.id)
+                      .map((p) => (
                         <DropdownMenuItem
                           key={p.id}
                           onClick={(e) => {

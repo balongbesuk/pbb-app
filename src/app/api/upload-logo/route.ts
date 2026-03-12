@@ -55,10 +55,10 @@ export async function POST(req: NextRequest) {
     const logoUrl = `/uploads/${filename}`;
 
     // Update VillageConfig
-    await prisma.$executeRawUnsafe(
-      `UPDATE "VillageConfig" SET logoUrl = ? WHERE id = 1`,
-      logoUrl
-    );
+    await prisma.villageConfig.update({
+      where: { id: 1 },
+      data: { logoUrl },
+    });
 
     revalidatePath("/settings");
     revalidatePath("/");
