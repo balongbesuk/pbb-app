@@ -47,13 +47,18 @@ Tiga level akses untuk menjaga integritas data pajak:
 
 ---
 
-## 🛠️ Panduan Instalasi (Development)
+## 🛠️ Panduan Instalasi
 
-### Persyaratan
-- **Node.js** versi 20 LTS atau lebih baru  
-- **Git**
+Kami menyediakan dua jenis panduan tergantung tingkat kemahiran Anda:
 
-### Step-by-Step
+### 🔰 Untuk Pemula (Step-by-Step Lengkap)
+Jika Anda baru pertama kali mencoba menjalankan aplikasi berbasis web, silakan baca:
+👉 **[PANDUAN_INSTALASI.md](./PANDUAN_INSTALASI.md)**
+
+---
+
+### 🚀 Untuk Developer (Quick Start)
+Jika Anda sudah familiar dengan Node.js dan Git:
 
 ```bash
 # 1. Clone & Install
@@ -61,10 +66,17 @@ git clone https://github.com/balongbesuk/pbb-app.git
 cd pbb-app
 npm install
 
-# 2. Setup Database & Seed
+# 2. Setup Environment
+cp .env.example .env
+# Edit .env dan isi NEXTAUTH_SECRET
+
+# 3. Setup Database & Seed
 npx prisma generate
 npx prisma db push
 npx prisma db seed
+
+# 4. Run Development
+npm run dev
 ```
 
 **Akun Default:** `admin` / `admin123`
