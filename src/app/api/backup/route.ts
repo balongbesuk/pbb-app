@@ -14,17 +14,23 @@ export async function GET(req: NextRequest) {
 
     const zip = new AdmZip();
     const dbPath = path.join(process.cwd(), "prisma", "dev.db");
+    const uploadsPath = path.join(process.cwd(), "public", "uploads");
 
     if (!fs.existsSync(dbPath)) {
       return new NextResponse("Database file not found", { status: 404 });
     }
 
-    // Copy the database file into the zip
+    // 1. Add database file to root of zip
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const zipName = `PBB-MA-Backup-${timestamp}.zip`;
-    const dbFileName = `pbb-manager-${timestamp}.db`;
-
+    const dbFileName = `dev.db`; // Use fixed name for easier restore detection, or keeping it in root
+    
     zip.addFile(dbFileName, fs.readFileSync(dbPath));
+
+    // 2. Add uploads folder to zip if it exists
+    if (fs.existsSync(uploadsPath)) {
+      zip.addLocalFolder(uploadsPath, "uploads");
+    }
 
     const zipBuffer = zip.toBuffer();
 

@@ -42,12 +42,31 @@ export async function POST(req: NextRequest) {
     }
 
     const dbPath = path.join(process.cwd(), "prisma", "dev.db");
+    const uploadsPath = path.join(process.cwd(), "public", "uploads");
 
     // Putuskan koneksi Prisma agar file dev.db tidak terkunci (khususnya untuk Windows)
     await prisma.$disconnect();
 
+    // 1. Ekstrak database (.db)
     const dbBuffer = dbEntry.getData();
     fs.writeFileSync(dbPath, dbBuffer);
+
+    // 2. Ekstrak folder uploads jika ada dalam ZIP
+    // Kita filter semua entry yang prefixnya "uploads/"
+    const uploadEntries = zipEntries.filter(entry => entry.entryName.startsWith("uploads/"));
+    
+    if (uploadEntries.length > 0) {
+      // Pastikan folder public/uploads ada
+      if (!fs.existsSync(uploadsPath)) {
+        fs.mkdirSync(uploadsPath, { recursive: true });
+      }
+      // Ekstrak folder uploads ke public/uploads
+      // extractEntryTo akan mengambil entry tertentu, tapi kita gunakan extractAllTo seperlunya atau manual
+      // Karena addLocalFolder dengan target "uploads" akan membuat struktur "uploads/..." dalam zip
+      // Kita ingin isinya masuk ke public/uploads
+      zip.extractEntryTo("uploads/", uploadsPath, false, true);
+      console.log(`Restored ${uploadEntries.length} files to uploads folder.`);
+    }
 
     // Otomatis sinkronisasi schema jika database versi lama
     try {
@@ -66,10 +85,16 @@ export async function POST(req: NextRequest) {
     // Buka kembali koneksinya
     await prisma.$connect();
 
-    return NextResponse.json({
+    // Hancurkan sesi dengan menghapus cookie (Force Logout)
+    const response = NextResponse.json({
       success: true,
-      message: "Database berhasil dipulihkan dan disinkronkan ke versi terbaru. Silakan login kembali dengan password admin bawaan.",
+      message: "Database berhasil dipulihkan dan disinkronkan ke versi terbaru. Anda akan dialihkan ke halaman login.",
     });
+
+    // Hapus cookie sesi agar pengguna dipaksa login ulang
+    response.cookies.delete("next-auth.session-token");
+    
+    return response;
   } catch (error: any) {
     console.error("Restore Error:", error);
     return NextResponse.json(
