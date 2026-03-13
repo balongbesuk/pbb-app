@@ -50,9 +50,6 @@ function isAdminOnlyRoute(pathname: string): boolean {
 // ──────────────────────────────────────────────────────────────
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  // LOG VERIFIKASI (Hanya untuk debug di VPS)
-  console.log(`>>> [SYSTEM LOG] Path: ${pathname} | AuthURL: ${process.env.NEXTAUTH_URL}`);
 
   // A. RATE LIMITING (Hanya untuk login)
   if (pathname === "/api/auth/callback/credentials" && request.method === "POST") {
