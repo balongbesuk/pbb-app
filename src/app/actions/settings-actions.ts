@@ -1,4 +1,6 @@
 "use server";
+import fs from "fs";
+import path from "path";
 
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
@@ -35,6 +37,34 @@ export async function deleteAllTaxData() {
         logoUrl: null,
       },
     });
+
+    // 1. Reset all users avatarUrl
+    await prisma.user.updateMany({
+      data: { avatarUrl: null }
+    });
+
+    // 2. Physical file deletion (Cleaning public/uploads)
+    try {
+      const uploadsPath = path.join(process.cwd(), "public", "uploads");
+      if (fs.existsSync(uploadsPath)) {
+        // We delete subfolders content but keep the folders structure
+        const subfolders = ["avatars", "logos"];
+        for (const sub of subfolders) {
+          const subPath = path.join(uploadsPath, sub);
+          if (fs.existsSync(subPath)) {
+            const files = fs.readdirSync(subPath);
+            for (const file of files) {
+              const filePath = path.join(subPath, file);
+              if (fs.statSync(filePath).isFile()) {
+                fs.unlinkSync(filePath);
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to delete physical upload files:", e);
+    }
 
     revalidatePath("/data-pajak");
     revalidatePath("/settings");
