@@ -105,8 +105,6 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  console.log(`[Middleware] Path: ${pathname} | Token: ${!!token} | MustChange: ${token?.mustChangePassword}`);
-
   // 3. PROTEKSI: Wajib Ganti Password (MANDATORY PASSWORD CHANGE)
   //    Jika user sudah login tapi status mustChangePassword masih true,
   //    mereka TIDAK BOLEH akses halaman apapun selain /ganti-password atau logout.
