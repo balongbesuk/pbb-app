@@ -48,7 +48,7 @@ function isAdminOnlyRoute(pathname: string): boolean {
 // ──────────────────────────────────────────────────────────────
 // Main Middleware
 // ──────────────────────────────────────────────────────────────
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // A. RATE LIMITING (Hanya untuk login)
