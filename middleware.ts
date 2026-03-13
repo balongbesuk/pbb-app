@@ -125,7 +125,9 @@ export async function middleware(request: NextRequest) {
         );
       }
       // Jika halaman biasa, paksa ke ganti-password
-      return NextResponse.redirect(new URL("/ganti-password", request.url));
+      const redirectUrl = new URL("/ganti-password", request.url);
+      console.log(`[Middleware] FORCING REDIRECT to: ${redirectUrl.toString()}`);
+      return NextResponse.redirect(redirectUrl);
     }
   }
 
