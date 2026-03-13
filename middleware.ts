@@ -99,20 +99,43 @@ export async function middleware(request: NextRequest) {
   //    (handled by matcher, but this is a safety net)
   if (pathname.includes(".")) return NextResponse.next();
 
-  // 2. ALLOW: Public routes — tidak perlu autentikasi
-  if (isPublicRoute(pathname)) {
-    return NextResponse.next();
-  }
-
-  // 3. CHECK: Apakah user sudah login?
+  // 2. DAPATKAN TOKEN (Autentikasi)
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   });
 
+  console.log(`[Middleware] Path: ${pathname} | Token: ${!!token} | MustChange: ${token?.mustChangePassword}`);
+
+  // 3. PROTEKSI: Wajib Ganti Password (MANDATORY PASSWORD CHANGE)
+  //    Jika user sudah login tapi status mustChangePassword masih true,
+  //    mereka TIDAK BOLEH akses halaman apapun selain /ganti-password atau logout.
+  if (token && token.mustChangePassword) {
+    const isAllowedInForcedMode = [
+      "/ganti-password",
+      "/api/auth",
+    ].some(route => pathname.startsWith(route));
+
+    if (!isAllowedInForcedMode) {
+      // Jika ini request API, beri error 403
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "Anda harus mengganti password terlebih dahulu." },
+          { status: 403 }
+        );
+      }
+      // Jika halaman biasa, paksa ke ganti-password
+      return NextResponse.redirect(new URL("/ganti-password", request.url));
+    }
+  }
+
+  // 4. ALLOW: Public routes — tidak perlu autentikasi (jika belum login atau sudah ganti pass)
+  if (isPublicRoute(pathname)) {
+    return NextResponse.next();
+  }
+
+  // 5. CHECK: Jika belum login dan mencoba akses halaman terproteksi
   if (!token) {
-    // Belum login → redirect ke halaman login
-    // Untuk API routes, return 401 JSON response
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
         { error: "Unauthorized: Silakan login terlebih dahulu." },
@@ -120,32 +143,9 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    // Untuk halaman, redirect ke /login dengan callback URL
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
-  }
-
-  // 4. CHECK: Apakah user wajib ganti password?
-  //    Jika ya, paksa redirect ke /ganti-password
-  //    KECUALI mereka sudah di halaman ganti password atau sedang logout
-  const mustChangePassword = token.mustChangePassword as boolean;
-  if (mustChangePassword) {
-    const allowedWhileForced = [
-      "/ganti-password",
-      "/api/auth",
-    ];
-    const isAllowed = allowedWhileForced.some((route) => pathname.startsWith(route));
-
-    if (!isAllowed) {
-      if (pathname.startsWith("/api/")) {
-        return NextResponse.json(
-          { error: "Anda harus mengganti password terlebih dahulu." },
-          { status: 403 }
-        );
-      }
-      return NextResponse.redirect(new URL("/ganti-password", request.url));
-    }
   }
 
   // 5. CHECK: Apakah route ini hanya untuk ADMIN?
