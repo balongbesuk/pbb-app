@@ -34,7 +34,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
     fetch("/api/me/avatar")
       .then((r) => r.json())
       .then((d) => {
-        if (d.avatarUrl) setAvatarUrl(d.avatarUrl + "?t=" + Date.now());
+        if (d.avatarUrl) setAvatarUrl(d.avatarUrl + "?t=" + new Date().getTime());
       })
       .catch(() => {});
   }, [session]);

@@ -95,7 +95,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
             <div className="bg-primary/5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
               {villageConfig.logoUrl ? (
                 <Image
-                  src={`${villageConfig.logoUrl}?v=1`}
+                  src={`${villageConfig.logoUrl}?t=${Date.now()}`}
                   alt="Logo Desa"
                   width={40}
                   height={40}
