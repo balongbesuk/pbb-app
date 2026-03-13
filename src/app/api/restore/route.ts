@@ -51,21 +51,30 @@ export async function POST(req: NextRequest) {
     const dbBuffer = dbEntry.getData();
     fs.writeFileSync(dbPath, dbBuffer);
 
-    // 2. Ekstrak folder uploads jika ada dalam ZIP
-    // Kita filter semua entry yang prefixnya "uploads/"
+    // 2. Ekstrak folder uploads secara mendalam (termasuk subfolder seperti avatars)
     const uploadEntries = zipEntries.filter(entry => entry.entryName.startsWith("uploads/"));
     
     if (uploadEntries.length > 0) {
-      // Pastikan folder public/uploads ada
-      if (!fs.existsSync(uploadsPath)) {
-        fs.mkdirSync(uploadsPath, { recursive: true });
-      }
-      // Ekstrak folder uploads ke public/uploads
-      // extractEntryTo akan mengambil entry tertentu, tapi kita gunakan extractAllTo seperlunya atau manual
-      // Karena addLocalFolder dengan target "uploads" akan membuat struktur "uploads/..." dalam zip
-      // Kita ingin isinya masuk ke public/uploads
-      zip.extractEntryTo("uploads/", uploadsPath, false, true);
-      console.log(`Restored ${uploadEntries.length} files to uploads folder.`);
+      console.log(`Found ${uploadEntries.length} files in backup uploads...`);
+      
+      uploadEntries.forEach(entry => {
+        if (!entry.isDirectory) {
+          // Contoh: entry.entryName = "uploads/avatars/user1.jpg"
+          // Kita hilangkan prefix "uploads/" nya
+          const relativePath = entry.entryName.replace(/^uploads\//, "");
+          const targetFile = path.join(uploadsPath, relativePath);
+          const targetDir = path.dirname(targetFile);
+          
+          // Pastikan subfolder (seperti 'avatars') sudah ada
+          if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+          }
+          
+          // Tulis filenya
+          fs.writeFileSync(targetFile, entry.getData());
+        }
+      });
+      console.log("Restoration of uploads folder (logo & avatars) finished.");
     }
 
     // Otomatis sinkronisasi schema jika database versi lama
