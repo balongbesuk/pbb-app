@@ -23,13 +23,18 @@ export async function generateMetadata(): Promise<Metadata> {
   const config = await getVillageConfig();
   const villageName = config?.namaDesa || "";
   
+  // Cache buster for icon based on updated time or current time
+  const iconUrl = config?.logoUrl 
+    ? `${config.logoUrl}?t=${config.updatedAt?.getTime() || Date.now()}` 
+    : "/favicon.ico";
+  
   return {
     title: villageName 
       ? `PBB Manager | ${villageName}` 
       : "PBB Manager | Sistem Manajemen Penarikan Pajak",
     description: `Aplikasi Manajemen Penarikan Pajak Bumi Bangunan (PBB) Desa ${villageName}`,
     icons: {
-      icon: config?.logoUrl || "/favicon.ico",
+      icon: iconUrl,
     },
   };
 }
