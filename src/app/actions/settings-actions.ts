@@ -130,6 +130,7 @@ export async function updateVillageConfig(raw: any) {
     });
 
     revalidatePath("/settings");
+    revalidatePath("/", "layout");
     return { success: true };
   } catch (error) {
     return { success: false, message: formatZodError(error) };

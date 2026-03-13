@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     });
 
     revalidatePath("/settings");
-    revalidatePath("/");
+    revalidatePath("/", "layout");
 
     return NextResponse.json({ success: true, logoUrl });
   } catch (error: any) {

@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // Cache buster for icon based on updated time or current time
   const iconUrl = config?.logoUrl 
     ? `${config.logoUrl}?t=${config.updatedAt?.getTime() || Date.now()}` 
-    : "/favicon.ico";
+    : "https://nextjs.org/favicon.ico"; // Fallback to a remote or local icon
   
   return {
     title: villageName 
@@ -35,6 +35,8 @@ export async function generateMetadata(): Promise<Metadata> {
     description: `Aplikasi Manajemen Penarikan Pajak Bumi Bangunan (PBB) Desa ${villageName}`,
     icons: {
       icon: iconUrl,
+      shortcut: iconUrl,
+      apple: iconUrl,
     },
   };
 }
