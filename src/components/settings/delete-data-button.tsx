@@ -43,6 +43,10 @@ export function DeleteDataButton() {
       toast.success("Database berhasil dikosongkan");
       setOpen(false);
       setConfirmText("");
+      // Memberi waktu user melihat toast sebelum refresh
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } else {
       toast.error(`Gagal menghapus data: ${res.message}`);
     }
