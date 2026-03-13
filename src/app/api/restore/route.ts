@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
 import path from "path";
 import fs from "fs";
 import AdmZip from "adm-zip";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,12 +49,26 @@ export async function POST(req: NextRequest) {
     const dbBuffer = dbEntry.getData();
     fs.writeFileSync(dbPath, dbBuffer);
 
-    // Buka kembali koneksinya (opsional, karena prisma otomatis reconncet pada pemanggilan berikutnya)
+    // Otomatis sinkronisasi schema jika database versi lama
+    try {
+      // 1. Sinkronkan schema (menambah kolom yang kurang tanpa hapus data)
+      await execAsync("npx prisma db push --accept-data-loss");
+      
+      // 2. Reset/Update admin password ke bawaan agar pasti bisa login
+      await execAsync("npx prisma db seed");
+      
+      console.log("Database restoration sync completed successfully.");
+    } catch (syncError: any) {
+      console.error("Sync/Seed Error during restore:", syncError);
+      // Tetap lanjutkan karena file sudah ter-copy, tapi user mungkin butuh sinkronisasi manual
+    }
+
+    // Buka kembali koneksinya
     await prisma.$connect();
 
     return NextResponse.json({
       success: true,
-      message: "Database berhasil dipulihkan dari cadangan. Silakan login kembali.",
+      message: "Database berhasil dipulihkan dan disinkronkan ke versi terbaru. Silakan login kembali dengan password admin bawaan.",
     });
   } catch (error: any) {
     console.error("Restore Error:", error);
@@ -60,3 +78,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

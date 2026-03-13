@@ -84,6 +84,8 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
       nop: r.nop,
       namaWp: r.namaWp,
       alamat: r.alamatObjek,
+      luasTanah: r.luasTanah,
+      luasBangunan: r.luasBangunan,
       tagihan: r.sisaTagihan,
       status: r.paymentStatus,
       petugas: r.penarik ? {

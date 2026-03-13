@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert } from "lucide-react";
+import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler } from "lucide-react";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
 import { formatCurrency } from "@/lib/utils";
 
@@ -154,6 +154,17 @@ export function PublicSearch({
                       <span className="text-[10px] uppercase font-bold tracking-wider">Alamat Objek</span>
                     </div>
                     <p className={`font-semibold ${addressCls}`}>{item.alamat}</p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className={`flex items-center gap-1.5 mb-0.5 ${mutedLabelCls}`}>
+                      <Ruler className="w-3.5 h-3.5" />
+                      <span className="text-[10px] uppercase font-bold tracking-wider">Luas Objek</span>
+                    </div>
+                    <div className={`flex gap-3 font-semibold ${addressCls}`}>
+                      <p>T: {item.luasTanah} m²</p>
+                      <p>B: {item.luasBangunan} m²</p>
+                    </div>
                   </div>
                   
                   {showNominalPajak && (

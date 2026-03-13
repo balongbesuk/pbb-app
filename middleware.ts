@@ -83,16 +83,22 @@ function isAdminOnlyRoute(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. SKIP: Static files & Next.js internals
-  //    (sudah di-handle oleh matcher config di bawah,
-  //     tapi ini sebagai safety net)
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
-    pathname.includes(".")
-  ) {
-    return NextResponse.next();
+  // 0. KHUSUS LOGIN: Jika sudah login, lempar ke dashboard
+  if (pathname === "/login") {
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+      cookieName: "next-auth.session-token"
+    });
+    
+    if (token) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
   }
+
+  // 1. SKIP: Static files & Next.js internals
+  //    (handled by matcher, but this is a safety net)
+  if (pathname.includes(".")) return NextResponse.next();
 
   // 2. ALLOW: Public routes — tidak perlu autentikasi
   if (isPublicRoute(pathname)) {
@@ -103,6 +109,7 @@ export async function middleware(request: NextRequest) {
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
+    cookieName: "next-auth.session-token", // Konsisten dengan lib/auth.ts
   });
 
   if (!token) {

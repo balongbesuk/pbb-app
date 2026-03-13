@@ -124,6 +124,10 @@ export function RestoreDatabaseButton() {
               Peringatan: Data yang sudah terhapus tidak dapat dikembalikan sesudahnya.
             </div>
 
+            <div className="bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md p-3 text-[10px] leading-relaxed font-semibold border border-amber-500/20">
+              Catatan: Setelah pemulihan, sistem akan otomatis melakukan sinkronisasi database dan mereset password administrator menjadi <strong>admin123</strong> untuk keamanan akses.
+            </div>
+
             <div className="space-y-2.5">
               <Label htmlFor="confirm-text" className="text-foreground text-xs font-bold">
                 Ketik <span className="font-bold select-all">RESTORE DATABASE</span> untuk

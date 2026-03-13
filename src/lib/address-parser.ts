@@ -20,9 +20,9 @@ export function extractRTRW(address: string) {
   const rwMatch = norm.match(rwRegex);
 
   const normalizeNum = (val: string | null) => {
-    if (!val) return null;
+    if (!val) return "00";
     const num = parseInt(val, 10);
-    if (isNaN(num)) return null;
+    if (isNaN(num)) return "00";
     // Format to 2 digits (e.g., 1 -> 01, 10 -> 10, 001 -> 01)
     return num.toString().padStart(2, "0").slice(-2);
   };

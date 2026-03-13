@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -40,12 +40,24 @@ function LoginForm() {
   const { theme } = usePublicThemeContext();
   const isDark = theme === "dark";
 
+  const { status } = useSession();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard");
+    }
+  }, [status, router]);
+
   useEffect(() => {
     fetch("/api/village-config")
       .then((r) => r.json())
       .then((d) => setVillage(d))
       .catch(() => {});
   }, []);
+
+  if (status === "authenticated") {
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +78,16 @@ function LoginForm() {
         toast.error("Username atau password salah");
       } else {
         toast.success("Login berhasil");
-        router.push("/dashboard");
+
+        // Ambil data session terbaru untuk cek mustChangePassword
+        const sessionRes = await fetch("/api/auth/session");
+        const session = await sessionRes.json();
+        
+        if (session?.user?.mustChangePassword) {
+          router.push("/ganti-password");
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch {
       toast.error("Terjadi kesalahan sistem");
