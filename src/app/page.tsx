@@ -7,6 +7,8 @@ import { ArrowRight, MapPin } from "lucide-react";
 import { PublicThemeWrapper } from "@/components/public/public-theme-wrapper";
 import { PublicModeToggle } from "@/components/public/public-mode-toggle";
 import { PublicNav } from "@/components/public/public-nav";
+import "./public.css";
+
 
 // Enable caching with revalidation every 30 seconds to support BFCache
 export const revalidate = 30;

@@ -79,49 +79,7 @@
   --ring: #3B82F6;
 }
 
-.public-light {
-  --background: oklch(0.985 0.001 106.423);
-  --foreground: oklch(0.145 0.012 45.057);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0.012 45.057);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0.012 45.057);
-  --primary: oklch(0.205 0.1 244.29);
-  --primary-foreground: oklch(0.985 0.001 106.423);
-  --secondary: oklch(0.97 0.01 244.29);
-  --secondary-foreground: oklch(0.205 0.1 244.29);
-  --muted: oklch(0.97 0.01 106.423);
-  --muted-foreground: oklch(0.556 0.011 45.187);
-  --accent: oklch(0.97 0.01 244.29);
-  --accent-foreground: oklch(0.205 0.1 244.29);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0.001 106.423);
-  --border: oklch(0.922 0.011 45.187);
-  --input: oklch(0.922 0.011 45.187);
-  --ring: oklch(0.205 0.1 244.29);
-}
 
-.public-dark {
-  --background: #050B14;
-  --foreground: #F8FAFC;
-  --card: #0A192F;
-  --card-foreground: #F8FAFC;
-  --popover: #0A192F;
-  --popover-foreground: #F8FAFC;
-  --primary: #3B82F6;
-  --primary-foreground: #FFFFFF;
-  --secondary: #1E293B;
-  --secondary-foreground: #F1F5F9;
-  --muted: #1E293B;
-  --muted-foreground: #94A3B8;
-  --accent: #1E293B;
-  --accent-foreground: #F1F5F9;
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: #FFFFFF;
-  --border: #1E293B;
-  --input: #1E293B;
-  --ring: #3B82F6;
-}
 
 @layer base {
   * {
@@ -145,17 +103,7 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.public-dark .glass {
-  background: rgba(10, 25, 47, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
 
-.public-light .glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
 
 .gradient-bg {
   background-color: var(--background);
@@ -166,86 +114,9 @@
   background-image: linear-gradient(135deg, #0A0F1A 0%, #0F1629 50%, #0A0F1A 100%);
 }
 
-/* Public Dark Oceanic - hardcoded to prevent any intrusion from next-themes */
-.public-dark.gradient-bg,
-.public-dark .gradient-bg {
-  background-color: #050B14 !important;
-  background-image: radial-gradient(ellipse at top, #0F203B 0%, #050B14 60%, #02060D 100%) !important;
-}
 
-/* Public Light - explicitly light even when html.dark is set by next-themes */
-.public-light.gradient-bg,
-.public-light .gradient-bg {
-  background-color: oklch(0.985 0.001 106.423) !important;
-  background-image: linear-gradient(135deg, oklch(0.99 0.01 244.29) 0%, oklch(0.95 0.02 200.29) 100%) !important;
-  color: oklch(0.145 0.012 45.057) !important;
-}
 
-/* ─── PUBLIC PORTAL SEMANTIC CLASSES ─────────────────────────────────── */
 
-/* Main background */
-.public-dark .public-main-bg {
-  background-color: #050B14;
-  background-image: radial-gradient(ellipse at top, #0F203B 0%, #050B14 60%, #02060D 100%);
-  color: #F8FAFC;
-}
-.public-light .public-main-bg {
-  background-color: oklch(0.985 0.001 106.423);
-  background-image: linear-gradient(135deg, oklch(0.99 0.01 244.29) 0%, oklch(0.95 0.02 200.29) 100%);
-  color: oklch(0.145 0.012 45.057);
-}
-
-/* Navbar pill */
-.public-dark .public-nav-pill {
-  background: rgba(10, 25, 47, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-}
-.public-light .public-nav-pill {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-}
-
-/* Village name in nav */
-.public-dark .public-nav-name { color: #DBEAFE; }
-.public-light .public-nav-name { color: #18181B; }
-
-/* CTA Button (Masuk Admin) */
-.public-dark .public-cta-btn {
-  background: #2563EB;
-  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
-}
-.public-dark .public-cta-btn:hover { background: #1D4ED8; }
-.public-light .public-cta-btn {
-  background: #18181B;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
-}
-.public-light .public-cta-btn:hover { background: #27272A; }
-
-/* Badge (portal label) */
-.public-dark .public-badge {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93C5FD;
-}
-.public-light .public-badge {
-  background: rgba(37, 99, 235, 0.08);
-  color: #2563EB;
-}
-
-/* Heading */
-.public-dark .public-heading { color: #FFFFFF; }
-.public-light .public-heading { color: #18181B; }
-
-/* Heading accent (PBB) */
-.public-dark .public-heading-accent { background-image: linear-gradient(to right, #60A5FA, #34D399); }
-.public-light .public-heading-accent { background-image: linear-gradient(to right, #10B981, #0D9488); }
-
-/* Subtext */
-.public-dark .public-subtext { color: rgba(191, 219, 254, 0.65); }
-.public-light .public-subtext { color: oklch(0.556 0.011 45.187); }
-
-/* Footer text */
-.public-dark .public-footer-text { color: rgba(147, 197, 253, 0.45); }
-.public-light .public-footer-text { color: oklch(0.556 0.011 45.187); }
 
 @media print {
   @page {
