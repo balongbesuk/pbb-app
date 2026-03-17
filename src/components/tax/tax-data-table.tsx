@@ -394,24 +394,25 @@ export function TaxDataTable({
       >
         <Table>
           <TableHeader className="bg-muted/30 sticky top-0 z-20 backdrop-blur-md">
-            <TableRow>
+            <TableRow className="flex w-full border-b">
               {currentUser?.role !== "PENGGUNA" && (
-                <TableHead className="w-[40px]">
+                <TableHead className="flex w-[50px] items-center justify-center">
                   <Checkbox
                     checked={displayData.length > 0 && selectedIds.size === displayData.length}
                     onCheckedChange={toggleSelectAll}
                   />
                 </TableHead>
               )}
-              <TableHead className="w-[180px] font-bold">NOP</TableHead>
-              <TableHead className="font-bold">Nama Wajib Pajak</TableHead>
-              <TableHead className="font-bold">Wilayah</TableHead>
-              <TableHead className="text-right font-bold">Tagihan</TableHead>
-              <TableHead className="font-bold">Status</TableHead>
-              <TableHead className="font-bold">Penarik</TableHead>
-              {currentUser?.role !== "PENGGUNA" && <TableHead className="w-[50px]"></TableHead>}
+              <TableHead className="flex w-[180px] items-center font-bold">NOP</TableHead>
+              <TableHead className="flex flex-1 items-center font-bold">Nama Wajib Pajak</TableHead>
+              <TableHead className="flex w-[150px] items-center font-bold">Wilayah</TableHead>
+              <TableHead className="flex w-[120px] items-center justify-end font-bold">Tagihan</TableHead>
+              <TableHead className="flex w-[120px] items-center font-bold">Status</TableHead>
+              <TableHead className="flex w-[150px] items-center font-bold">Penarik</TableHead>
+              {currentUser?.role !== "PENGGUNA" && <TableHead className="flex w-[60px] items-center"></TableHead>}
             </TableRow>
           </TableHeader>
+
           <TableBody className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
             {isLoading ? (
               <TaxTableSkeleton rows={10} role={currentUser?.role} />
