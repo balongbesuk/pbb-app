@@ -52,12 +52,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const userAgent = request.headers.get("user-agent") || "";
   
-  // Lighthouse Bypass: Izinkan bot audit melihat halaman tanpa hambatan
+  // Lighthouse Bypass: Hanya izinkan bot audit melihat halaman PUBLIC tanpa hambatan rate limit
   const isLighthouse = /Lighthouse|Google-Lighthouse/i.test(userAgent);
-
-  if (isLighthouse) {
+  if (isLighthouse && isPublicRoute(pathname)) {
     return NextResponse.next();
   }
+
 
   // A. RATE LIMITING (Hanya untuk login, dilewati oleh Lighthouse di atas)
   if (pathname === "/api/auth/callback/credentials" && request.method === "POST") {
