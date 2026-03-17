@@ -48,7 +48,8 @@ function isAdminOnlyRoute(pathname: string): boolean {
 // ──────────────────────────────────────────────────────────────
 // Main Middleware (renamed from proxy for Next.js internal recognition)
 // ──────────────────────────────────────────────────────────────
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+
   const { pathname } = request.nextUrl;
   const userAgent = request.headers.get("user-agent") || "";
   
@@ -129,6 +130,9 @@ export async function middleware(request: NextRequest) {
 
   return NextResponse.next();
 }
+
+export default proxy;
+
 
 export const config = {
   matcher: [
