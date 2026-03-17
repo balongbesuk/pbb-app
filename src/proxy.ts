@@ -82,17 +82,21 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // B. PROTEKSI LOGIN REDIRECT
-  if (pathname === "/login") {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    if (token) return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
   // C. SKIP STATIC
   if (pathname.includes(".")) return NextResponse.next();
 
-  // D. DAPATKAN TOKEN
+  // F. PUBLIC ROUTES (Skip token check for landing page to improve TTFB)
+  if (pathname === "/") return NextResponse.next();
+  if (isPublicRoute(pathname) && pathname !== "/login") return NextResponse.next();
+
+  // D. DAPATKAN TOKEN (Dijalankan hanya untuk rute yang butuh auth atau login redirect)
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+
+  // B. PROTEKSI LOGIN REDIRECT
+  if (pathname === "/login" && token) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
 
   // E. PROTEKSI: WAJIB GANTI PASSWORD (MANDATORY)
   if (token && token.mustChangePassword) {
@@ -109,6 +113,7 @@ export async function proxy(request: NextRequest) {
   if (isPublicRoute(pathname)) return NextResponse.next();
 
   // G. AUTH REQUIREMENT
+
   if (!token) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
