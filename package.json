@@ -15,10 +15,12 @@
     "audit:a11y": "node scripts/axe-audit.js"
   },
   "browserslist": [
-    "last 3 versions",
+    "> 0.5%",
+    "last 2 versions",
     "not dead",
-    "not IE 11"
+    "not ie 11"
   ],
+
   "dependencies": {
 
     "@base-ui/react": "^1.2.0",
