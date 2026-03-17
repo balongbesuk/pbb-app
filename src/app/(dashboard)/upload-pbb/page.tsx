@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { uploadTaxData, clearTaxData } from "@/app/actions/tax-actions";
+import { uploadTaxData, clearTaxData, previewTaxData } from "@/app/actions/tax-actions";
+
 import { toast } from "sonner";
 import {
   Upload,
@@ -15,7 +16,10 @@ import {
   AlertCircle,
   Download,
   AlertTriangle,
+  CheckCircle2,
+  FileText,
 } from "lucide-react";
+
 import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
@@ -29,6 +33,16 @@ import {
 import { useRouter } from "next/navigation";
 import { checkImportRequirements } from "@/app/actions/settings-actions";
 import { Checkbox } from "@/components/ui/checkbox";
+import { formatCurrency } from "@/lib/utils";
+
+interface PreviewData {
+  total: number;
+  updates: number;
+  newItems: number;
+  totalAmount: number;
+  fileName: string;
+}
+
 
 export default function UploadPBBPage() {
   const router = useRouter();
@@ -43,6 +57,10 @@ export default function UploadPBBPage() {
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [readInstructions, setReadInstructions] = useState({ 1: false, 2: false, 3: false });
   const [progress, setProgress] = useState(0);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
 
   const performReset = async () => {
     setIsResetDialogOpen(false);
@@ -98,9 +116,36 @@ export default function UploadPBBPage() {
     startActualUpload();
   };
 
+  const handlePreview = async () => {
+    if (!file) {
+      toast.error("Silakan pilih file Excel terlebih dahulu");
+      return;
+    }
+
+    setIsPreviewLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const result = await previewTaxData(formData, tahun);
+      if (result.success) {
+        setPreviewData(result as unknown as PreviewData);
+        setIsPreviewOpen(true);
+      } else {
+        toast.error(`Gagal preview: ${result.message}`);
+      }
+    } catch (e) {
+      toast.error("Kesalahan sistem saat preview data");
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
+
   const startActualUpload = async () => {
     if (!file) return;
+    setIsPreviewOpen(false);
     setIsDataExistsWarningOpen(false);
+
     setReadInstructions({ 1: false, 2: false, 3: false }); // Reset checkboxes
     setIsUploading(true);
     setProgress(10);
@@ -230,10 +275,15 @@ export default function UploadPBBPage() {
 
             <Button
               className="shadow-primary/5 h-12 w-full rounded-2xl text-sm font-black shadow-xl transition-all duration-300 hover:scale-[1.01] active:scale-95"
-              onClick={handleUpload}
-              disabled={!file || isUploading}
+              onClick={handlePreview}
+              disabled={!file || isUploading || isPreviewLoading}
             >
-              {isUploading ? (
+              {isPreviewLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  MENGALISA FILE...
+                </>
+              ) : isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   MENYERAP DATA...
@@ -242,6 +292,7 @@ export default function UploadPBBPage() {
                 "IMPORT DATA KE SISTEM"
               )}
             </Button>
+
           </CardContent>
         </Card>
 
@@ -510,6 +561,76 @@ export default function UploadPBBPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-lg rounded-3xl border-none p-0 shadow-2xl overflow-hidden">
+          <div className="bg-primary/5 flex items-center gap-4 p-6 text-primary">
+            <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-2xl">
+              <FileText className="h-6 w-6" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-black">Preview Data PBB</DialogTitle>
+              <DialogDescription className="text-primary/60 font-bold text-xs uppercase tracking-widest">
+                Konfirmasi sebelum impor ke database
+              </DialogDescription>
+            </div>
+          </div>
+
+          <div className="space-y-6 p-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-zinc-50 border-zinc-100 rounded-2xl border p-4 dark:bg-zinc-900/50 dark:border-zinc-800">
+                <p className="text-muted-foreground mb-1 text-[10px] font-bold tracking-widest uppercase">Total Baris</p>
+                <p className="text-2xl font-black">{previewData?.total.toLocaleString("id-ID")}</p>
+              </div>
+              <div className="bg-emerald-50/50 border-emerald-100 rounded-2xl border p-4 dark:bg-emerald-950/10 dark:border-emerald-900/30">
+                <p className="text-emerald-600/70 mb-1 text-[10px] font-bold tracking-widest uppercase">Data Baru</p>
+                <p className="text-emerald-600 text-2xl font-black">{previewData?.newItems.toLocaleString("id-ID")}</p>
+              </div>
+              <div className="bg-blue-50/50 border-blue-100 rounded-2xl border p-4 dark:bg-blue-950/10 dark:border-blue-900/30">
+                <p className="text-blue-600/70 mb-1 text-[10px] font-bold tracking-widest uppercase">Update Data</p>
+                <p className="text-blue-600 text-2xl font-black">{previewData?.updates.toLocaleString("id-ID")}</p>
+              </div>
+              <div className="bg-zinc-50 border-zinc-100 rounded-2xl border p-4 dark:bg-zinc-900/50 dark:border-zinc-800">
+                <p className="text-muted-foreground mb-1 text-[10px] font-bold tracking-widest uppercase">Tahun Pajak</p>
+                <p className="text-2xl font-black">{tahun}</p>
+              </div>
+            </div>
+
+            <div className="bg-primary border-primary/20 rounded-2xl border p-5 shadow-lg shadow-primary/20">
+              <p className="text-primary-foreground/60 mb-1 text-[10px] font-bold tracking-widest uppercase">Total Nilai Ketetapan Pajak</p>
+              <p className="text-primary-foreground text-3xl font-black tracking-tighter">
+                {formatCurrency(previewData?.totalAmount || 0)}
+              </p>
+            </div>
+
+            <div className="flex items-start gap-3 bg-amber-50 border-amber-100 rounded-xl border p-3 dark:bg-amber-950/10 dark:border-amber-900/30">
+              <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-amber-700 dark:text-amber-400 text-[11px] font-bold leading-relaxed">
+                Penting: Sistem akan otomatis mencadangkan database sebelum proses impor dimulai untuk memastikan keamanan data Anda.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-zinc-50 flex items-center justify-between gap-4 p-6 dark:bg-zinc-900/50">
+            <Button
+              variant="ghost"
+              onClick={() => setIsPreviewOpen(false)}
+              className="rounded-xl font-bold"
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={handleUpload}
+              className="shadow-primary/20 flex-1 rounded-xl h-11 font-black shadow-lg"
+            >
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              KONFIRMASI & IMPORT
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }

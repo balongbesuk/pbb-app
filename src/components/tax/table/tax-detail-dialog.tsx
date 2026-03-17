@@ -89,8 +89,6 @@ export function TaxDetailDialog({
     }
   };
 
-
-
   return (
     <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-[95vw] overflow-hidden overflow-y-auto rounded-3xl border-none bg-white p-0 shadow-2xl sm:max-w-3xl dark:bg-zinc-950">
@@ -286,39 +284,42 @@ export function TaxDetailDialog({
                 </div>
               )}
             </div>
-
-            {/* Payment Actions */}
-            {currentUser?.role !== "PENGGUNA" && !isEditing && (
-              <div className="space-y-3 pt-8">
-                <Button
-                  onClick={() => handleStatusChange("LUNAS")}
-                  disabled={isStatusLoading || item.paymentStatus === "LUNAS"}
-                  className="h-12 w-full rounded-2xl bg-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/10 transition-all hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
-                >
-                  {isStatusLoading ? (
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  ) : (
-                    <CheckCircle className="mr-2 h-5 w-5" />
-                  )}
-                  KONFIRMASI LUNAS
-                </Button>
-                <Button
-                  onClick={() => handleStatusChange("BELUM_LUNAS")}
-                  disabled={isStatusLoading || item.paymentStatus === "BELUM_LUNAS"}
-                  className="h-11 w-full rounded-2xl border border-amber-200 bg-transparent text-xs font-bold text-amber-600 transition-all hover:bg-amber-50 disabled:opacity-50"
-                >
-                  {isStatusLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Clock className="mr-2 h-4 w-4" />
-                  )}
-                  BATALKAN PELUNASAN
-                </Button>
-              </div>
-            )}
           </div>
         </div>
-        <div className="h-4" />
+
+        <div className="h-20 sm:hidden" /> {/* Spacer for sticky button */}
+        
+        {/* Payment Actions - Responsive placement */}
+        {currentUser?.role !== "PENGGUNA" && !isEditing && (
+          <div className="sticky bottom-0 bg-white/80 p-4 backdrop-blur-md sm:relative sm:bg-transparent sm:p-6 sm:pt-4 dark:bg-zinc-950/80">
+            <div className="flex flex-col gap-3">
+              <Button
+                onClick={() => handleStatusChange("LUNAS")}
+                disabled={isStatusLoading || item.paymentStatus === "LUNAS"}
+                className="h-14 w-full rounded-2xl bg-emerald-600 text-base font-black text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-[0.97] disabled:opacity-50 sm:h-12 sm:text-sm"
+              >
+                {isStatusLoading ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <CheckCircle className="mr-2 h-6 w-6" />
+                )}
+                KONFIRMASI LUNAS
+              </Button>
+              <Button
+                onClick={() => handleStatusChange("BELUM_LUNAS")}
+                disabled={isStatusLoading || item.paymentStatus === "BELUM_LUNAS"}
+                className="h-12 w-full rounded-2xl border border-zinc-200 bg-transparent text-xs font-bold text-zinc-500 transition-all hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 sm:h-10"
+              >
+                {isStatusLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Clock className="mr-2 h-4 w-4" />
+                )}
+                BATALKAN PELUNASAN
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

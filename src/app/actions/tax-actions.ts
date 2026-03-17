@@ -6,11 +6,59 @@ import { revalidatePath } from "next/cache";
 import { createAuditLog } from "./log-actions";
 import { requireAdmin } from "@/lib/server-auth";
 import { formatZodError } from "@/lib/validations/schemas";
+import { createDatabaseBackup } from "@/lib/backup";
+
+export async function previewTaxData(formData: FormData, tahun: number) {
+  try {
+    await requireAdmin();
+    const file = formData.get("file") as File;
+    if (!file) throw new Error("File tidak ditemukan");
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const isCsv = file.name.toLowerCase().endsWith(".csv");
+    const rows = await parseExcel(buffer, isCsv);
+    
+    // Simple summary
+    let totalKetetapan = 0;
+    const count = rows.length;
+    
+    // Map to find existing rows by NOP for update vs create count
+    const nops = rows.map(r => r.nop ? String(r.nop).trim() : "").filter(Boolean);
+    const existing = await prisma.taxData.count({
+      where: {
+        tahun,
+        nop: { in: nops }
+      }
+    });
+
+    rows.forEach((r: any) => {
+      const val = parseFloat(String(r.ketetapan || 0).replace(/[^\d.-]/g, ''));
+      if (!isNaN(val)) totalKetetapan += val;
+    });
+
+    return { 
+      success: true, 
+      total: count, 
+      updates: existing, 
+      newItems: count - existing,
+      totalAmount: totalKetetapan,
+      fileName: file.name
+    };
+  } catch (error) {
+    console.error("Preview Error: ", error);
+    return { success: false, message: formatZodError(error) };
+  }
+}
+
 
 export async function uploadTaxData(formData: FormData, tahun: number) {
   try {
     await requireAdmin();
+    // Automatic safety backup before import
+    await createDatabaseBackup();
+    
     const file = formData.get("file") as File;
+
     if (!file) throw new Error("File tidak ditemukan");
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -73,8 +121,11 @@ export async function restoreAssignments(formData: FormData, tahun: number) {
 export async function clearTaxData(tahun: number) {
   try {
     await requireAdmin();
+    // Automatic safety backup before clearing
+    await createDatabaseBackup();
 
     // 1. Ambil ID pajak yang akan dihapus untuk membersihkan relasi TransferRequest
+
     const taxIds = await prisma.taxData.findMany({
       where: { tahun },
       select: { id: true }
