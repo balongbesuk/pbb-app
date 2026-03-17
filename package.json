@@ -14,7 +14,13 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "audit:a11y": "node scripts/axe-audit.js"
   },
+  "browserslist": [
+    "last 3 versions",
+    "not dead",
+    "not IE 11"
+  ],
   "dependencies": {
+
     "@base-ui/react": "^1.2.0",
     "@prisma/client": "^6.19.2",
     "@tanstack/react-query": "^5.90.21",
