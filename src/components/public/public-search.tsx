@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler } from "lucide-react";
+import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle } from "lucide-react";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
 import { formatCurrency } from "@/lib/utils";
 
@@ -141,11 +141,11 @@ export function PublicSearch({
                     <p className={`text-[10px] font-bold uppercase tracking-widest leading-none mb-1.5 ${nopCls}`}>{item.nop}</p>
                     <h3 className={`text-lg font-black truncate ${nameCls}`}>{item.namaWp}</h3>
                   </div>
-                  <Badge variant={item.status === "LUNAS" ? "default" : "destructive"} className={`h-7 px-3 text-xs shadow-sm ${item.status === "LUNAS" ? "bg-emerald-500 hover:bg-emerald-600 border-none" : ""}`}>
+                  <Badge variant={item.status === "LUNAS" ? "success" : "warning"} className="h-7 px-4 text-[10px] font-black shadow-sm ring-1 ring-white/10">
                     {item.status === "LUNAS" ? (
-                      <><CheckCircle2 className="w-3.5 h-3.5 mr-1" /> LUNAS</>
+                      <><CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> LUNAS</>
                     ) : (
-                      <><XCircle className="w-3.5 h-3.5 mr-1" /> BELUM LUNAS</>
+                      <><AlertCircle className="w-3.5 h-3.5 mr-1.5" /> BELUM LUNAS</>
                     )}
                   </Badge>
                 </CardHeader>
