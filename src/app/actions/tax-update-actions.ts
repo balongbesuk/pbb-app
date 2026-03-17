@@ -185,13 +185,27 @@ export async function updateWpRegion(
       throw new Error("Anda tidak diperbolehkan mengubah wilayah data milik penarik lain.");
     }
 
+    const updateData: Prisma.TaxDataUpdateInput = {};
+    
+    if (dusun !== null) {
+      updateData.dusun = dusun === "none" ? null : dusun;
+    }
+    
+    if (rt !== null) {
+      updateData.rt = rt ? parseInt(rt, 10).toString().padStart(2, "0") : null;
+    }
+    
+    if (rw !== null) {
+      updateData.rw = rw ? parseInt(rw, 10).toString().padStart(2, "0") : null;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return { success: true }; // No changes needed
+    }
+
     await prisma.taxData.update({
       where: { id },
-      data: {
-        dusun,
-        rt: rt ? parseInt(rt, 10).toString().padStart(2, "0") : null,
-        rw: rw ? parseInt(rw, 10).toString().padStart(2, "0") : null,
-      },
+      data: updateData,
     });
 
     await createAuditLog(
@@ -231,13 +245,27 @@ export async function updateWpRegionBulk(
       }
     }
 
+    const updateData: Prisma.TaxDataUpdateManyMutationInput = {};
+    
+    if (dusun !== null) {
+      updateData.dusun = dusun === "none" ? null : dusun;
+    }
+    
+    if (rt !== null) {
+      updateData.rt = rt ? parseInt(rt, 10).toString().padStart(2, "0") : null;
+    }
+    
+    if (rw !== null) {
+      updateData.rw = rw ? parseInt(rw, 10).toString().padStart(2, "0") : null;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return { success: true, count: 0 };
+    }
+
     await prisma.taxData.updateMany({
       where: { id: { in: ids } },
-      data: {
-        dusun,
-        rt: rt ? parseInt(rt, 10).toString().padStart(2, "0") : null,
-        rw: rw ? parseInt(rw, 10).toString().padStart(2, "0") : null,
-      },
+      data: updateData,
     });
 
     await createAuditLog(
@@ -250,6 +278,104 @@ export async function updateWpRegionBulk(
     revalidatePath("/laporan");
     revalidatePath("/data-pajak");
     return { success: true, count: ids.length };
+  } catch (error) {
+    return { success: false, message: formatZodError(error) };
+  }
+}
+
+export async function updateWpRegionByFilter(
+  filters: {
+    tahun: number;
+    q?: string;
+    dusun?: string;
+    rw?: string;
+    rt?: string;
+    penarik?: string;
+    regionStatus?: string;
+  },
+  dusun: string | null,
+  rt: string | null,
+  rw: string | null
+) {
+  try {
+    const { role, userId } = await requireAuth();
+
+    const whereClause: Prisma.TaxDataWhereInput = {
+      tahun: filters.tahun,
+    };
+
+    const andFilters: Prisma.TaxDataWhereInput[] = [];
+
+    if (filters.q) {
+      andFilters.push({
+        OR: [
+          { nop: { contains: filters.q } },
+          { namaWp: { contains: filters.q } },
+          { alamatObjek: { contains: filters.q } },
+        ],
+      });
+    }
+
+    if (filters.regionStatus === "incomplete") {
+      andFilters.push({
+        OR: [{ dusun: null }, { rw: null }, { rt: null }, { dusun: "" }, { rw: "" }, { rt: "" }],
+      });
+    }
+
+    if (filters.dusun && filters.dusun !== "all") whereClause.dusun = filters.dusun;
+    if (filters.rw && filters.rw !== "all") whereClause.rw = filters.rw;
+    if (filters.rt && filters.rt !== "all") whereClause.rt = filters.rt;
+    
+    if (filters.penarik && filters.penarik !== "all") {
+      if (filters.penarik === "none") {
+        whereClause.penarikId = null;
+      } else {
+        whereClause.penarikId = filters.penarik;
+      }
+    }
+
+    if (andFilters.length > 0) {
+      whereClause.AND = andFilters;
+    }
+
+    // Role check for PENARIK
+    if (role === "PENARIK") {
+      whereClause.penarikId = userId;
+    }
+
+    const updateData: Prisma.TaxDataUpdateManyMutationInput = {};
+    
+    if (dusun !== null) {
+      updateData.dusun = dusun === "none" ? null : dusun;
+    }
+    
+    if (rt !== null) {
+      updateData.rt = rt ? parseInt(rt, 10).toString().padStart(2, "0") : null;
+    }
+    
+    if (rw !== null) {
+      updateData.rw = rw ? parseInt(rw, 10).toString().padStart(2, "0") : null;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return { success: true, count: 0 };
+    }
+
+    const res = await prisma.taxData.updateMany({
+      where: whereClause,
+      data: updateData,
+    });
+
+    await createAuditLog(
+      "UPDATE_REGION",
+      "TaxData",
+      null,
+      `Update wilayah filter (${res.count} data) ke Dusun ${dusun || "-"}, RT ${rt || "-"}/RW ${rw || "-"}`
+    );
+
+    revalidatePath("/laporan");
+    revalidatePath("/data-pajak");
+    return { success: true, count: res.count };
   } catch (error) {
     return { success: false, message: formatZodError(error) };
   }

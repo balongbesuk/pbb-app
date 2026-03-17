@@ -314,7 +314,6 @@ export function TaxDataTable({
               size="sm"
               className="border-primary/10 hover:bg-primary/5 h-10 rounded-xl px-4 text-xs font-bold transition-all disabled:opacity-30"
               onClick={() => setIsBulkRegionOpen(true)}
-              disabled={isAllFilteredSelected}
             >
               <MapPin className="mr-2 h-4 w-4" />
               Atur Wilayah
@@ -461,8 +460,21 @@ export function TaxDataTable({
         open={isBulkRegionOpen}
         onOpenChange={setIsBulkRegionOpen}
         selectedIds={Array.from(selectedIds)}
+        isAllFilteredSelected={isAllFilteredSelected}
+        filters={{
+          tahun: parseInt(tahun),
+          q,
+          dusun,
+          rw,
+          rt,
+          penarik,
+          regionStatus
+        }}
         availableFilters={availableFilters}
-        onSuccess={() => setSelectedIds(new Set())}
+        onSuccess={() => {
+          setSelectedIds(new Set());
+          setIsAllFilteredSelected(false);
+        }}
       />
     </div>
   );

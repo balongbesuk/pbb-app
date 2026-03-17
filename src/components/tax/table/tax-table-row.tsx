@@ -70,7 +70,7 @@ export function TaxTableRow({
           <span>{item.dusun || "-"}</span>
         </div>
         <div className="text-muted-foreground text-xs">
-          RT {item.rt || "?"} / RW {item.rw || "?"}
+          RT {item.rt || "-"} / RW {item.rw || "-"}
         </div>
       </TableCell>
       <TableCell className="text-right font-semibold">{formatCurrency(item.ketetapan)}</TableCell>

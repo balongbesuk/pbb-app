@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Save, MapPin } from "lucide-react";
-import { updateWpRegionBulk } from "@/app/actions/tax-update-actions";
+import { updateWpRegionBulk, updateWpRegionByFilter } from "@/app/actions/tax-update-actions";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import type { AvailableFilters } from "@/types/app";
@@ -21,6 +21,16 @@ interface BulkRegionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedIds: number[];
+  isAllFilteredSelected?: boolean;
+  filters?: {
+    tahun: number;
+    q?: string;
+    dusun?: string;
+    rw?: string;
+    rt?: string;
+    penarik?: string;
+    regionStatus?: string;
+  };
   availableFilters: AvailableFilters;
   onSuccess: () => void;
 }
@@ -29,6 +39,8 @@ export function BulkRegionDialog({
   open,
   onOpenChange,
   selectedIds,
+  isAllFilteredSelected = false,
+  filters,
   availableFilters,
   onSuccess,
 }: BulkRegionDialogProps) {
@@ -56,7 +68,13 @@ export function BulkRegionDialog({
     const finalRw = normalizeNum(rw);
 
     setIsLoading(true);
-    const res = await updateWpRegionBulk(selectedIds, dusun || null, finalRt || null, finalRw || null);
+    let res;
+    if (isAllFilteredSelected && filters) {
+      res = await updateWpRegionByFilter(filters, dusun || null, finalRt || null, finalRw || null);
+    } else {
+      res = await updateWpRegionBulk(selectedIds, dusun || null, finalRt || null, finalRw || null);
+    }
+    
     if (res.success) {
       toast.success(`Berhasil memperbarui wilayah untuk ${res.count} data`);
       queryClient.invalidateQueries({ queryKey: ["tax-data"] });
@@ -82,7 +100,7 @@ export function BulkRegionDialog({
                   Update Wilayah Masal
                 </DialogTitle>
                 <p className="text-blue-600/70 text-[10px] font-bold uppercase tracking-widest">
-                  {selectedIds.length} Data Objek Pajak
+                   {isAllFilteredSelected ? "Seluruh Terfilter" : `${selectedIds.length} Data`} Objek Pajak
                 </p>
               </div>
             </div>
