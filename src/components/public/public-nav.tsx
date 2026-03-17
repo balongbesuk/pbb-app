@@ -50,13 +50,14 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNav
         <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-white/20">
           {logoUrl ? (
             <Image
-              src={logoSrc}
+              src={logoUrl}
               alt={namaDesa ? `Logo Desa ${namaDesa}` : "Logo PBB Manager"}
               width={44}
               height={44}
               className="h-full w-full object-contain p-1"
-              unoptimized
+              priority
             />
+
           ) : (
             <div
               className="w-full h-full rounded-2xl flex items-center justify-center text-white"
@@ -82,8 +83,9 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNav
         <PublicModeToggle />
         <Link
           href="/login"
-          className="public-cta-btn group flex items-center gap-2 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg"
+          className="public-cta-btn group flex items-center gap-2 text-white px-4 sm:px-6 py-2.5 sm:py-3 h-11 sm:h-12 rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg"
         >
+
           <span className="hidden sm:inline">Masuk Admin</span>
           <span className="sm:hidden">Masuk</span>
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

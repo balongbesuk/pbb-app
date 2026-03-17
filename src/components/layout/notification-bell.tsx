@@ -90,7 +90,10 @@ export function NotificationBell() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="group hover:bg-muted relative cursor-pointer rounded-md p-2 transition-colors outline-none">
+      <DropdownMenuTrigger
+        aria-label="Pemberitahuan"
+        className="group hover:bg-muted relative cursor-pointer rounded-md p-2 transition-colors outline-none"
+      >
         <Bell className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors" />
         {unreadCount > 0 && (
           <span className="bg-destructive border-background absolute top-1.5 right-1.5 flex h-4 min-w-[16px] animate-pulse items-center justify-center rounded-full border-2 px-0.5 text-[10px] font-bold text-white">

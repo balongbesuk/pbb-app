@@ -11,7 +11,9 @@ import { getVillageConfig } from "@/app/actions/settings-actions";
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
+  display: "swap",
 });
+
 
 export const viewport: Viewport = {
   themeColor: "#1e293b",

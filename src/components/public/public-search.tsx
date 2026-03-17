@@ -97,8 +97,10 @@ export function PublicSearch({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Misal: 35.15.118... atau NAMA ANDA"
+                aria-label="Cari NOP atau Nama Wajib Pajak"
                 className={`pl-11 h-12 rounded-2xl w-full text-base shadow-sm ${inputCls}`}
               />
+
             </div>
             <Button type="submit" disabled={loading} className={`h-12 w-full sm:w-32 rounded-2xl font-bold shadow-lg ${btnCls}`}>
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Cari Data"}

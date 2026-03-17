@@ -40,9 +40,11 @@ export function TaxTableActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        aria-label="Opsi data pajak"
         className="hover:bg-muted rounded-md p-1 transition-colors outline-none"
         onClick={(e) => e.stopPropagation()}
       >
+
         <MoreHorizontal className="h-4 w-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[180px]">

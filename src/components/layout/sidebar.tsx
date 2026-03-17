@@ -95,13 +95,13 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
             <div className="bg-primary/5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
               {villageConfig.logoUrl ? (
                 <Image
-                  src={`${villageConfig.logoUrl}?t=${Date.now()}`}
+                  src={villageConfig.logoUrl}
                   alt="Logo Desa"
                   width={40}
                   height={40}
                   className="h-full w-full object-contain p-0.5"
-                  unoptimized
                 />
+
               ) : (
                 <Building2 className="text-primary h-6 w-6" />
               )}
