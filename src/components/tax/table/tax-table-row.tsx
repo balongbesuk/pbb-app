@@ -3,7 +3,8 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, User, CheckCircle2 } from "lucide-react";
+import { MapPin, User } from "lucide-react";
+
 
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -110,29 +111,16 @@ export function TaxTableRow({
       </TableCell>
       {role !== "PENGGUNA" && (
         <TableCell onClick={(e) => e.stopPropagation()} className="flex w-[60px] items-center justify-center p-1 sm:p-4">
-          <div className="flex items-center gap-1 sm:gap-2">
-            {item.paymentStatus === "BELUM_LUNAS" && (currentUser?.role === "ADMIN" || item.penarikId === currentUser?.id) && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUpdateStatus(item.id.toString(), "LUNAS");
-                }}
-                className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 active:scale-90 flex h-7 w-7 items-center justify-center rounded-lg transition-all sm:hidden"
-                title="Cepat Lunaskan"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-              </button>
-            )}
-            <TaxTableActions
-              item={item}
-              penariks={penariks}
-              currentUser={currentUser}
-              onAssignPenarik={onAssignPenarik}
-              onTransferRequest={onTransferRequest}
-            />
-          </div>
+          <TaxTableActions
+            item={item}
+            penariks={penariks}
+            currentUser={currentUser}
+            onAssignPenarik={onAssignPenarik}
+            onTransferRequest={onTransferRequest}
+          />
         </TableCell>
       )}
+
     </TableRow>
 
   );
