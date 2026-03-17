@@ -312,12 +312,14 @@ export function TaxDataTable({
             <Button
               variant="outline"
               size="sm"
-              className="border-primary/10 hover:bg-primary/5 h-10 rounded-xl px-4 text-xs font-bold transition-all disabled:opacity-30"
+              className="border-primary/30 hover:bg-primary/10 h-10 rounded-xl px-4 text-xs font-bold transition-all text-primary dark:bg-primary/5 disabled:opacity-30"
               onClick={() => setIsBulkRegionOpen(true)}
             >
               <MapPin className="mr-2 h-4 w-4" />
               Atur Wilayah
             </Button>
+
+
             
             <DropdownMenu>
               <DropdownMenuTrigger
