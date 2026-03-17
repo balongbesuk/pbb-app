@@ -27,7 +27,9 @@ interface TaxTableRowProps {
   onAssignPenarik: (taxId: string, penarikId: string | null) => void;
   onTransferRequest: (taxId: number, receiverId: string, type: "GIVE" | "TAKE") => void;
   role: string;
+  style?: React.CSSProperties;
 }
+
 
 export function TaxTableRow({
   item,
@@ -40,14 +42,18 @@ export function TaxTableRow({
   onAssignPenarik,
   onTransferRequest,
   role,
+  style,
 }: TaxTableRowProps) {
+
 
   return (
     <TableRow
       className="hover:bg-muted/40 border-border/50 cursor-pointer transition-colors"
       data-state={selected ? "selected" : undefined}
       onClick={() => onOpenDetail(item)}
+      style={style}
     >
+
       {role !== "PENGGUNA" && (
         <TableCell onClick={(e) => e.stopPropagation()}>
           <Checkbox

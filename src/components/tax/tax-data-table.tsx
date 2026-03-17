@@ -32,13 +32,17 @@ import { sendTransferRequest } from "@/app/actions/transfer-actions";
 import { toast } from "sonner";
 import { BulkRegionDialog } from "./table/bulk-region-dialog";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { TaxTableSkeleton } from "./table/tax-table-skeleton";
+
 // Sub-components
 import { TaxTableRow } from "./table/tax-table-row";
 import { TaxTableFilters } from "./table/tax-table-filters";
 import { TaxTablePagination } from "./table/tax-table-pagination";
 import { TaxDetailDialog } from "./table/tax-detail-dialog";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+
 import type { TaxDataItem, AppUser, PenarikInfo, AvailableFilters } from "@/types/app";
 import type { PaymentStatus } from "@prisma/client";
 
@@ -116,6 +120,15 @@ export function TaxDataTable({
     setFilterRegionStatus(regionStatus || "all");
   }, [q, dusun, rw, rt, penarik, regionStatus]);
 
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: displayData.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 72, 
+    overscan: 10,
+  });
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams(searchParams);
@@ -164,7 +177,7 @@ export function TaxDataTable({
 
   const handleUpdateStatus = async (
     id: string,
-    status: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT"
+    status: PaymentStatus
   ) => {
     const res = await updatePaymentStatus(id, status);
     if (res.success) {
@@ -246,15 +259,15 @@ export function TaxDataTable({
         onSearchChange={setSearch}
         onSearchSubmit={handleSearch}
         filterDusun={filterDusun}
-        onDusunChange={(v) => handleFilterChange("dusun", v)}
+        onDusunChange={(v: string) => handleFilterChange("dusun", v)}
         filterRw={filterRw}
-        onRwChange={(v) => handleFilterChange("rw", v)}
+        onRwChange={(v: string) => handleFilterChange("rw", v)}
         filterRt={filterRt}
-        onRtChange={(v) => handleFilterChange("rt", v)}
+        onRtChange={(v: string) => handleFilterChange("rt", v)}
         filterPenarik={filterPenarik}
-        onPenarikChange={(v) => handleFilterChange("penarik", v)}
+        onPenarikChange={(v: string) => handleFilterChange("penarik", v)}
         filterRegionStatus={filterRegionStatus}
-        onRegionStatusChange={(v) => handleFilterChange("regionStatus", v)}
+        onRegionStatusChange={(v: string) => handleFilterChange("regionStatus", v)}
         availableFilters={availableFilters}
         onPrint={handlePrint}
         showPrint={currentUser?.role !== "PENGGUNA"}
@@ -319,8 +332,6 @@ export function TaxDataTable({
               Atur Wilayah
             </Button>
 
-
-            
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
@@ -377,9 +388,12 @@ export function TaxDataTable({
         </div>
       )}
 
-      <div className="border-border/50 bg-background overflow-hidden rounded-xl border shadow-lg">
+      <div 
+        ref={parentRef}
+        className="border-border/50 bg-background relative overflow-auto rounded-xl border shadow-lg max-h-[70vh]"
+      >
         <Table>
-          <TableHeader className="bg-muted/30">
+          <TableHeader className="bg-muted/30 sticky top-0 z-20 backdrop-blur-md">
             <TableRow>
               {currentUser?.role !== "PENGGUNA" && (
                 <TableHead className="w-[40px]">
@@ -398,16 +412,9 @@ export function TaxDataTable({
               {currentUser?.role !== "PENGGUNA" && <TableHead className="w-[50px]"></TableHead>}
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
             {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={8} className="h-40 text-center">
-                  <div className="text-muted-foreground flex items-center justify-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Memuat data...</span>
-                  </div>
-                </TableCell>
-              </TableRow>
+              <TaxTableSkeleton rows={10} role={currentUser?.role} />
             ) : displayData.length === 0 ? (
               <TableRow>
                 <TableCell
@@ -418,21 +425,33 @@ export function TaxDataTable({
                 </TableCell>
               </TableRow>
             ) : (
-              displayData.map((item: TaxDataItem) => (
-                <TaxTableRow
-                  key={item.id}
-                  item={item}
-                  selected={selectedIds.has(item.id)}
-                  onToggle={toggleSelect}
-                  onOpenDetail={setSelectedDetailItem}
-                  currentUser={currentUser}
-                  penariks={penariks}
-                  onUpdateStatus={handleUpdateStatus}
-                  onAssignPenarik={handleAssignPenarik}
-                  onTransferRequest={handleTransferRequestAction}
-                  role={currentUser?.role || "PENGGUNA"}
-                />
-              ))
+              rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const item = displayData[virtualRow.index];
+                if (!item) return null;
+                return (
+                  <TaxTableRow
+                    key={item.id}
+                    item={item}
+                    selected={selectedIds.has(item.id)}
+                    onToggle={toggleSelect}
+                    onOpenDetail={setSelectedDetailItem}
+                    currentUser={currentUser}
+                    penariks={penariks}
+                    onUpdateStatus={handleUpdateStatus}
+                    onAssignPenarik={handleAssignPenarik}
+                    onTransferRequest={handleTransferRequestAction}
+                    role={currentUser?.role || "PENGGUNA"}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  />
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -443,7 +462,7 @@ export function TaxDataTable({
         totalPages={totalPages}
         total={displayTotal}
         shownCount={displayData.length}
-        onPageChange={(p) => {
+        onPageChange={(p: number) => {
           const params = new URLSearchParams(searchParams);
           params.set("page", p.toString());
           router.push(`${pathname}?${params.toString()}`);

@@ -20,13 +20,12 @@
     "not dead",
     "not ie 11"
   ],
-
   "dependencies": {
-
     "@base-ui/react": "^1.2.0",
     "@prisma/client": "^6.19.2",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.13.23",
     "@types/bcrypt": "^6.0.0",
     "adm-zip": "^0.5.16",
     "axios": "^1.13.6",
