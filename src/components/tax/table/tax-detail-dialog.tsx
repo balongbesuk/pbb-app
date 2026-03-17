@@ -308,7 +308,7 @@ export function TaxDetailDialog({
               <Button
                 onClick={() => handleStatusChange("BELUM_LUNAS")}
                 disabled={isStatusLoading || item.paymentStatus === "BELUM_LUNAS"}
-                className="h-12 w-full rounded-2xl border border-zinc-200 bg-transparent text-xs font-bold text-zinc-500 transition-all hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800 sm:h-10"
+                className="h-12 w-full rounded-2xl border border-amber-200 bg-amber-50/50 text-xs font-bold text-amber-600 transition-all hover:bg-amber-100 disabled:opacity-50 dark:border-amber-900/50 dark:text-amber-500 dark:hover:bg-amber-950 sm:h-10"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
