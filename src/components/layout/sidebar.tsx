@@ -15,6 +15,7 @@ import {
   Activity,
   X,
   Globe,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -44,7 +45,8 @@ const menuItems = [
   },
   { icon: Activity, label: "Log Aktivitas", href: "/log-aktivitas", allowedRoles: ["ADMIN"] },
   { icon: Settings, label: "Pengaturan", href: "/settings", allowedRoles: ["ADMIN"] },
-  { icon: Globe, label: "Portal Warga", href: "/", allowedRoles: ["ADMIN", "PENARIK", "PENGGUNA"] },
+  { icon: History, label: "Riwayat Penagihan", href: "/riwayat", allowedRoles: ["PENARIK"] },
+  { icon: Globe, label: "Portal Warga", href: "/", allowedRoles: ["ADMIN", "PENGGUNA"] },
 ];
 
 export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {

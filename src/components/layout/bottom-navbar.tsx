@@ -9,6 +9,7 @@ import {
   FileText,
   Globe,
   Search,
+  History,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -44,10 +45,16 @@ export function BottomNavbar() {
       allowedRoles: ["ADMIN", "PENARIK", "PENGGUNA"],
     },
     {
+      icon: History,
+      label: "Riwayat",
+      href: "/riwayat",
+      allowedRoles: ["PENARIK"],
+    },
+    {
       icon: Globe,
       label: "Portal",
       href: "/",
-      allowedRoles: ["ADMIN", "PENARIK", "PENGGUNA"],
+      allowedRoles: ["ADMIN", "PENGGUNA"],
     },
   ];
 
