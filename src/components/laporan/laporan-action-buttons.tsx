@@ -23,7 +23,7 @@ export function LaporanActionButtons({ tahun, currentUser }: { tahun: number; cu
         <Printer className="h-4 w-4" />
         Cetak Ringkasan
       </Button>
-      {currentUser?.role !== "PENGGUNA" && (
+      {currentUser?.role === "ADMIN" && (
         <Button className="gap-2 shadow-lg" onClick={handleExport}>
           <Download className="h-4 w-4" />
           Export Excel
