@@ -321,10 +321,10 @@ export function TaxDataTable({
               <Button
                 variant="outline"
                 size="sm"
-                className="border-primary/30 hover:bg-primary/5 h-10 rounded-xl px-4 text-[10px] font-black uppercase tracking-widest transition-all text-primary dark:bg-primary/5 shadow-sm active:scale-95"
+                className="border-primary/30 hover:bg-primary/10 h-10 rounded-xl px-4 text-xs font-bold transition-all text-primary dark:bg-primary/5"
                 onClick={() => setIsBulkRegionOpen(true)}
               >
-                <MapPin className="mr-2 h-3 w-3" />
+                <MapPin className="mr-2 h-4 w-4" />
                 Atur Wilayah
               </Button>
 
@@ -332,13 +332,13 @@ export function TaxDataTable({
                 <DropdownMenuTrigger
                   render={
                     <Button 
-                      className="shadow-primary/20 h-10 rounded-xl px-5 text-[10px] font-black uppercase tracking-widest shadow-lg transition-all hover:scale-[1.02] active:scale-95" 
+                      className="shadow-primary/20 h-10 rounded-xl px-5 text-xs font-black shadow-lg transition-all hover:scale-[1.02] active:scale-95" 
                       disabled={isAssigning}
                     >
                       {isAssigning ? (
-                        <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
-                        <User className="mr-2 h-3.5 w-3.5" />
+                        <User className="mr-2 h-4 w-4" />
                       )}
                       Alokasikan ({isAllFilteredSelected ? displayTotal : selectedIds.size})
                     </Button>
@@ -388,22 +388,24 @@ export function TaxDataTable({
       {/* Unified Virtualized Container */}
       <div 
         ref={parentRef}
-        className="border-border/60 bg-background relative overflow-auto rounded-2xl border shadow-2xl max-h-[80vh] min-h-[400px] scrollbar-thin scrollbar-thumb-muted-foreground/20"
+        className="border-border/50 bg-background relative overflow-auto rounded-2xl border shadow-xl max-h-[75vh] min-h-[400px]"
       >
-        <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-          {/* Desktop Table Header (Sticky: Premium Glassmorphism-like) */}
-          <div className="hidden md:block sticky top-0 z-30 bg-muted/95 backdrop-blur-sm border-b border-border/80 shadow-sm">
-            <div className="flex w-full items-center h-12 px-4 text-muted-foreground font-black uppercase tracking-widest text-[10px]">
-              {currentUser?.role !== "PENGGUNA" && <div className="w-[50px] shrink-0" />}
-              <div className="w-[180px] shrink-0 font-bold px-4">NOP</div>
-              <div className="flex-1 px-4">Informasi Wajib Pajak</div>
-              <div className="w-[150px] shrink-0 px-4">Wilayah</div>
-              <div className="w-[120px] shrink-0 text-right px-4">Tagihan PBB</div>
-              <div className="w-[120px] shrink-0 px-4">Status Bayar</div>
-              <div className="w-[150px] shrink-0 px-4">Petugas Alokasi</div>
-            </div>
+        {/* Inner content: on desktop enforces min-width so columns don't squeeze.
+            On mobile this has no min-width so cards render normally. */}
+        <div className="md:min-w-[870px]">
+          {/* Desktop Table Header (Sticky) — hidden on mobile */}
+          <div className="hidden md:flex sticky top-0 z-30 bg-muted border-b border-border/80 w-full items-center h-12 px-4 text-foreground font-black uppercase tracking-tight text-[11px]">
+            {currentUser?.role !== "PENGGUNA" && <div className="w-[50px] shrink-0" />}
+            <div className="w-[180px] shrink-0">NOP</div>
+            <div className="w-[200px] shrink-0 px-4">Nama Wajib Pajak</div>
+            <div className="w-[150px] shrink-0 px-4">Wilayah</div>
+            <div className="w-[130px] shrink-0 text-right px-4">Tagihan</div>
+            <div className="w-[120px] shrink-0 px-4">Status</div>
+            <div className="w-[150px] shrink-0 px-4">Penarik</div>
           </div>
 
+          {/* Virtual rows */}
+          <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
           {isLoading ? (
             <div className="p-8 text-center flex flex-col items-center justify-center gap-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -538,8 +540,10 @@ export function TaxDataTable({
               );
             })
           )}
+          </div>
         </div>
       </div>
+
 
       <TaxTablePagination
         currentPage={currentPage}

@@ -27,23 +27,23 @@ export function TaxTablePagination({
         <Button
           variant="outline"
           size="sm"
-          className="h-10 rounded-xl px-4 font-bold transition-all border-border/60 hover:bg-muted/50 active:scale-95"
+          className="h-8 px-3 font-semibold transition-all"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
         >
-          <ChevronLeft className="mr-1.5 h-4 w-4" /> Sebelum
+          <ChevronLeft className="mr-1.5 h-4 w-4" /> Sebelumnya
         </Button>
-        <div className="bg-muted/30 backdrop-blur-sm border-border/60 rounded-xl border px-5 py-2 text-xs font-black tracking-tight shadow-sm">
-          <span className="text-muted-foreground">HALAMAN</span> <span className="text-primary text-sm">{currentPage}</span> <span className="text-muted-foreground">DARI</span> {totalPages || 1}
+        <div className="bg-muted/50 border-border/50 rounded-md border px-4 py-1.5 text-xs font-bold">
+          Halaman <span className="text-primary">{currentPage}</span> dari {totalPages || 1}
         </div>
         <Button
           variant="outline"
           size="sm"
-          className="h-10 rounded-xl px-4 font-bold transition-all border-border/60 hover:bg-muted/50 active:scale-95"
+          className="h-8 px-3 font-semibold transition-all"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
         >
-          Lanjut <ChevronRight className="ml-1.5 h-4 w-4" />
+          Selanjutnya <ChevronRight className="ml-1.5 h-4 w-4" />
         </Button>
       </div>
     </div>
