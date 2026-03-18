@@ -394,15 +394,15 @@ export function TaxDataTable({
       >
         <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
           {/* Desktop Table Header (Sticky) */}
-          <div className="hidden md:block sticky top-0 z-30 bg-muted/30 backdrop-blur-md border-b border-border/50">
-            <div className="flex w-full items-center h-12 px-4">
+          <div className="hidden md:block sticky top-0 z-30 bg-muted border-b border-border/80">
+            <div className="flex w-full items-center h-12 px-4 text-foreground font-black uppercase tracking-tight text-[11px]">
               {currentUser?.role !== "PENGGUNA" && <div className="w-[50px] shrink-0" />}
-              <div className="w-[180px] shrink-0 text-xs font-black uppercase tracking-wider text-muted-foreground">NOP</div>
-              <div className="flex-1 text-xs font-black uppercase tracking-wider text-muted-foreground">Nama Wajib Pajak</div>
-              <div className="w-[150px] shrink-0 text-xs font-black uppercase tracking-wider text-muted-foreground">Wilayah</div>
-              <div className="w-[120px] shrink-0 text-xs font-black uppercase tracking-wider text-muted-foreground text-right">Tagihan</div>
-              <div className="w-[120px] shrink-0 text-xs font-black uppercase tracking-wider text-muted-foreground px-4">Status</div>
-              <div className="w-[150px] shrink-0 text-xs font-black uppercase tracking-wider text-muted-foreground">Penarik</div>
+              <div className="w-[180px] shrink-0">NOP</div>
+              <div className="flex-1 px-4">Nama Wajib Pajak</div>
+              <div className="w-[150px] shrink-0 px-4">Wilayah</div>
+              <div className="w-[120px] shrink-0 text-right px-4">Tagihan</div>
+              <div className="w-[120px] shrink-0 px-4">Status</div>
+              <div className="w-[150px] shrink-0 px-4">Penarik</div>
             </div>
           </div>
 
