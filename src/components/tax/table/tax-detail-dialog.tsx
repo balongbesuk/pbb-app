@@ -129,10 +129,10 @@ export function TaxDetailDialog({
               <MapPin className="text-primary/60 h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-foreground text-base font-bold tracking-tight leading-tight">
+              <h2 className="text-foreground text-lg font-bold tracking-tight leading-tight">
                 Detail Objek Pajak
               </h2>
-              <p className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+              <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                 {item.nop}
               </p>
             </div>
@@ -144,31 +144,31 @@ export function TaxDetailDialog({
           <div className="space-y-3">
             {/* Wajib Pajak Section */}
             <div className="space-y-0.5">
-              <span className="text-muted-foreground text-[9px] leading-none font-bold tracking-widest uppercase">
+              <span className="text-muted-foreground text-xs leading-none font-bold tracking-widest uppercase">
                 Wajib Pajak
               </span>
               <h3 className="text-foreground text-lg leading-tight font-black tracking-tighter uppercase">
                 {item.namaWp}
               </h3>
-              <p className="text-muted-foreground/80 text-xs leading-snug">{item.alamatObjek}</p>
+              <p className="text-muted-foreground/80 text-sm leading-snug">{item.alamatObjek}</p>
             </div>
 
             {/* List Attributes */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-[11px] font-semibold">Penarik</span>
+                <span className="text-muted-foreground text-xs font-semibold">Penarik</span>
                 <div className="flex items-center gap-1.5">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-100 text-[9px] font-bold text-zinc-500 dark:bg-zinc-800">
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-100 text-xs font-bold text-zinc-500 dark:bg-zinc-800">
                     {item.penarik?.name?.charAt(0) || "U"}
                   </div>
-                  <span className="text-foreground/90 text-xs font-bold">
+                  <span className="text-foreground/90 text-sm font-bold">
                     {item.penarik?.name || "-"}
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-[11px] font-semibold">Status</span>
+                <span className="text-muted-foreground text-xs font-semibold">Status</span>
                 <Badge
                   variant={
                     (item.paymentStatus === "LUNAS"
@@ -177,7 +177,7 @@ export function TaxDetailDialog({
                         ? "warning"
                         : "outline") as any
                   }
-                  className="rounded-full px-2.5 py-0.5 text-[8px] font-black uppercase"
+                  className="rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase"
                 >
                   {item.paymentStatus === "LUNAS"
                     ? "Lunas"
@@ -188,16 +188,16 @@ export function TaxDetailDialog({
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-[11px] font-semibold">
+                <span className="text-muted-foreground text-xs font-semibold">
                   Luas Tanah / Bangunan
                 </span>
-                <span className="text-foreground/90 text-xs font-bold">
+                <span className="text-foreground/90 text-sm font-bold">
                   {item.luasTanah} / {item.luasBangunan} m²
                 </span>
               </div>
 
               <div className="flex items-center justify-between border-t border-zinc-100 pt-2 dark:border-zinc-800">
-                <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+                <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
                   Total Tagihan
                 </span>
                 <span className="text-primary text-xl font-black tracking-tighter">
@@ -212,7 +212,7 @@ export function TaxDetailDialog({
             {/* Region Edit Section */}
             <div className="flex-1 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
+                <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
                   Wilayah Penagihan
                 </span>
                 {!isEditing && canManage && (
@@ -220,16 +220,16 @@ export function TaxDetailDialog({
                     variant="ghost"
                     size="sm"
                     onClick={() => setIsEditing(true)}
-                    className="h-6 rounded-lg px-2 text-[10px] font-bold text-primary hover:bg-primary/5 hover:text-primary"
+                    className="h-6 rounded-lg px-2 text-xs font-bold text-primary hover:bg-primary/5 hover:text-primary"
                   >
-                    <Edit2 className="mr-1 h-2.5 w-2.5" /> Ubah
+                    <Edit2 className="mr-1 h-3 w-3" /> Ubah
                   </Button>
                 )}
               </div>
 
               <div className="space-y-2">
                 <div className="space-y-0.5">
-                  <span className="text-muted-foreground/60 text-[8px] font-bold uppercase">
+                  <span className="text-muted-foreground/60 text-xs font-bold uppercase">
                     Dusun
                   </span>
                   {isEditing ? (
@@ -252,7 +252,7 @@ export function TaxDetailDialog({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-0.5">
-                    <span className="text-muted-foreground/60 text-[8px] font-bold uppercase">
+                    <span className="text-muted-foreground/60 text-xs font-bold uppercase">
                       RT
                     </span>
                     {isEditing ? (
@@ -269,7 +269,7 @@ export function TaxDetailDialog({
                     )}
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-muted-foreground/60 text-[8px] font-bold uppercase">
+                    <span className="text-muted-foreground/60 text-xs font-bold uppercase">
                       RW
                     </span>
                     {isEditing ? (
@@ -294,7 +294,7 @@ export function TaxDetailDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => setIsEditing(false)}
-                    className="h-8 flex-1 rounded-lg text-[10px]"
+                    className="h-8 flex-1 rounded-lg text-xs"
                   >
                     Batal
                   </Button>
@@ -302,7 +302,7 @@ export function TaxDetailDialog({
                     size="sm"
                     onClick={handleUpdate}
                     disabled={isUpdating}
-                    className="h-8 flex-1 rounded-lg text-[10px] font-bold"
+                    className="h-8 flex-1 rounded-lg text-xs font-bold"
                   >
                     {isUpdating ? (
                       <Loader2 className="mr-1 h-3 w-3 animate-spin" />
@@ -317,7 +317,7 @@ export function TaxDetailDialog({
             {/* Admin: Direct Assignment */}
             {isAdmin && !isEditing && (
               <div className="mt-3 space-y-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
-                <span className="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
+                <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
                   Alokasi Petugas
                 </span>
                 <div className="space-y-2">
@@ -343,7 +343,7 @@ export function TaxDetailDialog({
                   <Button 
                     onClick={handleAssignSubmit}
                     disabled={isAssignSubmitting}
-                    className="h-8 w-full rounded-lg bg-zinc-900 text-[10px] font-bold text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+                    className="h-8 w-full rounded-lg bg-zinc-900 text-xs font-bold text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
                   >
                     {isAssignSubmitting ? (
                       <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
@@ -358,7 +358,7 @@ export function TaxDetailDialog({
 
             {currentUser?.role === "PENARIK" && !isEditing && (
               <div className="mt-3 space-y-2 border-t border-zinc-100 pt-3 dark:border-zinc-800">
-                <span className="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
+                <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
                   Pemindahan Alokasi
                 </span>
                 
@@ -386,7 +386,7 @@ export function TaxDetailDialog({
                     <Button 
                       onClick={() => handleTransferSubmit("GIVE")}
                       disabled={!selectedTransferPenarik || isTransferSubmitting}
-                      className="h-8 w-full rounded-lg bg-emerald-500/10 text-[10px] font-bold text-emerald-600 hover:bg-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-400"
+                      className="h-8 w-full rounded-lg bg-emerald-500/10 text-xs font-bold text-emerald-600 hover:bg-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-400"
                     >
                       {isTransferSubmitting ? (
                         <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
@@ -405,14 +405,14 @@ export function TaxDetailDialog({
                           <User className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[9px] text-blue-600/70 font-bold uppercase dark:text-blue-400/70">Milik Petugas</p>
-                          <p className="text-[11px] font-bold text-blue-700 truncate dark:text-blue-300">{item.penarik?.name || "Lainnya"}</p>
+                          <p className="text-xs text-blue-600/70 font-bold uppercase dark:text-blue-400/70">Milik Petugas</p>
+                          <p className="text-sm font-bold text-blue-700 truncate dark:text-blue-300">{item.penarik?.name || "Lainnya"}</p>
                         </div>
                       </div>
                       <Button 
                         onClick={() => handleTransferSubmit("TAKE")}
                         disabled={isTransferSubmitting}
-                        className="h-8 w-full rounded-lg bg-blue-600 text-[10px] font-bold text-white hover:bg-blue-700 shadow-sm transition-all active:scale-[0.98]"
+                        className="h-8 w-full rounded-lg bg-blue-600 text-xs font-bold text-white hover:bg-blue-700 shadow-sm transition-all active:scale-[0.98]"
                       >
                         {isTransferSubmitting ? (
                           <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
@@ -424,8 +424,8 @@ export function TaxDetailDialog({
                     </div>
                   ) : (
                     <div className="rounded-lg border border-dashed border-zinc-200 p-2.5 text-center dark:border-zinc-800">
-                      <p className="text-[9px] text-muted-foreground font-medium">Belum ada alokasi petugas</p>
-                      <p className="text-[8px] text-muted-foreground/60 mt-0.5 italic">Hanya ADMIN yang dapat mengatur alokasi awal</p>
+                      <p className="text-xs text-muted-foreground font-medium">Belum ada alokasi petugas</p>
+                      <p className="text-xs text-muted-foreground/60 mt-0.5 italic">Hanya ADMIN yang dapat mengatur alokasi awal</p>
                     </div>
                   )
                 )}
