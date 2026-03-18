@@ -545,13 +545,18 @@ export function TaxDataTable({
                           </div>
                         </div>
                         
-                        {currentUser?.role === "ADMIN" && (
+                        {currentUser?.role !== "PENGGUNA" && (
                           <div 
-                            onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}
+                            onClick={(e) => { 
+                              if (currentUser?.role === "PENARIK" && isLunas) return;
+                              e.stopPropagation(); 
+                              toggleSelect(item.id); 
+                            }}
                             className="flex h-10 w-10 items-center justify-center -mr-2 -mt-1"
                           >
                              <Checkbox 
                                checked={selectedIds.has(item.id)} 
+                               disabled={currentUser?.role === "PENARIK" && isLunas}
                                className="h-6 w-6 rounded-lg border-primary/30 bg-background shadow-sm" 
                              />
                           </div>
