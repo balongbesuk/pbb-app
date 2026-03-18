@@ -94,6 +94,7 @@ export function TaxDataTable({
   const [filterPenarik, setFilterPenarik] = useState(penarik || "all");
   const [filterRegionStatus, setFilterRegionStatus] = useState(regionStatus || "all");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedAmounts, setSelectedAmounts] = useState<Map<number, number>>(new Map());
   const [isAllFilteredSelected, setIsAllFilteredSelected] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isBulkRegionOpen, setIsBulkRegionOpen] = useState(false);
@@ -156,6 +157,7 @@ export function TaxDataTable({
 
   const handleFilterChange = (key: string, value: string) => {
     setSelectedIds(new Set());
+    setSelectedAmounts(new Map());
     setIsAllFilteredSelected(false);
     const params = new URLSearchParams(searchParams);
     if (value && value !== "all") params.set(key, value);
@@ -221,6 +223,7 @@ export function TaxDataTable({
     if (res.success) {
       toast.success(`Berhasil mengalokasikan ${res.count} data`);
       setSelectedIds(new Set());
+      setSelectedAmounts(new Map());
       setIsAllFilteredSelected(false);
       queryClient.invalidateQueries({ queryKey: ["tax-data"] });
     } else toast.error(res.message);
@@ -238,6 +241,7 @@ export function TaxDataTable({
     if (res.success) {
       toast.success(`Berhasil mengupdate ${res.count} data wp menjadi ${status}`);
       setSelectedIds(new Set());
+      setSelectedAmounts(new Map());
       setIsAllFilteredSelected(false);
       queryClient.invalidateQueries({ queryKey: ["tax-data"] });
     } else toast.error(res.message);
@@ -245,12 +249,7 @@ export function TaxDataTable({
     setIsAssigning(false);
   };
 
-  const selectedSum = Array.from(selectedIds).reduce((acc, id) => {
-    const item = displayData.find((d: TaxDataItem) => d.id === id);
-    if (!item) return acc;
-    if (currentUser?.role === "PENARIK" && item.paymentStatus === "LUNAS") return acc;
-    return acc + (item.sisaTagihan > 0 ? item.sisaTagihan : item.ketetapan); // Fallback to ketetapan if sisaTagihan not yet populated
-  }, 0);
+  const selectedSum = Array.from(selectedAmounts.values()).reduce((acc, amount) => acc + amount, 0);
 
   const handleTransferRequestAction = async (
     taxId: number,
@@ -271,23 +270,47 @@ export function TaxDataTable({
 
   const toggleSelectAll = () => {
     const selectable = getSelectableItems();
-    if (selectedIds.size >= selectable.length && selectable.length > 0) {
-      setSelectedIds(new Set());
+    // Use Array.every properly on non-empty selectable array
+    const allSelected = selectable.length > 0 && selectable.every((item: TaxDataItem) => selectedIds.has(item.id));
+
+    if (allSelected) {
+      const newSet = new Set(selectedIds);
+      const newAmounts = new Map(selectedAmounts);
+      selectable.forEach((d: TaxDataItem) => {
+        newSet.delete(d.id);
+        newAmounts.delete(d.id);
+      });
+      setSelectedIds(newSet);
+      setSelectedAmounts(newAmounts);
       setIsAllFilteredSelected(false);
     } else {
-      setSelectedIds(new Set(selectable.map((d: TaxDataItem) => d.id)));
+      const newSet = new Set(selectedIds);
+      const newAmounts = new Map(selectedAmounts);
+      selectable.forEach((d: TaxDataItem) => {
+        newSet.add(d.id);
+        newAmounts.set(d.id, d.sisaTagihan > 0 ? d.sisaTagihan : d.ketetapan);
+      });
+      setSelectedIds(newSet);
+      setSelectedAmounts(newAmounts);
     }
   };
 
   const toggleSelect = (id: number) => {
     const newSet = new Set(selectedIds);
+    const newAmounts = new Map(selectedAmounts);
     if (newSet.has(id)) {
       newSet.delete(id);
+      newAmounts.delete(id);
       setIsAllFilteredSelected(false);
     } else {
       newSet.add(id);
+      const item = displayData.find((d: TaxDataItem) => d.id === id);
+      if (item) {
+        newAmounts.set(id, item.sisaTagihan > 0 ? item.sisaTagihan : item.ketetapan);
+      }
     }
     setSelectedIds(newSet);
+    setSelectedAmounts(newAmounts);
   };
 
   return (
