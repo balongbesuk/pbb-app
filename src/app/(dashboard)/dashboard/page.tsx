@@ -17,6 +17,7 @@ import {
   Layers as LayersIcon,
   Zap as ZapIcon,
   Clock,
+  History,
 } from "lucide-react";
 import {
   RWBarChart,
@@ -301,9 +302,13 @@ export default async function DashboardPage({
                   </div>
                 ))}
                 {dailyLogs.length === 5 && (
-                  <p className="text-xs text-muted-foreground italic pt-2 border-t mt-2">
-                    Menampilkan 5 aktivitas penagihan terakhir Anda.
-                  </p>
+                  <div className="pt-4 mt-2 border-t">
+                    <Link href="/riwayat" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full gap-2 rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted/50 hover:text-foreground">
+                        <History className="h-4 w-4" /> Lihat Semua Riwayat ({personalStats?.wpLunas || 0} Aktivitas)
+                      </Button>
+                    </Link>
+                  </div>
                 )}
               </>
             ) : (
