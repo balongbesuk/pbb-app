@@ -26,15 +26,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import type { AppUser } from "@/types/app";
 
 interface RwWpDialogProps {
   dusun: string | null;
   rw: string | null;
   tahun: number;
   count: number;
+  currentUser?: AppUser;
 }
 
-export function RwWpDialog({ dusun, rw, tahun, count }: RwWpDialogProps) {
+export function RwWpDialog({ dusun, rw, tahun, count, currentUser }: RwWpDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any[]>([]);
@@ -167,7 +169,7 @@ export function RwWpDialog({ dusun, rw, tahun, count }: RwWpDialogProps) {
           </DialogTitle>
         </DialogHeader>
 
-        {!loading && data.length > 0 && (
+        {!loading && data.length > 0 && currentUser?.role === "ADMIN" && (
           <div className="bg-primary/5 border-primary/20 mt-2 flex shrink-0 flex-col justify-between gap-3 rounded-lg border p-3 md:flex-row md:items-center">
             <div className="flex items-center gap-2">
               <Checkbox
@@ -230,7 +232,7 @@ export function RwWpDialog({ dusun, rw, tahun, count }: RwWpDialogProps) {
               <Table>
                 <TableHeader className="bg-muted/50">
                   <TableRow>
-                    <TableHead className="w-[40px] text-center">#</TableHead>
+                    <TableHead className="w-[40px] text-center">{currentUser?.role === "ADMIN" ? "#" : "No."}</TableHead>
                     <TableHead className="w-[80px]">Aksi</TableHead>
                     <TableHead className="w-[150px]">NOP</TableHead>
                     <TableHead>Nama Wajib Pajak & Alamat</TableHead>
@@ -242,15 +244,20 @@ export function RwWpDialog({ dusun, rw, tahun, count }: RwWpDialogProps) {
                     <TableRow
                       key={item.id}
                       className={
-                        editingId === item.id ? "bg-muted/30" : "hover:bg-muted/40 cursor-pointer"
+                        (editingId === item.id ? "bg-muted/30" : "hover:bg-muted/40 cursor-pointer")
                       }
+                      onClick={() => currentUser?.role === "ADMIN" && toggleSelect(item.id)}
                     >
                       <TableCell className="text-center">
-                        <Checkbox
-                          checked={selectedIds.has(item.id)}
-                          onCheckedChange={() => toggleSelect(item.id)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
+                        {currentUser?.role === "ADMIN" ? (
+                          <Checkbox
+                            checked={selectedIds.has(item.id)}
+                            onCheckedChange={() => toggleSelect(item.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="text-muted-foreground text-xs">{data.indexOf(item) + 1}</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {editingId === item.id ? (
@@ -279,7 +286,7 @@ export function RwWpDialog({ dusun, rw, tahun, count }: RwWpDialogProps) {
                             size="icon"
                             variant="ghost"
                             aria-label={`Edit wilayah ${item.namaWp}`}
-                            onClick={() => startEdit(item)}
+                            onClick={(e) => { e.stopPropagation(); startEdit(item); }}
                             className="text-muted-foreground hover:text-primary h-7 w-7"
                           >
                             <Edit2 className="h-3.5 w-3.5" />

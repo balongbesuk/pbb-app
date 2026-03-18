@@ -166,7 +166,7 @@ export function PenarikWpDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {!loading && data.length > 0 && currentUser?.role !== "PENGGUNA" && (
+        {!loading && data.length > 0 && currentUser?.role === "ADMIN" && (
           <div className="bg-primary/5 border-primary/20 mt-2 flex shrink-0 flex-col justify-between gap-3 rounded-lg border p-3 md:flex-row md:items-center">
             <div className="flex items-center gap-2">
               <Checkbox
@@ -232,7 +232,7 @@ export function PenarikWpDialog({
                 <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead className="w-[40px] text-center">
-                      {currentUser?.role !== "PENGGUNA" ? "#" : "No."}
+                      {currentUser?.role === "ADMIN" ? "#" : "No."}
                     </TableHead>
                     <TableHead className="w-[150px]">NOP</TableHead>
                     <TableHead>Nama Wajib Pajak</TableHead>
@@ -245,10 +245,10 @@ export function PenarikWpDialog({
                     <TableRow
                       key={item.id}
                       className="cursor-pointer"
-                      onClick={() => currentUser?.role !== "PENGGUNA" && toggleSelect(item.id)}
+                      onClick={() => currentUser?.role === "ADMIN" && toggleSelect(item.id)}
                     >
                       <TableCell className="text-center font-medium">
-                        {currentUser?.role !== "PENGGUNA" ? (
+                        {currentUser?.role === "ADMIN" ? (
                           <Checkbox
                             checked={selectedIds.has(item.id)}
                             onCheckedChange={() => toggleSelect(item.id)}
