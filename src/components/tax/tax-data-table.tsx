@@ -392,6 +392,7 @@ export function TaxDataTable({
 
       {/* Unified Virtualized Container */}
       <div 
+        key={isMobile ? "mobile-view" : "desktop-view"}
         ref={parentRef}
         className="border-border/50 bg-background relative overflow-auto rounded-2xl border shadow-xl max-h-[75vh] min-h-[400px]"
       >
