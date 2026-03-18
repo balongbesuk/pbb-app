@@ -15,13 +15,18 @@ export async function GET(req: NextRequest) {
   const filterDusun = searchParams.get("dusun") || "";
   const filterRw = searchParams.get("rw") || "";
   const filterRt = searchParams.get("rt") || "";
-  const filterPenarik = searchParams.get("penarik") || "";
-  const regionStatus = searchParams.get("regionStatus") || "all";
-  const pageSize = 50;
-
-  const whereClause: Prisma.TaxDataWhereInput = {
-    tahun,
-  };
+   const filterPenarik = searchParams.get("penarik") || "";
+   const regionStatus = searchParams.get("regionStatus") || "all";
+   const paymentStatus = searchParams.get("paymentStatus") || "all";
+   const pageSize = 50;
+ 
+   const whereClause: Prisma.TaxDataWhereInput = {
+     tahun,
+   };
+ 
+   if (paymentStatus !== "all") {
+     whereClause.paymentStatus = paymentStatus as any;
+   }
 
   const andFilters: Prisma.TaxDataWhereInput[] = [];
 

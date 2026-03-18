@@ -67,13 +67,14 @@ export function TaxDataTable({
   const rt = searchParams.get("rt") || "";
   const penarik = searchParams.get("penarik") || "";
   const regionStatus = searchParams.get("regionStatus") || "all";
+  const paymentStatus = searchParams.get("paymentStatus") || "all";
 
   const {
     data: queryData,
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ["tax-data", { q, page, tahun, dusun, rw, rt, penarik, regionStatus }],
+    queryKey: ["tax-data", { q, page, tahun, dusun, rw, rt, penarik, regionStatus, paymentStatus }],
     queryFn: async () => {
       const params = new URLSearchParams(searchParams);
       const res = await fetch(`/api/tax?${params.toString()}`);
@@ -93,6 +94,7 @@ export function TaxDataTable({
   const [filterRt, setFilterRt] = useState(rt || "all");
   const [filterPenarik, setFilterPenarik] = useState(penarik || "all");
   const [filterRegionStatus, setFilterRegionStatus] = useState(regionStatus || "all");
+  const [filterPaymentStatus, setFilterPaymentStatus] = useState(paymentStatus || "all");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [selectedAmounts, setSelectedAmounts] = useState<Map<number, { amount: number; name: string }>>(new Map());
   const [isAllFilteredSelected, setIsAllFilteredSelected] = useState(false);
@@ -111,7 +113,8 @@ export function TaxDataTable({
     setFilterRt(rt || "all");
     setFilterPenarik(penarik || "all");
     setFilterRegionStatus(regionStatus || "all");
-  }, [q, dusun, rw, rt, penarik, regionStatus]);
+    setFilterPaymentStatus(paymentStatus || "all");
+  }, [q, dusun, rw, rt, penarik, regionStatus, paymentStatus]);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -151,6 +154,9 @@ export function TaxDataTable({
     if (filterRegionStatus && filterRegionStatus !== "all")
       params.set("regionStatus", filterRegionStatus);
     else params.delete("regionStatus");
+    if (filterPaymentStatus && filterPaymentStatus !== "all")
+      params.set("paymentStatus", filterPaymentStatus);
+    else params.delete("paymentStatus");
     params.set("page", "1");
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -332,6 +338,8 @@ export function TaxDataTable({
         onPenarikChange={(v: string) => handleFilterChange("penarik", v)}
         filterRegionStatus={filterRegionStatus}
         onRegionStatusChange={(v: string) => handleFilterChange("regionStatus", v)}
+        filterPaymentStatus={filterPaymentStatus}
+        onPaymentStatusChange={(v: string) => handleFilterChange("paymentStatus", v)}
         availableFilters={availableFilters}
         onPrint={handlePrint}
         showPrint={currentUser?.role !== "PENGGUNA"}

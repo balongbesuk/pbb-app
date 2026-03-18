@@ -18,6 +18,7 @@ export default async function DataPajakPage({
     rt?: string;
     penarik?: string;
     regionStatus?: string;
+    paymentStatus?: string;
   }>;
 }) {
   const session = await getServerSession(authOptions);
@@ -30,11 +31,16 @@ export default async function DataPajakPage({
   const filterRt = params.rt || "";
   const filterPenarik = params.penarik || "";
   const regionStatus = params.regionStatus || "all";
+  const paymentStatus = params.paymentStatus || "all";
   const pageSize = 50;
 
   const whereClause: Prisma.TaxDataWhereInput = {
     tahun,
   };
+
+  if (paymentStatus !== "all") {
+    whereClause.paymentStatus = paymentStatus as any;
+  }
 
   const andFilters: Prisma.TaxDataWhereInput[] = [];
 

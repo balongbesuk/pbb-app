@@ -30,6 +30,8 @@ interface TaxTableFiltersProps {
   onPenarikChange: (val: string) => void;
   filterRegionStatus: string;
   onRegionStatusChange: (val: string) => void;
+  filterPaymentStatus: string;
+  onPaymentStatusChange: (val: string) => void;
   availableFilters: AvailableFilters;
   onPrint: () => void;
   showPrint: boolean;
@@ -51,6 +53,8 @@ export function TaxTableFilters({
   onPenarikChange,
   filterRegionStatus,
   onRegionStatusChange,
+  filterPaymentStatus,
+  onPaymentStatusChange,
   availableFilters,
   onPrint,
   showPrint,
@@ -97,6 +101,27 @@ export function TaxTableFilters({
               <SelectItem value="incomplete" className="text-destructive font-black">
                 ⚠️ Belum Lengkap
               </SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={filterPaymentStatus}
+            onValueChange={(v) => onPaymentStatusChange(v || "all")}
+          >
+            <SelectTrigger className="h-10 w-[160px] rounded-xl border-border bg-card text-xs font-bold shadow-sm">
+              <span className="flex flex-1 truncate text-left">
+                {filterPaymentStatus === "all" ? "Semua Status" : 
+                 filterPaymentStatus === "LUNAS" ? "✅ Lunas" :
+                 filterPaymentStatus === "BELUM_LUNAS" ? "⏳ Blm Lunas" :
+                 filterPaymentStatus === "SUSPEND" ? "🚫 Suspend" : "Tdk Terbit"}
+              </span>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-border shadow-2xl">
+              <SelectItem value="all">Semua Status</SelectItem>
+              <SelectItem value="BELUM_LUNAS" className="font-bold text-amber-600">⏳ Belum Lunas</SelectItem>
+              <SelectItem value="LUNAS" className="text-emerald-600">✅ Lunas</SelectItem>
+              <SelectItem value="SUSPEND" className="text-rose-600">🚫 Suspend / Sengketa</SelectItem>
+              <SelectItem value="TIDAK_TERBIT">Tdk Terbit</SelectItem>
             </SelectContent>
           </Select>
 
@@ -222,6 +247,23 @@ export function TaxTableFilters({
               {filterPenarik === currentUser.id ? "Menampilkan Tugas Saya" : "Tampilkan Tugas Saya"}
             </Button>
           )}
+          <Button
+            onClick={() => {
+              if (filterPaymentStatus === "BELUM_LUNAS") onPaymentStatusChange("all");
+              else onPaymentStatusChange("BELUM_LUNAS");
+            }}
+            variant={filterPaymentStatus === "BELUM_LUNAS" ? "default" : "outline"}
+            size="sm"
+            className={cn(
+              "h-9 w-full sm:w-auto gap-2 rounded-xl text-[10px] font-bold tracking-widest uppercase shadow-sm transition-colors",
+              filterPaymentStatus === "BELUM_LUNAS" 
+                ? "bg-amber-600 text-white shadow-amber-500/20" 
+                : "border-border bg-amber-500/5 text-amber-600 dark:text-amber-500 hover:bg-amber-500/10"
+            )}
+          >
+            <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+            {filterPaymentStatus === "BELUM_LUNAS" ? "Menampilkan Belum Lunas" : "Tampilkan Belum Lunas"}
+          </Button>
         </div>
       </div>
     </div>
