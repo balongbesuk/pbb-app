@@ -57,16 +57,24 @@ async function getPenarikPersonalStats(userId: string, tahun: number) {
 }
 
 async function getPenarikDailyLog(userId: string) {
-  const logs = await prisma.auditLog.findMany({
-    where: { 
-      userId, 
-      action: "UPDATE_PAYMENT",
-    },
-    orderBy: { createdAt: "desc" },
-    take: 5
-  });
+  const [logs, total] = await Promise.all([
+    prisma.auditLog.findMany({
+      where: { 
+        userId, 
+        action: "UPDATE_PAYMENT",
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5
+    }),
+    prisma.auditLog.count({
+      where: { 
+        userId, 
+        action: "UPDATE_PAYMENT",
+      }
+    }),
+  ]);
   
-  return logs;
+  return { logs, total };
 }
 
 async function getDashboardStats(tahun: number = new Date().getFullYear()) {
@@ -190,11 +198,15 @@ export default async function DashboardPage({
 
   let personalStats = null;
   let dailyLogs: any[] = [];
+  let totalLogs = 0;
   if (currentUser?.role === "PENARIK" && currentUser?.id) {
-    [personalStats, dailyLogs] = await Promise.all([
+    const [ps, dl] = await Promise.all([
       getPenarikPersonalStats(currentUser.id, currentYear),
       getPenarikDailyLog(currentUser.id)
     ]);
+    personalStats = ps;
+    dailyLogs = dl.logs;
+    totalLogs = dl.total;
   }
 
   return (
@@ -301,11 +313,11 @@ export default async function DashboardPage({
                     </div>
                   </div>
                 ))}
-                {dailyLogs.length === 5 && (
+                {dailyLogs.length === 5 && totalLogs > 5 && (
                   <div className="pt-4 mt-2 border-t">
                     <Link href="/riwayat" className="w-full">
                       <Button variant="outline" size="sm" className="w-full gap-2 rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted/50 hover:text-foreground">
-                        <History className="h-4 w-4" /> Lihat Semua Riwayat ({personalStats?.wpLunas || 0} Aktivitas)
+                        <History className="h-4 w-4" /> Lihat Semua Riwayat ({totalLogs} Aktivitas)
                       </Button>
                     </Link>
                   </div>
