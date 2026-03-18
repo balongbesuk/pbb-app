@@ -135,7 +135,7 @@ export function TaxDataTable({
     count: displayData.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => (isMobile ? 240 : 64),
-    overscan: 10,
+    overscan: 25,
   });
 
 
@@ -396,7 +396,7 @@ export function TaxDataTable({
         ref={parentRef}
         className="border-border/50 bg-background relative overflow-auto rounded-2xl border shadow-xl max-h-[75vh] min-h-[400px]"
       >
-        <div className="relative" style={{ height: `${isMobile ? displayData.length * 240 : rowVirtualizer.getTotalSize()}px` }}>
+        <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
           {/* Desktop Table Header (Sticky) */}
           <div className="hidden md:block sticky top-0 z-30 bg-muted border-b border-border/80">
             <div className="flex w-full items-center h-12 px-4 text-foreground font-black uppercase tracking-tight text-[11px]">
@@ -434,8 +434,8 @@ export function TaxDataTable({
                     top: 0,
                     left: 0,
                     width: '100%',
-                    height: `${isMobile ? 240 : virtualRow.size}px`,
-                    transform: `translateY(${isMobile ? virtualRow.index * 240 : virtualRow.start}px)`,
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
                     padding: '12px', 
                   }}
                 >
