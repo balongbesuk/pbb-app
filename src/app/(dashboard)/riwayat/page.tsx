@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { History, CheckCircle2, Calendar } from "lucide-react";
+import { History, CheckCircle2, Calendar, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -71,13 +71,19 @@ export default async function RiwayatPekerjaanPage({
                 Belum ada riwayat penagihan yang tercatat.
               </div>
             ) : (
-              logs.map((log: any) => (
-                <div key={log.id} className="group flex gap-4 p-5 transition-all hover:bg-zinc-50/50 md:px-6 dark:hover:bg-zinc-900/30">
-                  <div className="mt-1 hidden shrink-0 sm:block">
-                    <div className="bg-emerald-500/10 border-emerald-500/20 flex h-10 w-10 items-center justify-center rounded-xl border">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              logs.map((log: any) => {
+                const isUnpaid = log.details?.includes("BELUM_LUNAS") || log.details?.includes("TIDAK_TERBIT");
+                return (
+                  <div key={log.id} className="group flex gap-4 p-5 transition-all hover:bg-zinc-50/50 md:px-6 dark:hover:bg-zinc-900/30">
+                    <div className="mt-1 hidden shrink-0 sm:block">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-xl border ${isUnpaid ? 'bg-rose-500/10 border-rose-500/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
+                        {isUnpaid ? (
+                          <XCircle className="h-5 w-5 text-rose-500" />
+                        ) : (
+                          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        )}
+                      </div>
                     </div>
-                  </div>
                   <div className="flex-1 space-y-2">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                       <p className="font-bold text-foreground">{log.details}</p>
@@ -93,7 +99,7 @@ export default async function RiwayatPekerjaanPage({
                     )}
                   </div>
                 </div>
-              ))
+              )})
             )}
           </div>
           

@@ -18,6 +18,7 @@ import {
   Zap as ZapIcon,
   Clock,
   History,
+  XCircle,
 } from "lucide-react";
 import {
   RWBarChart,
@@ -299,10 +300,16 @@ export default async function DashboardPage({
           <div className="space-y-4">
             {dailyLogs?.length > 0 ? (
               <>
-                {dailyLogs.map((log: any) => (
+                {dailyLogs.map((log: any) => {
+                  const isUnpaid = log.details?.includes("BELUM_LUNAS") || log.details?.includes("TIDAK_TERBIT");
+                  return (
                   <div key={log.id} className="flex items-start gap-3 text-sm">
-                    <div className="mt-0.5 rounded-full bg-emerald-500/20 p-1">
-                      <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                    <div className={`mt-0.5 rounded-full p-1 ${isUnpaid ? 'bg-rose-500/20' : 'bg-emerald-500/20'}`}>
+                      {isUnpaid ? (
+                        <XCircle className="h-3 w-3 text-rose-600 dark:text-rose-400" />
+                      ) : (
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                      )}
                     </div>
                     <div>
                       <p className="font-semibold">{log.details}</p>
@@ -312,7 +319,7 @@ export default async function DashboardPage({
                       </p>
                     </div>
                   </div>
-                ))}
+                )})}
                 {dailyLogs.length === 5 && totalLogs > 5 && (
                   <div className="pt-4 mt-2 border-t">
                     <Link href="/riwayat" className="w-full">
