@@ -73,7 +73,7 @@ export function TaxTableFilters({
             <Input
               ref={inputRef}
               placeholder="Cari NOP atau Nama..."
-              className="focus-visible:ring-primary/20 h-10 rounded-xl border-border bg-muted/20 pl-10 text-xs font-medium transition-all"
+              className="focus-visible:ring-primary/20 h-10 rounded-xl border-border/60 bg-muted/30 pl-10 text-xs font-bold transition-all shadow-sm"
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
             />
@@ -83,7 +83,7 @@ export function TaxTableFilters({
             value={filterRegionStatus}
             onValueChange={(v) => onRegionStatusChange(v || "all")}
           >
-            <SelectTrigger className="h-10 w-[160px] rounded-xl border-border bg-card text-xs font-bold shadow-sm">
+            <SelectTrigger className="h-10 w-[160px] rounded-xl border-border/60 bg-muted/30 text-xs font-black uppercase tracking-tight shadow-sm">
               <span className="flex flex-1 truncate text-left">
                 {filterRegionStatus === "all" ? "Semua Wilayah" : "⚠️ Belum Lengkap"}
               </span>
@@ -107,7 +107,7 @@ export function TaxTableFilters({
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto">
           <Select value={filterDusun} onValueChange={(v) => onDusunChange(v || "all")}>
-            <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[130px]">
+            <SelectTrigger className="h-10 flex-1 rounded-xl border-border/60 bg-muted/30 text-[10px] font-black uppercase tracking-tight shadow-sm sm:text-xs lg:min-w-[120px]">
               <span className="flex flex-1 truncate text-left">
                 {filterDusun === "all" ? "Semua Dusun" : filterDusun}
               </span>
@@ -193,7 +193,7 @@ export function TaxTableFilters({
             onClick={onPrint}
             variant="outline"
             size="sm"
-            className="h-9 w-full gap-2 rounded-xl border-border bg-muted/20 text-[10px] font-bold tracking-widest text-muted-foreground uppercase shadow-sm transition-colors hover:bg-muted/30 sm:w-auto"
+            className="h-10 w-full gap-2 rounded-xl border-border/60 bg-muted/30 text-[10px] font-black tracking-widest text-muted-foreground uppercase shadow-sm transition-all hover:bg-primary/5 hover:text-primary sm:w-auto px-6"
           >
             <Printer className="h-3.5 w-3.5" /> Cetak / Export Data
           </Button>
