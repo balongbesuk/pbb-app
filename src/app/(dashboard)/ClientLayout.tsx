@@ -29,8 +29,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       <div className="print:hidden">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col transition-all duration-300 print:block">
-        <div className="print:hidden">
+      <div className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden transition-all duration-300 print:block">
+        <div className="sticky top-0 z-30 shrink-0 print:hidden">
           <Topbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
         </div>
         <main className="flex-1 overflow-y-auto p-4 pb-28 md:p-8 print:overflow-visible print:p-0">

@@ -32,6 +32,7 @@ import { sendTransferRequest } from "@/app/actions/transfer-actions";
 import { toast } from "sonner";
 import { BulkRegionDialog } from "./table/bulk-region-dialog";
 
+import { cn } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -386,11 +387,10 @@ export function TaxDataTable({
             </DropdownMenu>
           </div>
         </div>
-      )}
-
+      )}      {/* Desktop Table View */}
       <div 
         ref={parentRef}
-        className="border-border/50 bg-background relative overflow-auto rounded-xl border shadow-lg max-h-[70vh]"
+        className="hidden md:block border-border/50 bg-background relative overflow-auto rounded-2xl border shadow-xl max-h-[70vh]"
       >
         <Table>
           <TableHeader className="bg-muted/30 sticky top-0 z-20 backdrop-blur-md">
@@ -409,7 +409,6 @@ export function TaxDataTable({
               <TableHead className="flex w-[120px] items-center justify-end font-bold">Tagihan</TableHead>
               <TableHead className="flex w-[120px] items-center font-bold">Status</TableHead>
               <TableHead className="flex w-[150px] items-center font-bold">Penarik</TableHead>
-
             </TableRow>
           </TableHeader>
 
@@ -456,6 +455,102 @@ export function TaxDataTable({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div 
+        ref={parentRef}
+        className="md:hidden space-y-3 overflow-y-auto max-h-[80vh] pb-24"
+      >
+        {isLoading ? (
+          <div className="space-y-3">
+             {[1,2,3,4,5].map(i => (
+               <div key={i} className="h-32 w-full animate-pulse bg-muted rounded-2xl" />
+             ))}
+          </div>
+        ) : displayData.length === 0 ? (
+          <div className="text-muted-foreground py-20 text-center text-sm italic bg-muted/20 rounded-2xl border border-dashed border-border">
+            Data tidak ditemukan
+          </div>
+        ) : (
+          <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const item = displayData[virtualRow.index];
+              if (!item) return null;
+              
+              const isLunas = item.paymentStatus === "LUNAS";
+              
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    paddingBottom: '12px',
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  <div 
+                    onClick={() => setSelectedDetailItem(item)}
+                    className={cn(
+                      "bg-card border border-border/50 rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all flex flex-col gap-3 relative overflow-hidden",
+                      selectedIds.has(item.id) && "ring-2 ring-primary bg-primary/5 border-primary/20",
+                      isLunas ? "border-l-4 border-l-emerald-500" : "border-l-4 border-l-amber-500"
+                    )}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">NOP: {item.nop}</span>
+                        <h3 className="font-bold text-sm truncate uppercase">{item.namaWp}</h3>
+                        <p className="text-[10px] text-muted-foreground truncate italic">{item.alamatObjek || "Tanpa Alamat"}</p>
+                      </div>
+                      <div 
+                        onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}
+                        className="p-1 -mr-2"
+                      >
+                         <Checkbox checked={selectedIds.has(item.id)} className="h-5 w-5 rounded-lg border-primary/20" />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Tagihan</span>
+                        <span className="font-black text-sm text-primary">
+                          {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.ketetapan)}
+                        </span>
+                      </div>
+                      
+                      <div className={cn(
+                        "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
+                        isLunas ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      )}>
+                        {isLunas ? "Lunas" : "Blm Lunas"}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-border/50 pt-3">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black">
+                          {(item.penarik?.name || "?").charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-[10px] font-bold text-muted-foreground tracking-tight truncate max-w-[100px]">
+                           {item.penarik?.name || "Belum Ada"}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-400">
+                        <MapPin className="h-3 w-3" />
+                        <span>{item.dusun || "-"} · RT {item.rt}/{item.rw}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <TaxTablePagination
