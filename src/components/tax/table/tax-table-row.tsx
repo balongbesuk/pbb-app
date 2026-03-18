@@ -37,6 +37,7 @@ export function TaxTableRow({
           <Checkbox
             checked={selected}
             onCheckedChange={() => onToggle(item.id)}
+            disabled={role === "PENARIK" && item.paymentStatus === "LUNAS"}
             aria-label="Select row"
           />
         </div>

@@ -247,7 +247,9 @@ export function TaxDataTable({
 
   const selectedSum = Array.from(selectedIds).reduce((acc, id) => {
     const item = displayData.find((d: TaxDataItem) => d.id === id);
-    return acc + (item ? item.ketetapan : 0);
+    if (!item) return acc;
+    if (currentUser?.role === "PENARIK" && item.paymentStatus === "LUNAS") return acc;
+    return acc + (item.sisaTagihan > 0 ? item.sisaTagihan : item.ketetapan); // Fallback to ketetapan if sisaTagihan not yet populated
   }, 0);
 
   const handleTransferRequestAction = async (
@@ -260,12 +262,20 @@ export function TaxDataTable({
     else toast.error(res.message);
   };
 
+  const getSelectableItems = () => {
+    if (currentUser?.role === "PENARIK") {
+      return displayData.filter((d: TaxDataItem) => d.paymentStatus !== "LUNAS");
+    }
+    return displayData;
+  };
+
   const toggleSelectAll = () => {
-    if (selectedIds.size === displayData.length) {
+    const selectable = getSelectableItems();
+    if (selectedIds.size >= selectable.length && selectable.length > 0) {
       setSelectedIds(new Set());
       setIsAllFilteredSelected(false);
     } else {
-      setSelectedIds(new Set(displayData.map((d: TaxDataItem) => d.id)));
+      setSelectedIds(new Set(selectable.map((d: TaxDataItem) => d.id)));
     }
   };
 
