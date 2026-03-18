@@ -275,6 +275,7 @@ export function TaxDataTable({
         isFetching={isFetching && !isLoading}
       />
 
+      {/* Desktop & Mobile Mass Actions */}
       {selectedIds.size > 0 && currentUser?.role !== "PENGGUNA" && (
         <div className="bg-primary/5 border-primary/20 animate-in fade-in zoom-in-95 duration-300 flex flex-col gap-4 rounded-2xl border p-4 shadow-xl shadow-primary/5 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
@@ -304,90 +305,83 @@ export function TaxDataTable({
                   onClick={() => setIsAllFilteredSelected(true)}
                   className="text-primary/70 hover:text-primary w-fit text-left text-[11px] font-bold underline decoration-primary/30 underline-offset-4 transition-colors"
                 >
-                  Pilih seluruh <span className="text-primary font-black">{displayTotal.toLocaleString("id-ID")}</span> data sesuai filter saat ini
-                </button>
-              )}
-              
-              {isAllFilteredSelected && (
-                <button 
-                  onClick={() => {
-                    setSelectedIds(new Set());
-                    setIsAllFilteredSelected(false);
-                  }}
-                  className="text-primary/70 hover:text-primary w-fit text-left text-[11px] font-bold underline decoration-primary/30 underline-offset-4 transition-colors"
-                >
-                  Batalkan pilihan masal
+                  Pilih seluruh <span className="text-primary font-black">{displayTotal.toLocaleString("id-ID")}</span> data sesuai filter
                 </button>
               )}
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-primary/30 hover:bg-primary/10 h-10 rounded-xl px-4 text-xs font-bold transition-all text-primary dark:bg-primary/5 disabled:opacity-30"
-              onClick={() => setIsBulkRegionOpen(true)}
-            >
-              <MapPin className="mr-2 h-4 w-4" />
-              Atur Wilayah
-            </Button>
+          {/* Action buttons - only for ADMIN */}
+          {currentUser?.role === "ADMIN" && (
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-primary/30 hover:bg-primary/10 h-10 rounded-xl px-4 text-xs font-bold transition-all text-primary dark:bg-primary/5"
+                onClick={() => setIsBulkRegionOpen(true)}
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                Atur Wilayah
+              </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button 
-                    className="shadow-primary/20 h-10 rounded-xl px-5 text-xs font-black shadow-lg transition-all hover:scale-[1.02] active:scale-95" 
-                    disabled={isAssigning}
-                  >
-                    {isAssigning ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <User className="mr-2 h-4 w-4" />
-                    )}
-                    Alokasikan ({isAllFilteredSelected ? displayTotal : selectedIds.size})
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="end" className="w-[260px] rounded-2xl border-none p-2 shadow-2xl">
-                <DropdownMenuGroup>
-                  <DropdownMenuLabel className="text-muted-foreground px-3 pt-3 pb-2 text-[10px] font-bold tracking-widest uppercase">
-                    Pilih Penarik Kolektor
-                  </DropdownMenuLabel>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator className="opacity-50" />
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive flex cursor-pointer gap-2 rounded-xl px-3 py-2.5 font-bold transition-colors"
-                  onClick={() => handleBulkAssign(null)}
-                >
-                  <UserMinus className="h-4 w-4" /> 
-                  <span>Kosongkan Alokasi</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="opacity-50" />
-                <div className="max-h-[320px] space-y-1 overflow-y-auto pr-1">
-                  {penariks.map((p) => (
-                    <DropdownMenuItem
-                      key={p.id}
-                      onClick={() => handleBulkAssign(p.id)}
-                      className="group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all focus:bg-primary/5"
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button 
+                      className="shadow-primary/20 h-10 rounded-xl px-5 text-xs font-black shadow-lg transition-all hover:scale-[1.02] active:scale-95" 
+                      disabled={isAssigning}
                     >
-                      <div className="bg-primary/10 text-primary group-focus:bg-primary/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition-colors">
-                        {(p.name || "?").charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex flex-col truncate">
-                        <span className="truncate text-sm font-bold tracking-tight">{p.name}</span>
-                        <span className="text-muted-foreground group-focus:text-primary/70 truncate text-[10px] font-medium italic">
-                          {p.dusun || "-"} • RT {p.rt || "0"}/{p.rw || "0"}
-                        </span>
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                      {isAssigning ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <User className="mr-2 h-4 w-4" />
+                      )}
+                      Alokasikan ({isAllFilteredSelected ? displayTotal : selectedIds.size})
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="end" className="w-[260px] rounded-2xl border-none p-2 shadow-2xl">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="text-muted-foreground px-3 pt-3 pb-2 text-[10px] font-bold tracking-widest uppercase">
+                      Pilih Penarik Kolektor
+                    </DropdownMenuLabel>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator className="opacity-50" />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive flex cursor-pointer gap-2 rounded-xl px-3 py-2.5 font-bold transition-all"
+                    onClick={() => handleBulkAssign(null)}
+                  >
+                    <UserMinus className="h-4 w-4" /> 
+                    <span>Kosongkan Alokasi</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="opacity-50" />
+                  <div className="max-h-[320px] space-y-1 overflow-y-auto pr-1">
+                    {penariks.map((p) => (
+                      <DropdownMenuItem
+                        key={p.id}
+                        onClick={() => handleBulkAssign(p.id)}
+                        className="group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all focus:bg-primary/5"
+                      >
+                        <div className="bg-primary/10 text-primary group-focus:bg-primary/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition-colors">
+                          {(p.name || "?").charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex flex-col truncate">
+                          <span className="truncate text-sm font-bold tracking-tight">{p.name}</span>
+                          <span className="text-muted-foreground group-focus:text-primary/70 truncate text-[10px] font-medium italic">
+                            {p.dusun || "-"} • RT {p.rt || "0"}/{p.rw || "0"}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </div>
-      )}      {/* Unified Virtualized Container */}
+      )}
+
+      {/* Unified Virtualized Container */}
       <div 
         ref={parentRef}
         className="border-border/50 bg-background relative overflow-auto rounded-2xl border shadow-xl max-h-[75vh] min-h-[400px]"
@@ -409,11 +403,11 @@ export function TaxDataTable({
           {isLoading ? (
             <div className="p-8 text-center flex flex-col items-center justify-center gap-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm font-medium animate-pulse">Memuat Data...</p>
+              <p className="text-sm font-medium animate-pulse">Memuat Data Pajak...</p>
             </div>
           ) : displayData.length === 0 ? (
             <div className="flex items-center justify-center h-40 text-muted-foreground italic text-sm">
-               Data tidak ditemukan
+               Data pajak tidak ditemukan
             </div>
           ) : (
             rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -451,59 +445,91 @@ export function TaxDataTable({
                     />
                   </div>
 
-                  {/* Mobile view (below md) */}
+                  {/* Mobile Card Redesign (below md) */}
                   <div className="md:hidden p-2">
                     <div 
                       onClick={() => setSelectedDetailItem(item)}
                       className={cn(
-                        "bg-card border border-border/50 rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all flex flex-col gap-3 relative overflow-hidden",
-                        selectedIds.has(item.id) && "ring-2 ring-primary bg-primary/5 border-primary/20",
-                        isLunas ? "border-l-4 border-l-emerald-500" : "border-l-4 border-l-amber-500"
+                        "group relative flex flex-col gap-4 p-4 rounded-3xl border transition-all duration-300 overflow-hidden",
+                        selectedIds.has(item.id) 
+                          ? "bg-primary/10 border-primary ring-1 ring-primary/20 shadow-lg shadow-primary/10" 
+                          : "bg-white dark:bg-zinc-900/50 border-border/80 shadow-md",
                       )}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">NOP: {item.nop}</span>
-                          <h3 className="font-bold text-sm truncate uppercase">{item.namaWp}</h3>
-                          <p className="text-[10px] text-muted-foreground truncate italic">{item.alamatObjek || "Tanpa Alamat"}</p>
+                      {/* Status Accent Strip */}
+                      <div className={cn(
+                        "absolute top-0 right-0 w-32 h-10 opacity-10 rotate-12 blur-2xl -mr-10 -mt-2 transition-colors",
+                        isLunas ? "bg-emerald-500" : "bg-amber-500"
+                      )} />
+
+                      <div className="flex items-start justify-between z-10">
+                        <div className="flex-1 space-y-1.5 min-w-0">
+                          <div className="flex items-center gap-2">
+                             <div className={cn(
+                               "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border",
+                               isLunas 
+                                 ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" 
+                                 : "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
+                             )}>
+                               {isLunas ? "Terbayar" : "Tertunggak"}
+                             </div>
+                             <span className="text-[10px] font-mono font-bold text-muted-foreground opacity-60">
+                               {item.nop}
+                             </span>
+                          </div>
+                          <h3 className="font-black text-base text-foreground tracking-tight uppercase leading-tight truncate">
+                            {item.namaWp}
+                          </h3>
+                          <p className="text-[10px] font-medium text-muted-foreground line-clamp-1 italic opacity-80">
+                            {item.alamatObjek || "Alamat tidak tersedia"}
+                          </p>
                         </div>
+                        
                         <div 
                           onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}
-                          className="p-1 -mr-2"
+                          className="flex h-10 w-10 items-center justify-center -mr-2"
                         >
-                           <Checkbox checked={selectedIds.has(item.id)} className="h-5 w-5 rounded-lg border-primary/20" />
+                           <Checkbox 
+                             checked={selectedIds.has(item.id)} 
+                             className="h-6 w-6 rounded-lg border-primary/20 bg-background/50 shadow-sm" 
+                           />
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-1">
-                        <div className="flex flex-col">
-                          <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Tagihan</span>
-                          <span className="font-black text-sm text-primary">
-                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.ketetapan)}
-                          </span>
-                        </div>
-                        
-                        <div className={cn(
-                          "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
-                          isLunas ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                        )}>
-                          {isLunas ? "Lunas" : "Blm Lunas"}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-border/50 pt-3">
-                        <div className="flex items-center gap-2">
-                          <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black">
-                            {(item.penarik?.name || "?").charAt(0).toUpperCase()}
+                      <div className="flex items-end justify-between z-10 pt-1">
+                        <div className="space-y-0.5">
+                          <span className="text-[9px] font-black text-muted-foreground uppercase opacity-40">Ketetapan Pajak</span>
+                          <div className="text-xl font-black text-primary tracking-tighter flex items-baseline gap-1">
+                            <span className="text-xs">Rp</span>
+                            {new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(item.ketetapan)}
                           </div>
-                          <span className="text-[10px] font-bold text-muted-foreground tracking-tight truncate max-w-[100px]">
-                             {item.penarik?.name || "Belum Ada"}
-                          </span>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1.5">
+                          <div className="flex items-center gap-1.5 bg-muted/40 px-2 py-1 rounded-lg border border-border/50">
+                            <MapPin className="h-3 w-3 text-primary" />
+                            <span className="text-[10px] font-black uppercase tracking-tight text-foreground/80">
+                               {item.dusun || "-"} · RT {item.rt}/{item.rw}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between border-t border-dashed border-border/50 pt-3 mt-1 z-10">
+                        <div className="flex items-center gap-2">
+                           <div className="bg-primary/5 text-primary h-7 w-7 rounded-full flex items-center justify-center border border-primary/10">
+                              <User className="h-3.5 w-3.5" />
+                           </div>
+                           <div className="flex flex-col">
+                             <span className="text-[8px] font-black uppercase text-muted-foreground tracking-widest">Kolektor</span>
+                             <span className="text-[10px] font-bold text-foreground/70 tracking-tight">
+                               {item.penarik?.name || "Tanpa Alokasi"}
+                             </span>
+                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-400">
-                          <MapPin className="h-3 w-3" />
-                          <span>{item.dusun || "-"} · RT {item.rt}/{item.rw}</span>
+                        <div className="h-8 w-8 rounded-full bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center border border-border/50">
+                           <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
                         </div>
                       </div>
                     </div>
