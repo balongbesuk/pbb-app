@@ -277,6 +277,7 @@ export function TaxDataTable({
         onPrint={handlePrint}
         showPrint={currentUser?.role !== "PENGGUNA"}
         isFetching={isFetching && !isLoading}
+        currentUser={currentUser}
       />
 
       {/* Desktop & Mobile Mass Actions */}

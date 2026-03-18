@@ -9,10 +9,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Printer, Loader2 } from "lucide-react";
+import { Search, Printer, Loader2, User } from "lucide-react";
 import type { AvailableFilters } from "@/types/app";
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import type { AppUser } from "@/types/app";
+import { cn } from "@/lib/utils";
 
 interface TaxTableFiltersProps {
   search: string;
@@ -32,6 +34,7 @@ interface TaxTableFiltersProps {
   onPrint: () => void;
   showPrint: boolean;
   isFetching?: boolean;
+  currentUser?: AppUser;
 }
 
 export function TaxTableFilters({
@@ -52,6 +55,7 @@ export function TaxTableFilters({
   onPrint,
   showPrint,
   isFetching,
+  currentUser,
 }: TaxTableFiltersProps) {
   const searchParams = useSearchParams();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -188,18 +192,37 @@ export function TaxTableFilters({
         </div>
       </div>
       <div className="flex flex-col-reverse items-center justify-between gap-2 sm:flex-row">
-        {showPrint ? (
-          <Button
-            onClick={onPrint}
-            variant="outline"
-            size="sm"
-            className="h-9 w-full gap-2 rounded-xl border-border bg-muted/20 text-[10px] font-bold tracking-widest text-muted-foreground uppercase shadow-sm transition-colors hover:bg-muted/30 sm:w-auto"
-          >
-            <Printer className="h-3.5 w-3.5" /> Cetak / Export Data
-          </Button>
-        ) : (
-          <div></div>
-        )}
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          {showPrint && (
+            <Button
+              onClick={onPrint}
+              variant="outline"
+              size="sm"
+              className="h-9 w-full gap-2 rounded-xl border-border bg-muted/20 text-[10px] font-bold tracking-widest text-muted-foreground uppercase shadow-sm transition-colors hover:bg-muted/30 sm:w-auto"
+            >
+              <Printer className="h-3.5 w-3.5" /> Cetak Layar Data
+            </Button>
+          )}
+          {currentUser?.role === "PENARIK" && currentUser?.id && (
+            <Button
+              onClick={() => {
+                if (filterPenarik === currentUser.id) onPenarikChange("all");
+                else onPenarikChange(currentUser.id);
+              }}
+              variant={filterPenarik === currentUser.id ? "default" : "outline"}
+              size="sm"
+              className={cn(
+                "h-9 w-full sm:w-auto gap-2 rounded-xl text-[10px] font-bold tracking-widest uppercase shadow-sm transition-colors",
+                filterPenarik === currentUser.id 
+                  ? "bg-primary text-primary-foreground shadow-primary/20" 
+                  : "border-border bg-amber-500/10 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20"
+              )}
+            >
+              <User className="h-3.5 w-3.5" /> 
+              {filterPenarik === currentUser.id ? "Menampilkan Tugas Saya" : "Tampilkan Tugas Saya"}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

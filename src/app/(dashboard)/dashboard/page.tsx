@@ -29,6 +29,30 @@ import Link from "next/link";
 import { getVillageConfig } from "@/app/actions/settings-actions";
 import { formatCurrency, toTitleCase, cn } from "@/lib/utils";
 import Image from "next/image";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+async function getPenarikPersonalStats(userId: string, tahun: number) {
+  const [all, lunas] = await Promise.all([
+    prisma.taxData.aggregate({
+      where: { penarikId: userId, tahun },
+      _sum: { ketetapan: true },
+      _count: true,
+    }),
+    prisma.taxData.aggregate({
+      where: { penarikId: userId, tahun, paymentStatus: "LUNAS" },
+      _sum: { pembayaran: true },
+      _count: true,
+    }),
+  ]);
+
+  return {
+    totalTarget: all._sum.ketetapan || 0,
+    totalWp: all._count || 0,
+    totalLunas: lunas._sum.pembayaran || 0,
+    wpLunas: lunas._count || 0,
+  };
+}
 
 async function getDashboardStats(tahun: number = new Date().getFullYear()) {
   const [
@@ -141,11 +165,18 @@ export default async function DashboardPage({
 }) {
   const params = await searchParams;
   const currentYear = parseInt(params.tahun || new Date().getFullYear().toString());
+  const session = await getServerSession(authOptions);
+  const currentUser = session?.user as any;
+
   const [stats, villageConfig] = await Promise.all([
     getDashboardStats(currentYear),
     getVillageConfig(),
   ]);
 
+  let personalStats = null;
+  if (currentUser?.role === "PENARIK" && currentUser?.id) {
+    personalStats = await getPenarikPersonalStats(currentUser.id, currentYear);
+  }
 
   return (
     <div className="animate-in fade-in space-y-8 duration-700">
@@ -180,6 +211,51 @@ export default async function DashboardPage({
         <DashboardFilters />
       </div>
 
+      {personalStats && (
+        <div className="bg-primary/5 border-primary/20 animate-in slide-in-from-top-4 relative overflow-hidden rounded-3xl border p-6 shadow-xl sm:p-8">
+          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-2">
+              <h2 className="text-primary text-2xl font-black tracking-tight">Halo, {currentUser?.name}! 👋</h2>
+              <p className="text-muted-foreground text-sm font-medium">
+                Ini adalah progress penagihan PBB Anda untuk tahun <strong>{currentYear}</strong>. Semangat berkeliling!
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-4 lg:gap-8">
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Target Kelunasan</p>
+                <div className="text-foreground text-2xl font-black">{formatCurrency(personalStats.totalTarget)}</div>
+                <p className="text-xs font-medium text-amber-600 dark:text-amber-500">Sisa {personalStats.totalWp - personalStats.wpLunas} WP Belum Bayar</p>
+              </div>
+              
+              <div className="hidden h-12 w-px bg-primary/20 sm:block"></div>
+
+              <div className="space-y-1">
+                <p className="text-primary text-[10px] font-bold tracking-widest uppercase">Telah Terkumpul</p>
+                <div className="text-emerald-600 dark:text-emerald-400 text-2xl font-black">{formatCurrency(personalStats.totalLunas)}</div>
+                <p className="text-xs font-medium text-emerald-600 dark:text-emerald-500">{personalStats.wpLunas} WP Lunas</p>
+              </div>
+
+              <div className="hidden h-12 w-px bg-primary/20 sm:block"></div>
+
+              <div className="w-full sm:w-32 lg:w-48">
+                <div className="mb-2 flex items-center justify-between text-xs font-bold">
+                  <span className="text-primary">Progress</span>
+                  <span className="text-primary">{personalStats.totalTarget > 0 ? ((personalStats.totalLunas / personalStats.totalTarget) * 100).toFixed(1) : 0}%</span>
+                </div>
+                <div className="h-3 w-full overflow-hidden rounded-full bg-primary/10">
+                  <div 
+                    className="h-full rounded-full bg-primary shadow-lg transition-all duration-1000 ease-out" 
+                    style={{ width: `${personalStats.totalTarget > 0 ? Math.min((personalStats.totalLunas / personalStats.totalTarget) * 100, 100) : 0}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-primary/10 absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-50 pointer-events-none" />
+          <div className="bg-primary/5 absolute -bottom-24 -left-24 h-64 w-64 rounded-full blur-3xl opacity-50 pointer-events-none" />
+        </div>
+      )}
 
       {/* Main Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
