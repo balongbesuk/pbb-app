@@ -147,12 +147,16 @@ export async function bulkUpdatePaymentStatus(
       })
     );
 
+    // Append WP names into the log
+    const wpNames = taxDataRecords.map(d => d.namaWp).join(", ");
+    const limitedNames = wpNames.length > 60 ? wpNames.substring(0, 57) + "..." : wpNames;
+
     // Create single audit log for bulk
     await createAuditLog(
       "UPDATE_PAYMENT",
       "TaxData",
-      null,
-      `Merubah status pembayaran ${updatedCount} data WP menjadi ${paymentStatus}`
+      limitedNames,
+      `Ubah status pembayaran ${updatedCount} data WP menjadi ${paymentStatus}`
     );
 
     revalidatePath("/data-pajak");
