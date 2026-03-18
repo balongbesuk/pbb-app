@@ -2,6 +2,7 @@
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { BottomNavbar } from "@/components/layout/bottom-navbar";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 
@@ -32,9 +33,12 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         <div className="print:hidden">
           <Topbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
         </div>
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 print:overflow-visible print:p-0">
+        <main className="flex-1 overflow-y-auto p-4 pb-28 md:p-8 print:overflow-visible print:p-0">
           {children}
         </main>
+      </div>
+      <div className="print:hidden">
+        <BottomNavbar />
       </div>
     </div>
   );

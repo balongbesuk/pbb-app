@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Search, Printer, Loader2 } from "lucide-react";
 import type { AvailableFilters } from "@/types/app";
+import { useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface TaxTableFiltersProps {
   search: string;
@@ -51,6 +53,17 @@ export function TaxTableFilters({
   showPrint,
   isFetching,
 }: TaxTableFiltersProps) {
+  const searchParams = useSearchParams();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (searchParams.get("focus") === "search") {
+      inputRef.current?.focus();
+      // Optional: scroll into view
+      inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [searchParams]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
@@ -58,6 +71,7 @@ export function TaxTableFilters({
           <form onSubmit={onSearchSubmit} className="relative flex-1 sm:min-w-[300px]">
             <Search className="absolute top-1/2 left-3.5 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
             <Input
+              ref={inputRef}
               placeholder="Cari NOP atau Nama..."
               className="focus-visible:ring-primary/20 h-10 rounded-xl border-border bg-muted/20 pl-10 text-xs font-medium transition-all"
               value={search}
