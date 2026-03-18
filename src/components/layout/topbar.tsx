@@ -129,15 +129,13 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-border/50" />
-                {(session?.user as any)?.role !== "PENARIK" && (
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => router.push("/settings/profile")}
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profil &amp; Password</span>
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => router.push("/settings/profile")}
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profil &amp; Password</span>
+                </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator className="bg-border/50" />
               <DropdownMenuItem

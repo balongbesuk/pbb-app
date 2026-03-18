@@ -29,7 +29,7 @@ const PUBLIC_API_PREFIXES = ["/api/auth", "/api/village-config", "/api/download-
 
 const ADMIN_ONLY_ROUTES = ["/upload-pbb", "/pengguna", "/settings", "/log-aktivitas"];
 const ADMIN_ONLY_API_PREFIXES = [
-  "/api/backup", "/api/restore", "/api/upload-avatar", 
+  "/api/backup", "/api/restore", 
   "/api/upload-logo", "/api/export-tax", "/api/export-laporan-excel", "/api/backup-assignments"
 ];
 
@@ -40,6 +40,7 @@ function isPublicRoute(pathname: string): boolean {
 }
 
 function isAdminOnlyRoute(pathname: string): boolean {
+  if (pathname.startsWith("/settings/profile")) return false;
   if (ADMIN_ONLY_ROUTES.some((route) => pathname.startsWith(route))) return true;
   if (ADMIN_ONLY_API_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return true;
   return false;
