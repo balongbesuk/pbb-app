@@ -32,7 +32,7 @@ export function TaxTableRow({
       onClick={() => onOpenDetail(item)}
       style={style}
     >
-      {role !== "PENGGUNA" && (
+      {role === "ADMIN" && (
         <div onClick={(e) => e.stopPropagation()} className="flex w-[50px] items-center justify-center p-1 sm:p-2 shrink-0">
           <Checkbox
             checked={selected}

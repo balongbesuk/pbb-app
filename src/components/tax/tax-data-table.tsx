@@ -280,7 +280,7 @@ export function TaxDataTable({
       />
 
       {/* Desktop & Mobile Mass Actions */}
-      {selectedIds.size > 0 && currentUser?.role !== "PENGGUNA" && (
+      {selectedIds.size > 0 && currentUser?.role === "ADMIN" && (
         <div className="bg-primary/5 border-primary/20 animate-in fade-in zoom-in-95 duration-300 flex flex-col gap-4 rounded-2xl border p-4 shadow-xl shadow-primary/5 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-xl">
@@ -316,8 +316,7 @@ export function TaxDataTable({
           </div>
           
           {/* Action buttons - only for ADMIN */}
-          {currentUser?.role === "ADMIN" && (
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -381,7 +380,6 @@ export function TaxDataTable({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          )}
         </div>
       )}
 
@@ -395,7 +393,7 @@ export function TaxDataTable({
         <div className="md:min-w-[1100px]">
           {/* Desktop Table Header (Sticky) — hidden on mobile */}
           <div className="hidden md:flex sticky top-0 z-30 bg-muted border-b border-border/80 w-full items-center h-12 px-4 text-foreground font-black uppercase tracking-tight text-[11px]">
-            {currentUser?.role !== "PENGGUNA" && <div className="w-[50px] shrink-0" />}
+            {currentUser?.role === "ADMIN" && <div className="w-[50px] shrink-0" />}
             <div className="w-[180px] shrink-0">NOP</div>
             <div className="flex-1 min-w-[300px] px-4">Nama Wajib Pajak</div>
             <div className="w-[150px] shrink-0 px-4">Wilayah</div>
@@ -490,15 +488,17 @@ export function TaxDataTable({
                           </div>
                         </div>
                         
-                        <div 
-                          onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}
-                          className="flex h-10 w-10 items-center justify-center -mr-2 -mt-1"
-                        >
-                           <Checkbox 
-                             checked={selectedIds.has(item.id)} 
-                             className="h-6 w-6 rounded-lg border-primary/30 bg-background shadow-sm" 
-                           />
-                        </div>
+                        {currentUser?.role === "ADMIN" && (
+                          <div 
+                            onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}
+                            className="flex h-10 w-10 items-center justify-center -mr-2 -mt-1"
+                          >
+                             <Checkbox 
+                               checked={selectedIds.has(item.id)} 
+                               className="h-6 w-6 rounded-lg border-primary/30 bg-background shadow-sm" 
+                             />
+                          </div>
+                        )}
                       </div>
 
                       {/* Section 3: Data Grid - Administrasi & Lokasi */}
