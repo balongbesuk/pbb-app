@@ -126,7 +126,7 @@ export function TaxDataTable({
   const rowVirtualizer = useVirtualizer({
     count: displayData.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 72, 
+    estimateSize: () => (typeof window !== "undefined" && window.innerWidth < 768 ? 200 : 64),
     overscan: 10,
   });
 
@@ -426,6 +426,7 @@ export function TaxDataTable({
                     width: '100%',
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
+                    padding: '8px', 
                   }}
                 >
                   {/* Desktop view (md and up) */}
@@ -446,7 +447,7 @@ export function TaxDataTable({
                   </div>
 
                   {/* Mobile Card Redesign (below md) */}
-                  <div className="md:hidden p-2">
+                  <div className="md:hidden h-full">
                     <div 
                       onClick={() => setSelectedDetailItem(item)}
                       className={cn(
