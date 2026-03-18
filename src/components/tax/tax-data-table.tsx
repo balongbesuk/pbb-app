@@ -450,7 +450,7 @@ export function TaxDataTable({
         <div className="md:min-w-[1100px]">
           {/* Desktop Table Header (Sticky) — hidden on mobile */}
           <div className="hidden md:flex sticky top-0 z-30 bg-muted border-b border-border/80 w-full items-center h-12 px-4 text-foreground font-black uppercase tracking-tight text-[11px]">
-            {currentUser?.role === "ADMIN" && <div className="w-[50px] shrink-0" />}
+            {currentUser?.role !== "PENGGUNA" && <div className="w-[50px] shrink-0" />}
             <div className="w-[180px] shrink-0">NOP</div>
             <div className="flex-1 min-w-[300px] px-4">Nama Wajib Pajak</div>
             <div className="w-[150px] shrink-0 px-4">Wilayah</div>
