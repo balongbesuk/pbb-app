@@ -476,6 +476,7 @@ export function TaxDataTable({
         availableFilters={availableFilters}
         currentUser={currentUser}
         onUpdateStatus={handleUpdateStatus}
+        onTransferRequest={handleTransferRequestAction}
       />
 
       <BulkRegionDialog

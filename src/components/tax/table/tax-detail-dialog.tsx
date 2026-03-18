@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit2, Loader2, Save, User, CheckCircle, Clock, MapPin, X } from "lucide-react";
+import { Edit2, Loader2, Save, User, CheckCircle, Clock, MapPin, X, ArrowRight, Handshake, ChevronRight } from "lucide-react";
 import { updateWpRegion } from "@/app/actions/tax-update-actions";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ interface TaxDetailDialogProps {
   availableFilters: AvailableFilters;
   currentUser: AppUser | undefined;
   onUpdateStatus: (id: string, status: PaymentStatus) => void;
+  onTransferRequest: (taxId: number, receiverId: string, type: "GIVE" | "TAKE") => void;
 }
 
 export function TaxDetailDialog({
@@ -34,6 +35,7 @@ export function TaxDetailDialog({
   availableFilters,
   currentUser,
   onUpdateStatus,
+  onTransferRequest,
 }: TaxDetailDialogProps) {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
@@ -42,6 +44,8 @@ export function TaxDetailDialog({
   const [editRw, setEditRw] = useState(item?.rw || "");
   const [isUpdating, setIsUpdating] = useState(false);
   const [isStatusLoading, setIsStatusLoading] = useState(false);
+  const [selectedTransferPenarik, setSelectedTransferPenarik] = useState<string>("");
+  const [isTransferSubmitting, setIsTransferSubmitting] = useState(false);
 
   useEffect(() => {
     if (item) {
@@ -53,6 +57,10 @@ export function TaxDetailDialog({
   }, [item]);
 
   if (!item) return null;
+
+  const isAdmin = currentUser?.role === "ADMIN";
+  const isOwner = item.penarikId === currentUser?.id;
+  const canManage = isAdmin || isOwner;
 
   const handleUpdate = async () => {
     // Normalize RT/RW to 2 digits (e.g., "1" -> "01")
@@ -86,6 +94,19 @@ export function TaxDetailDialog({
       onClose();
     } finally {
       setIsStatusLoading(false);
+    }
+  };
+  
+  const handleTransferSubmit = async (type: "GIVE" | "TAKE") => {
+    const receiverId = type === "GIVE" ? selectedTransferPenarik : item.penarikId;
+    if (!receiverId) return;
+    
+    setIsTransferSubmitting(true);
+    try {
+      await onTransferRequest(item.id, receiverId, type);
+      onClose();
+    } finally {
+      setIsTransferSubmitting(false);
     }
   };
 
@@ -185,12 +206,12 @@ export function TaxDetailDialog({
                 <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
                   Wilayah Penagihan
                 </span>
-                {!isEditing && currentUser?.role !== "PENGGUNA" && (
+                {!isEditing && canManage && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setIsEditing(true)}
-                    className="text-primary hover:text-primary hover:bg-primary/5 h-7 rounded-lg px-2 text-xs font-bold"
+                    className="h-7 rounded-lg px-2 text-xs font-bold text-primary hover:bg-primary/5 hover:text-primary"
                   >
                     <Edit2 className="mr-1 h-3 w-3" /> Ubah
                   </Button>
@@ -216,7 +237,7 @@ export function TaxDetailDialog({
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-foreground text-base font-bold">{item.dusun || "-"}</p>
+                    <p className="text-base font-bold text-foreground">{item.dusun || "-"}</p>
                   )}
                 </div>
 
@@ -233,7 +254,7 @@ export function TaxDetailDialog({
                         placeholder="01"
                       />
                     ) : (
-                      <p className="text-foreground font-mono text-base font-bold">
+                      <p className="font-mono text-base font-bold text-foreground">
                         {item.rt || "01"}
                       </p>
                     )}
@@ -250,7 +271,7 @@ export function TaxDetailDialog({
                         placeholder="Contoh: 01"
                       />
                     ) : (
-                      <p className="text-foreground font-mono text-base font-bold">
+                      <p className="font-mono text-base font-bold text-foreground">
                         {item.rw || "01"}
                       </p>
                     )}
@@ -284,13 +305,88 @@ export function TaxDetailDialog({
                 </div>
               )}
             </div>
+            {currentUser?.role === "PENARIK" && !isEditing && (
+              <div className="mt-6 space-y-4 border-t border-zinc-100 pt-6 dark:border-zinc-800">
+                <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+                  Pemindahan Alokasi
+                </span>
+                
+                {item.penarikId === currentUser.id ? (
+                  // GIVE Logic
+                  <div className="space-y-3">
+                    <Select value={selectedTransferPenarik} onValueChange={(v) => setSelectedTransferPenarik(v || "")}>
+                      <SelectTrigger className="h-10 rounded-xl border-zinc-200 bg-white text-xs dark:bg-zinc-950">
+                        <span className="truncate">
+                          {selectedTransferPenarik 
+                            ? availableFilters.penarik.find(p => p.id === selectedTransferPenarik)?.name 
+                            : "Pilih Petugas Penerima"}
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableFilters.penarik
+                          .filter((p) => p.id !== currentUser.id)
+                          .map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      onClick={() => handleTransferSubmit("GIVE")}
+                      disabled={!selectedTransferPenarik || isTransferSubmitting}
+                      className="h-10 w-full rounded-xl bg-emerald-500/10 text-xs font-bold text-emerald-600 hover:bg-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-400"
+                    >
+                      {isTransferSubmitting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <ArrowRight className="mr-2 h-4 w-4" />
+                      )}
+                      Kirim ke Petugas Lain
+                    </Button>
+                  </div>
+                ) : (
+                  // TAKE Logic
+                  item.penarikId ? (
+                    <div className="rounded-xl bg-blue-50/50 p-3 dark:bg-blue-900/10">
+                      <div className="mb-3 flex items-center gap-2">
+                        <div className="bg-blue-100 p-1.5 rounded-full dark:bg-blue-900/30">
+                          <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-blue-600/70 font-bold uppercase dark:text-blue-400/70">Milik Petugas</p>
+                          <p className="text-xs font-bold text-blue-700 truncate dark:text-blue-300">{item.penarik?.name || "Lainnya"}</p>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => handleTransferSubmit("TAKE")}
+                        disabled={isTransferSubmitting}
+                        className="h-10 w-full rounded-xl bg-blue-600 text-xs font-bold text-white hover:bg-blue-700 shadow-sm transition-all active:scale-[0.98]"
+                      >
+                        {isTransferSubmitting ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Handshake className="mr-2 h-4 w-4" />
+                        )}
+                        Minta Data WP
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-zinc-200 p-3 text-center dark:border-zinc-800">
+                      <p className="text-[10px] text-muted-foreground font-medium">Belum ada alokasi petugas</p>
+                      <p className="text-[9px] text-muted-foreground/60 mt-1 italic">Hanya ADMIN yang dapat mengatur alokasi awal</p>
+                    </div>
+                  )
+                )}
+              </div>
+            )}
           </div>
         </div>
 
         <div className="h-20 sm:hidden" /> {/* Spacer for sticky button */}
         
         {/* Payment Actions - Responsive placement */}
-        {currentUser?.role !== "PENGGUNA" && !isEditing && (
+        {canManage && !isEditing && (
           <div className="sticky bottom-0 bg-white/80 p-4 backdrop-blur-md sm:relative sm:bg-transparent sm:p-6 sm:pt-4 dark:bg-zinc-950/80">
             <div className="flex flex-col gap-3">
               <Button
