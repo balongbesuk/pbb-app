@@ -15,6 +15,7 @@ import { Loader2, Save, MapPin } from "lucide-react";
 import { updateWpRegionBulk, updateWpRegionByFilter } from "@/app/actions/tax-update-actions";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { normalizeNum } from "@/lib/utils";
 import type { AvailableFilters } from "@/types/app";
 
 interface BulkRegionDialogProps {
@@ -55,14 +56,6 @@ export function BulkRegionDialog({
       toast.error("Pilih dusun, RT, atau RW yang ingin diubah");
       return;
     }
-
-    // Normalize RT/RW
-    const normalizeNum = (val: string) => {
-      if (!val) return val;
-      const num = val.replace(/\D/g, "");
-      if (!num) return "";
-      return num.padStart(2, "0").slice(-2);
-    };
 
     const finalRt = normalizeNum(rt);
     const finalRw = normalizeNum(rw);

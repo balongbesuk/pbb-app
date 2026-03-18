@@ -4,6 +4,7 @@ import { TaxDataTable } from "@/components/tax/tax-data-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import type { AppUser } from "@/types/app";
 
 export default async function DataPajakPage({
   searchParams,
@@ -96,23 +97,22 @@ export default async function DataPajakPage({
     }),
   ]);
 
-  // Extract unique regions for filter dropdowns
   const uniqueDusuns = Array.from(
-    new Set(filterOptions.map((o: any) => o.dusun).filter(Boolean))
+    new Set(filterOptions.map((o) => o.dusun).filter(Boolean))
   ) as string[];
   const uniqueRws = Array.from(
-    new Set(filterOptions.map((o: any) => o.rw).filter(Boolean))
+    new Set(filterOptions.map((o) => o.rw).filter(Boolean))
   ).sort() as string[];
   const uniqueRts = Array.from(
-    new Set(filterOptions.map((o: any) => o.rt).filter(Boolean))
+    new Set(filterOptions.map((o) => o.rt).filter(Boolean))
   ).sort() as string[];
 
   const availableFilters = {
     dusun: uniqueDusuns,
     rw: uniqueRws,
     rt: uniqueRts,
-    penarik: penariks.map((p: any) => ({ id: p.id, name: p.name })),
-    dusunRefs: dusunRefsRaw.map((d: any) => d.name),
+    penarik: penariks.map((p) => ({ id: p.id, name: p.name || "" })),
+    dusunRefs: dusunRefsRaw.map((d) => d.name),
   };
 
   return (
@@ -135,7 +135,7 @@ export default async function DataPajakPage({
             pageSize={pageSize}
             penariks={JSON.parse(JSON.stringify(penariks))}
             availableFilters={availableFilters}
-            currentUser={session?.user as any}
+            currentUser={session?.user as AppUser | undefined}
           />
         </CardContent>
       </Card>

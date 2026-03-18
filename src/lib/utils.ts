@@ -21,3 +21,11 @@ export function formatCurrency(val: number) {
     maximumFractionDigits: 0,
   }).format(val);
 }
+
+/** Normalize RT/RW to 2-digit string: "1" → "01", "12" → "12", "" → "" */
+export function normalizeNum(val: string) {
+  if (!val) return val;
+  const num = val.replace(/\D/g, "");
+  if (!num) return "";
+  return num.padStart(2, "0").slice(-2);
+}

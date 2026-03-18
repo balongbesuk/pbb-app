@@ -16,7 +16,7 @@ import { updateWpRegion } from "@/app/actions/tax-update-actions";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, normalizeNum } from "@/lib/utils";
 import type { TaxDataItem, AppUser, AvailableFilters } from "@/types/app";
 import type { PaymentStatus } from "@prisma/client";
 
@@ -68,14 +68,6 @@ export function TaxDetailDialog({
   const canManage = isAdmin || isOwner;
 
   const handleUpdate = async () => {
-    // Normalize RT/RW to 2 digits (e.g., "1" -> "01")
-    const normalizeNum = (val: string) => {
-      if (!val) return val;
-      const num = val.replace(/\D/g, "");
-      if (!num) return "";
-      return num.padStart(2, "0").slice(-2);
-    };
-
     const finalRt = normalizeNum(editRt);
     const finalRw = normalizeNum(editRw);
 
