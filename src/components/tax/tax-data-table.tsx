@@ -138,6 +138,10 @@ export function TaxDataTable({
     overscan: 25,
   });
 
+  // Force re-measure all items when isMobile changes
+  useEffect(() => {
+    rowVirtualizer.measure();
+  }, [isMobile, rowVirtualizer]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
