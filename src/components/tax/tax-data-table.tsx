@@ -387,99 +387,41 @@ export function TaxDataTable({
             </DropdownMenu>
           </div>
         </div>
-      )}      {/* Desktop Table View */}
+      )}      {/* Unified Virtualized Container */}
       <div 
         ref={parentRef}
-        className="hidden md:block border-border/50 bg-background relative overflow-auto rounded-2xl border shadow-xl max-h-[70vh]"
+        className="border-border/50 bg-background relative overflow-auto rounded-2xl border shadow-xl max-h-[75vh] min-h-[400px]"
       >
-        <Table>
-          <TableHeader className="bg-muted/30 sticky top-0 z-20 backdrop-blur-md">
-            <TableRow className="flex w-full border-b">
-              {currentUser?.role !== "PENGGUNA" && (
-                <TableHead className="flex w-[50px] items-center justify-center">
-                  <Checkbox
-                    checked={displayData.length > 0 && selectedIds.size === displayData.length}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
-              )}
-              <TableHead className="flex w-[180px] items-center font-bold">NOP</TableHead>
-              <TableHead className="flex flex-1 items-center font-bold">Nama Wajib Pajak</TableHead>
-              <TableHead className="flex w-[150px] items-center font-bold">Wilayah</TableHead>
-              <TableHead className="flex w-[120px] items-center justify-end font-bold">Tagihan</TableHead>
-              <TableHead className="flex w-[120px] items-center font-bold">Status</TableHead>
-              <TableHead className="flex w-[150px] items-center font-bold">Penarik</TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-            {isLoading ? (
-              <TaxTableSkeleton rows={10} role={currentUser?.role} />
-            ) : displayData.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={8}
-                  className="text-muted-foreground h-40 text-center text-sm italic"
-                >
-                  Data tidak ditemukan
-                </TableCell>
-              </TableRow>
-            ) : (
-              rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const item = displayData[virtualRow.index];
-                if (!item) return null;
-                return (
-                  <TaxTableRow
-                    key={item.id}
-                    item={item}
-                    selected={selectedIds.has(item.id)}
-                    onToggle={toggleSelect}
-                    onOpenDetail={setSelectedDetailItem}
-                    currentUser={currentUser}
-                    penariks={penariks}
-                    onUpdateStatus={handleUpdateStatus}
-                    onAssignPenarik={handleAssignPenarik}
-                    onTransferRequest={handleTransferRequestAction}
-                    role={currentUser?.role || "PENGGUNA"}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: `${virtualRow.size}px`,
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  />
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Mobile Card View */}
-      <div 
-        ref={parentRef}
-        className="md:hidden space-y-3 overflow-y-auto max-h-[80vh] pb-24"
-      >
-        {isLoading ? (
-          <div className="space-y-3">
-             {[1,2,3,4,5].map(i => (
-               <div key={i} className="h-32 w-full animate-pulse bg-muted rounded-2xl" />
-             ))}
+        <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+          {/* Desktop Table Header (Sticky) */}
+          <div className="hidden md:block sticky top-0 z-30 bg-muted/30 backdrop-blur-md border-b border-border/50">
+            <div className="flex w-full items-center h-12 px-4">
+              {currentUser?.role !== "PENGGUNA" && <div className="w-[50px] shrink-0" />}
+              <div className="w-[180px] shrink-0 text-xs font-black uppercase tracking-wider text-muted-foreground">NOP</div>
+              <div className="flex-1 text-xs font-black uppercase tracking-wider text-muted-foreground">Nama Wajib Pajak</div>
+              <div className="w-[150px] shrink-0 text-xs font-black uppercase tracking-wider text-muted-foreground">Wilayah</div>
+              <div className="w-[120px] shrink-0 text-xs font-black uppercase tracking-wider text-muted-foreground text-right">Tagihan</div>
+              <div className="w-[120px] shrink-0 text-xs font-black uppercase tracking-wider text-muted-foreground px-4">Status</div>
+              <div className="w-[150px] shrink-0 text-xs font-black uppercase tracking-wider text-muted-foreground">Penarik</div>
+            </div>
           </div>
-        ) : displayData.length === 0 ? (
-          <div className="text-muted-foreground py-20 text-center text-sm italic bg-muted/20 rounded-2xl border border-dashed border-border">
-            Data tidak ditemukan
-          </div>
-        ) : (
-          <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+
+          {isLoading ? (
+            <div className="p-8 text-center flex flex-col items-center justify-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm font-medium animate-pulse">Memuat Data...</p>
+            </div>
+          ) : displayData.length === 0 ? (
+            <div className="flex items-center justify-center h-40 text-muted-foreground italic text-sm">
+               Data tidak ditemukan
+            </div>
+          ) : (
+            rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const item = displayData[virtualRow.index];
               if (!item) return null;
               
               const isLunas = item.paymentStatus === "LUNAS";
-              
+
               return (
                 <div
                   key={item.id}
@@ -488,69 +430,89 @@ export function TaxDataTable({
                     top: 0,
                     left: 0,
                     width: '100%',
-                    paddingBottom: '12px',
+                    height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  <div 
-                    onClick={() => setSelectedDetailItem(item)}
-                    className={cn(
-                      "bg-card border border-border/50 rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all flex flex-col gap-3 relative overflow-hidden",
-                      selectedIds.has(item.id) && "ring-2 ring-primary bg-primary/5 border-primary/20",
-                      isLunas ? "border-l-4 border-l-emerald-500" : "border-l-4 border-l-amber-500"
-                    )}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">NOP: {item.nop}</span>
-                        <h3 className="font-bold text-sm truncate uppercase">{item.namaWp}</h3>
-                        <p className="text-[10px] text-muted-foreground truncate italic">{item.alamatObjek || "Tanpa Alamat"}</p>
-                      </div>
-                      <div 
-                        onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}
-                        className="p-1 -mr-2"
-                      >
-                         <Checkbox checked={selectedIds.has(item.id)} className="h-5 w-5 rounded-lg border-primary/20" />
-                      </div>
-                    </div>
+                  {/* Desktop view (md and up) */}
+                  <div className="hidden md:block h-full">
+                    <TaxTableRow
+                      item={item}
+                      selected={selectedIds.has(item.id)}
+                      onToggle={toggleSelect}
+                      onOpenDetail={setSelectedDetailItem}
+                      currentUser={currentUser}
+                      penariks={penariks}
+                      onUpdateStatus={handleUpdateStatus}
+                      onAssignPenarik={handleAssignPenarik}
+                      onTransferRequest={handleTransferRequestAction}
+                      role={currentUser?.role || "PENGGUNA"}
+                      style={{ height: '100%' }}
+                    />
+                  </div>
 
-                    <div className="flex items-center justify-between pt-1">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Tagihan</span>
-                        <span className="font-black text-sm text-primary">
-                          {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.ketetapan)}
-                        </span>
-                      </div>
-                      
-                      <div className={cn(
-                        "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
-                        isLunas ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                      )}>
-                        {isLunas ? "Lunas" : "Blm Lunas"}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between border-t border-border/50 pt-3">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black">
-                          {(item.penarik?.name || "?").charAt(0).toUpperCase()}
+                  {/* Mobile view (below md) */}
+                  <div className="md:hidden p-2">
+                    <div 
+                      onClick={() => setSelectedDetailItem(item)}
+                      className={cn(
+                        "bg-card border border-border/50 rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-all flex flex-col gap-3 relative overflow-hidden",
+                        selectedIds.has(item.id) && "ring-2 ring-primary bg-primary/5 border-primary/20",
+                        isLunas ? "border-l-4 border-l-emerald-500" : "border-l-4 border-l-amber-500"
+                      )}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">NOP: {item.nop}</span>
+                          <h3 className="font-bold text-sm truncate uppercase">{item.namaWp}</h3>
+                          <p className="text-[10px] text-muted-foreground truncate italic">{item.alamatObjek || "Tanpa Alamat"}</p>
                         </div>
-                        <span className="text-[10px] font-bold text-muted-foreground tracking-tight truncate max-w-[100px]">
-                           {item.penarik?.name || "Belum Ada"}
-                        </span>
+                        <div 
+                          onClick={(e) => { e.stopPropagation(); toggleSelect(item.id); }}
+                          className="p-1 -mr-2"
+                        >
+                           <Checkbox checked={selectedIds.has(item.id)} className="h-5 w-5 rounded-lg border-primary/20" />
+                        </div>
                       </div>
-                      
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-400">
-                        <MapPin className="h-3 w-3" />
-                        <span>{item.dusun || "-"} · RT {item.rt}/{item.rw}</span>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Tagihan</span>
+                          <span className="font-black text-sm text-primary">
+                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.ketetapan)}
+                          </span>
+                        </div>
+                        
+                        <div className={cn(
+                          "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
+                          isLunas ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                        )}>
+                          {isLunas ? "Lunas" : "Blm Lunas"}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between border-t border-border/50 pt-3">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black">
+                            {(item.penarik?.name || "?").charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-[10px] font-bold text-muted-foreground tracking-tight truncate max-w-[100px]">
+                             {item.penarik?.name || "Belum Ada"}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-zinc-400">
+                          <MapPin className="h-3 w-3" />
+                          <span>{item.dusun || "-"} · RT {item.rt}/{item.rw}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               );
-            })}
-          </div>
-        )}
+            })
+          )}
+        </div>
       </div>
 
       <TaxTablePagination
