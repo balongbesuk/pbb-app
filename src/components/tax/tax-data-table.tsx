@@ -94,7 +94,7 @@ export function TaxDataTable({
   const [filterPenarik, setFilterPenarik] = useState(penarik || "all");
   const [filterRegionStatus, setFilterRegionStatus] = useState(regionStatus || "all");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [selectedAmounts, setSelectedAmounts] = useState<Map<number, number>>(new Map());
+  const [selectedAmounts, setSelectedAmounts] = useState<Map<number, { amount: number; name: string }>>(new Map());
   const [isAllFilteredSelected, setIsAllFilteredSelected] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isBulkRegionOpen, setIsBulkRegionOpen] = useState(false);
@@ -246,7 +246,7 @@ export function TaxDataTable({
     setIsAssigning(false);
   };
 
-  const selectedSum = Array.from(selectedAmounts.values()).reduce((acc, amount) => acc + amount, 0);
+  const selectedSum = Array.from(selectedAmounts.values()).reduce((acc, obj) => acc + obj.amount, 0);
 
   const handleTransferRequestAction = async (
     taxId: number,
@@ -285,7 +285,10 @@ export function TaxDataTable({
       const newAmounts = new Map(selectedAmounts);
       selectable.forEach((d: TaxDataItem) => {
         newSet.add(d.id);
-        newAmounts.set(d.id, d.sisaTagihan > 0 ? d.sisaTagihan : d.ketetapan);
+        newAmounts.set(d.id, {
+          amount: d.sisaTagihan > 0 ? d.sisaTagihan : d.ketetapan,
+          name: d.namaWp
+        });
       });
       setSelectedIds(newSet);
       setSelectedAmounts(newAmounts);
@@ -303,7 +306,10 @@ export function TaxDataTable({
       newSet.add(id);
       const item = displayData.find((d: TaxDataItem) => d.id === id);
       if (item) {
-        newAmounts.set(id, item.sisaTagihan > 0 ? item.sisaTagihan : item.ketetapan);
+        newAmounts.set(id, { 
+          amount: item.sisaTagihan > 0 ? item.sisaTagihan : item.ketetapan,
+          name: item.namaWp
+        });
       }
     }
     setSelectedIds(newSet);
@@ -437,23 +443,49 @@ export function TaxDataTable({
           )}
 
           {currentUser?.role === "PENARIK" && (
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <div className="flex items-center gap-2 bg-background border px-4 py-2 rounded-xl shadow-inner">
-                 <Calculator className="h-4 w-4 text-muted-foreground" />
-                 <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Total Bayar:</span>
-                 <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(selectedSum)}</span>
+            <div className="flex w-full flex-col gap-3">
+              <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3">
+                <div className="flex items-center gap-2 bg-background border px-4 py-2 rounded-xl shadow-inner w-full sm:w-auto">
+                   <Calculator className="h-4 w-4 text-muted-foreground" />
+                   <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Total Bayar:</span>
+                   <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(selectedSum)}</span>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shadow-primary/20 h-10 w-full sm:w-auto rounded-xl px-4 text-xs font-black shadow-lg transition-all hover:scale-[1.02] active:scale-95 border-emerald-500/30 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100" 
+                    disabled={isAssigning}
+                    onClick={() => handleBulkPayment("LUNAS")}
+                  >
+                    {isAssigning ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
+                    Bayar Sekaligus ({selectedIds.size})
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="shadow-primary/20 h-10 rounded-xl px-4 text-xs font-black shadow-lg transition-all hover:scale-[1.02] active:scale-95 border-emerald-500/30 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100" 
-                  disabled={isAssigning}
-                  onClick={() => handleBulkPayment("LUNAS")}
-                >
-                  {isAssigning ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
-                  Bayar Sekaligus
-                </Button>
+
+              {/* Shopping Cart area for Penarik */}
+              <div className="bg-white/50 dark:bg-zinc-900/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 p-3">
+                <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 flex items-center justify-between">
+                   <span>Daftar PBB Terpilih</span>
+                   <span className="text-zinc-500">Klik 'X' untuk hapus</span>
+                </p>
+                <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1">
+                   {Array.from(selectedAmounts.entries()).map(([id, data]) => (
+                     <div key={id} className="bg-white dark:bg-zinc-800 border shadow-sm rounded-lg px-2 py-1 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-1 duration-300">
+                        <div className="flex flex-col">
+                           <span className="text-[10px] font-bold truncate max-w-[100px]">{data.name}</span>
+                           <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-black">{formatCurrency(data.amount)}</span>
+                        </div>
+                        <button 
+                          onClick={() => toggleSelect(id)}
+                          className="hover:bg-rose-500/10 p-0.5 rounded-md transition-colors group"
+                        >
+                          <XCircle className="h-3 w-3 text-zinc-300 group-hover:text-rose-500" />
+                        </button>
+                     </div>
+                   ))}
+                </div>
               </div>
             </div>
           )}
