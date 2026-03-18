@@ -481,7 +481,7 @@ export function TaxDataTable({
                              ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" 
                              : "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
                          )}>
-                           {isLunas ? "Lunas" : "Tertunggak"}
+                           {isLunas ? "Lunas" : "Blm Lunas"}
                          </div>
                       </div>
 
@@ -536,7 +536,7 @@ export function TaxDataTable({
                               {(item.penarik?.name || "?").charAt(0).toUpperCase()}
                            </div>
                            <div className="flex items-baseline gap-2 overflow-hidden">
-                             <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest leading-none">PENGAMBIL:</span>
+                             <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest leading-none">PENARIK:</span>
                              <span className="text-[10px] font-black text-foreground/60 tracking-tight uppercase truncate max-w-[120px]">
                                {item.penarik?.name || "BELUM DIALOKASIKAN"}
                              </span>
