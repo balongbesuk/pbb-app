@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -14,6 +15,10 @@ export default async function ProfilePage() {
 
   if (!session || !session.user) {
     return <div>Sesi tidak valid. Silakan login kembali.</div>;
+  }
+
+  if ((session.user as any).role === "PENARIK") {
+    redirect("/data-pajak");
   }
 
   const user = await prisma.user.findUnique({
