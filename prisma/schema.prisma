@@ -17,6 +17,7 @@ enum PaymentStatus {
   LUNAS
   BELUM_LUNAS
   TIDAK_TERBIT
+  SUSPEND
 }
 
 model User {

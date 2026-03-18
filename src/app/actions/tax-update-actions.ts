@@ -10,12 +10,12 @@ import { z } from "zod";
 
 const statusSchema = z.object({
   id: z.union([z.string(), z.number()]),
-  paymentStatus: z.enum(["LUNAS", "BELUM_LUNAS", "TIDAK_TERBIT"]),
+  paymentStatus: z.enum(["LUNAS", "BELUM_LUNAS", "TIDAK_TERBIT", "SUSPEND"]),
 });
 
 export async function updatePaymentStatus(
   id: string | number,
-  paymentStatus: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT"
+  paymentStatus: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT" | "SUSPEND"
 ) {
   try {
     statusSchema.parse({ id, paymentStatus });
@@ -89,6 +89,75 @@ export async function updatePaymentStatus(
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");
     return { success: true };
+  } catch (error) {
+    return { success: false, message: formatZodError(error) };
+  }
+}
+
+export async function bulkUpdatePaymentStatus(
+  ids: number[],
+  paymentStatus: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT" | "SUSPEND"
+) {
+  try {
+    if (!ids || ids.length === 0) return { success: false, message: "Tidak ada data yang dipilih" };
+    const { role, userId } = await requireAuth();
+
+    // Fetch the relevant data
+    const taxDataRecords = await prisma.taxData.findMany({
+      where: { id: { in: ids } },
+    });
+
+    if (role === "PENARIK") {
+      const invalid = taxDataRecords.filter(d => d.penarikId !== userId);
+      if (invalid.length > 0) {
+        throw new Error("Anda tidak diperbolehkan mengubah data milik penarik lain.");
+      }
+    }
+
+    const now = new Date();
+
+    // Grouping by status action to batch update easily 
+    // Wait, updating status individually allows correct `pembayaran` values since `ketetapan` differs per row.
+    let updatedCount = 0;
+    
+    // Using transaction for atomic mass upate
+    await prisma.$transaction(
+      taxDataRecords.map(data => {
+        let sisa = data.sisaTagihan;
+        let pembayaran = data.pembayaran;
+
+        if (paymentStatus === "LUNAS") {
+          pembayaran = data.ketetapan;
+          sisa = 0;
+        } else if (paymentStatus === "BELUM_LUNAS" || paymentStatus === "SUSPEND") {
+          pembayaran = 0;
+          sisa = data.ketetapan;
+        }
+
+        updatedCount++;
+        return prisma.taxData.update({
+          where: { id: data.id },
+          data: {
+            paymentStatus,
+            pembayaran,
+            sisaTagihan: sisa,
+            tanggalBayar: paymentStatus === "LUNAS" ? now : null,
+          },
+        });
+      })
+    );
+
+    // Create single audit log for bulk
+    await createAuditLog(
+      "UPDATE_PAYMENT",
+      "TaxData",
+      null,
+      `Merubah status pembayaran ${updatedCount} data WP menjadi ${paymentStatus}`
+    );
+
+    revalidatePath("/data-pajak");
+    revalidatePath("/dashboard");
+    return { success: true, count: updatedCount };
   } catch (error) {
     return { success: false, message: formatZodError(error) };
   }

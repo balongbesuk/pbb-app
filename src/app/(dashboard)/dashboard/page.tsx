@@ -38,7 +38,7 @@ import { authOptions } from "@/lib/auth";
 async function getPenarikPersonalStats(userId: string, tahun: number) {
   const [all, lunas] = await Promise.all([
     prisma.taxData.aggregate({
-      where: { penarikId: userId, tahun },
+      where: { penarikId: userId, tahun, paymentStatus: { in: ["LUNAS", "BELUM_LUNAS"] } },
       _sum: { ketetapan: true },
       _count: true,
     }),
@@ -92,8 +92,8 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
     tanahDenganBangunan,
     totalLuas,
   ] = await Promise.all([
-    prisma.taxData.count({ where: { tahun } }),
-    prisma.taxData.aggregate({ where: { tahun }, _sum: { ketetapan: true } }),
+    prisma.taxData.count({ where: { tahun, paymentStatus: { in: ["LUNAS", "BELUM_LUNAS"] } } }),
+    prisma.taxData.aggregate({ where: { tahun, paymentStatus: { in: ["LUNAS", "BELUM_LUNAS"] } }, _sum: { ketetapan: true } }),
     prisma.taxData.aggregate({
       where: { tahun, paymentStatus: "LUNAS" },
       _sum: { ketetapan: true, pembayaran: true },

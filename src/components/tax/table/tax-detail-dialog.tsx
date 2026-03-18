@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit2, Loader2, Save, User, CheckCircle, Clock, MapPin, X, ArrowRight, Handshake, ChevronRight } from "lucide-react";
+import { Edit2, Loader2, Save, User, CheckCircle, Clock, Ban, MapPin, X, ArrowRight, Handshake, ChevronRight } from "lucide-react";
 import { updateWpRegion } from "@/app/actions/tax-update-actions";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -84,7 +84,7 @@ export function TaxDetailDialog({
     setIsUpdating(false);
   };
 
-  const handleStatusChange = async (status: "LUNAS" | "BELUM_LUNAS") => {
+  const handleStatusChange = async (status: "LUNAS" | "BELUM_LUNAS" | "SUSPEND") => {
     setIsStatusLoading(true);
     try {
       await onUpdateStatus(item.id.toString(), status);
@@ -175,7 +175,9 @@ export function TaxDetailDialog({
                       ? "success"
                       : item.paymentStatus === "BELUM_LUNAS"
                         ? "warning"
-                        : "outline") as any
+                        : item.paymentStatus === "SUSPEND"
+                          ? "destructive"
+                          : "outline") as any
                   }
                   className="rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase"
                 >
@@ -183,7 +185,9 @@ export function TaxDetailDialog({
                     ? "Lunas"
                     : item.paymentStatus === "BELUM_LUNAS"
                       ? "Belum Lunas"
-                      : "Tdk Terbit"}
+                      : item.paymentStatus === "SUSPEND"
+                        ? "Suspend / Sengketa"
+                        : "Tdk Terbit"}
                 </Badge>
               </div>
 
@@ -461,6 +465,18 @@ export function TaxDetailDialog({
                   <Clock className="mr-1.5 h-3.5 w-3.5" />
                 )}
                 BATALKAN
+              </Button>
+              <Button
+                onClick={() => handleStatusChange("SUSPEND")}
+                disabled={isStatusLoading || item.paymentStatus === "SUSPEND"}
+                className="h-10 flex-1 rounded-xl bg-rose-500/10 text-[10px] font-bold text-rose-600 transition-all hover:bg-rose-500/20 disabled:opacity-50 dark:text-rose-500"
+              >
+                {isStatusLoading ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Ban className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                SUSPEND
               </Button>
             </div>
           </div>

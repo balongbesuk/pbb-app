@@ -12,9 +12,9 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User, Loader2, UserMinus, MapPin } from "lucide-react";
+import { User, Loader2, UserMinus, MapPin, Calculator, XCircle, CheckCircle2 } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { updatePaymentStatus } from "@/app/actions/tax-update-actions";
+import { updatePaymentStatus, bulkUpdatePaymentStatus } from "@/app/actions/tax-update-actions";
 import { 
   assignPenarik, 
   assignPenarikBulk, 
@@ -227,6 +227,29 @@ export function TaxDataTable({
     setIsAssigning(false);
   };
 
+  const handleBulkPayment = async (status: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT" | "SUSPEND") => {
+    if (selectedIds.size === 0) return;
+    setIsAssigning(true);
+    
+    // For bulk payments, we only allow explicit selection, no smart filtered selection yet for simplicity
+    const ids = Array.from(selectedIds);
+    const res = await bulkUpdatePaymentStatus(ids, status);
+    
+    if (res.success) {
+      toast.success(`Berhasil mengupdate ${res.count} data wp menjadi ${status}`);
+      setSelectedIds(new Set());
+      setIsAllFilteredSelected(false);
+      queryClient.invalidateQueries({ queryKey: ["tax-data"] });
+    } else toast.error(res.message);
+    
+    setIsAssigning(false);
+  };
+
+  const selectedSum = Array.from(selectedIds).reduce((acc, id) => {
+    const item = displayData.find((d: TaxDataItem) => d.id === id);
+    return acc + (item ? item.ketetapan : 0);
+  }, 0);
+
   const handleTransferRequestAction = async (
     taxId: number,
     receiverId: string,
@@ -281,7 +304,7 @@ export function TaxDataTable({
       />
 
       {/* Desktop & Mobile Mass Actions */}
-      {selectedIds.size > 0 && currentUser?.role === "ADMIN" && (
+      {selectedIds.size > 0 && currentUser?.role !== "PENGGUNA" && (
         <div className="bg-primary/5 border-primary/20 animate-in fade-in zoom-in-95 duration-300 flex flex-col gap-4 rounded-2xl border p-4 shadow-xl shadow-primary/5 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-xl">
@@ -305,7 +328,7 @@ export function TaxDataTable({
                 )}
               </div>
               
-              {displayTotal > displayData.length && !isAllFilteredSelected && selectedIds.size === displayData.length && (
+              {displayTotal > displayData.length && !isAllFilteredSelected && selectedIds.size === displayData.length && currentUser?.role === "ADMIN" && (
                 <button 
                   onClick={() => setIsAllFilteredSelected(true)}
                   className="text-primary/70 hover:text-primary w-fit text-left text-[11px] font-bold underline decoration-primary/30 underline-offset-4 transition-colors"
@@ -316,8 +339,8 @@ export function TaxDataTable({
             </div>
           </div>
           
-          {/* Action buttons - only for ADMIN */}
-          <div className="flex items-center gap-3">
+          {currentUser?.role === "ADMIN" && (
+            <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -381,6 +404,29 @@ export function TaxDataTable({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+          )}
+
+          {currentUser?.role === "PENARIK" && (
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="flex items-center gap-2 bg-background border px-4 py-2 rounded-xl shadow-inner">
+                 <Calculator className="h-4 w-4 text-muted-foreground" />
+                 <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Total Bayar:</span>
+                 <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(selectedSum)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shadow-primary/20 h-10 rounded-xl px-4 text-xs font-black shadow-lg transition-all hover:scale-[1.02] active:scale-95 border-emerald-500/30 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100" 
+                  disabled={isAssigning}
+                  onClick={() => handleBulkPayment("LUNAS")}
+                >
+                  {isAssigning ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
+                  Bayar Sekaligus
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
