@@ -16,6 +16,7 @@ import {
   Home as HomeIcon,
   Layers as LayersIcon,
   Zap as ZapIcon,
+  Clock,
 } from "lucide-react";
 import {
   RWBarChart,
@@ -52,6 +53,23 @@ async function getPenarikPersonalStats(userId: string, tahun: number) {
     totalLunas: lunas._sum.pembayaran || 0,
     wpLunas: lunas._count || 0,
   };
+}
+
+async function getPenarikDailyLog(userId: string) {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const logs = await prisma.auditLog.findMany({
+    where: { 
+      userId, 
+      action: "UPDATE_PAYMENT",
+      createdAt: { gte: startOfDay }
+    },
+    orderBy: { createdAt: "desc" },
+    take: 5
+  });
+  
+  return logs;
 }
 
 async function getDashboardStats(tahun: number = new Date().getFullYear()) {
@@ -174,8 +192,12 @@ export default async function DashboardPage({
   ]);
 
   let personalStats = null;
+  let dailyLogs: any[] = [];
   if (currentUser?.role === "PENARIK" && currentUser?.id) {
-    personalStats = await getPenarikPersonalStats(currentUser.id, currentYear);
+    [personalStats, dailyLogs] = await Promise.all([
+      getPenarikPersonalStats(currentUser.id, currentYear),
+      getPenarikDailyLog(currentUser.id)
+    ]);
   }
 
   return (
@@ -254,6 +276,35 @@ export default async function DashboardPage({
           </div>
           <div className="bg-primary/10 absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-50 pointer-events-none" />
           <div className="bg-primary/5 absolute -bottom-24 -left-24 h-64 w-64 rounded-full blur-3xl opacity-50 pointer-events-none" />
+        </div>
+      )}
+
+      {currentUser?.role === "PENARIK" && dailyLogs?.length > 0 && (
+        <div className="bg-background rounded-3xl border border-border p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="bg-emerald-500/10 rounded-lg p-1.5">
+              <Clock className="h-4 w-4 text-emerald-500" />
+            </div>
+            <h2 className="text-lg font-bold tracking-tight">Riwayat Pekerjaan Hari Ini</h2>
+          </div>
+          <div className="space-y-4">
+            {dailyLogs.map((log: any) => (
+              <div key={log.id} className="flex items-start gap-3 text-sm">
+                <div className="mt-0.5 rounded-full bg-emerald-500/20 p-1">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <p className="font-semibold">{log.details}</p>
+                  <p className="text-xs text-muted-foreground">{log.createdAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB • {log.targetId ? `Wajib Pajak: ${log.targetId}` : "Penagihan"}</p>
+                </div>
+              </div>
+            ))}
+            {dailyLogs.length === 5 && (
+              <p className="text-xs text-muted-foreground italic pt-2 border-t mt-2">
+                Menampilkan 5 aktivitas penagihan terakhir Anda hari ini.
+              </p>
+            )}
+          </div>
         </div>
       )}
 
