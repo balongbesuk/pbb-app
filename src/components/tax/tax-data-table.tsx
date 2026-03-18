@@ -453,8 +453,7 @@ export function TaxDataTable({
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <Button
                     size="sm"
-                    variant="outline"
-                    className="shadow-primary/20 h-10 w-full sm:w-auto rounded-xl px-4 text-xs font-black shadow-lg transition-all hover:scale-[1.02] active:scale-95 border-emerald-500/30 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100" 
+                    className="h-10 w-full sm:w-auto rounded-xl px-6 text-xs font-black shadow-xl transition-all hover:scale-[1.02] active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 shadow-emerald-500/20 border-none" 
                     disabled={isAssigning}
                     onClick={() => handleBulkPayment("LUNAS")}
                   >
