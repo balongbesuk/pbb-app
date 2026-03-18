@@ -1,48 +1,42 @@
 "use client";
 
-import { TableRow, TableCell } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function TaxTableSkeleton({ rows = 5, role = "ADMIN" }: { rows?: number; role?: string }) {
   return (
-    <>
+    <div className="flex flex-col w-full">
       {Array.from({ length: rows }).map((_, i) => (
-        <TableRow key={i} className="animate-in fade-in-50 duration-500">
+        <div key={i} className="flex w-full items-center h-16 border-b border-border/50 animate-in fade-in-50 duration-500 px-4">
           {role !== "PENGGUNA" && (
-            <TableCell>
+            <div className="w-[50px] shrink-0">
               <Skeleton className="h-4 w-4 rounded" />
-            </TableCell>
+            </div>
           )}
-          <TableCell>
+          <div className="w-[180px] shrink-0">
             <Skeleton className="h-4 w-32" />
-          </TableCell>
-          <TableCell>
+          </div>
+          <div className="flex-1">
             <Skeleton className="mb-1 h-4 w-40" />
             <Skeleton className="h-3 w-60" />
-          </TableCell>
-          <TableCell>
+          </div>
+          <div className="w-[150px] shrink-0 px-4">
             <Skeleton className="mb-1 h-3 w-20" />
             <Skeleton className="h-3 w-16" />
-          </TableCell>
-          <TableCell className="text-right">
+          </div>
+          <div className="w-[120px] shrink-0 text-right px-4">
             <Skeleton className="ml-auto h-4 w-24" />
-          </TableCell>
-          <TableCell>
+          </div>
+          <div className="w-[120px] shrink-0 px-4">
             <Skeleton className="h-6 w-20 rounded-full" />
-          </TableCell>
-          <TableCell>
+          </div>
+          <div className="w-[150px] shrink-0 px-4">
             <div className="flex items-center gap-2">
               <Skeleton className="h-6 w-6 rounded-full" />
               <Skeleton className="h-3 w-20" />
             </div>
-          </TableCell>
-          {role !== "PENGGUNA" && (
-            <TableCell>
-              <Skeleton className="ml-auto h-8 w-8 rounded-lg" />
-            </TableCell>
-          )}
-        </TableRow>
+          </div>
+        </div>
       ))}
-    </>
+    </div>
   );
 }

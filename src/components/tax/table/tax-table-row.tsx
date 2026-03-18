@@ -1,20 +1,9 @@
 "use client";
 
-import { TableCell, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, User } from "lucide-react";
-
-
-import { formatCurrency } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { TaxTableActions } from "@/components/tax/table/tax-table-actions";
+import { cn, formatCurrency } from "@/lib/utils";
 import type { TaxDataItem, AppUser, PenarikInfo } from "@/types/app";
 import type { PaymentStatus } from "@prisma/client";
 
@@ -32,7 +21,6 @@ interface TaxTableRowProps {
   style?: React.CSSProperties;
 }
 
-
 export function TaxTableRow({
   item,
   selected,
@@ -46,32 +34,32 @@ export function TaxTableRow({
   role,
   style,
 }: TaxTableRowProps) {
-
-
   return (
-    <TableRow
-      className="hover:bg-muted/40 border-border/50 absolute left-0 top-0 flex w-full cursor-pointer transition-colors"
-      data-state={selected ? "selected" : undefined}
+    <div
+      className={cn(
+        "hover:bg-muted/40 border-b border-border/50 absolute left-0 top-0 flex w-full cursor-pointer transition-colors items-center",
+        selected && "bg-muted/60"
+      )}
       onClick={() => onOpenDetail(item)}
       style={style}
     >
       {role !== "PENGGUNA" && (
-        <TableCell onClick={(e) => e.stopPropagation()} className="flex w-[50px] items-center justify-center p-1 sm:p-2">
+        <div onClick={(e) => e.stopPropagation()} className="flex w-[50px] items-center justify-center p-1 sm:p-2 shrink-0">
           <Checkbox
             checked={selected}
             onCheckedChange={() => onToggle(item.id)}
             aria-label="Select row"
           />
-        </TableCell>
+        </div>
       )}
-      <TableCell className="flex w-[180px] items-center font-mono text-xs">{item.nop}</TableCell>
-      <TableCell className="flex flex-1 flex-col justify-center overflow-hidden">
-        <div className="truncate font-semibold">{item.namaWp}</div>
+      <div className="flex w-[180px] items-center font-mono text-xs px-4 shrink-0">{item.nop}</div>
+      <div className="flex flex-1 flex-col justify-center overflow-hidden px-4">
+        <div className="truncate font-semibold text-sm">{item.namaWp}</div>
         <div className="text-muted-foreground line-clamp-1 max-w-full text-xs">
           {item.alamatObjek}
         </div>
-      </TableCell>
-      <TableCell className="flex w-[150px] flex-col justify-center overflow-hidden">
+      </div>
+      <div className="flex w-[150px] flex-col justify-center overflow-hidden px-4 shrink-0">
         <div className="flex items-center gap-1 text-xs">
           <MapPin className="text-primary h-3 w-3 shrink-0" />
           <span className="truncate">{item.dusun || "-"}</span>
@@ -79,11 +67,11 @@ export function TaxTableRow({
         <div className="text-muted-foreground text-xs truncate">
           RT {item.rt || "-"} / RW {item.rw || "-"}
         </div>
-      </TableCell>
-      <TableCell className="flex w-[120px] items-center justify-end font-semibold">
+      </div>
+      <div className="flex w-[120px] items-center justify-end font-semibold px-4 shrink-0">
         {formatCurrency(item.ketetapan)}
-      </TableCell>
-      <TableCell className="flex w-[120px] items-center">
+      </div>
+      <div className="flex w-[120px] items-center px-4 shrink-0">
         <Badge
           variant={
             (item.paymentStatus === "LUNAS"
@@ -92,7 +80,7 @@ export function TaxTableRow({
                  ? "warning"
                  : "outline") as any
           }
-          className="whitespace-nowrap text-[10px] sm:text-xs font-black uppercase"
+          className="whitespace-nowrap text-[10px] sm:text-[11px] font-black uppercase"
         >
           {item.paymentStatus === "LUNAS"
             ? "Lunas"
@@ -100,18 +88,15 @@ export function TaxTableRow({
               ? "Blm Lunas"
               : "Tdk Terbit"}
         </Badge>
-      </TableCell>
-      <TableCell className="flex w-[150px] items-center overflow-hidden">
+      </div>
+      <div className="flex w-[150px] items-center overflow-hidden px-4 shrink-0">
         <div className="flex items-center gap-2 truncate">
-          <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+          <div className="bg-primary/10 text-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black">
             {item.penarik?.name?.charAt(0) || <User className="h-3 w-3" />}
           </div>
-          <span className="truncate text-xs">{item.penarik?.name || "Belum Ada"}</span>
+          <span className="truncate text-[11px] font-medium">{item.penarik?.name || "Belum Ada"}</span>
         </div>
-      </TableCell>
-
-
-    </TableRow>
-
+      </div>
+    </div>
   );
 }
