@@ -30,7 +30,7 @@ const PUBLIC_API_PREFIXES = ["/api/auth", "/api/village-config", "/api/download-
 const ADMIN_ONLY_ROUTES = ["/upload-pbb", "/pengguna", "/settings", "/log-aktivitas"];
 const ADMIN_ONLY_API_PREFIXES = [
   "/api/backup", "/api/restore", 
-  "/api/upload-logo", "/api/export-tax", "/api/export-laporan-excel", "/api/backup-assignments"
+  "/api/upload-logo", "/api/export-laporan-excel", "/api/backup-assignments"
 ];
 
 function isPublicRoute(pathname: string): boolean {

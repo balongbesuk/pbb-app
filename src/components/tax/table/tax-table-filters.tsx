@@ -200,7 +200,7 @@ export function TaxTableFilters({
               size="sm"
               className="h-9 w-full gap-2 rounded-xl border-border bg-muted/20 text-[10px] font-bold tracking-widest text-muted-foreground uppercase shadow-sm transition-colors hover:bg-muted/30 sm:w-auto"
             >
-              <Printer className="h-3.5 w-3.5" /> Cetak Layar Data
+              <Printer className="h-3.5 w-3.5" /> Cetak / Unduh Excel
             </Button>
           )}
           {currentUser?.role === "PENARIK" && currentUser?.id && (
