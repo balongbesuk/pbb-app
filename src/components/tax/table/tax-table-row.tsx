@@ -4,19 +4,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, User } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
-import type { TaxDataItem, AppUser, PenarikInfo } from "@/types/app";
-import type { PaymentStatus } from "@prisma/client";
+import type { TaxDataItem } from "@/types/app";
 
 interface TaxTableRowProps {
   item: TaxDataItem;
   selected: boolean;
   onToggle: (id: number) => void;
   onOpenDetail: (item: TaxDataItem) => void;
-  currentUser: AppUser | undefined;
-  penariks: PenarikInfo[];
-  onUpdateStatus: (id: string, status: PaymentStatus) => void;
-  onAssignPenarik: (taxId: string, penarikId: string | null) => void;
-  onTransferRequest: (taxId: number, receiverId: string, type: "GIVE" | "TAKE") => void;
   role: string;
   style?: React.CSSProperties;
 }
@@ -26,11 +20,6 @@ export function TaxTableRow({
   selected,
   onToggle,
   onOpenDetail,
-  currentUser,
-  penariks,
-  onUpdateStatus,
-  onAssignPenarik,
-  onTransferRequest,
   role,
   style,
 }: TaxTableRowProps) {

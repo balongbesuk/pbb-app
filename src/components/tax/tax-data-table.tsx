@@ -1,14 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -32,11 +24,10 @@ import { sendTransferRequest } from "@/app/actions/transfer-actions";
 import { toast } from "sonner";
 import { BulkRegionDialog } from "./table/bulk-region-dialog";
 
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { TaxTableSkeleton } from "./table/tax-table-skeleton";
 
 // Sub-components
 import { TaxTableRow } from "./table/tax-table-row";
@@ -396,7 +387,6 @@ export function TaxDataTable({
 
       {/* Unified Virtualized Container */}
       <div 
-        key={isMobile ? "mobile-view" : "desktop-view"}
         ref={parentRef}
         className="border-border/50 bg-background relative overflow-auto rounded-2xl border shadow-xl max-h-[75vh] min-h-[400px]"
       >
@@ -440,7 +430,7 @@ export function TaxDataTable({
                     width: '100%',
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
-                    padding: '12px', 
+                    padding: isMobile ? '10px 12px' : '0px', 
                   }}
                 >
                   {/* Desktop view (md and up) */}
@@ -450,11 +440,6 @@ export function TaxDataTable({
                       selected={selectedIds.has(item.id)}
                       onToggle={toggleSelect}
                       onOpenDetail={setSelectedDetailItem}
-                      currentUser={currentUser}
-                      penariks={penariks}
-                      onUpdateStatus={handleUpdateStatus}
-                      onAssignPenarik={handleAssignPenarik}
-                      onTransferRequest={handleTransferRequestAction}
                       role={currentUser?.role || "PENGGUNA"}
                       style={{ height: '100%' }}
                     />
@@ -518,9 +503,8 @@ export function TaxDataTable({
                       <div className="grid grid-cols-2 border-t border-border/40 divide-x divide-border/40">
                          <div className="px-4 py-3 flex flex-col justify-center">
                             <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 tracking-widest mb-0.5">TAGIHAN PAJAK</span>
-                            <div className="text-lg font-black text-primary tracking-tighter flex items-baseline gap-1">
-                               <span className="text-[10px]">Rp</span>
-                               {new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(item.ketetapan)}
+                            <div className="text-lg font-black text-primary tracking-tighter">
+                               {formatCurrency(item.ketetapan)}
                             </div>
                          </div>
                          <div className="px-4 py-3 flex flex-col justify-center overflow-hidden">
