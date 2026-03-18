@@ -122,13 +122,22 @@ export function TaxDataTable({
   }, [q, dusun, rw, rt, penarik, regionStatus]);
 
   const parentRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize(); // Check on mount
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const rowVirtualizer = useVirtualizer({
     count: displayData.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => (typeof window !== "undefined" && window.innerWidth < 768 ? 200 : 64),
+    estimateSize: () => (isMobile ? 200 : 64),
     overscan: 10,
   });
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
