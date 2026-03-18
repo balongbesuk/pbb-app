@@ -109,17 +109,7 @@ export function TaxTableRow({
           <span className="truncate text-xs">{item.penarik?.name || "Belum Ada"}</span>
         </div>
       </TableCell>
-      {role !== "PENGGUNA" && (
-        <TableCell onClick={(e) => e.stopPropagation()} className="flex w-[60px] items-center justify-center p-1 sm:p-4">
-          <TaxTableActions
-            item={item}
-            penariks={penariks}
-            currentUser={currentUser}
-            onAssignPenarik={onAssignPenarik}
-            onTransferRequest={onTransferRequest}
-          />
-        </TableCell>
-      )}
+
 
     </TableRow>
 

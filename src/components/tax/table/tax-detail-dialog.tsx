@@ -27,6 +27,7 @@ interface TaxDetailDialogProps {
   currentUser: AppUser | undefined;
   onUpdateStatus: (id: string, status: PaymentStatus) => void;
   onTransferRequest: (taxId: number, receiverId: string, type: "GIVE" | "TAKE") => void;
+  onAssignPenarik: (taxId: string, penarikId: string | null) => void;
 }
 
 export function TaxDetailDialog({
@@ -36,6 +37,7 @@ export function TaxDetailDialog({
   currentUser,
   onUpdateStatus,
   onTransferRequest,
+  onAssignPenarik,
 }: TaxDetailDialogProps) {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
@@ -46,12 +48,15 @@ export function TaxDetailDialog({
   const [isStatusLoading, setIsStatusLoading] = useState(false);
   const [selectedTransferPenarik, setSelectedTransferPenarik] = useState<string>("");
   const [isTransferSubmitting, setIsTransferSubmitting] = useState(false);
+  const [selectedAdminPenarik, setSelectedAdminPenarik] = useState<string>(item?.penarikId || "");
+  const [isAssignSubmitting, setIsAssignSubmitting] = useState(false);
 
   useEffect(() => {
     if (item) {
       setEditDusun(item.dusun || "");
       setEditRt(item.rt || "");
       setEditRw(item.rw || "");
+      setSelectedAdminPenarik(item.penarikId || "none");
       setIsEditing(false);
     }
   }, [item]);
@@ -107,6 +112,18 @@ export function TaxDetailDialog({
       onClose();
     } finally {
       setIsTransferSubmitting(false);
+    }
+  };
+
+  const handleAssignSubmit = async () => {
+    setIsAssignSubmitting(true);
+    try {
+      const penarikId = selectedAdminPenarik === "none" ? null : selectedAdminPenarik;
+      await onAssignPenarik(item.id.toString(), penarikId);
+      toast.success("Petugas berhasil dialokasikan");
+      onClose();
+    } finally {
+      setIsAssignSubmitting(false);
     }
   };
 
@@ -305,6 +322,48 @@ export function TaxDetailDialog({
                 </div>
               )}
             </div>
+            {/* Admin: Direct Assignment */}
+            {isAdmin && !isEditing && (
+              <div className="mt-6 space-y-4 border-t border-zinc-100 pt-6 dark:border-zinc-800">
+                <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+                  Alokasi Petugas (Admin)
+                </span>
+                <div className="space-y-3">
+                  <Select value={selectedAdminPenarik} onValueChange={(v) => setSelectedAdminPenarik(v || "none")}>
+                    <SelectTrigger className="h-10 rounded-xl border-zinc-200 bg-white text-xs dark:bg-zinc-950">
+                      <span className="truncate">
+                        {selectedAdminPenarik === "none" 
+                          ? "Kosongkan Petugas" 
+                          : availableFilters.penarik.find(p => p.id === selectedAdminPenarik)?.name || "Pilih Petugas"}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none" className="text-red-500 font-medium italic">
+                        Tanpa Petugas (Hapus Alokasi)
+                      </SelectItem>
+                      {availableFilters.penarik.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    onClick={handleAssignSubmit}
+                    disabled={isAssignSubmitting}
+                    className="h-10 w-full rounded-xl bg-zinc-900 text-xs font-bold text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+                  >
+                    {isAssignSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="mr-2 h-4 w-4" />
+                    )}
+                    Simpan Alokasi
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {currentUser?.role === "PENARIK" && !isEditing && (
               <div className="mt-6 space-y-4 border-t border-zinc-100 pt-6 dark:border-zinc-800">
                 <span className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">

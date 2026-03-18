@@ -409,7 +409,7 @@ export function TaxDataTable({
               <TableHead className="flex w-[120px] items-center justify-end font-bold">Tagihan</TableHead>
               <TableHead className="flex w-[120px] items-center font-bold">Status</TableHead>
               <TableHead className="flex w-[150px] items-center font-bold">Penarik</TableHead>
-              {currentUser?.role !== "PENGGUNA" && <TableHead className="flex w-[60px] items-center"></TableHead>}
+
             </TableRow>
           </TableHeader>
 
@@ -477,6 +477,7 @@ export function TaxDataTable({
         currentUser={currentUser}
         onUpdateStatus={handleUpdateStatus}
         onTransferRequest={handleTransferRequestAction}
+        onAssignPenarik={handleAssignPenarik}
       />
 
       <BulkRegionDialog
