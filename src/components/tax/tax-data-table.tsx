@@ -156,9 +156,6 @@ export function TaxDataTable({
   };
 
   const handleFilterChange = (key: string, value: string) => {
-    setSelectedIds(new Set());
-    setSelectedAmounts(new Map());
-    setIsAllFilteredSelected(false);
     const params = new URLSearchParams(searchParams);
     if (value && value !== "all") params.set(key, value);
     else params.delete(key);
