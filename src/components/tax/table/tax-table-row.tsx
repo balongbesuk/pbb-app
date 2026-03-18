@@ -42,9 +42,9 @@ export function TaxTableRow({
         </div>
       )}
       <div className="flex w-[180px] items-center font-mono text-xs px-4 shrink-0">{item.nop}</div>
-      <div className="flex w-[200px] shrink-0 flex-col justify-center overflow-hidden px-4">
+      <div className="flex flex-1 min-w-[300px] shrink-0 flex-col justify-center overflow-hidden px-4">
         <div className="truncate font-semibold text-sm">{item.namaWp}</div>
-        <div className="text-muted-foreground line-clamp-2 max-w-full text-xs leading-tight">
+        <div className="text-muted-foreground truncate max-w-full text-xs">
           {item.alamatObjek}
         </div>
       </div>

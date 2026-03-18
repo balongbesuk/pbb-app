@@ -392,12 +392,12 @@ export function TaxDataTable({
       >
         {/* Inner content: on desktop enforces min-width so columns don't squeeze.
             On mobile this has no min-width so cards render normally. */}
-        <div className="md:min-w-[870px]">
+        <div className="md:min-w-[1100px]">
           {/* Desktop Table Header (Sticky) — hidden on mobile */}
           <div className="hidden md:flex sticky top-0 z-30 bg-muted border-b border-border/80 w-full items-center h-12 px-4 text-foreground font-black uppercase tracking-tight text-[11px]">
             {currentUser?.role !== "PENGGUNA" && <div className="w-[50px] shrink-0" />}
             <div className="w-[180px] shrink-0">NOP</div>
-            <div className="w-[200px] shrink-0 px-4">Nama Wajib Pajak</div>
+            <div className="flex-1 min-w-[300px] px-4">Nama Wajib Pajak</div>
             <div className="w-[150px] shrink-0 px-4">Wilayah</div>
             <div className="w-[130px] shrink-0 text-right px-4">Tagihan</div>
             <div className="w-[120px] shrink-0 px-4">Status</div>
