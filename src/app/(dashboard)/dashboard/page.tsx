@@ -56,14 +56,10 @@ async function getPenarikPersonalStats(userId: string, tahun: number) {
 }
 
 async function getPenarikDailyLog(userId: string) {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-
   const logs = await prisma.auditLog.findMany({
     where: { 
       userId, 
       action: "UPDATE_PAYMENT",
-      createdAt: { gte: startOfDay }
     },
     orderBy: { createdAt: "desc" },
     take: 5
@@ -279,30 +275,42 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {currentUser?.role === "PENARIK" && dailyLogs?.length > 0 && (
+      {currentUser?.role === "PENARIK" && (
         <div className="bg-background rounded-3xl border border-border p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <div className="bg-emerald-500/10 rounded-lg p-1.5">
               <Clock className="h-4 w-4 text-emerald-500" />
             </div>
-            <h2 className="text-lg font-bold tracking-tight">Riwayat Pekerjaan Hari Ini</h2>
+            <h2 className="text-lg font-bold tracking-tight">Riwayat Pekerjaan Terakhir</h2>
           </div>
           <div className="space-y-4">
-            {dailyLogs.map((log: any) => (
-              <div key={log.id} className="flex items-start gap-3 text-sm">
-                <div className="mt-0.5 rounded-full bg-emerald-500/20 p-1">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                  <p className="font-semibold">{log.details}</p>
-                  <p className="text-xs text-muted-foreground">{log.createdAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB • {log.targetId ? `Wajib Pajak: ${log.targetId}` : "Penagihan"}</p>
-                </div>
+            {dailyLogs?.length > 0 ? (
+              <>
+                {dailyLogs.map((log: any) => (
+                  <div key={log.id} className="flex items-start gap-3 text-sm">
+                    <div className="mt-0.5 rounded-full bg-emerald-500/20 p-1">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">{log.details}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {log.createdAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • {log.createdAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB 
+                        {log.entityId ? ` • WP: ${log.entityId}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {dailyLogs.length === 5 && (
+                  <p className="text-xs text-muted-foreground italic pt-2 border-t mt-2">
+                    Menampilkan 5 aktivitas penagihan terakhir Anda.
+                  </p>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-6">
+                <p className="text-sm font-medium text-muted-foreground">Belum ada riwayat penagihan yang tercatat.</p>
+                <p className="text-xs text-muted-foreground mt-1">Aktivitas update status pembayaran Anda akan muncul di sini.</p>
               </div>
-            ))}
-            {dailyLogs.length === 5 && (
-              <p className="text-xs text-muted-foreground italic pt-2 border-t mt-2">
-                Menampilkan 5 aktivitas penagihan terakhir Anda hari ini.
-              </p>
             )}
           </div>
         </div>
