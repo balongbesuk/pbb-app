@@ -159,6 +159,33 @@ export async function bulkUpdatePaymentStatus(
       `Ubah status pembayaran ${updatedCount} data WP menjadi ${paymentStatus}`
     );
 
+    // Send notification to admins if status changed to LUNAS/BELUM_LUNAS
+    if ((paymentStatus === "LUNAS" || paymentStatus === "BELUM_LUNAS") && (role === "PENARIK" || role === "ADMIN")) {
+      const penarikName = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true },
+      });
+
+      const admins = await prisma.user.findMany({
+        where: { role: { in: ["ADMIN", "PENGGUNA"] } },
+        select: { id: true },
+      });
+
+      if (admins.length > 0) {
+        const isLunas = paymentStatus === "LUNAS";
+        await prisma.notification.createMany({
+          data: admins.map((admin) => ({
+            userId: admin.id,
+            title: isLunas ? "📦 Setoran Massal WP Lunas" : "⚠️ Pembatalan Massal",
+            message: isLunas
+              ? `${penarikName?.name || "Penarik"} mengkonfirmasi ${updatedCount} data WP sekaligus telah lunas.`
+              : `${penarikName?.name || "Penarik"} membatalkan pelunasan ${updatedCount} data WP sekaligus.`,
+            type: isLunas ? "ACCEPTED" : "INFO",
+          })),
+        });
+      }
+    }
+
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");
     return { success: true, count: updatedCount };
