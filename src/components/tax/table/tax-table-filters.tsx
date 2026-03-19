@@ -62,12 +62,20 @@ export function TaxTableFilters({
 }: TaxTableFiltersProps) {
   const searchParams = useSearchParams();
   const inputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("focus") === "search") {
-      inputRef.current?.focus();
-      inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Focus mobile input (visible on small screens)
+      if (window.innerWidth < 768) {
+        mobileInputRef.current?.focus();
+        mobileInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        // Focus desktop input
+        inputRef.current?.focus();
+        inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
     }
   }, [searchParams]);
 
@@ -187,7 +195,7 @@ export function TaxTableFilters({
           <form onSubmit={onSearchSubmit} className="relative flex-1">
             <Search className="absolute top-1/2 left-3.5 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
             <Input
-              ref={inputRef}
+              ref={mobileInputRef}
               placeholder="Cari NOP atau Nama..."
               className="focus-visible:ring-primary/20 h-10 rounded-xl border-border bg-muted/20 pl-10 text-xs font-medium transition-all"
               value={search}
