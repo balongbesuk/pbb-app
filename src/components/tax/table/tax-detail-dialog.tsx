@@ -121,7 +121,7 @@ export function TaxDetailDialog({
 
   return (
     <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-[95vw] overflow-hidden overflow-y-auto rounded-3xl border-none bg-white p-0 shadow-2xl sm:max-w-3xl dark:bg-zinc-950">
+      <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden overflow-y-auto rounded-3xl border-none bg-white p-0 shadow-2xl dark:bg-zinc-950">
         {/* Header: Compact */}
         <div className="flex items-center justify-between px-5 py-3">
           <div className="flex items-center gap-2.5">
@@ -155,20 +155,20 @@ export function TaxDetailDialog({
 
             {/* List Attributes */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs font-semibold">Penarik</span>
-                <div className="flex items-center gap-1.5">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-100 text-xs font-bold text-zinc-500 dark:bg-zinc-800">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground text-xs font-semibold shrink-0">Penarik</span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-bold text-zinc-500 dark:bg-zinc-800">
                     {item.penarik?.name?.charAt(0) || "U"}
                   </div>
-                  <span className="text-foreground/90 text-sm font-bold">
+                  <span className="text-foreground/90 text-sm font-bold truncate">
                     {item.penarik?.name || "-"}
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs font-semibold">Status</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground text-xs font-semibold shrink-0">Status</span>
                 <Badge
                   variant={
                     (item.paymentStatus === "LUNAS"
@@ -179,20 +179,20 @@ export function TaxDetailDialog({
                           ? "destructive"
                           : "outline") as any
                   }
-                  className="rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase"
+                  className="rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase max-w-[120px] truncate"
                 >
                   {item.paymentStatus === "LUNAS"
                     ? "Lunas"
                     : item.paymentStatus === "BELUM_LUNAS"
                       ? "Belum Lunas"
                       : item.paymentStatus === "SUSPEND"
-                        ? "Suspend / Sengketa"
+                        ? "Sengketa"
                         : "Tdk Terbit"}
                 </Badge>
               </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs font-semibold">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-muted-foreground text-xs font-semibold shrink-0">
                   Luas Tanah / Bangunan
                 </span>
                 <span className="text-foreground/90 text-sm font-bold">
@@ -200,8 +200,8 @@ export function TaxDetailDialog({
                 </span>
               </div>
 
-              <div className="flex items-center justify-between border-t border-zinc-100 pt-2 dark:border-zinc-800">
-                <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
+              <div className="flex items-center justify-between gap-2 border-t border-zinc-100 pt-2 dark:border-zinc-800">
+                <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase shrink-0">
                   Total Tagihan
                 </span>
                 <span className="text-primary text-xl font-black tracking-tighter">
@@ -441,11 +441,12 @@ export function TaxDetailDialog({
         {/* Payment Actions - Compact */}
         {canManage && !isEditing && (
           <div className="sticky bottom-0 bg-white/90 px-5 py-3 backdrop-blur-md dark:bg-zinc-950/90 border-t border-zinc-100 dark:border-zinc-800">
-            <div className="flex gap-2">
+            {/* 2x2 grid on mobile, single row on sm+ */}
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Button
                 onClick={() => handleStatusChange("LUNAS")}
                 disabled={isStatusLoading || item.paymentStatus === "LUNAS"}
-                className="h-10 flex-1 rounded-xl bg-emerald-600 text-xs font-black text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-[0.97] disabled:opacity-50"
+                className="h-10 col-span-2 sm:col-span-1 rounded-xl bg-emerald-600 text-xs font-black text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-[0.97] disabled:opacity-50"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
@@ -457,7 +458,7 @@ export function TaxDetailDialog({
               <Button
                 onClick={() => handleStatusChange("BELUM_LUNAS")}
                 disabled={isStatusLoading || item.paymentStatus === "BELUM_LUNAS"}
-                className="h-10 flex-1 rounded-xl border border-amber-200 bg-amber-50/50 text-[10px] font-bold text-amber-600 transition-all hover:bg-amber-100 disabled:opacity-50 dark:border-amber-900/50 dark:text-amber-500"
+                className="h-10 rounded-xl border border-amber-200 bg-amber-50/50 text-[10px] font-bold text-amber-600 transition-all hover:bg-amber-100 disabled:opacity-50 dark:border-amber-900/50 dark:text-amber-500"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -469,7 +470,7 @@ export function TaxDetailDialog({
               <Button
                 onClick={() => handleStatusChange("SUSPEND")}
                 disabled={isStatusLoading || item.paymentStatus === "SUSPEND"}
-                className="h-10 flex-1 rounded-xl bg-orange-500/10 text-[10px] font-bold text-orange-600 transition-all hover:bg-orange-500/20 disabled:opacity-50 dark:text-orange-500"
+                className="h-10 rounded-xl bg-orange-500/10 text-[10px] font-bold text-orange-600 transition-all hover:bg-orange-500/20 disabled:opacity-50 dark:text-orange-500"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -481,7 +482,7 @@ export function TaxDetailDialog({
               <Button
                 onClick={() => handleStatusChange("TIDAK_TERBIT")}
                 disabled={isStatusLoading || item.paymentStatus === "TIDAK_TERBIT"}
-                className="h-10 flex-1 rounded-xl bg-zinc-500/10 text-[10px] font-bold text-zinc-600 transition-all hover:bg-zinc-500/20 disabled:opacity-50 dark:text-zinc-500"
+                className="h-10 rounded-xl bg-zinc-500/10 text-[10px] font-bold text-zinc-600 transition-all hover:bg-zinc-500/20 disabled:opacity-50 dark:text-zinc-500"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
