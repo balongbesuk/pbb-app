@@ -47,6 +47,8 @@ export default async function LaporanPage({
         _sum: { ketetapan: 0, pembayaran: 0, sisaTagihan: 0 },
         lunasCount: 0,
         belumLunasCount: 0,
+        sengketaCount: 0,
+        tdkTerbitCount: 0,
       });
     }
 
@@ -58,8 +60,12 @@ export default async function LaporanPage({
 
     if (stat.paymentStatus === "LUNAS") {
       curr.lunasCount += stat._count.nop;
-    } else {
+    } else if (stat.paymentStatus === "BELUM_LUNAS") {
       curr.belumLunasCount += stat._count.nop;
+    } else if (stat.paymentStatus === "SUSPEND") {
+      curr.sengketaCount += stat._count.nop;
+    } else if (stat.paymentStatus === "TIDAK_TERBIT") {
+      curr.tdkTerbitCount += stat._count.nop;
     }
   });
 
@@ -90,6 +96,14 @@ export default async function LaporanPage({
   );
   const totalWpBelumLunas = penarikStatsFlat.reduce(
     (acc: number, curr: any) => acc + curr.belumLunasCount,
+    0
+  );
+  const totalWpSengketa = penarikStatsFlat.reduce(
+    (acc: number, curr: any) => acc + (curr.sengketaCount || 0),
+    0
+  );
+  const totalWpTdkTerbit = penarikStatsFlat.reduce(
+    (acc: number, curr: any) => acc + (curr.tdkTerbitCount || 0),
     0
   );
   const totalTarget = penarikStatsFlat.reduce(
@@ -184,7 +198,13 @@ export default async function LaporanPage({
                     Lunas
                   </TableHead>
                   <TableHead className="hidden text-center text-sm font-bold tracking-wider uppercase sm:table-cell">
-                    Belum
+                    Blm
+                  </TableHead>
+                  <TableHead className="hidden text-center text-sm font-bold tracking-wider uppercase md:table-cell">
+                    Sengketa
+                  </TableHead>
+                  <TableHead className="hidden text-center text-sm font-bold tracking-wider uppercase lg:table-cell">
+                    Tdk Terbit
                   </TableHead>
                   <TableHead className="hidden text-right text-sm font-bold tracking-wider uppercase md:table-cell">
                     Target
@@ -192,11 +212,11 @@ export default async function LaporanPage({
                   <TableHead className="text-right text-sm font-bold tracking-wider uppercase">
                     Realisasi
                   </TableHead>
-                  <TableHead className="hidden text-right text-sm font-bold tracking-wider uppercase lg:table-cell">
+                  <TableHead className="hidden text-right text-sm font-bold tracking-wider uppercase xl:table-cell">
                     Sisa
                   </TableHead>
                   <TableHead className="text-right text-sm font-bold tracking-wider uppercase">
-                    Progress
+                    %
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -261,8 +281,38 @@ export default async function LaporanPage({
                             paymentStatus="BELUM_LUNAS"
                             currentUser={currentUser}
                           >
-                            <div className="inline-flex items-center justify-center rounded-full bg-rose-100 px-2 py-1 text-xs font-bold text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
+                            <div className="inline-flex items-center justify-center rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-400">
                               {stat.belumLunasCount}
+                            </div>
+                          </PenarikWpDialog>
+                        </TableCell>
+                        <TableCell className="hover:bg-muted/50 hidden text-center transition-colors md:table-cell">
+                          <PenarikWpDialog
+                            penarikId={stat.penarikId}
+                            penarikName={stat.penarikName}
+                            tahun={currentYear}
+                            count={stat.sengketaCount}
+                            allPenariks={penarikUsers}
+                            paymentStatus="SUSPEND"
+                            currentUser={currentUser}
+                          >
+                            <div className="inline-flex items-center justify-center rounded-full bg-orange-100 px-2 py-1 text-xs font-bold text-orange-800 dark:bg-orange-900/40 dark:text-orange-400">
+                              {stat.sengketaCount}
+                            </div>
+                          </PenarikWpDialog>
+                        </TableCell>
+                        <TableCell className="hover:bg-muted/50 hidden text-center transition-colors lg:table-cell">
+                          <PenarikWpDialog
+                            penarikId={stat.penarikId}
+                            penarikName={stat.penarikName}
+                            tahun={currentYear}
+                            count={stat.tdkTerbitCount}
+                            allPenariks={penarikUsers}
+                            paymentStatus="TIDAK_TERBIT"
+                            currentUser={currentUser}
+                          >
+                            <div className="inline-flex items-center justify-center rounded-full bg-zinc-100 px-2 py-1 text-xs font-bold text-zinc-800 dark:bg-zinc-800 dark:text-zinc-400">
+                              {stat.tdkTerbitCount}
                             </div>
                           </PenarikWpDialog>
                         </TableCell>

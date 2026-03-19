@@ -49,6 +49,8 @@ export async function GET(req: NextRequest) {
       sisaTagihan: number;
       lunas: number;
       belum: number;
+      sengketa: number;
+      tdkTerbit: number;
       name?: string;
       dusun?: string;
     }
@@ -64,7 +66,9 @@ export async function GET(req: NextRequest) {
           pembayaran: 0, 
           sisaTagihan: 0, 
           lunas: 0, 
-          belum: 0 
+          belum: 0,
+          sengketa: 0,
+          tdkTerbit: 0
         });
       }
       const c = map.get(pId)!;
@@ -73,7 +77,9 @@ export async function GET(req: NextRequest) {
       c.pembayaran += s._sum.pembayaran || 0;
       c.sisaTagihan += s._sum.sisaTagihan || 0;
       if (s.paymentStatus === "LUNAS") c.lunas += s._count.nop;
-      else c.belum += s._count.nop;
+      else if (s.paymentStatus === "BELUM_LUNAS") c.belum += s._count.nop;
+      else if (s.paymentStatus === "SUSPEND") c.sengketa += s._count.nop;
+      else if (s.paymentStatus === "TIDAK_TERBIT") c.tdkTerbit += s._count.nop;
     });
 
     const penarikStatsFlat = Array.from(map.values());
@@ -130,10 +136,10 @@ export async function GET(req: NextRequest) {
     const sheet = workbook.addWorksheet(`Laporan Rekapitulasi ${tahun}`);
 
     // ─── KOP SURAT (Header Area) rows 1–5 ────────────────────────────────
-    const COL_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+    const COL_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 
-    // Rows 1-4: header text (merged B1:J4, logo goes in A1:A4)
-    sheet.mergeCells("B1:J4");
+    // Rows 1-4: header text (merged B1:L4, logo goes in A1:A4)
+    sheet.mergeCells("B1:L4");
     const kopCell = sheet.getCell("B1");
     const kopLines: string[] = [];
     if (villageConfig.namaDesa) {
@@ -183,7 +189,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Row 5: blue separator strip
-    sheet.mergeCells("A5:J5");
+    sheet.mergeCells("A5:L5");
     sheet.getCell("A5").fill = {
       type: "pattern",
       pattern: "solid",
@@ -202,6 +208,8 @@ export async function GET(req: NextRequest) {
       { key: "totalWp", width: 10 },
       { key: "lunas", width: 10 },
       { key: "belum", width: 10 },
+      { key: "sengketa", width: 10 },
+      { key: "tdkTerbit", width: 10 },
       { key: "target", width: 22 },
       { key: "realisasi", width: 22 },
       { key: "sisa", width: 22 },
@@ -218,6 +226,8 @@ export async function GET(req: NextRequest) {
       "Total WP",
       "Lunas",
       "Belum",
+      "Sengketa",
+      "Tdk Terbit",
       "Ketetapan (Target)",
       "Realisasi (Terbayar)",
       "Sisa Pagu",
@@ -253,6 +263,8 @@ export async function GET(req: NextRequest) {
         totalWp: stat.nop,
         lunas: stat.lunas,
         belum: stat.belum,
+        sengketa: stat.sengketa,
+        tdkTerbit: stat.tdkTerbit,
         target,
         realisasi,
         sisa,
@@ -277,11 +289,11 @@ export async function GET(req: NextRequest) {
       rowIndex++;
     });
 
-    // Currency formatting for data rows
+    // Currency formatting for data rows (Now I, J, K)
     for (let current = headerRowNum + 1; current < rowIndex; current++) {
-      sheet.getCell(`G${current}`).numFmt = currencyFormat;
-      sheet.getCell(`H${current}`).numFmt = currencyFormat;
       sheet.getCell(`I${current}`).numFmt = currencyFormat;
+      sheet.getCell(`J${current}`).numFmt = currencyFormat;
+      sheet.getCell(`K${current}`).numFmt = currencyFormat;
     }
 
     // ─── TOTAL ROW ────────────────────────────────────────────────────────
@@ -292,6 +304,8 @@ export async function GET(req: NextRequest) {
       totalWp: totalWp,
       lunas: totalWpLunas,
       belum: totalWpBelumLunas,
+      sengketa: combinedStats.reduce((a,c)=>a+c.sengketa, 0),
+      tdkTerbit: combinedStats.reduce((a,c)=>a+c.tdkTerbit, 0),
       target: totalTarget,
       realisasi: totalRealisasi,
       sisa: totalSisa,
@@ -308,9 +322,9 @@ export async function GET(req: NextRequest) {
         right: { style: "thin", color: { argb: "FFDDDDDD" } },
       };
     });
-    sheet.getCell(`G${rowIndex}`).numFmt = currencyFormat;
-    sheet.getCell(`H${rowIndex}`).numFmt = currencyFormat;
     sheet.getCell(`I${rowIndex}`).numFmt = currencyFormat;
+    sheet.getCell(`J${rowIndex}`).numFmt = currencyFormat;
+    sheet.getCell(`K${rowIndex}`).numFmt = currencyFormat;
 
     // ─── FOOTER ───────────────────────────────────────────────────────────
     sheet.addRow([]);

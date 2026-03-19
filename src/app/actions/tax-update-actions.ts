@@ -227,7 +227,7 @@ export async function getWpByPenarik(
   tahun: number,
   page: number = 1,
   pageSize: number = 50,
-  paymentStatus?: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT"
+  paymentStatus?: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT" | "SUSPEND"
 ) {
   try {
     const whereClause: Prisma.TaxDataWhereInput = {

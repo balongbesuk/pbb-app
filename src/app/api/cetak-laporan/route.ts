@@ -35,6 +35,8 @@ export async function GET(req: NextRequest) {
     sisaTagihan: number;
     lunas: number;
     belum: number;
+    sengketa: number;
+    tdkTerbit: number;
     name?: string;
     dusun?: string;
   }
@@ -43,7 +45,7 @@ export async function GET(req: NextRequest) {
   penarikStatsRaw.forEach((s) => {
     const pId = s.penarikId || "unassigned";
     if (!map.has(pId)) {
-      map.set(pId, { penarikId: s.penarikId, nop: 0, ketetapan: 0, pembayaran: 0, sisaTagihan: 0, lunas: 0, belum: 0 });
+      map.set(pId, { penarikId: s.penarikId, nop: 0, ketetapan: 0, pembayaran: 0, sisaTagihan: 0, lunas: 0, belum: 0, sengketa: 0, tdkTerbit: 0 });
     }
     const c = map.get(pId)!;
     c.nop += s._count.nop;
@@ -51,7 +53,9 @@ export async function GET(req: NextRequest) {
     c.pembayaran += s._sum.pembayaran || 0;
     c.sisaTagihan += s._sum.sisaTagihan || 0;
     if (s.paymentStatus === "LUNAS") c.lunas += s._count.nop;
-    else c.belum += s._count.nop;
+    else if (s.paymentStatus === "BELUM_LUNAS") c.belum += s._count.nop;
+    else if (s.paymentStatus === "SUSPEND") c.sengketa += s._count.nop;
+    else if (s.paymentStatus === "TIDAK_TERBIT") c.tdkTerbit += s._count.nop;
   });
 
   const penarikUsers = await prisma.user.findMany({
@@ -96,6 +100,8 @@ export async function GET(req: NextRequest) {
         <td style="text-align:center">${s.nop}</td>
         <td style="text-align:center">${s.lunas}</td>
         <td style="text-align:center">${s.belum}</td>
+        <td style="text-align:center">${s.sengketa}</td>
+        <td style="text-align:center">${s.tdkTerbit}</td>
         <td style="text-align:right">${fmt(s.ketetapan)}</td>
         <td style="text-align:right">${fmt(s.pembayaran)}</td>
         <td style="text-align:right">${fmt(s.sisaTagihan)}</td>
@@ -179,7 +185,7 @@ export async function GET(req: NextRequest) {
       <div class="summary-box">
         <div class="lbl">Total Wajib Pajak</div>
         <div class="val">${totalWp.toLocaleString("id-ID")} WP</div>
-        <div class="sub">Lunas: ${totalLunas} | Belum: ${totalBelum}</div>
+        <div class="sub">Lunas: ${totalLunas} | Belum: ${totalBelum} | Sgkta: ${stats.reduce((a,c)=>a+c.sengketa, 0)} | TdkTrb: ${stats.reduce((a,c)=>a+c.tdkTerbit, 0)}</div>
       </div>
       <div class="summary-box">
         <div class="lbl">Target Penerimaan</div>
@@ -201,14 +207,16 @@ export async function GET(req: NextRequest) {
         <tr>
           <th style="width:28px">No</th>
           <th>Penarik / Kolektor</th>
-          <th>Wilayah</th>
-          <th>WP</th>
-          <th>Lunas</th>
-          <th>Belum</th>
+          <th style="width:80px">Wilayah</th>
+          <th style="width:40px">WP</th>
+          <th style="width:40px">Lunas</th>
+          <th style="width:35px">Blm</th>
+          <th style="width:35px">Sgkta</th>
+          <th style="width:35px">TdkTrb</th>
           <th>Target (Rp)</th>
           <th>Realisasi (Rp)</th>
           <th>Sisa (Rp)</th>
-          <th>%</th>
+          <th style="width:40px">%</th>
         </tr>
       </thead>
       <tbody>
@@ -218,6 +226,8 @@ export async function GET(req: NextRequest) {
           <td style="text-align:center">${totalWp}</td>
           <td style="text-align:center">${totalLunas}</td>
           <td style="text-align:center">${totalBelum}</td>
+          <td style="text-align:center">${stats.reduce((a,c)=>a+c.sengketa, 0)}</td>
+          <td style="text-align:center">${stats.reduce((a,c)=>a+c.tdkTerbit, 0)}</td>
           <td style="text-align:right">${fmt(totalTarget)}</td>
           <td style="text-align:right">${fmt(totalRealisasi)}</td>
           <td style="text-align:right">${fmt(totalSisa)}</td>

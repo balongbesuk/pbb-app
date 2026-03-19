@@ -37,7 +37,7 @@ interface PenarikWpDialogProps {
   tahun: number;
   count: number;
   allPenariks: PenarikInfo[];
-  paymentStatus?: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT";
+  paymentStatus?: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT" | "SUSPEND";
   children?: React.ReactNode;
   currentUser?: AppUser;
 }
@@ -163,6 +163,8 @@ export function PenarikWpDialog({
             Kelola Data WP - {penarikName}
             {paymentStatus === "LUNAS" && " (Lunas)"}
             {paymentStatus === "BELUM_LUNAS" && " (Belum Lunas)"}
+            {paymentStatus === "SUSPEND" && " (Sengketa)"}
+            {paymentStatus === "TIDAK_TERBIT" && " (Tdk Terbit)"}
           </DialogTitle>
         </DialogHeader>
 
