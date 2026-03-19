@@ -441,11 +441,11 @@ export function TaxDetailDialog({
         {/* Payment Actions - Compact */}
         {canManage && !isEditing && (
           <div className="sticky bottom-0 bg-white/90 px-5 py-4 backdrop-blur-md dark:bg-zinc-950/90 border-t border-zinc-100 dark:border-zinc-800">
-            <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-row">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               <Button
                 onClick={() => handleStatusChange("LUNAS")}
                 disabled={isStatusLoading || item.paymentStatus === "LUNAS"}
-                className="col-span-2 h-12 flex-1 rounded-xl bg-emerald-500 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-[0.98] disabled:opacity-50 dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:shadow-emerald-900/20"
+                className="col-span-2 sm:col-span-1 h-12 flex-1 rounded-xl bg-emerald-500 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-[0.98] disabled:opacity-50 dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:shadow-emerald-900/20"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
@@ -458,7 +458,7 @@ export function TaxDetailDialog({
               <Button
                 onClick={() => handleStatusChange("SUSPEND")}
                 disabled={isStatusLoading || item.paymentStatus === "SUSPEND"}
-                className="col-span-1 h-12 flex-1 rounded-xl bg-orange-100/50 text-xs font-bold text-orange-600 transition-all hover:bg-orange-100 disabled:opacity-50 dark:bg-orange-500/15 dark:hover:bg-orange-500/25 dark:text-orange-400"
+                className="col-span-1 sm:col-span-1 h-12 flex-1 rounded-xl bg-rose-100/80 text-xs font-bold text-rose-600 transition-all hover:bg-rose-200 disabled:opacity-50 dark:bg-rose-500/15 dark:hover:bg-rose-500/25 dark:text-rose-400"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -471,7 +471,7 @@ export function TaxDetailDialog({
               <Button
                 onClick={() => handleStatusChange("TIDAK_TERBIT")}
                 disabled={isStatusLoading || item.paymentStatus === "TIDAK_TERBIT"}
-                className="col-span-1 h-12 flex-1 rounded-xl bg-zinc-100 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-200 disabled:opacity-50 dark:bg-zinc-500/20 dark:hover:bg-zinc-500/30 dark:text-zinc-300"
+                className="col-span-1 sm:col-span-1 h-12 flex-1 rounded-xl bg-zinc-100 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-200 disabled:opacity-50 dark:bg-zinc-500/20 dark:hover:bg-zinc-500/30 dark:text-zinc-300"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -484,7 +484,7 @@ export function TaxDetailDialog({
               <Button
                 onClick={() => handleStatusChange("BELUM_LUNAS")}
                 disabled={isStatusLoading || item.paymentStatus === "BELUM_LUNAS"}
-                className="col-span-2 h-12 flex-1 rounded-xl border-2 border-rose-100 bg-white text-xs font-bold text-rose-500 transition-all hover:bg-rose-50 disabled:opacity-50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-400"
+                className="col-span-2 sm:col-span-1 h-12 flex-1 rounded-xl border-2 border-amber-200 bg-white text-xs font-bold text-amber-600 transition-all hover:bg-amber-50 disabled:opacity-50 dark:border-amber-500/30 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-400"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
