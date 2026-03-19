@@ -232,50 +232,43 @@ export function TaxTableFilters({
 
         {/* Row 2: Quick action chips — always visible */}
         <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {showPrint && (
+            <button
+              onClick={onPrint}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted/20 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/30"
+            >
+              <Printer className="h-3 w-3" />
+              Cetak
+            </button>
+          )}
+
           {currentUser?.role === "PENARIK" && currentUser?.id && (
             <button
               onClick={() => filterPenarik === currentUser.id ? onPenarikChange("all") : onPenarikChange(currentUser.id)}
               className={cn(
                 "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors",
                 filterPenarik === currentUser.id
-                  ? "bg-primary text-white border-primary"
-                  : "bg-card border-border text-muted-foreground"
+                  ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
+                  : "bg-muted/30 border-border text-muted-foreground hover:bg-muted/50"
               )}
             >
               <User className="h-3 w-3" />
               {filterPenarik === currentUser.id ? "Tugas Saya ✓" : "Tugas Saya"}
             </button>
           )}
+
           <button
             onClick={() => filterPaymentStatus === "BELUM_LUNAS" ? onPaymentStatusChange("all") : onPaymentStatusChange("BELUM_LUNAS")}
             className={cn(
               "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors",
               filterPaymentStatus === "BELUM_LUNAS"
-                ? "bg-amber-600 text-white border-amber-600"
-                : "bg-amber-500/5 border-amber-300 text-amber-600 dark:text-amber-500"
+                ? "bg-amber-600 text-white border-amber-600 shadow-lg shadow-amber-500/20"
+                : "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20"
             )}
           >
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
             {filterPaymentStatus === "BELUM_LUNAS" ? "Blm Lunas ✓" : "Blm Lunas"}
           </button>
-          {activeFilterCount > 0 && (
-            <button
-              onClick={clearAllFilters}
-              className="flex shrink-0 items-center gap-1.5 rounded-full border border-rose-300 bg-rose-500/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-rose-500 transition-colors hover:bg-rose-500/10"
-            >
-              <X className="h-3 w-3" />
-              Reset ({activeFilterCount})
-            </button>
-          )}
-          {showPrint && (
-            <button
-              onClick={onPrint}
-              className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/30"
-            >
-              <Printer className="h-3 w-3" />
-              Cetak
-            </button>
-          )}
         </div>
 
         {/* Collapsible Filter Panel */}
