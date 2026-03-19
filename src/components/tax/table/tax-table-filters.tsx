@@ -231,11 +231,11 @@ export function TaxTableFilters({
         </div>
 
         {/* Row 2: Quick action chips — always visible */}
-        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex gap-2 overflow-x-auto pb-2 px-1 no-scrollbar">
           {showPrint && (
             <button
               onClick={onPrint}
-              className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted/20 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/30"
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-800"
             >
               <Printer className="h-3 w-3" />
               Cetak
@@ -248,8 +248,8 @@ export function TaxTableFilters({
               className={cn(
                 "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors",
                 filterPenarik === currentUser.id
-                  ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                  : "bg-muted/30 border-border text-muted-foreground hover:bg-muted/50"
+                  ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
+                  : "bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800"
               )}
             >
               <User className="h-3 w-3" />
@@ -260,10 +260,10 @@ export function TaxTableFilters({
           <button
             onClick={() => filterPaymentStatus === "BELUM_LUNAS" ? onPaymentStatusChange("all") : onPaymentStatusChange("BELUM_LUNAS")}
             className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors",
+              "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all",
               filterPaymentStatus === "BELUM_LUNAS"
                 ? "bg-amber-600 text-white border-amber-600 shadow-lg shadow-amber-500/20"
-                : "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20"
+                : "bg-amber-500/5 dark:bg-amber-950/20 border-amber-500/30 text-amber-600 dark:text-amber-500 hover:bg-amber-500/10"
             )}
           >
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
