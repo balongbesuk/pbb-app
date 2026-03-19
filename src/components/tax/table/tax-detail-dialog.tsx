@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit2, Loader2, Save, User, CheckCircle, Clock, Ban, MapPin, X, ArrowRight, Handshake, ChevronRight } from "lucide-react";
+import { Edit2, Loader2, Save, User, CheckCircle, Clock, Ban, MapPin, X, ArrowRight, Handshake, ChevronRight, RotateCcw, ShieldAlert, FileX } from "lucide-react";
 import { updateWpRegion } from "@/app/actions/tax-update-actions";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -440,58 +440,57 @@ export function TaxDetailDialog({
 
         {/* Payment Actions - Compact */}
         {canManage && !isEditing && (
-          <div className="sticky bottom-0 bg-white/90 px-5 py-4 backdrop-blur-md dark:bg-zinc-950/90 border-t border-zinc-100 dark:border-zinc-800">
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <div className="flex gap-2 sm:flex-1">
-                <Button
-                  onClick={() => handleStatusChange("LUNAS")}
-                  disabled={isStatusLoading || item.paymentStatus === "LUNAS"}
-                  className="h-12 flex-[2] rounded-xl bg-emerald-600 text-sm font-black text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-[0.97] disabled:opacity-50 sm:h-10 sm:text-xs"
-                >
+          <div className="sticky bottom-0 bg-white/90 px-5 py-4 backdrop-blur-md border-t border-zinc-100 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)] dark:border-zinc-800 dark:bg-zinc-950/90 dark:shadow-none">
+            <div className="flex flex-col gap-3">
+              {/* Primary Action (LUNAS) */}
+              <Button
+                onClick={() => handleStatusChange("LUNAS")}
+                disabled={isStatusLoading || item.paymentStatus === "LUNAS"}
+                className="group relative h-14 w-full overflow-hidden rounded-2xl bg-emerald-600 font-bold shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
+              >
+                <div className="absolute inset-0 -translate-x-[100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-out group-hover:translate-x-[100%]" />
+                <div className="relative flex items-center justify-center gap-2.5 text-white">
                   {isStatusLoading ? (
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
-                    <CheckCircle className="mr-1.5 h-4 w-4" />
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
+                      <CheckCircle className="h-4 w-4" />
+                    </div>
                   )}
-                  LUNAS
-                </Button>
+                  <span className="text-[15px] font-black tracking-widest uppercase">Tandai Lunas</span>
+                </div>
+              </Button>
+
+              {/* Secondary Actions (Grid) */}
+              <div className="grid grid-cols-3 gap-2">
                 <Button
                   onClick={() => handleStatusChange("BELUM_LUNAS")}
                   disabled={isStatusLoading || item.paymentStatus === "BELUM_LUNAS"}
-                  className="h-12 flex-1 rounded-xl border border-amber-200 bg-amber-50/50 text-[11px] font-bold text-amber-600 transition-all hover:bg-amber-100 disabled:opacity-50 dark:border-amber-900/50 dark:text-amber-500 sm:h-10 sm:text-[10px]"
+                  variant="outline"
+                  className="flex h-[60px] flex-col items-center justify-center gap-1.5 rounded-xl border border-amber-200/60 bg-amber-50/50 text-amber-600 transition-all hover:bg-amber-100 hover:text-amber-700 hover:shadow-sm disabled:opacity-50 dark:border-amber-900/40 dark:bg-amber-900/10 dark:text-amber-500 hover:dark:bg-amber-900/30"
                 >
-                  {isStatusLoading ? (
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Clock className="mr-1.5 h-4 w-4" />
-                  )}
-                  BATALKAN
+                  {isStatusLoading ? <Loader2 className="h-4 w-4 animate-spin opacity-80" /> : <RotateCcw className="h-4 w-4 opacity-80" />}
+                  <span className="text-[9px] font-black uppercase tracking-wider">Batalkan</span>
                 </Button>
-              </div>
-              <div className="flex gap-2 sm:flex-1">
+
                 <Button
                   onClick={() => handleStatusChange("SUSPEND")}
                   disabled={isStatusLoading || item.paymentStatus === "SUSPEND"}
-                  className="h-12 flex-1 rounded-xl bg-orange-500/10 text-[11px] font-bold text-orange-600 transition-all hover:bg-orange-500/20 disabled:opacity-50 dark:text-orange-500 sm:h-10 sm:text-[10px]"
+                  variant="outline"
+                  className="flex h-[60px] flex-col items-center justify-center gap-1.5 rounded-xl border border-orange-200/60 bg-orange-50/50 text-orange-600 transition-all hover:bg-orange-100 hover:text-orange-700 hover:shadow-sm disabled:opacity-50 dark:border-orange-900/40 dark:bg-orange-900/10 dark:text-orange-500 hover:dark:bg-orange-900/30"
                 >
-                  {isStatusLoading ? (
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Ban className="mr-1.5 h-4 w-4" />
-                  )}
-                  SENGKETA
+                  {isStatusLoading ? <Loader2 className="h-4 w-4 animate-spin opacity-80" /> : <ShieldAlert className="h-4 w-4 opacity-80" />}
+                  <span className="text-[9px] font-black uppercase tracking-wider">Sengketa</span>
                 </Button>
+
                 <Button
                   onClick={() => handleStatusChange("TIDAK_TERBIT")}
                   disabled={isStatusLoading || item.paymentStatus === "TIDAK_TERBIT"}
-                  className="h-12 flex-1 rounded-xl bg-zinc-500/10 text-[11px] font-bold text-zinc-600 transition-all hover:bg-zinc-500/20 disabled:opacity-50 dark:text-zinc-500 sm:h-10 sm:text-[10px]"
+                  variant="outline"
+                  className="flex h-[60px] flex-col items-center justify-center gap-1.5 rounded-xl border border-zinc-200/80 bg-zinc-50/80 text-zinc-600 transition-all hover:bg-zinc-100 hover:text-zinc-700 hover:shadow-sm disabled:opacity-50 dark:border-zinc-800/80 dark:bg-zinc-900/40 dark:text-zinc-400 hover:dark:bg-zinc-900"
                 >
-                  {isStatusLoading ? (
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  ) : (
-                    <X className="mr-1.5 h-4 w-4" />
-                  )}
-                  TDK TERBIT
+                  {isStatusLoading ? <Loader2 className="h-4 w-4 animate-spin opacity-80" /> : <FileX className="h-4 w-4 opacity-80" />}
+                  <span className="text-[9px] font-black uppercase tracking-wider">Tdk Terbit</span>
                 </Button>
               </div>
             </div>
