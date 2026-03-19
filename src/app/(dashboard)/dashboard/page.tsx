@@ -36,9 +36,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 async function getPenarikPersonalStats(userId: string, tahun: number) {
-  const [all, lunas] = await Promise.all([
+  const [all, lunas, sengketa, tdkTerbit] = await Promise.all([
     prisma.taxData.aggregate({
-      where: { penarikId: userId, tahun, paymentStatus: { in: ["LUNAS", "BELUM_LUNAS"] } },
+      where: { penarikId: userId, tahun },
       _sum: { ketetapan: true },
       _count: true,
     }),
@@ -47,6 +47,12 @@ async function getPenarikPersonalStats(userId: string, tahun: number) {
       _sum: { pembayaran: true },
       _count: true,
     }),
+    prisma.taxData.count({
+      where: { penarikId: userId, tahun, paymentStatus: "SUSPEND" }
+    }),
+    prisma.taxData.count({
+      where: { penarikId: userId, tahun, paymentStatus: "TIDAK_TERBIT" }
+    }),
   ]);
 
   return {
@@ -54,6 +60,8 @@ async function getPenarikPersonalStats(userId: string, tahun: number) {
     totalWp: all._count || 0,
     totalLunas: lunas._sum.pembayaran || 0,
     wpLunas: lunas._count || 0,
+    wpSengketa: sengketa,
+    wpTdkTerbit: tdkTerbit,
   };
 }
 
@@ -85,6 +93,7 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
     sudahDibayar,
     belumDibayar,
     tidakTerbit,
+    sengketa,
     pajakPerRW,
     trenPembayaran,
     penarikStats,
@@ -92,8 +101,8 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
     tanahDenganBangunan,
     totalLuas,
   ] = await Promise.all([
-    prisma.taxData.count({ where: { tahun, paymentStatus: { in: ["LUNAS", "BELUM_LUNAS"] } } }),
-    prisma.taxData.aggregate({ where: { tahun, paymentStatus: { in: ["LUNAS", "BELUM_LUNAS"] } }, _sum: { ketetapan: true } }),
+    prisma.taxData.count({ where: { tahun } }),
+    prisma.taxData.aggregate({ where: { tahun }, _sum: { ketetapan: true } }),
     prisma.taxData.aggregate({
       where: { tahun, paymentStatus: "LUNAS" },
       _sum: { ketetapan: true, pembayaran: true },
@@ -105,6 +114,7 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
       _count: true,
     }),
     prisma.taxData.count({ where: { tahun, paymentStatus: "TIDAK_TERBIT" } }),
+    prisma.taxData.count({ where: { tahun, paymentStatus: "SUSPEND" } }),
 
     prisma.taxData.groupBy({
       by: ["rw"],
@@ -135,6 +145,10 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
 
   const totalNominalValue = totalNominal._sum.ketetapan || 0;
   const sudahDibayarValue = sudahDibayar._sum.pembayaran || 0;
+  const belumDibayarValue = belumDibayar._sum.ketetapan || 0;
+  const sudahDibayarCount = sudahDibayar._count || 0;
+  const belumDibayarCount = belumDibayar._count || 0;
+  const sengketaCount = sengketa;
   const persentase = totalNominalValue > 0 ? (sudahDibayarValue / totalNominalValue) * 100 : 0;
 
   // Get penarik names
@@ -166,6 +180,7 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
     belumDibayarCount: belumDibayar._count || 0,
     belumDibayarValue: belumDibayar._sum.ketetapan || 0,
     tidakTerbit,
+    sengketaCount,
     persentase,
     pajakPerRW: pajakPerRW
       .sort((a, b) => (a.rw || "").localeCompare(b.rw || ""))
@@ -257,7 +272,25 @@ export default async function DashboardPage({
               <div className="space-y-1">
                 <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Target Kelunasan</p>
                 <div className="text-foreground text-2xl font-black">{formatCurrency(personalStats.totalTarget)}</div>
-                <p className="text-xs font-medium text-amber-600 dark:text-amber-500">Sisa {personalStats.totalWp - personalStats.wpLunas} WP Belum Bayar</p>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-tighter">
+                    Tagihan Aktif: {personalStats.totalWp - personalStats.wpLunas - personalStats.wpSengketa - personalStats.wpTdkTerbit} WP
+                  </p>
+                  {(personalStats.wpSengketa > 0 || personalStats.wpTdkTerbit > 0) && (
+                    <div className="flex items-center gap-2 opacity-80">
+                      {personalStats.wpSengketa > 0 && (
+                        <p className="text-[9px] font-bold text-orange-600 dark:text-orange-400 bg-orange-500/10 px-1.5 rounded uppercase">
+                          {personalStats.wpSengketa} Sengketa
+                        </p>
+                      )}
+                      {personalStats.wpTdkTerbit > 0 && (
+                        <p className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400 bg-zinc-500/10 px-1.5 rounded uppercase">
+                          {personalStats.wpTdkTerbit} Tdk Terbit
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="hidden h-12 w-px bg-primary/20 sm:block"></div>
@@ -426,7 +459,8 @@ export default async function DashboardPage({
                 data={[
                   { name: "Lunas", value: stats.sudahDibayarCount, color: "#10b981" },
                   { name: "Belum", value: stats.belumDibayarCount, color: "#ef4444" },
-                  { name: "Tidak Terbit", value: stats.tidakTerbit, color: "#71717a" },
+                  { name: "Sengketa", value: stats.sengketaCount, color: "#f59e0b" },
+                  { name: "Tdk Terbit", value: stats.tidakTerbit, color: "#71717a" },
                 ]}
               />
               <div className="mt-6 space-y-2">
@@ -437,6 +471,10 @@ export default async function DashboardPage({
                 <DashboardMiniStat
                   label="WP Belum Bayar"
                   value={stats.belumDibayarCount.toString()}
+                />
+                <DashboardMiniStat
+                  label="Bermasalah / Sengketa"
+                  value={stats.sengketaCount.toString()}
                 />
               </div>
             </CardContent>
