@@ -101,8 +101,8 @@ export function TaxTableFilters({
   const paymentStatusLabel = filterPaymentStatus === "all" ? "Semua Status"
     : filterPaymentStatus === "LUNAS" ? "✅ Lunas"
     : filterPaymentStatus === "BELUM_LUNAS" ? "⏳ Blm Lunas"
-    : filterPaymentStatus === "SUSPEND" ? "🚫 Suspend"
-    : "Tdk Terbit";
+    : filterPaymentStatus === "SUSPEND" ? "🚫 Sengketa"
+    : "📄 Tdk Terbit";
 
   // Reusable filter dropdowns
   const FilterDropdowns = () => (
@@ -179,8 +179,8 @@ export function TaxTableFilters({
           <SelectItem value="all">Semua Status</SelectItem>
           <SelectItem value="BELUM_LUNAS" className="font-bold text-amber-600">⏳ Belum Lunas</SelectItem>
           <SelectItem value="LUNAS" className="text-emerald-600">✅ Lunas</SelectItem>
-          <SelectItem value="SUSPEND" className="text-rose-600">🚫 Suspend / Sengketa</SelectItem>
-          <SelectItem value="TIDAK_TERBIT">Tdk Terbit</SelectItem>
+          <SelectItem value="SUSPEND" className="text-rose-600 font-bold">🚫 Sengketa</SelectItem>
+          <SelectItem value="TIDAK_TERBIT" className="font-bold text-zinc-500">📄 Tdk Terbit</SelectItem>
         </SelectContent>
       </Select>
     </>
@@ -357,9 +357,9 @@ export function TaxTableFilters({
               </div>
             </div>
 
-            {/* Penarik & Region Status */}
-            <div className="flex flex-wrap gap-2">
-              <div className="flex-1">
+            {/* Penarik, Kelengkapan, Status row */}
+            <div className="space-y-3">
+              <div>
                 <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Penarik</p>
                 <Select value={filterPenarik} onValueChange={(v) => onPenarikChange(v || "all")}>
                   <SelectTrigger className="h-9 w-full rounded-xl border-border bg-muted/40 text-[10px] font-bold">
@@ -377,19 +377,39 @@ export function TaxTableFilters({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex-1">
-                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Kelengkapan</p>
-                <Select value={filterRegionStatus} onValueChange={(v) => onRegionStatusChange(v || "all")}>
-                  <SelectTrigger className="h-9 w-full rounded-xl border-border bg-muted/40 text-[10px] font-bold">
-                    <span className="flex flex-1 text-left">
-                      {filterRegionStatus === "all" ? "Semua" : "⚠️ Blm Lengkap"}
-                    </span>
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-border shadow-2xl">
-                    <SelectItem value="all">Semua</SelectItem>
-                    <SelectItem value="incomplete" className="text-destructive font-black">⚠️ Belum Lengkap</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Kelengkapan</p>
+                  <Select value={filterRegionStatus} onValueChange={(v) => onRegionStatusChange(v || "all")}>
+                    <SelectTrigger className="h-9 w-full rounded-xl border-border bg-muted/40 text-[10px] font-bold">
+                      <span className="flex flex-1 text-left">
+                        {filterRegionStatus === "all" ? "Semua" : "⚠️ Blm Lengkap"}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border shadow-2xl">
+                      <SelectItem value="all">Semua</SelectItem>
+                      <SelectItem value="incomplete" className="text-destructive font-black">⚠️ Belum Lengkap</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Status Bayar</p>
+                  <Select value={filterPaymentStatus} onValueChange={(v) => onPaymentStatusChange(v || "all")}>
+                    <SelectTrigger className="h-9 w-full rounded-xl border-border bg-muted/40 text-[10px] font-bold">
+                      <span className="flex flex-1 text-left truncate italic">
+                        {paymentStatusLabel}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border shadow-2xl">
+                      <SelectItem value="all" className="font-bold">Semua Status</SelectItem>
+                      <SelectItem value="BELUM_LUNAS" className="font-bold text-amber-600">⏳ Belum Lunas</SelectItem>
+                      <SelectItem value="LUNAS" className="text-emerald-600">✅ Lunas</SelectItem>
+                      <SelectItem value="SUSPEND" className="text-rose-600 font-bold">🚫 Sengketa</SelectItem>
+                      <SelectItem value="TIDAK_TERBIT" className="font-bold text-zinc-500">📄 Tdk Terbit</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -421,31 +441,6 @@ export function TaxTableFilters({
                 onChange={(e) => onSearchChange(e.target.value)}
               />
             </form>
-
-            <Select value={filterRegionStatus} onValueChange={(v) => onRegionStatusChange(v || "all")}>
-              <SelectTrigger className="h-10 w-[160px] rounded-xl border-border bg-card text-xs font-bold shadow-sm">
-                <span className="flex flex-1 truncate text-left">
-                  {filterRegionStatus === "all" ? "Semua Wilayah" : "⚠️ Belum Lengkap"}
-                </span>
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-border shadow-2xl">
-                <SelectItem value="all">Semua Wilayah</SelectItem>
-                <SelectItem value="incomplete" className="text-destructive font-black">⚠️ Belum Lengkap</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filterPaymentStatus} onValueChange={(v) => onPaymentStatusChange(v || "all")}>
-              <SelectTrigger className="h-10 w-[160px] rounded-xl border-border bg-card text-xs font-bold shadow-sm">
-                <span className="flex flex-1 truncate text-left">{paymentStatusLabel}</span>
-              </SelectTrigger>
-              <SelectContent className="rounded-xl border-border shadow-2xl">
-                <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="BELUM_LUNAS" className="font-bold text-amber-600">⏳ Belum Lunas</SelectItem>
-                <SelectItem value="LUNAS" className="text-emerald-600">✅ Lunas</SelectItem>
-                <SelectItem value="SUSPEND" className="text-rose-600">🚫 Suspend / Sengketa</SelectItem>
-                <SelectItem value="TIDAK_TERBIT">Tdk Terbit</SelectItem>
-              </SelectContent>
-            </Select>
 
             {isFetching && (
               <div className="animate-in fade-in zoom-in hidden items-center gap-2 duration-300 sm:flex">
