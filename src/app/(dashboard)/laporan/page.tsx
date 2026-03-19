@@ -212,7 +212,7 @@ export default async function LaporanPage({
                   <TableHead className="text-right text-sm font-bold tracking-wider uppercase">
                     Realisasi
                   </TableHead>
-                  <TableHead className="hidden text-right text-sm font-bold tracking-wider uppercase xl:table-cell">
+                  <TableHead className="hidden text-right text-sm font-bold tracking-wider uppercase lg:table-cell">
                     Sisa
                   </TableHead>
                   <TableHead className="text-right text-sm font-bold tracking-wider uppercase">
@@ -358,6 +358,12 @@ export default async function LaporanPage({
                     </TableCell>
                     <TableCell className="hidden text-center sm:table-cell">
                       {totalWpBelumLunas}
+                    </TableCell>
+                    <TableCell className="hidden text-center md:table-cell">
+                      {totalWpSengketa}
+                    </TableCell>
+                    <TableCell className="hidden text-center lg:table-cell">
+                      {totalWpTdkTerbit}
                     </TableCell>
                     <TableCell className="hidden text-right md:table-cell">
                       {formatCurrency(totalTarget)}
