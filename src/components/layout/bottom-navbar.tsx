@@ -85,29 +85,33 @@ export function BottomNavbar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "relative flex flex-col items-center justify-center gap-1.5 transition-all w-14",
-                isActive ? "text-primary" : "text-zinc-500 hover:text-zinc-400"
+                "relative flex flex-col items-center justify-center gap-1 transition-all w-14 pt-1",
+                isActive ? "text-primary" : "text-zinc-400 dark:text-zinc-500"
               )}
             >
+              {/* Active indicator pill at top */}
+              <div className={cn(
+                "absolute top-0 h-0.5 rounded-full transition-all duration-300",
+                isActive ? "w-8 bg-primary shadow-[0_0_8px_rgba(var(--primary-rgb),0.7)]" : "w-0 bg-transparent"
+              )} />
+
               <div className={cn(
                 "p-2 rounded-xl transition-all",
-                isActive ? "bg-primary/10" : "group-hover:bg-zinc-100/10"
+                isActive
+                  ? "bg-primary/15 dark:bg-primary/20 shadow-sm"
+                  : "bg-transparent"
               )}>
                 <Icon className={cn(
-                  "h-6 w-6 transition-all", 
-                  isActive ? "stroke-[2.5px] scale-110" : "stroke-2"
+                  "h-5 w-5 transition-all",
+                  isActive ? "stroke-[2.5px] scale-110" : "stroke-[1.8px] scale-100"
                 )} />
               </div>
               <span className={cn(
-                "text-[9px] font-black uppercase tracking-tighter transition-all", 
-                isActive ? "opacity-100" : "opacity-60"
+                "text-[9px] font-black uppercase tracking-tighter transition-all leading-none",
+                isActive ? "opacity-100" : "opacity-50"
               )}>
                 {item.label}
               </span>
-              
-              {isActive && (
-                <div className="absolute -bottom-1 h-1 w-1 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),0.8)] animate-in fade-in zoom-in duration-500" />
-              )}
             </Link>
           );
         })}
