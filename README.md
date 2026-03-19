@@ -1,6 +1,6 @@
 <img width="2536" height="923" alt="image" src="https://github.com/user-attachments/assets/d540a662-121b-41d0-8882-5cb8455aa37b" />
 
-# 🏦 PBB Manager — Sistem Manajemen Pajak Desa `v2.0`
+# 🏦 PBB Manager — Sistem Manajemen Pajak Desa `v5.1`
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
@@ -8,11 +8,11 @@
 [![Version](https://img.shields.io/badge/Version-2.0-blue)](https://github.com/balongbesuk/pbb-app/tags)
 [![License](https://img.shields.io/badge/License-MIT-blue)](./LICENSE)
 
-**PBB Manager v2.0** hadir dengan update besar **"Smart Sync & Global Management"** untuk tata kelola pendataan, penagihan, dan pelaporan Pajak Bumi dan Bangunan (PBB) yang lebih efisien, akurat, dan profesional.
+**PBB Manager v5.1** hadir dengan update besar **"Smart Sync & Global Management"** untuk tata kelola pendataan, penagihan, dan pelaporan Pajak Bumi dan Bangunan (PBB) yang lebih efisien, akurat, dan profesional.
 
 ---
 
-## ✨ Fitur Unggulan v2.0
+## ✨ Fitur Unggulan v5.1
 
 | Fitur | Deskripsi |
 |---|---|
