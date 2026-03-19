@@ -121,7 +121,7 @@ export function TaxDetailDialog({
 
   return (
     <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-hidden overflow-y-auto rounded-3xl border-none bg-white p-0 shadow-2xl dark:bg-zinc-950">
+      <DialogContent className="max-h-[90vh] max-w-[95vw] overflow-hidden overflow-y-auto rounded-3xl border-none bg-white p-0 shadow-2xl sm:max-w-3xl dark:bg-zinc-950">
         {/* Header: Compact */}
         <div className="flex items-center justify-between px-5 py-3">
           <div className="flex items-center gap-2.5">
@@ -155,20 +155,20 @@ export function TaxDetailDialog({
 
             {/* List Attributes */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground text-xs font-semibold shrink-0">Penarik</span>
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-bold text-zinc-500 dark:bg-zinc-800">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs font-semibold">Penarik</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-100 text-xs font-bold text-zinc-500 dark:bg-zinc-800">
                     {item.penarik?.name?.charAt(0) || "U"}
                   </div>
-                  <span className="text-foreground/90 text-sm font-bold truncate">
+                  <span className="text-foreground/90 text-sm font-bold">
                     {item.penarik?.name || "-"}
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground text-xs font-semibold shrink-0">Status</span>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs font-semibold">Status</span>
                 <Badge
                   variant={
                     (item.paymentStatus === "LUNAS"
@@ -179,20 +179,20 @@ export function TaxDetailDialog({
                           ? "destructive"
                           : "outline") as any
                   }
-                  className="rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase max-w-[120px] truncate"
+                  className="rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase"
                 >
                   {item.paymentStatus === "LUNAS"
                     ? "Lunas"
                     : item.paymentStatus === "BELUM_LUNAS"
                       ? "Belum Lunas"
                       : item.paymentStatus === "SUSPEND"
-                        ? "Sengketa"
+                        ? "Suspend / Sengketa"
                         : "Tdk Terbit"}
                 </Badge>
               </div>
 
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-muted-foreground text-xs font-semibold shrink-0">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs font-semibold">
                   Luas Tanah / Bangunan
                 </span>
                 <span className="text-foreground/90 text-sm font-bold">
@@ -200,8 +200,8 @@ export function TaxDetailDialog({
                 </span>
               </div>
 
-              <div className="flex items-center justify-between gap-2 border-t border-zinc-100 pt-2 dark:border-zinc-800">
-                <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase shrink-0">
+              <div className="flex items-center justify-between border-t border-zinc-100 pt-2 dark:border-zinc-800">
+                <span className="text-muted-foreground text-xs font-bold tracking-widest uppercase">
                   Total Tagihan
                 </span>
                 <span className="text-primary text-xl font-black tracking-tighter">
@@ -441,58 +441,59 @@ export function TaxDetailDialog({
         {/* Payment Actions - Compact */}
         {canManage && !isEditing && (
           <div className="sticky bottom-0 bg-white/90 px-5 py-4 backdrop-blur-md dark:bg-zinc-950/90 border-t border-zinc-100 dark:border-zinc-800">
-            <div className="grid grid-cols-2 gap-2.5">
-              <Button
-                onClick={() => handleStatusChange("LUNAS")}
-                disabled={isStatusLoading || item.paymentStatus === "LUNAS"}
-                className="col-span-2 h-12 w-full rounded-xl bg-emerald-500 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-[0.98] disabled:opacity-50 dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:shadow-emerald-900/20"
-              >
-                {isStatusLoading ? (
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                ) : (
-                  <CheckCircle className="mr-1.5 h-4 w-4" />
-                )}
-                TANDAI LUNAS
-              </Button>
-              
-              <Button
-                onClick={() => handleStatusChange("SUSPEND")}
-                disabled={isStatusLoading || item.paymentStatus === "SUSPEND"}
-                className="col-span-1 h-12 w-full rounded-xl bg-rose-100/80 text-xs font-bold text-rose-600 transition-all hover:bg-rose-200 disabled:opacity-50 dark:bg-rose-500/15 dark:hover:bg-rose-500/25 dark:text-rose-400"
-              >
-                {isStatusLoading ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Ban className="mr-1.5 h-3.5 w-3.5" />
-                )}
-                SENGKETA
-              </Button>
-
-              <Button
-                onClick={() => handleStatusChange("TIDAK_TERBIT")}
-                disabled={isStatusLoading || item.paymentStatus === "TIDAK_TERBIT"}
-                className="col-span-1 h-12 w-full rounded-xl bg-zinc-100 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-200 disabled:opacity-50 dark:bg-zinc-500/20 dark:hover:bg-zinc-500/30 dark:text-zinc-300"
-              >
-                {isStatusLoading ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <X className="mr-1.5 h-3.5 w-3.5" />
-                )}
-                TDK TERBIT
-              </Button>
-              
-              <Button
-                onClick={() => handleStatusChange("BELUM_LUNAS")}
-                disabled={isStatusLoading || item.paymentStatus === "BELUM_LUNAS"}
-                className="col-span-2 h-12 w-full rounded-xl border-2 border-amber-200 bg-white text-xs font-bold text-amber-600 transition-all hover:bg-amber-50 disabled:opacity-50 dark:border-amber-500/30 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-400"
-              >
-                {isStatusLoading ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Clock className="mr-1.5 h-3.5 w-3.5" />
-                )}
-                BATALKAN & RESET
-              </Button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="flex gap-2 sm:flex-1">
+                <Button
+                  onClick={() => handleStatusChange("LUNAS")}
+                  disabled={isStatusLoading || item.paymentStatus === "LUNAS"}
+                  className="h-12 flex-[2] rounded-xl bg-emerald-600 text-sm font-black text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-[0.97] disabled:opacity-50 sm:h-10 sm:text-xs"
+                >
+                  {isStatusLoading ? (
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="mr-1.5 h-4 w-4" />
+                  )}
+                  LUNAS
+                </Button>
+                <Button
+                  onClick={() => handleStatusChange("BELUM_LUNAS")}
+                  disabled={isStatusLoading || item.paymentStatus === "BELUM_LUNAS"}
+                  className="h-12 flex-1 rounded-xl border border-amber-200 bg-amber-50/50 text-[11px] font-bold text-amber-600 transition-all hover:bg-amber-100 disabled:opacity-50 dark:border-amber-900/50 dark:text-amber-500 sm:h-10 sm:text-[10px]"
+                >
+                  {isStatusLoading ? (
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Clock className="mr-1.5 h-4 w-4" />
+                  )}
+                  BATALKAN
+                </Button>
+              </div>
+              <div className="flex gap-2 sm:flex-1">
+                <Button
+                  onClick={() => handleStatusChange("SUSPEND")}
+                  disabled={isStatusLoading || item.paymentStatus === "SUSPEND"}
+                  className="h-12 flex-1 rounded-xl bg-orange-500/10 text-[11px] font-bold text-orange-600 transition-all hover:bg-orange-500/20 disabled:opacity-50 dark:text-orange-500 sm:h-10 sm:text-[10px]"
+                >
+                  {isStatusLoading ? (
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Ban className="mr-1.5 h-4 w-4" />
+                  )}
+                  SENGKETA
+                </Button>
+                <Button
+                  onClick={() => handleStatusChange("TIDAK_TERBIT")}
+                  disabled={isStatusLoading || item.paymentStatus === "TIDAK_TERBIT"}
+                  className="h-12 flex-1 rounded-xl bg-zinc-500/10 text-[11px] font-bold text-zinc-600 transition-all hover:bg-zinc-500/20 disabled:opacity-50 dark:text-zinc-500 sm:h-10 sm:text-[10px]"
+                >
+                  {isStatusLoading ? (
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  ) : (
+                    <X className="mr-1.5 h-4 w-4" />
+                  )}
+                  TDK TERBIT
+                </Button>
+              </div>
             </div>
           </div>
         )}

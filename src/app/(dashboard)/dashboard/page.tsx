@@ -334,27 +334,18 @@ export default async function DashboardPage({
             {dailyLogs?.length > 0 ? (
               <>
                 {dailyLogs.map((log: any) => {
-                  // Map raw status codes to user-friendly labels
-                  const friendlyDetails = (log.details as string || "")
-                    .replace("TIDAK_TERBIT", "Tdk Terbit")
-                    .replace("BELUM_LUNAS", "Belum Lunas")
-                    .replace("SUSPEND", "Sengketa")
-                    .replace("LUNAS", "Lunas");
-                  const isUnpaid = log.details?.includes("BELUM_LUNAS") || log.details?.includes("TIDAK_TERBIT") || log.details?.includes("SUSPEND");
-                  const isSengketa = log.details?.includes("SUSPEND");
-                  const isTdkTerbit = log.details?.includes("TIDAK_TERBIT");
-                  const iconColor = isSengketa ? "bg-amber-500/20" : isTdkTerbit ? "bg-zinc-500/20" : isUnpaid ? "bg-rose-500/20" : "bg-emerald-500/20";
+                  const isUnpaid = log.details?.includes("BELUM_LUNAS") || log.details?.includes("TIDAK_TERBIT");
                   return (
                   <div key={log.id} className="flex items-start gap-3 text-sm">
-                    <div className={`mt-0.5 rounded-full p-1 ${iconColor}`}>
+                    <div className={`mt-0.5 rounded-full p-1 ${isUnpaid ? 'bg-rose-500/20' : 'bg-emerald-500/20'}`}>
                       {isUnpaid ? (
-                        <XCircle className={`h-3 w-3 ${isSengketa ? 'text-amber-600 dark:text-amber-400' : isTdkTerbit ? 'text-zinc-500' : 'text-rose-600 dark:text-rose-400'}`} />
+                        <XCircle className="h-3 w-3 text-rose-600 dark:text-rose-400" />
                       ) : (
                         <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                       )}
                     </div>
                     <div>
-                      <p className="font-semibold">{friendlyDetails}</p>
+                      <p className="font-semibold">{log.details}</p>
                       <p className="text-xs text-muted-foreground">
                         {log.createdAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • {log.createdAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB 
                         {log.entityId ? ` • WP: ${log.entityId}` : ""}
@@ -382,8 +373,8 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {/* Main Stats Grid — 2-col mobile, 4-col desktop */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      {/* Main Stats Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsHeroCard
           title="Total Ketetapan"
           value={formatCurrency(stats.totalNominal)}
@@ -598,26 +589,26 @@ function StatsHeroCard({ title, value, icon, description, percent, color }: any)
   };
 
   return (
-    <Card className="hover:border-primary/20 group rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-300">
-      <div className="flex items-center justify-between mb-2">
-        <div className={cn("rounded-lg border p-1.5", colors[color])}>{icon}</div>
+    <Card className="hover:border-primary/20 group space-y-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300">
+      <div className="flex items-start justify-between">
+        <div className={cn("rounded-xl border p-2.5", colors[color])}>{icon}</div>
         {percent !== undefined && (
           <Badge
             variant="outline"
-            className="rounded-full border-emerald-500/20 bg-emerald-500/5 px-1.5 py-0.5 text-[9px] font-black text-emerald-600"
+            className="rounded-full border-emerald-500/20 bg-emerald-500/5 px-2 py-0.5 text-[9px] font-black text-emerald-600"
           >
             {percent.toFixed(1)}%
           </Badge>
         )}
       </div>
-      <div>
-        <p className="text-muted-foreground text-[9px] font-bold tracking-widest uppercase mb-0.5">
+      <div className="space-y-1">
+        <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
           {title}
         </p>
-        <div className="text-foreground text-lg leading-none font-black tracking-tighter">
+        <div className="text-foreground text-2xl leading-none font-black tracking-tighter">
           {value}
         </div>
-        <p className="text-muted-foreground flex items-center gap-1 pt-1 text-[9px] leading-relaxed">
+        <p className="text-muted-foreground flex items-center gap-1.5 pt-1 text-[10px] leading-relaxed">
           <span className="h-1 w-1 rounded-full bg-zinc-200" />
           {description}
         </p>
