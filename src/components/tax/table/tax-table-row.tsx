@@ -68,7 +68,9 @@ export function TaxTableRow({
                ? "success"
                : item.paymentStatus === "BELUM_LUNAS"
                  ? "warning"
-                 : "outline") as any
+                 : item.paymentStatus === "SUSPEND"
+                   ? "destructive"
+                   : "outline") as any
           }
           className="whitespace-nowrap text-[10px] sm:text-[11px] font-black uppercase"
         >
@@ -76,7 +78,9 @@ export function TaxTableRow({
             ? "Lunas"
             : item.paymentStatus === "BELUM_LUNAS"
               ? "Blm Lunas"
-              : "Tdk Terbit"}
+              : item.paymentStatus === "SUSPEND"
+                ? "Sengketa"
+                : "Tdk Terbit"}
         </Badge>
       </div>
       <div className="flex w-[150px] items-center overflow-hidden px-4 shrink-0">

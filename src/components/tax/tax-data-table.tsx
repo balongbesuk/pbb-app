@@ -582,11 +582,17 @@ export function TaxDataTable({
                          </div>
                          <div className={cn(
                            "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm",
-                           isLunas 
+                           item.paymentStatus === "LUNAS" 
                              ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" 
-                             : "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
+                             : item.paymentStatus === "BELUM_LUNAS"
+                               ? "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
+                               : item.paymentStatus === "SUSPEND"
+                                 ? "bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20"
+                                 : "bg-zinc-50 text-zinc-600 border-zinc-200 dark:bg-zinc-500/10 dark:text-zinc-400 dark:border-zinc-500/20"
                          )}>
-                           {isLunas ? "Lunas" : "Blm Lunas"}
+                           {item.paymentStatus === "LUNAS" ? "Lunas" : 
+                            item.paymentStatus === "BELUM_LUNAS" ? "Blm Lunas" :
+                            item.paymentStatus === "SUSPEND" ? "Sengketa" : "Tdk Terbit"}
                          </div>
                       </div>
 
