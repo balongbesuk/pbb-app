@@ -440,37 +440,25 @@ export function TaxDetailDialog({
 
         {/* Payment Actions - Compact */}
         {canManage && !isEditing && (
-          <div className="sticky bottom-0 bg-white/90 px-5 py-3 backdrop-blur-md dark:bg-zinc-950/90 border-t border-zinc-100 dark:border-zinc-800">
-            {/* 2x2 grid on mobile, single row on sm+ */}
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="sticky bottom-0 bg-white/90 px-5 py-4 backdrop-blur-md dark:bg-zinc-950/90 border-t border-zinc-100 dark:border-zinc-800">
+            <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-row">
               <Button
                 onClick={() => handleStatusChange("LUNAS")}
                 disabled={isStatusLoading || item.paymentStatus === "LUNAS"}
-                className="h-10 col-span-2 sm:col-span-1 rounded-xl bg-emerald-600 text-xs font-black text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-[0.97] disabled:opacity-50"
+                className="col-span-2 h-12 flex-1 rounded-xl bg-emerald-500 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-[0.98] disabled:opacity-50"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
                 ) : (
                   <CheckCircle className="mr-1.5 h-4 w-4" />
                 )}
-                LUNAS
+                TANDAI LUNAS
               </Button>
-              <Button
-                onClick={() => handleStatusChange("BELUM_LUNAS")}
-                disabled={isStatusLoading || item.paymentStatus === "BELUM_LUNAS"}
-                className="h-10 rounded-xl border border-amber-200 bg-amber-50/50 text-[10px] font-bold text-amber-600 transition-all hover:bg-amber-100 disabled:opacity-50 dark:border-amber-900/50 dark:text-amber-500"
-              >
-                {isStatusLoading ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Clock className="mr-1.5 h-3.5 w-3.5" />
-                )}
-                BATALKAN
-              </Button>
+              
               <Button
                 onClick={() => handleStatusChange("SUSPEND")}
                 disabled={isStatusLoading || item.paymentStatus === "SUSPEND"}
-                className="h-10 rounded-xl bg-orange-500/10 text-[10px] font-bold text-orange-600 transition-all hover:bg-orange-500/20 disabled:opacity-50 dark:text-orange-500"
+                className="col-span-1 h-12 flex-1 rounded-xl bg-orange-100/50 text-xs font-bold text-orange-600 transition-all hover:bg-orange-100 disabled:opacity-50 dark:bg-orange-950/30 dark:text-orange-500"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -479,10 +467,11 @@ export function TaxDetailDialog({
                 )}
                 SENGKETA
               </Button>
+
               <Button
                 onClick={() => handleStatusChange("TIDAK_TERBIT")}
                 disabled={isStatusLoading || item.paymentStatus === "TIDAK_TERBIT"}
-                className="h-10 rounded-xl bg-zinc-500/10 text-[10px] font-bold text-zinc-600 transition-all hover:bg-zinc-500/20 disabled:opacity-50 dark:text-zinc-500"
+                className="col-span-1 h-12 flex-1 rounded-xl bg-zinc-100 text-xs font-bold text-zinc-600 transition-all hover:bg-zinc-200 disabled:opacity-50 dark:bg-zinc-800 dark:text-zinc-400"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -490,6 +479,19 @@ export function TaxDetailDialog({
                   <X className="mr-1.5 h-3.5 w-3.5" />
                 )}
                 TDK TERBIT
+              </Button>
+              
+              <Button
+                onClick={() => handleStatusChange("BELUM_LUNAS")}
+                disabled={isStatusLoading || item.paymentStatus === "BELUM_LUNAS"}
+                className="col-span-2 h-12 flex-1 rounded-xl border-2 border-rose-100 bg-white text-xs font-bold text-rose-500 transition-all hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900/40 dark:bg-zinc-950"
+              >
+                {isStatusLoading ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Clock className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                BATALKAN & RESET
               </Button>
             </div>
           </div>
