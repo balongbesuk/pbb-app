@@ -37,7 +37,7 @@ export async function updatePaymentStatus(
     if (paymentStatus === "LUNAS") {
       pembayaran = data.ketetapan;
       sisa = 0;
-    } else if (paymentStatus === "BELUM_LUNAS") {
+    } else {
       pembayaran = 0;
       sisa = data.ketetapan;
     }
@@ -129,7 +129,7 @@ export async function bulkUpdatePaymentStatus(
         if (paymentStatus === "LUNAS") {
           pembayaran = data.ketetapan;
           sisa = 0;
-        } else if (paymentStatus === "BELUM_LUNAS" || paymentStatus === "SUSPEND") {
+        } else {
           pembayaran = 0;
           sisa = data.ketetapan;
         }

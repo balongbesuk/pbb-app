@@ -84,7 +84,7 @@ export function TaxDetailDialog({
     setIsUpdating(false);
   };
 
-  const handleStatusChange = async (status: "LUNAS" | "BELUM_LUNAS" | "SUSPEND") => {
+  const handleStatusChange = async (status: "LUNAS" | "BELUM_LUNAS" | "SUSPEND" | "TIDAK_TERBIT") => {
     setIsStatusLoading(true);
     try {
       await onUpdateStatus(item.id.toString(), status);
@@ -469,14 +469,26 @@ export function TaxDetailDialog({
               <Button
                 onClick={() => handleStatusChange("SUSPEND")}
                 disabled={isStatusLoading || item.paymentStatus === "SUSPEND"}
-                className="h-10 flex-1 rounded-xl bg-rose-500/10 text-[10px] font-bold text-rose-600 transition-all hover:bg-rose-500/20 disabled:opacity-50 dark:text-rose-500"
+                className="h-10 flex-1 rounded-xl bg-orange-500/10 text-[10px] font-bold text-orange-600 transition-all hover:bg-orange-500/20 disabled:opacity-50 dark:text-orange-500"
               >
                 {isStatusLoading ? (
                   <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                 ) : (
                   <Ban className="mr-1.5 h-3.5 w-3.5" />
                 )}
-                SUSPEND
+                SENGKETA
+              </Button>
+              <Button
+                onClick={() => handleStatusChange("TIDAK_TERBIT")}
+                disabled={isStatusLoading || item.paymentStatus === "TIDAK_TERBIT"}
+                className="h-10 flex-1 rounded-xl bg-zinc-500/10 text-[10px] font-bold text-zinc-600 transition-all hover:bg-zinc-500/20 disabled:opacity-50 dark:text-zinc-500"
+              >
+                {isStatusLoading ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <X className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                TDK TERBIT
               </Button>
             </div>
           </div>
