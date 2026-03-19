@@ -209,20 +209,17 @@ export function TaxTableFilters({
               "relative flex h-10 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition-all",
               mobileFiltersOpen
                 ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25"
-                : "bg-card border-border text-foreground"
+                : "bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100"
             )}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             <span>Filter</span>
             {activeFilterCount > 0 && (
-              <span className={cn(
-                "flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black",
-                mobileFiltersOpen ? "bg-white/20 text-white" : "bg-primary text-white"
-              )}>
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shrink-0 shadow-sm">
                 {activeFilterCount}
               </span>
             )}
-            <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", mobileFiltersOpen && "rotate-180")} />
+            <ChevronDown className={cn("h-3 w-3 transition-transform duration-200 opacity-50", mobileFiltersOpen && "rotate-180 opacity-100")} />
           </button>
 
           {isFetching && (
@@ -400,7 +397,11 @@ export function TaxTableFilters({
             <Button onClick={() => setMobileFiltersOpen(false)} size="sm" className="w-full rounded-xl h-10 font-black text-xs gap-2">
               <CheckCircle2 className="h-4 w-4" />
               Terapkan Filter
-              {activeFilterCount > 0 && <span className="bg-white/20 rounded-full px-1.5 text-[10px]">{activeFilterCount} aktif</span>}
+              {activeFilterCount > 0 && (
+                <span className="bg-white text-primary rounded-full px-2 py-0.5 text-[10px] font-black shadow-sm">
+                  {activeFilterCount} aktif
+                </span>
+              )}
             </Button>
           </div>
         </div>
