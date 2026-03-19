@@ -6,12 +6,11 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Printer, Loader2, User } from "lucide-react";
+import { Search, Printer, User, SlidersHorizontal, ChevronDown, X, CheckCircle2 } from "lucide-react";
 import type { AvailableFilters } from "@/types/app";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { AppUser } from "@/types/app";
 import { cn } from "@/lib/utils";
@@ -63,20 +62,129 @@ export function TaxTableFilters({
 }: TaxTableFiltersProps) {
   const searchParams = useSearchParams();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("focus") === "search") {
       inputRef.current?.focus();
-      // Optional: scroll into view
       inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [searchParams]);
 
+  // Count active filters (excluding "all"/empty)
+  const activeFilterCount = [
+    filterDusun !== "all" && filterDusun,
+    filterRw !== "all" && filterRw,
+    filterRt !== "all" && filterRt,
+    filterPenarik !== "all" && filterPenarik,
+    filterRegionStatus !== "all" && filterRegionStatus,
+    filterPaymentStatus !== "all" && filterPaymentStatus,
+  ].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    onDusunChange("all");
+    onRwChange("all");
+    onRtChange("all");
+    onPenarikChange("all");
+    onRegionStatusChange("all");
+    onPaymentStatusChange("all");
+  };
+
+  const paymentStatusLabel = filterPaymentStatus === "all" ? "Semua Status"
+    : filterPaymentStatus === "LUNAS" ? "✅ Lunas"
+    : filterPaymentStatus === "BELUM_LUNAS" ? "⏳ Blm Lunas"
+    : filterPaymentStatus === "SUSPEND" ? "🚫 Suspend"
+    : "Tdk Terbit";
+
+  // Reusable filter dropdowns
+  const FilterDropdowns = () => (
+    <>
+      <Select value={filterDusun} onValueChange={(v) => onDusunChange(v || "all")}>
+        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[130px]">
+          <span className="flex flex-1 truncate text-left">{filterDusun === "all" ? "Semua Dusun" : filterDusun}</span>
+        </SelectTrigger>
+        <SelectContent className="rounded-xl border-border shadow-2xl">
+          <SelectItem value="all" className="font-bold">Semua Dusun</SelectItem>
+          {availableFilters.dusun.map((d: string) => (
+            <SelectItem key={d} value={d}>{d}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={filterRw} onValueChange={(v) => onRwChange(v || "all")}>
+        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px]">
+          <span className="flex flex-1 truncate text-left">{filterRw === "all" ? "Semua RW" : `RW ${filterRw}`}</span>
+        </SelectTrigger>
+        <SelectContent className="rounded-xl border-border shadow-2xl">
+          <SelectItem value="all" className="font-bold">Semua RW</SelectItem>
+          {availableFilters.rw.map((rw: string) => (
+            <SelectItem key={rw} value={rw}>RW {rw}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={filterRt} onValueChange={(v) => onRtChange(v || "all")}>
+        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px]">
+          <span className="flex flex-1 truncate text-left">{filterRt === "all" ? "Semua RT" : `RT ${filterRt}`}</span>
+        </SelectTrigger>
+        <SelectContent className="rounded-xl border-border shadow-2xl">
+          <SelectItem value="all" className="font-bold">Semua RT</SelectItem>
+          {availableFilters.rt.map((rt: string) => (
+            <SelectItem key={rt} value={rt}>RT {rt}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={filterPenarik} onValueChange={(v) => onPenarikChange(v || "all")}>
+        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[160px]">
+          <span className="flex flex-1 truncate text-left">
+            {filterPenarik === "all" ? "Semua Penarik" : filterPenarik === "none" ? "Tanpa Petugas"
+              : availableFilters.penarik?.find((p) => p.id === filterPenarik)?.name || "Pilih"}
+          </span>
+        </SelectTrigger>
+        <SelectContent className="rounded-xl border-border shadow-2xl">
+          <SelectItem value="all" className="font-bold">Semua Penarik</SelectItem>
+          <SelectItem value="none" className="text-destructive font-black">Tanpa Petugas</SelectItem>
+          {availableFilters.penarik?.map((p) => (
+            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={filterRegionStatus} onValueChange={(v) => onRegionStatusChange(v || "all")}>
+        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-xs font-bold shadow-sm lg:w-[140px]">
+          <span className="flex flex-1 truncate text-left">
+            {filterRegionStatus === "all" ? "Semua Wilayah" : "⚠️ Belum Lengkap"}
+          </span>
+        </SelectTrigger>
+        <SelectContent className="rounded-xl border-border shadow-2xl">
+          <SelectItem value="all">Semua Wilayah</SelectItem>
+          <SelectItem value="incomplete" className="text-destructive font-black">⚠️ Belum Lengkap</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select value={filterPaymentStatus} onValueChange={(v) => onPaymentStatusChange(v || "all")}>
+        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-xs font-bold shadow-sm lg:w-[150px]">
+          <span className="flex flex-1 truncate text-left">{paymentStatusLabel}</span>
+        </SelectTrigger>
+        <SelectContent className="rounded-xl border-border shadow-2xl">
+          <SelectItem value="all">Semua Status</SelectItem>
+          <SelectItem value="BELUM_LUNAS" className="font-bold text-amber-600">⏳ Belum Lunas</SelectItem>
+          <SelectItem value="LUNAS" className="text-emerald-600">✅ Lunas</SelectItem>
+          <SelectItem value="SUSPEND" className="text-rose-600">🚫 Suspend / Sengketa</SelectItem>
+          <SelectItem value="TIDAK_TERBIT">Tdk Terbit</SelectItem>
+        </SelectContent>
+      </Select>
+    </>
+  );
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
-        <div className="flex w-full items-center gap-3 lg:w-auto">
-          <form onSubmit={onSearchSubmit} className="relative flex-1 sm:min-w-[300px]">
+    <div className="space-y-3">
+      {/* ── MOBILE LAYOUT (hidden on md+) ─────────────────── */}
+      <div className="md:hidden space-y-2">
+        {/* Row 1: Search + Filter Button */}
+        <div className="flex items-center gap-2">
+          <form onSubmit={onSearchSubmit} className="relative flex-1">
             <Search className="absolute top-1/2 left-3.5 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
             <Input
               ref={inputRef}
@@ -87,183 +195,302 @@ export function TaxTableFilters({
             />
           </form>
 
-          <Select
-            value={filterRegionStatus}
-            onValueChange={(v) => onRegionStatusChange(v || "all")}
-          >
-            <SelectTrigger className="h-10 w-[160px] rounded-xl border-border bg-card text-xs font-bold shadow-sm">
-              <span className="flex flex-1 truncate text-left">
-                {filterRegionStatus === "all" ? "Semua Wilayah" : "⚠️ Belum Lengkap"}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-border shadow-2xl">
-              <SelectItem value="all">Semua Wilayah</SelectItem>
-              <SelectItem value="incomplete" className="text-destructive font-black">
-                ⚠️ Belum Lengkap
-              </SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={filterPaymentStatus}
-            onValueChange={(v) => onPaymentStatusChange(v || "all")}
-          >
-            <SelectTrigger className="h-10 w-[160px] rounded-xl border-border bg-card text-xs font-bold shadow-sm">
-              <span className="flex flex-1 truncate text-left">
-                {filterPaymentStatus === "all" ? "Semua Status" : 
-                 filterPaymentStatus === "LUNAS" ? "✅ Lunas" :
-                 filterPaymentStatus === "BELUM_LUNAS" ? "⏳ Blm Lunas" :
-                 filterPaymentStatus === "SUSPEND" ? "🚫 Suspend" : "Tdk Terbit"}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-border shadow-2xl">
-              <SelectItem value="all">Semua Status</SelectItem>
-              <SelectItem value="BELUM_LUNAS" className="font-bold text-amber-600">⏳ Belum Lunas</SelectItem>
-              <SelectItem value="LUNAS" className="text-emerald-600">✅ Lunas</SelectItem>
-              <SelectItem value="SUSPEND" className="text-rose-600">🚫 Suspend / Sengketa</SelectItem>
-              <SelectItem value="TIDAK_TERBIT">Tdk Terbit</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {isFetching && (
-            <div className="animate-in fade-in zoom-in hidden items-center gap-2 duration-300 sm:flex">
-              <div className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
-              <span className="text-primary text-[10px] font-black tracking-widest uppercase">
-                Sinkron...
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto">
-          <Select value={filterDusun} onValueChange={(v) => onDusunChange(v || "all")}>
-            <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[130px]">
-              <span className="flex flex-1 truncate text-left">
-                {filterDusun === "all" ? "Semua Dusun" : filterDusun}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-border shadow-2xl">
-              <SelectItem value="all" className="font-bold">
-                Semua Dusun
-              </SelectItem>
-              {availableFilters.dusun.map((d: string) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={filterRw} onValueChange={(v) => onRwChange(v || "all")}>
-            <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px]">
-              <span className="flex flex-1 truncate text-left">
-                {filterRw === "all" ? "Semua RW" : `RW ${filterRw}`}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-border shadow-2xl">
-              <SelectItem value="all" className="font-bold">
-                Semua RW
-              </SelectItem>
-              {availableFilters.rw.map((rw: string) => (
-                <SelectItem key={rw} value={rw}>
-                  RW {rw}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={filterRt} onValueChange={(v) => onRtChange(v || "all")}>
-            <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px]">
-              <span className="flex flex-1 truncate text-left">
-                {filterRt === "all" ? "Semua RT" : `RT ${filterRt}`}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-border shadow-2xl">
-              <SelectItem value="all" className="font-bold">
-                Semua RT
-              </SelectItem>
-              {availableFilters.rt.map((rt: string) => (
-                <SelectItem key={rt} value={rt}>
-                  RT {rt}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={filterPenarik} onValueChange={(v) => onPenarikChange(v || "all")}>
-            <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[160px]">
-              <span className="flex flex-1 truncate text-left">
-                {filterPenarik === "all"
-                  ? "Semua Penarik"
-                  : filterPenarik === "none"
-                    ? "Tanpa Petugas"
-                    : availableFilters.penarik?.find((p) => p.id === filterPenarik)?.name ||
-                      "Pilih"}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-border shadow-2xl">
-              <SelectItem value="all" className="font-bold">
-                Semua Penarik
-              </SelectItem>
-              <SelectItem value="none" className="text-destructive font-black">
-                Tanpa Petugas
-              </SelectItem>
-              {availableFilters.penarik?.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div className="flex flex-col-reverse items-center justify-between gap-2 sm:flex-row">
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          {showPrint && (
-            <Button
-              onClick={onPrint}
-              variant="outline"
-              size="sm"
-              className="h-9 w-full gap-2 rounded-xl border-border bg-muted/20 text-[10px] font-bold tracking-widest text-muted-foreground uppercase shadow-sm transition-colors hover:bg-muted/30 sm:w-auto"
-            >
-              <Printer className="h-3.5 w-3.5" /> Cetak / Unduh Excel
-            </Button>
-          )}
-          {currentUser?.role === "PENARIK" && currentUser?.id && (
-            <Button
-              onClick={() => {
-                if (filterPenarik === currentUser.id) onPenarikChange("all");
-                else onPenarikChange(currentUser.id);
-              }}
-              variant={filterPenarik === currentUser.id ? "default" : "outline"}
-              size="sm"
-              className={cn(
-                "h-9 w-full sm:w-auto gap-2 rounded-xl text-[10px] font-bold tracking-widest uppercase shadow-sm transition-colors",
-                filterPenarik === currentUser.id 
-                  ? "bg-primary text-primary-foreground shadow-primary/20" 
-                  : "border-border bg-amber-500/10 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20"
-              )}
-            >
-              <User className="h-3.5 w-3.5" /> 
-              {filterPenarik === currentUser.id ? "Menampilkan Tugas Saya" : "Tampilkan Tugas Saya"}
-            </Button>
-          )}
-          <Button
-            onClick={() => {
-              if (filterPaymentStatus === "BELUM_LUNAS") onPaymentStatusChange("all");
-              else onPaymentStatusChange("BELUM_LUNAS");
-            }}
-            variant={filterPaymentStatus === "BELUM_LUNAS" ? "default" : "outline"}
-            size="sm"
+          <button
+            onClick={() => setMobileFiltersOpen((v) => !v)}
             className={cn(
-              "h-9 w-full sm:w-auto gap-2 rounded-xl text-[10px] font-bold tracking-widest uppercase shadow-sm transition-colors",
-              filterPaymentStatus === "BELUM_LUNAS" 
-                ? "bg-amber-600 text-white shadow-amber-500/20" 
-                : "border-border bg-amber-500/5 text-amber-600 dark:text-amber-500 hover:bg-amber-500/10"
+              "relative flex h-10 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition-all",
+              mobileFiltersOpen
+                ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25"
+                : "bg-card border-border text-foreground"
             )}
           >
-            <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-            {filterPaymentStatus === "BELUM_LUNAS" ? "Menampilkan Belum Lunas" : "Tampilkan Belum Lunas"}
-          </Button>
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            <span>Filter</span>
+            {activeFilterCount > 0 && (
+              <span className={cn(
+                "flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black",
+                mobileFiltersOpen ? "bg-white/20 text-white" : "bg-primary text-white"
+              )}>
+                {activeFilterCount}
+              </span>
+            )}
+            <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", mobileFiltersOpen && "rotate-180")} />
+          </button>
+
+          {isFetching && (
+            <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-primary" />
+          )}
+        </div>
+
+        {/* Row 2: Quick action chips — always visible */}
+        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {currentUser?.role === "PENARIK" && currentUser?.id && (
+            <button
+              onClick={() => filterPenarik === currentUser.id ? onPenarikChange("all") : onPenarikChange(currentUser.id)}
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors",
+                filterPenarik === currentUser.id
+                  ? "bg-primary text-white border-primary"
+                  : "bg-card border-border text-muted-foreground"
+              )}
+            >
+              <User className="h-3 w-3" />
+              {filterPenarik === currentUser.id ? "Tugas Saya ✓" : "Tugas Saya"}
+            </button>
+          )}
+          <button
+            onClick={() => filterPaymentStatus === "BELUM_LUNAS" ? onPaymentStatusChange("all") : onPaymentStatusChange("BELUM_LUNAS")}
+            className={cn(
+              "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors",
+              filterPaymentStatus === "BELUM_LUNAS"
+                ? "bg-amber-600 text-white border-amber-600"
+                : "bg-amber-500/5 border-amber-300 text-amber-600 dark:text-amber-500"
+            )}
+          >
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
+            {filterPaymentStatus === "BELUM_LUNAS" ? "Blm Lunas ✓" : "Blm Lunas"}
+          </button>
+          {activeFilterCount > 0 && (
+            <button
+              onClick={clearAllFilters}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-rose-300 bg-rose-500/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-rose-500 transition-colors hover:bg-rose-500/10"
+            >
+              <X className="h-3 w-3" />
+              Reset ({activeFilterCount})
+            </button>
+          )}
+          {showPrint && (
+            <button
+              onClick={onPrint}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted/30"
+            >
+              <Printer className="h-3 w-3" />
+              Cetak
+            </button>
+          )}
+        </div>
+
+        {/* Collapsible Filter Panel */}
+        <div className={cn(
+          "overflow-hidden transition-all duration-300 ease-in-out",
+          mobileFiltersOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
+        )}>
+          <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-3 space-y-3 shadow-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Filter & Sortir</span>
+              <button onClick={() => setMobileFiltersOpen(false)} className="rounded-lg p-1 hover:bg-muted">
+                <X className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            </div>
+
+            {/* Status Bayar chips */}
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Status Bayar</p>
+              <div className="flex flex-wrap gap-1.5">
+                {["all","BELUM_LUNAS","LUNAS","SUSPEND","TIDAK_TERBIT"].map((s) => {
+                  const label = s === "all" ? "Semua" : s === "BELUM_LUNAS" ? "⏳ Belum Lunas" : s === "LUNAS" ? "✅ Lunas" : s === "SUSPEND" ? "🚫 Suspend" : "Tdk Terbit";
+                  return (
+                    <button key={s} onClick={() => onPaymentStatusChange(s)}
+                      className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold transition-all",
+                        filterPaymentStatus === s ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Dusun chips */}
+            {availableFilters.dusun.length > 0 && (
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Dusun</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button onClick={() => onDusunChange("all")}
+                    className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold transition-all",
+                      filterDusun === "all" ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                    Semua
+                  </button>
+                  {availableFilters.dusun.map((d: string) => (
+                    <button key={d} onClick={() => onDusunChange(d)}
+                      className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold transition-all",
+                        filterDusun === d ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* RW + RT row */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">RW</p>
+                <div className="flex flex-wrap gap-1">
+                  <button onClick={() => onRwChange("all")}
+                    className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
+                      filterRw === "all" ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                    Semua
+                  </button>
+                  {availableFilters.rw.map((rw: string) => (
+                    <button key={rw} onClick={() => onRwChange(rw)}
+                      className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
+                        filterRw === rw ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                      {rw}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">RT</p>
+                <div className="flex flex-wrap gap-1 max-h-[60px] overflow-y-auto">
+                  <button onClick={() => onRtChange("all")}
+                    className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
+                      filterRt === "all" ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                    Semua
+                  </button>
+                  {availableFilters.rt.map((rt: string) => (
+                    <button key={rt} onClick={() => onRtChange(rt)}
+                      className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
+                        filterRt === rt ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                      {rt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Penarik & Region Status */}
+            <div className="flex flex-wrap gap-2">
+              <div className="flex-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Penarik</p>
+                <Select value={filterPenarik} onValueChange={(v) => onPenarikChange(v || "all")}>
+                  <SelectTrigger className="h-9 w-full rounded-xl border-border bg-muted/40 text-[10px] font-bold">
+                    <span className="flex flex-1 truncate text-left">
+                      {filterPenarik === "all" ? "Semua Penarik" : filterPenarik === "none" ? "Tanpa Petugas"
+                        : availableFilters.penarik?.find((p) => p.id === filterPenarik)?.name || "Pilih"}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border shadow-2xl">
+                    <SelectItem value="all" className="font-bold">Semua Penarik</SelectItem>
+                    <SelectItem value="none" className="text-destructive font-black">Tanpa Petugas</SelectItem>
+                    {availableFilters.penarik?.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1">
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Kelengkapan</p>
+                <Select value={filterRegionStatus} onValueChange={(v) => onRegionStatusChange(v || "all")}>
+                  <SelectTrigger className="h-9 w-full rounded-xl border-border bg-muted/40 text-[10px] font-bold">
+                    <span className="flex flex-1 text-left">
+                      {filterRegionStatus === "all" ? "Semua" : "⚠️ Blm Lengkap"}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-border shadow-2xl">
+                    <SelectItem value="all">Semua</SelectItem>
+                    <SelectItem value="incomplete" className="text-destructive font-black">⚠️ Belum Lengkap</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Apply button */}
+            <Button onClick={() => setMobileFiltersOpen(false)} size="sm" className="w-full rounded-xl h-10 font-black text-xs gap-2">
+              <CheckCircle2 className="h-4 w-4" />
+              Terapkan Filter
+              {activeFilterCount > 0 && <span className="bg-white/20 rounded-full px-1.5 text-[10px]">{activeFilterCount} aktif</span>}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── DESKTOP LAYOUT (hidden on < md) ───────────────── */}
+      <div className="hidden md:block space-y-4">
+        <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
+          <div className="flex w-full items-center gap-3 lg:w-auto">
+            <form onSubmit={onSearchSubmit} className="relative flex-1 sm:min-w-[300px]">
+              <Search className="absolute top-1/2 left-3.5 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
+              <Input
+                ref={inputRef}
+                placeholder="Cari NOP atau Nama..."
+                className="focus-visible:ring-primary/20 h-10 rounded-xl border-border bg-muted/20 pl-10 text-xs font-medium transition-all"
+                value={search}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
+            </form>
+
+            <Select value={filterRegionStatus} onValueChange={(v) => onRegionStatusChange(v || "all")}>
+              <SelectTrigger className="h-10 w-[160px] rounded-xl border-border bg-card text-xs font-bold shadow-sm">
+                <span className="flex flex-1 truncate text-left">
+                  {filterRegionStatus === "all" ? "Semua Wilayah" : "⚠️ Belum Lengkap"}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border shadow-2xl">
+                <SelectItem value="all">Semua Wilayah</SelectItem>
+                <SelectItem value="incomplete" className="text-destructive font-black">⚠️ Belum Lengkap</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filterPaymentStatus} onValueChange={(v) => onPaymentStatusChange(v || "all")}>
+              <SelectTrigger className="h-10 w-[160px] rounded-xl border-border bg-card text-xs font-bold shadow-sm">
+                <span className="flex flex-1 truncate text-left">{paymentStatusLabel}</span>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border shadow-2xl">
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="BELUM_LUNAS" className="font-bold text-amber-600">⏳ Belum Lunas</SelectItem>
+                <SelectItem value="LUNAS" className="text-emerald-600">✅ Lunas</SelectItem>
+                <SelectItem value="SUSPEND" className="text-rose-600">🚫 Suspend / Sengketa</SelectItem>
+                <SelectItem value="TIDAK_TERBIT">Tdk Terbit</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {isFetching && (
+              <div className="animate-in fade-in zoom-in hidden items-center gap-2 duration-300 sm:flex">
+                <div className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
+                <span className="text-primary text-[10px] font-black tracking-widest uppercase">Sinkron...</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto">
+            <FilterDropdowns />
+          </div>
+        </div>
+
+        <div className="flex flex-col-reverse items-center justify-between gap-2 sm:flex-row">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            {showPrint && (
+              <Button onClick={onPrint} variant="outline" size="sm"
+                className="h-9 w-full gap-2 rounded-xl border-border bg-muted/20 text-[10px] font-bold tracking-widest text-muted-foreground uppercase shadow-sm transition-colors hover:bg-muted/30 sm:w-auto">
+                <Printer className="h-3.5 w-3.5" /> Cetak / Unduh Excel
+              </Button>
+            )}
+            {currentUser?.role === "PENARIK" && currentUser?.id && (
+              <Button
+                onClick={() => filterPenarik === currentUser.id ? onPenarikChange("all") : onPenarikChange(currentUser.id)}
+                variant={filterPenarik === currentUser.id ? "default" : "outline"} size="sm"
+                className={cn(
+                  "h-9 w-full sm:w-auto gap-2 rounded-xl text-[10px] font-bold tracking-widest uppercase shadow-sm transition-colors",
+                  filterPenarik === currentUser.id ? "bg-primary text-primary-foreground shadow-primary/20"
+                    : "border-border bg-amber-500/10 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20"
+                )}>
+                <User className="h-3.5 w-3.5" />
+                {filterPenarik === currentUser.id ? "Menampilkan Tugas Saya" : "Tampilkan Tugas Saya"}
+              </Button>
+            )}
+            <Button
+              onClick={() => filterPaymentStatus === "BELUM_LUNAS" ? onPaymentStatusChange("all") : onPaymentStatusChange("BELUM_LUNAS")}
+              variant={filterPaymentStatus === "BELUM_LUNAS" ? "default" : "outline"} size="sm"
+              className={cn(
+                "h-9 w-full sm:w-auto gap-2 rounded-xl text-[10px] font-bold tracking-widest uppercase shadow-sm transition-colors",
+                filterPaymentStatus === "BELUM_LUNAS" ? "bg-amber-600 text-white shadow-amber-500/20"
+                  : "border-border bg-amber-500/5 text-amber-600 dark:text-amber-500 hover:bg-amber-500/10"
+              )}>
+              <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+              {filterPaymentStatus === "BELUM_LUNAS" ? "Menampilkan Belum Lunas" : "Tampilkan Belum Lunas"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
