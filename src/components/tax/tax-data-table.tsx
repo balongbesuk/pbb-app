@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User, Loader2, UserMinus, MapPin, Calculator, XCircle, CheckCircle2 } from "lucide-react";
+import { User, Loader2, UserMinus, MapPin, Calculator, XCircle, CheckCircle2, Ban } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { updatePaymentStatus, bulkUpdatePaymentStatus } from "@/app/actions/tax-update-actions";
 import { 
@@ -137,6 +137,35 @@ export function TaxDataTable({
   useEffect(() => {
     rowVirtualizer.measure();
   }, [isMobile, rowVirtualizer]);
+
+  const isPenarik = currentUser?.role === "PENARIK";
+  const ownPenarikFilterActive = !isPenarik || filterPenarik === currentUser?.id;
+
+  const switchToOwnAssignments = () => {
+    if (!isPenarik || !currentUser?.id) return;
+
+    const params = new URLSearchParams(searchParams);
+    params.set("penarik", currentUser.id);
+    params.set("page", "1");
+    setSelectedIds(new Set());
+    setSelectedAmounts(new Map());
+    setIsAllFilteredSelected(false);
+    setFilterPenarik(currentUser.id);
+    router.push(`${pathname}?${params.toString()}`);
+    toast.info("Checklist dialihkan ke Tugas Saya agar hanya data milik Anda yang bisa dipilih.");
+  };
+
+  const isRowSelectable = (item: TaxDataItem) => {
+    if (!isPenarik) return true;
+    return item.penarikId === currentUser?.id && item.paymentStatus !== "LUNAS";
+  };
+
+  const getSelectionHint = (item: TaxDataItem) => {
+    if (!isPenarik) return undefined;
+    if (item.paymentStatus === "LUNAS") return "Data yang sudah lunas tidak bisa dicentang.";
+    if (item.penarikId !== currentUser?.id) return "Hanya data milik Anda yang bisa dicentang untuk aksi massal.";
+    return undefined;
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -265,13 +294,18 @@ export function TaxDataTable({
   };
 
   const getSelectableItems = () => {
-    if (currentUser?.role === "PENARIK") {
-      return displayData.filter((d: TaxDataItem) => d.paymentStatus !== "LUNAS");
+    if (isPenarik) {
+      return displayData.filter((d: TaxDataItem) => isRowSelectable(d));
     }
     return displayData;
   };
 
   const toggleSelectAll = () => {
+    if (isPenarik && !ownPenarikFilterActive) {
+      switchToOwnAssignments();
+      return;
+    }
+
     const selectable = getSelectableItems();
     // Use Array.every properly on non-empty selectable array
     const allSelected = selectable.length > 0 && selectable.every((item: TaxDataItem) => selectedIds.has(item.id));
@@ -308,16 +342,25 @@ export function TaxDataTable({
       newSet.delete(id);
       newAmounts.delete(id);
       setIsAllFilteredSelected(false);
-    } else {
-      newSet.add(id);
-      const item = displayData.find((d: TaxDataItem) => d.id === id);
-      if (item) {
-        newAmounts.set(id, { 
-          amount: item.sisaTagihan > 0 ? item.sisaTagihan : item.ketetapan,
-          name: item.namaWp
-        });
-      }
+      setSelectedIds(newSet);
+      setSelectedAmounts(newAmounts);
+      return;
     }
+
+    if (isPenarik && !ownPenarikFilterActive) {
+      switchToOwnAssignments();
+      return;
+    }
+
+    const item = displayData.find((d: TaxDataItem) => d.id === id);
+    if (!item || !isRowSelectable(item)) return;
+
+    newSet.add(id);
+    newAmounts.set(id, { 
+      amount: item.sisaTagihan > 0 ? item.sisaTagihan : item.ketetapan,
+      name: item.namaWp
+    });
+
     setSelectedIds(newSet);
     setSelectedAmounts(newAmounts);
   };
@@ -534,7 +577,8 @@ export function TaxDataTable({
               const item = displayData[virtualRow.index];
               if (!item) return null;
               
-              const isLunas = item.paymentStatus === "LUNAS";
+              const isSelectable = isRowSelectable(item);
+              const selectionHint = getSelectionHint(item);
 
               return (
                 <div
@@ -557,6 +601,8 @@ export function TaxDataTable({
                       onToggle={toggleSelect}
                       onOpenDetail={setSelectedDetailItem}
                       role={currentUser?.role || "PENGGUNA"}
+                      selectionDisabled={!isRowSelectable(item)}
+                      selectionHint={getSelectionHint(item)}
                       style={{ height: '100%' }}
                     />
                   </div>
@@ -613,17 +659,24 @@ export function TaxDataTable({
                         {currentUser?.role !== "PENGGUNA" && (
                           <div 
                             onClick={(e) => { 
-                              if (currentUser?.role === "PENARIK" && isLunas) return;
                               e.stopPropagation(); 
                               toggleSelect(item.id); 
                             }}
                             className="flex h-10 w-10 items-center justify-center -mr-2 -mt-1"
+                            title={selectionHint}
                           >
-                             <Checkbox 
-                               checked={selectedIds.has(item.id)} 
-                               disabled={currentUser?.role === "PENARIK" && isLunas}
-                               className="h-6 w-6 rounded-lg border-primary/30 bg-background shadow-sm" 
-                             />
+                             <div className="relative">
+                               <Checkbox 
+                                 checked={selectedIds.has(item.id)} 
+                                 disabled={!isSelectable}
+                                 className="h-6 w-6 rounded-lg border-primary/30 bg-background shadow-sm" 
+                               />
+                               {!isSelectable && (
+                                 <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                                   <Ban className="h-5 w-5 text-rose-500/85" />
+                                 </span>
+                               )}
+                             </div>
                           </div>
                         )}
                       </div>

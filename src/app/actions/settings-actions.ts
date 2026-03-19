@@ -47,6 +47,14 @@ export async function deleteAllTaxData() {
     try {
       const uploadsPath = path.join(process.cwd(), "public", "uploads");
       if (fs.existsSync(uploadsPath)) {
+        const rootFiles = fs.readdirSync(uploadsPath);
+        for (const entry of rootFiles) {
+          const entryPath = path.join(uploadsPath, entry);
+          if (fs.statSync(entryPath).isFile()) {
+            fs.unlinkSync(entryPath);
+          }
+        }
+
         // We delete subfolders content but keep the folders structure
         const subfolders = ["avatars", "logos"];
         for (const sub of subfolders) {

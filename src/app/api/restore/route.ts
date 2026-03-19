@@ -10,6 +10,19 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
+function getSafeUploadPath(basePath: string, entryName: string) {
+  const relativePath = entryName.replace(/^uploads\//, "");
+  const normalizedPath = path.normalize(relativePath);
+  const targetFile = path.resolve(basePath, normalizedPath);
+  const uploadsRoot = path.resolve(basePath);
+
+  if (!targetFile.startsWith(`${uploadsRoot}${path.sep}`) && targetFile !== uploadsRoot) {
+    throw new Error(`Path ZIP tidak valid: ${entryName}`);
+  }
+
+  return targetFile;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -59,10 +72,7 @@ export async function POST(req: NextRequest) {
       
       uploadEntries.forEach(entry => {
         if (!entry.isDirectory) {
-          // Contoh: entry.entryName = "uploads/avatars/user1.jpg"
-          // Kita hilangkan prefix "uploads/" nya
-          const relativePath = entry.entryName.replace(/^uploads\//, "");
-          const targetFile = path.join(uploadsPath, relativePath);
+          const targetFile = getSafeUploadPath(uploadsPath, entry.entryName);
           const targetDir = path.dirname(targetFile);
           
           // Pastikan subfolder (seperti 'avatars') sudah ada

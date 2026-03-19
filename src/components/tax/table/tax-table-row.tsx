@@ -2,7 +2,7 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, User } from "lucide-react";
+import { Ban, MapPin, User } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { TaxDataItem } from "@/types/app";
 
@@ -12,6 +12,8 @@ interface TaxTableRowProps {
   onToggle: (id: number) => void;
   onOpenDetail: (item: TaxDataItem) => void;
   role: string;
+  selectionDisabled?: boolean;
+  selectionHint?: string;
   style?: React.CSSProperties;
 }
 
@@ -21,6 +23,8 @@ export function TaxTableRow({
   onToggle,
   onOpenDetail,
   role,
+  selectionDisabled = false,
+  selectionHint,
   style,
 }: TaxTableRowProps) {
   return (
@@ -33,13 +37,24 @@ export function TaxTableRow({
       style={style}
     >
       {role !== "PENGGUNA" && (
-        <div onClick={(e) => e.stopPropagation()} className="flex w-[50px] items-center justify-center p-1 sm:p-2 shrink-0">
-          <Checkbox
-            checked={selected}
-            onCheckedChange={() => onToggle(item.id)}
-            disabled={role === "PENARIK" && item.paymentStatus === "LUNAS"}
-            aria-label="Select row"
-          />
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="flex w-[50px] items-center justify-center p-1 sm:p-2 shrink-0"
+          title={selectionHint}
+        >
+          <div className="relative">
+            <Checkbox
+              checked={selected}
+              onCheckedChange={() => onToggle(item.id)}
+              disabled={selectionDisabled}
+              aria-label="Select row"
+            />
+            {selectionDisabled && (
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <Ban className="h-4 w-4 text-rose-500/85" />
+              </span>
+            )}
+          </div>
         </div>
       )}
       <div className="flex w-[180px] items-center font-mono text-xs px-4 shrink-0">{item.nop}</div>

@@ -6,8 +6,14 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/svg+xml"];
+const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+const EXTENSION_BY_TYPE: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: "Format file tidak didukung. Gunakan JPG, PNG, WebP, atau SVG." },
+        { error: "Format file tidak didukung. Gunakan JPG, PNG, atau WebP." },
         { status: 400 }
       );
     }
@@ -42,17 +48,16 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Determine file extension
-    const ext = file.name.split(".").pop() || "png";
+    const ext = EXTENSION_BY_TYPE[file.type] || "png";
     const filename = `logo-desa.${ext}`;
 
-    // Save to public/uploads/
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    // Save to public/uploads/logos
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "logos");
     await mkdir(uploadDir, { recursive: true });
     const filePath = path.join(uploadDir, filename);
     await writeFile(filePath, buffer);
 
-    const logoUrl = `/uploads/${filename}`;
+    const logoUrl = `/uploads/logos/${filename}`;
 
     // Update VillageConfig
     await prisma.villageConfig.update({

@@ -38,6 +38,10 @@ export default async function DataPajakPage({
     tahun,
   };
 
+  if (session?.user.role === "PENGGUNA") {
+    whereClause.penarikId = "__NO_ACCESS__";
+  }
+
   if (paymentStatus !== "all") {
     whereClause.paymentStatus = paymentStatus as any;
   }
@@ -79,7 +83,16 @@ export default async function DataPajakPage({
     prisma.taxData.findMany({
       where: whereClause,
       include: {
-        penarik: true,
+        penarik: {
+          select: {
+            id: true,
+            name: true,
+            phoneNumber: true,
+            dusun: true,
+            rt: true,
+            rw: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,

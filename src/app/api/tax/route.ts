@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   const query = searchParams.get("q") || "";
@@ -20,13 +20,17 @@ export async function GET(req: NextRequest) {
    const paymentStatus = searchParams.get("paymentStatus") || "all";
    const pageSize = 50;
  
-   const whereClause: Prisma.TaxDataWhereInput = {
-     tahun,
-   };
+  const whereClause: Prisma.TaxDataWhereInput = {
+    tahun,
+  };
+
+  if (session.user.role === "PENGGUNA") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
  
-   if (paymentStatus !== "all") {
-     whereClause.paymentStatus = paymentStatus as any;
-   }
+  if (paymentStatus !== "all") {
+    whereClause.paymentStatus = paymentStatus as any;
+  }
 
   const andFilters: Prisma.TaxDataWhereInput[] = [];
 
@@ -65,7 +69,16 @@ export async function GET(req: NextRequest) {
     prisma.taxData.findMany({
       where: whereClause,
       include: {
-        penarik: true,
+        penarik: {
+          select: {
+            id: true,
+            name: true,
+            phoneNumber: true,
+            dusun: true,
+            rt: true,
+            rw: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
