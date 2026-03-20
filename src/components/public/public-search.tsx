@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { searchPublicTaxData } from "@/app/actions/public-actions";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle } from "lucide-react";
+import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle, Calendar, CreditCard, HelpCircle, History } from "lucide-react";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate, formatDateNoTime, formatJatuhTempo, cn } from "@/lib/utils";
 
 export function PublicSearch({ 
   tahunPajak, 
@@ -23,6 +23,9 @@ export function PublicSearch({
   const [hasSearched, setHasSearched] = useState(false);
   const [message, setMessage] = useState("");
   const [isRateLimited, setIsRateLimited] = useState(false);
+  const [jatuhTempo, setJatuhTempo] = useState("31 Agustus");
+  const [bapendaUrl, setBapendaUrl] = useState<string | null>(null);
+  const [isJombangBapenda, setIsJombangBapenda] = useState(true);
   const { theme } = usePublicThemeContext();
   const isDark = theme === "dark";
 
@@ -37,6 +40,15 @@ export function PublicSearch({
     const res = await searchPublicTaxData(query, tahunPajak);
     if (res.success) {
       setResults(res.data || []);
+      if ((res as any).jatuhTempo) {
+        setJatuhTempo((res as any).jatuhTempo);
+      }
+      if ((res as any).bapendaUrl) {
+        setBapendaUrl((res as any).bapendaUrl);
+        setIsJombangBapenda(!!(res as any).isJombangBapenda);
+      } else {
+        setBapendaUrl(null);
+      }
     } else {
       setResults([]);
       setMessage(res.message || "Terjadi kesalahan sistem.");
@@ -46,7 +58,6 @@ export function PublicSearch({
     }
     setLoading(false);
   };
-
 
 
   // Theme-aware class helpers
@@ -61,7 +72,7 @@ export function PublicSearch({
     ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/40"
     : "bg-zinc-900 hover:bg-zinc-800 text-white shadow-zinc-900/20";
   const disclaimerCls = isDark
-    ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+    ? "border-amber-500/30 bg-amber-50/10 text-amber-300"
     : "border-amber-200/60 bg-amber-50/50 text-amber-800";
   const resultCardCls = isDark
     ? "border-white/5 hover:border-blue-500/30 bg-[#0A192F]/60 text-white"
@@ -79,6 +90,29 @@ export function PublicSearch({
     ? "border-emerald-800/30 hover:bg-emerald-950/30 text-emerald-400 bg-emerald-950/10"
     : "border-emerald-200 hover:bg-emerald-50 text-emerald-700";
   const msgBgCls = isDark ? "bg-orange-950/40 border-orange-500/30 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-800";
+
+  const getBapendaUrl = (nop: string) => {
+    if (!bapendaUrl) return "#";
+    const cleanNop = nop.replace(/\D/g, "");
+
+    // Jika ini website Bapenda Jombang dan opsi Aktif
+    if (isJombangBapenda) {
+      if (cleanNop.length !== 18) return bapendaUrl;
+      const k0 = cleanNop.substring(0, 2);
+      const k1 = cleanNop.substring(2, 4);
+      const k2 = cleanNop.substring(4, 7);
+      const k3 = cleanNop.substring(7, 10);
+      const k4 = cleanNop.substring(10, 13);
+      const k5 = cleanNop.substring(13, 17);
+      const k6 = cleanNop.substring(17, 18);
+
+      const baseUrl = bapendaUrl.split("?")[0];
+      return `${baseUrl}?module=pbb&kata=${k0}&kata1=${k1}&kata2=${k2}&kata3=${k3}&kata4=${k4}&kata5=${k5}&kata6=${k6}&viewpbb=`;
+    }
+
+    // Untuk DAERAH LAIN (Manual URL)
+    return bapendaUrl;
+  };
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-6">
@@ -192,24 +226,71 @@ export function PublicSearch({
                         <p className={`text-xs ${mutedLabelCls}`}>{item.petugas.wilayah}</p>
                       </div>
                     ) : (
-                      <p className="text-red-500 font-medium italic">Belum Ada Petugas</p>
+                      <p className="text-red-500 font-medium italic text-[11px]">Belum Ada Petugas</p>
                     )}
                   </div>
-                </CardContent>
-                {item.status === "BELUM_LUNAS" && item.petugas && item.petugas.kontak !== "Tidak ada nomor" && (
-                  <CardFooter className={`p-4 border-t grid ${cardFooterCls}`}>
-                    <Button
-                      variant="outline"
-                      className={`w-full sm:w-auto ml-auto rounded-xl ${waaBtnCls}`}
-                      onClick={() => window.open(`https://wa.me/${item.petugas.kontak.replace(/^0/, "62")}`, "_blank")}
-                    >
-                      <Phone className="w-4 h-4 mr-2" /> Hubungi Petugas via WhatsApp
-                    </Button>
-                  </CardFooter>
-                )}
-              </Card>
-            ))}
-          </div>
+
+                   <div className="space-y-1">
+                    <div className={`flex items-center gap-1.5 mb-0.5 ${mutedLabelCls}`}>
+                      <History className="w-3.5 h-3.5" />
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-primary/80">update terakhir</span>
+                    </div>
+                    <p className={`text-[11px] font-medium ${addressCls}`}>
+                      {item.status === "LUNAS" ? (
+                        <>Terbayar: <span className="font-bold">{formatDateNoTime(item.tanggalBayar)}</span></>
+                      ) : (
+                        <>Terakhir Dicek: <span className="font-bold">{formatDateNoTime(item.updatedAt)}</span></>
+                      )}
+                    </p>
+                  </div>
+                  </CardContent>
+                  
+                  {item.status === "BELUM_LUNAS" && (
+                    <CardFooter className={`p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4 ${cardFooterCls}`}>
+                      <div className="flex items-center gap-2 text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-full border border-amber-500/20">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        Jatuh Tempo: {formatJatuhTempo(jatuhTempo)} {tahunPajak}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {bapendaUrl && (
+                          <a 
+                            href={getBapendaUrl(item.nop)} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className={cn(
+                              buttonVariants({ variant: "outline", size: "sm" }),
+                              "w-full sm:w-auto h-9 text-[11px] font-bold uppercase tracking-widest gap-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl"
+                            )}
+                          >
+                            <Info className="w-3.5 h-3.5" />
+                            Cek di BAPENDA Resmi
+                          </a>
+                        )}
+                        {item.petugas && item.petugas.kontak !== "Tidak ada nomor" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full sm:w-auto h-9 text-[11px] font-bold uppercase tracking-widest gap-2 border-primary/30 text-primary hover:bg-primary/5 rounded-xl transition-all hover:scale-105 active:scale-95"
+                            onClick={() => window.open(`https://wa.me/${item.petugas.kontak.replace(/\D/g, "")}?text=Halo%20pak%20petugas%20PBB%20saya%20ingin%20cek%20pembayaran%20PBB%20saya%20dengan%20NOP%20${item.nop}`, "_blank")}
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                            Hubungi Penarik
+                          </Button>
+                        )}
+                      </div>
+                    </CardFooter>
+                  )}
+
+                  {item.status === "LUNAS" && (
+                    <CardFooter className={`p-3 border-t text-center ${cardFooterCls}`}>
+                      <p className="w-full text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 opacity-80">
+                        Terima kasih Telah Membayar Pajak Anda
+                      </p>
+                    </CardFooter>
+                  )}
+                </Card>
+              ))}
+            </div>
         </div>
       )}
     </div>

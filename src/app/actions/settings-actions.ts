@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/server-auth";
 import { VillageConfigSchema, formatZodError } from "@/lib/validations/schemas";
-import { z } from "zod";
 
 export async function deleteAllTaxData() {
   try {
@@ -34,6 +33,9 @@ export async function deleteAllTaxData() {
         kecamatan: "",
         kabupaten: "",
         tahunPajak: 2026,
+        jatuhTempo: "31 Agustus",
+        bapendaUrl: null,
+        isJombangBapenda: true,
         logoUrl: null,
       },
     });
@@ -102,16 +104,17 @@ export const getVillageConfig = cache(async () => {
         kecamatan: "",
         kabupaten: "",
         tahunPajak: 2026,
+        jatuhTempo: "31 Agustus",
+        bapendaUrl: null,
+        isJombangBapenda: true,
         showNominalPajak: false,
       },
     });
   } catch (e) {
     console.error(e);
-    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026, logoUrl: null, showNominalPajak: false, updatedAt: new Date() };
+    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026, jatuhTempo: "31 Agustus", bapendaUrl: null, isJombangBapenda: true, logoUrl: null, showNominalPajak: false, updatedAt: new Date() };
   }
 });
-
-
 
 export async function updateVillageConfig(raw: any) {
   try {
@@ -126,6 +129,18 @@ export async function updateVillageConfig(raw: any) {
 
     if (data.tahunPajak) {
       updateData.tahunPajak = data.tahunPajak;
+    }
+
+    if (data.jatuhTempo) {
+      updateData.jatuhTempo = data.jatuhTempo;
+    }
+
+    if (data.bapendaUrl !== undefined) {
+      updateData.bapendaUrl = data.bapendaUrl;
+    }
+
+    if (data.isJombangBapenda !== undefined) {
+      updateData.isJombangBapenda = data.isJombangBapenda;
     }
 
     if (data.showNominalPajak !== undefined) {
@@ -203,7 +218,6 @@ export async function addRegionOtomation(type: "RT" | "RW", code: string, dusun:
     const normCode = parseInt(code.trim(), 10).toString().padStart(2, "0");
     if (!normCode || !dusun) throw new Error("Kode dan Dusun harus diisi");
 
-    // Upsert menggunakan Prisma Client (code is @unique)
     await prisma.regionOtomation.upsert({
       where: { code: normCode },
       update: { dusun, type },

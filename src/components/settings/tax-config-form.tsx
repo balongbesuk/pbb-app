@@ -14,13 +14,21 @@ export function TaxConfigForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [tahun, setTahun] = useState(2026);
+  const [jatuhTempo, setJatuhTempo] = useState("31 Agustus");
+  const [bapendaUrl, setBapendaUrl] = useState("");
+  const [isJombangBapenda, setIsJombangBapenda] = useState(true);
   const [showNominal, setShowNominal] = useState(false);
   const [rawConfig, setRawConfig] = useState<any>(null);
+
+  const DEFAULT_JOMBANG_URL = "https://bapenda.jombangkab.go.id/cek-bayar/ceknopbayar-jmb.kab?module=pbb";
 
   useEffect(() => {
     async function load() {
       const data = await getVillageConfig();
       setTahun(data.tahunPajak);
+      setJatuhTempo(data.jatuhTempo || "31 Agustus");
+      setBapendaUrl(data.bapendaUrl || "");
+      setIsJombangBapenda(data.isJombangBapenda ?? true);
       setShowNominal(!!data.showNominalPajak);
       setRawConfig(data);
       setLoading(false);
@@ -34,6 +42,9 @@ export function TaxConfigForm() {
     const res = await updateVillageConfig({
       ...rawConfig,
       tahunPajak: tahun,
+      jatuhTempo: jatuhTempo,
+      bapendaUrl: bapendaUrl,
+      isJombangBapenda: isJombangBapenda,
       showNominalPajak: !!showNominal,
     });
     if (res.success) {
@@ -57,15 +68,71 @@ export function TaxConfigForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleUpdate} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="tahun-aktif">Tahun Pajak Aktif Target</Label>
-            <Input
-              id="tahun-aktif"
-              type="number"
-              value={tahun}
-              onChange={(e) => setTahun(parseInt(e.target.value) || 2026)}
-              className="max-w-xs bg-white/50 dark:bg-[#111827]/50"
-            />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="tahun-aktif">Tahun Pajak Aktif Target</Label>
+              <Input
+                id="tahun-aktif"
+                type="number"
+                value={tahun}
+                onChange={(e) => setTahun(parseInt(e.target.value) || 2026)}
+                className="bg-white/50 dark:bg-[#111827]/50"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jatuh-tempo">Tanggal Jatuh Tempo</Label>
+              <Input
+                id="jatuh-tempo"
+                type="date"
+                value={jatuhTempo}
+                onChange={(e) => setJatuhTempo(e.target.value)}
+                className="bg-white/50 dark:bg-[#111827]/50"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4 rounded-2xl border bg-primary/5 p-4 dark:bg-primary/10">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="is-jombang">Sistem Cek Pajak Jombang</Label>
+                <p className="text-[10px] text-muted-foreground">Aktifkan fitur auto-fill NOP khusus Kabupaten Jombang.</p>
+              </div>
+              <Checkbox 
+                id="is-jombang" 
+                checked={isJombangBapenda} 
+                onCheckedChange={(checked) => setIsJombangBapenda(!!checked)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="bapenda-url">URL Website Bapenda</Label>
+                {isJombangBapenda && (
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="xs" 
+                    onClick={() => setBapendaUrl(DEFAULT_JOMBANG_URL)}
+                    className="text-[10px] uppercase font-bold text-primary"
+                  >
+                    Reset ke Default Jombang
+                  </Button>
+                )}
+              </div>
+              <Input
+                id="bapenda-url"
+                type="url"
+                placeholder="https://cekpajak.bapenda.kabupaten.go.id"
+                value={bapendaUrl}
+                onChange={(e) => setBapendaUrl(e.target.value)}
+                className="bg-white/50 dark:bg-[#111827]/50"
+              />
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                {isJombangBapenda 
+                  ? "Sistem akan otomatis membedah NOP untuk website Jombang." 
+                  : "Link akan dibuka langsung tanpa auto-fill NOP (atau manual)."}
+              </p>
+            </div>
           </div>
 
           <div className="bg-primary/5 border-primary/10 flex items-center justify-between rounded-2xl border p-4">

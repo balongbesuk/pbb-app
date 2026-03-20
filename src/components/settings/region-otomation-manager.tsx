@@ -43,6 +43,14 @@ export function RegionOtomationManager() {
   useEffect(() => {
     setMounted(true);
     fetchData();
+
+    // Listen for updates from DusunManager
+    const handleDusunUpdate = () => {
+      fetchData();
+    };
+
+    window.addEventListener("dusun-updated", handleDusunUpdate);
+    return () => window.removeEventListener("dusun-updated", handleDusunUpdate);
   }, []);
 
   if (!mounted) return null;

@@ -56,6 +56,8 @@ export function DusunManager() {
       toast.success("Dusun berhasil ditambahkan");
       setNewName("");
       await fetchDusuns();
+      // Trigger refresh for other components (RegionOtomationManager)
+      window.dispatchEvent(new CustomEvent("dusun-updated"));
     } else {
       toast.error(res.message ?? "Gagal menambahkan dusun");
     }
@@ -71,6 +73,8 @@ export function DusunManager() {
       toast.success(`Dusun "${selectedToDelete.name}" berhasil dihapus`);
       setSelectedToDelete(null);
       await fetchDusuns();
+      // Trigger refresh for other components (RegionOtomationManager)
+      window.dispatchEvent(new CustomEvent("dusun-updated"));
     } else {
       toast.error(res.message ?? "Gagal menghapus dusun");
     }

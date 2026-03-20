@@ -85,24 +85,42 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
       return { success: false, message: "Data tidak ditemukan." };
     }
 
-    // Map data to hide sensitive info if any, and structure for public view
-    const mapped = results.map(r => ({
-      id: r.id,
-      nop: r.nop,
-      namaWp: r.namaWp,
-      alamat: r.alamatObjek,
-      luasTanah: r.luasTanah,
-      luasBangunan: r.luasBangunan,
-      tagihan: r.sisaTagihan,
-      status: r.paymentStatus,
-      petugas: r.penarik ? {
-        nama: r.penarik.name,
-        kontak: r.penarik.phoneNumber || "Tidak ada nomor",
-        wilayah: `${r.penarik.dusun || ""} RT ${r.penarik.rt || "-"} RW ${r.penarik.rw || "-"}`,
-      } : null
-    }));
+    const config = await prisma.villageConfig.findFirst({ where: { id: 1 } }) as any;
+    const jatuhTempoStr = config?.jatuhTempo || "31 Agustus";
+    const bapendaUrl = config?.bapendaUrl || null;
+    const isJombangBapenda = config?.isJombangBapenda ?? true;
 
-    return { success: true, data: mapped, remaining: rateLimitResult.remaining };
+    const today = new Date();
+    
+    // Map data structure for public view
+    const mapped = results.map(r => {
+      return {
+        id: r.id,
+        nop: r.nop,
+        namaWp: r.namaWp,
+        alamat: r.alamatObjek,
+        luasTanah: r.luasTanah,
+        luasBangunan: r.luasBangunan,
+        tagihan: r.sisaTagihan,
+        status: r.paymentStatus,
+        updatedAt: r.updatedAt,
+        tanggalBayar: r.tanggalBayar,
+        petugas: r.penarik ? {
+          nama: r.penarik.name,
+          kontak: r.penarik.phoneNumber || "Tidak ada nomor",
+          wilayah: `${r.penarik.dusun || ""} RT ${r.penarik.rt || "-"} RW ${r.penarik.rw || "-"}`,
+        } : null
+      };
+    });
+
+    return { 
+      success: true, 
+      data: mapped, 
+      jatuhTempo: jatuhTempoStr,
+      bapendaUrl,
+      isJombangBapenda,
+      remaining: rateLimitResult.remaining 
+    };
   } catch (error) {
     console.error("Public Search Error:", error);
     return { success: false, message: "Terjadi kesalahan pada sistem pencarian." };

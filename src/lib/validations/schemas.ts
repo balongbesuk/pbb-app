@@ -30,6 +30,9 @@ export const VillageConfigSchema = z.object({
   kecamatan: z.string().min(1, "Kecamatan harus diisi"),
   kabupaten: z.string().min(1, "Kabupaten harus diisi"),
   tahunPajak: z.number().int().min(2000).max(2100).optional(),
+  jatuhTempo: z.string().min(1, "Jatuh tempo harus diisi").optional(),
+  bapendaUrl: z.string().url("Format URL tidak valid").or(z.literal("")).optional(),
+  isJombangBapenda: z.boolean().optional(),
   showNominalPajak: z.boolean().optional(),
 });
 

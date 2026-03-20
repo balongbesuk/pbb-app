@@ -29,3 +29,38 @@ export function normalizeNum(val: string) {
   if (!num) return "";
   return num.padStart(2, "0").slice(-2);
 }
+
+/** Format date to ID: "20 Maret 2026 14:00" */
+export function formatDate(date: Date | string | null) {
+  if (!date) return "-";
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(date));
+}
+
+/** Format date only (no time): "20 Maret 2026" */
+export function formatDateNoTime(date: Date | string | null) {
+  if (!date) return "-";
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(date));
+}
+
+/** Format falling date specifically (handles both date string and manual text) */
+export function formatJatuhTempo(val: string | null) {
+  if (!val) return "-";
+  // If it's a date string (e.g., 2026-08-31), format it to "31 Agustus"
+  if (val.match(/^\d{4}-\d{2}-\d{2}/)) {
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "long",
+    }).format(new Date(val));
+  }
+  return val;
+}
