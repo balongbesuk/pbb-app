@@ -119,8 +119,13 @@ export function ArchiveManager() {
           if (!line.trim()) continue;
           try {
             const msg = JSON.parse(line);
-            if (msg.type === "progress") {
-              toast.info(`Memproses halaman ${msg.current} / ${msg.total}...`, { id: "scan-progress" });
+            if (msg.type === "status") {
+              toast.info(msg.message, { id: "scan-progress" });
+            } else if (msg.type === "progress") {
+              const label = msg.phase === "save"
+                ? `Menyimpan arsip ${msg.current} / ${msg.total}...`
+                : `Mendeteksi NOP ${msg.current} / ${msg.total}...`;
+              toast.info(label, { id: "scan-progress" });
             } else if (msg.type === "done" || msg.success !== undefined) {
               toast.dismiss("scan-progress");
               if (msg.success) {

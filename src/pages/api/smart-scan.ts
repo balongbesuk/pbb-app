@@ -25,6 +25,53 @@ function parseMeta(req: NextApiRequest): Promise<Record<string, string>> {
   });
 }
 
+/** Extract NOP from text block */
+function extractNop(text: string): string {
+  const clean = text.replace(/\D/g, "");
+  const m = clean.match(/3517\d{14}/g);
+  if (m?.[0]) return m[0];
+  const a = clean.match(/\d{18}/g);
+  if (a?.[0]) return a[0];
+  return "";
+}
+
+/** Process a batch of pages concurrently */
+async function processBatch(
+  mainPdfDoc: PDFDocument,
+  pageIndices: number[],
+  archiveDir: string,
+  nopMap: Map<number, string>,
+  logPath: string
+): Promise<{ detected: number; skipped: number }> {
+  let detected = 0;
+  let skipped = 0;
+
+  const tasks = pageIndices.map(async (i) => {
+    try {
+      const nop = nopMap.get(i);
+
+      if (nop) {
+        // Only create sub-PDF if we have a valid NOP
+        const subDoc = await PDFDocument.create();
+        const [page] = await subDoc.copyPages(mainPdfDoc, [i]);
+        subDoc.addPage(page);
+        const bytes = await subDoc.save();
+        fs.writeFileSync(path.join(archiveDir, `${nop}.pdf`), bytes);
+        fs.appendFileSync(logPath, `PAGE ${i + 1}: NOP -> ${nop}\n`);
+        detected++;
+      } else {
+        skipped++;
+      }
+    } catch (err) {
+      fs.appendFileSync(logPath, `PAGE ${i + 1}: ERROR -> ${err}\n`);
+      skipped++;
+    }
+  });
+
+  await Promise.all(tasks);
+  return { detected, skipped };
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
@@ -47,7 +94,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.end();
     }
 
-    // Assemble chunks from temp directory
+    // ---- Step 1: Assemble chunks ----
+    send({ type: "status", message: "Menggabungkan file..." });
     const tempDir = path.join(process.cwd(), "tmp", "upload-chunks");
     const allBuffers: Buffer[] = [];
     for (let i = 0; i < totalChunksNum; i++) {
@@ -58,72 +106,110 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       allBuffers.push(fs.readFileSync(chunkPath));
     }
-
     const fileBuffer = Buffer.concat(allBuffers);
 
-    // Clean up chunks
+    // Clean up chunks immediately
     for (let i = 0; i < totalChunksNum; i++) {
       try { fs.unlinkSync(path.join(tempDir, `${sessionId}_${i}`)); } catch { /* ignore */ }
     }
 
     fs.writeFileSync(
       logPath,
-      `--- SMART SCAN (CHUNKED) --- ${new Date().toISOString()}\nFile: ${filename} (${fileBuffer.length} bytes), Year: ${year}\n`
+      `--- SMART SCAN OPTIMIZED --- ${new Date().toISOString()}\nFile: ${filename} (${fileBuffer.length} bytes), Year: ${year}\n`
     );
 
+    // ---- Step 2: Load PDF and get page count ----
+    send({ type: "status", message: "Membaca PDF..." });
     const mainPdfDoc = await PDFDocument.load(fileBuffer);
     const totalPages = mainPdfDoc.getPageCount();
     fs.appendFileSync(logPath, `Total Pages: ${totalPages}\n`);
 
-    send({ type: "progress", current: 0, total: totalPages });
+    send({ type: "progress", current: 0, total: totalPages, phase: "extract" });
 
+    // ---- Step 3: Extract all text at once (FAST!) ----
+    send({ type: "status", message: `Mengekstrak teks dari ${totalPages} halaman sekaligus...` });
+    const startExtract = Date.now();
+
+    let fullText = "";
+    try {
+      const data = await pdfParse(fileBuffer);
+      fullText = data.text || "";
+    } catch (err) {
+      fs.appendFileSync(logPath, `Full PDF text extraction failed: ${err}\n`);
+    }
+
+    const extractTime = ((Date.now() - startExtract) / 1000).toFixed(1);
+    fs.appendFileSync(logPath, `Full text extraction: ${extractTime}s\n`);
+
+    // ---- Step 4: Extract text per-page for NOP matching ----
+    // We still need per-page text to match NOP to specific pages.
+    // But we do it in batches of 20 for speed.
+    send({ type: "status", message: "Mendeteksi NOP per halaman..." });
+
+    const nopMap = new Map<number, string>();
+    const EXTRACT_BATCH = 20;
+
+    for (let batch = 0; batch < totalPages; batch += EXTRACT_BATCH) {
+      const end = Math.min(batch + EXTRACT_BATCH, totalPages);
+      const extractTasks = [];
+
+      for (let i = batch; i < end; i++) {
+        extractTasks.push(
+          (async () => {
+            try {
+              const subDoc = await PDFDocument.create();
+              const [page] = await subDoc.copyPages(mainPdfDoc, [i]);
+              subDoc.addPage(page);
+              const bytes = await subDoc.save();
+              const data = await pdfParse(Buffer.from(bytes));
+              const nop = extractNop(data.text || "");
+              if (nop) nopMap.set(i, nop);
+            } catch {
+              // skip extraction error
+            }
+          })()
+        );
+      }
+
+      await Promise.all(extractTasks);
+
+      // Report progress every batch
+      send({ type: "progress", current: end, total: totalPages, phase: "extract" });
+    }
+
+    fs.appendFileSync(logPath, `NOP detection done: ${nopMap.size} found out of ${totalPages}\n`);
+
+    // ---- Step 5: Save PDFs only for pages with NOP (parallel batches of 10) ----
     const archiveDir = path.join(process.cwd(), "public", "arsip-pbb", year.toString());
     if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
 
-    let detectedCount = 0;
-    let skippedCount = 0;
+    send({ type: "status", message: `Menyimpan ${nopMap.size} arsip...` });
 
-    for (let i = 0; i < totalPages; i++) {
-      try {
-        const subPdfDoc = await PDFDocument.create();
-        const [copiedPage] = await subPdfDoc.copyPages(mainPdfDoc, [i]);
-        subPdfDoc.addPage(copiedPage);
-        const subPdfBytes = await subPdfDoc.save();
+    const pagesWithNop = Array.from(nopMap.keys()).sort((a, b) => a - b);
+    const SAVE_BATCH = 10;
+    let totalDetected = 0;
 
-        let rawText = "";
-        try {
-          const data = await pdfParse(Buffer.from(subPdfBytes));
-          rawText = data.text || "";
-        } catch { /* silent */ }
+    for (let batch = 0; batch < pagesWithNop.length; batch += SAVE_BATCH) {
+      const batchPages = pagesWithNop.slice(batch, batch + SAVE_BATCH);
+      const result = await processBatch(mainPdfDoc, batchPages, archiveDir, nopMap, logPath);
+      totalDetected += result.detected;
 
-        const cleanText = rawText.replace(/\D/g, "");
-        let nop = "";
-        const m = cleanText.match(/3517\d{14}/g);
-        if (m?.[0]) { nop = m[0]; }
-        else { const a = cleanText.match(/\d{18}/g); if (a?.[0]) nop = a[0]; }
-
-        if (nop) {
-          fs.writeFileSync(path.join(archiveDir, `${nop}.pdf`), subPdfBytes);
-          fs.appendFileSync(logPath, `PAGE ${i + 1}: NOP -> ${nop}\n`);
-          detectedCount++;
-        } else {
-          fs.appendFileSync(logPath, `PAGE ${i + 1}: NO NOP\n`);
-          skippedCount++;
-        }
-
-        if ((i + 1) % 5 === 0 || i === totalPages - 1) {
-          send({ type: "progress", current: i + 1, total: totalPages });
-        }
-      } catch (err) {
-        fs.appendFileSync(logPath, `PAGE ${i + 1}: ERROR -> ${err}\n`);
-        skippedCount++;
-      }
+      send({
+        type: "progress",
+        current: Math.min(batch + SAVE_BATCH, pagesWithNop.length),
+        total: pagesWithNop.length,
+        phase: "save",
+      });
     }
+
+    const totalSkipped = totalPages - totalDetected;
+    const totalTime = ((Date.now() - startExtract) / 1000).toFixed(1);
+    fs.appendFileSync(logPath, `DONE in ${totalTime}s: ${totalDetected} saved, ${totalSkipped} skipped\n`);
 
     send({
       type: "done",
       success: true,
-      message: `Pemindaian selesai! Berhasil: ${detectedCount}, Terlewati: ${skippedCount}.`,
+      message: `Pemindaian selesai dalam ${totalTime}s! Berhasil: ${totalDetected}, Terlewati: ${totalSkipped}.`,
     });
   } catch (error: any) {
     console.error("[smart-scan]", error);
