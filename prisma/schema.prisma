@@ -168,6 +168,8 @@ model VillageConfig {
   isJombangBapenda  Boolean @default(true)
   logoUrl           String?
   showNominalPajak  Boolean @default(false)
+  enableDigitalArchive Boolean @default(true)
+  archiveOnlyLunas     Boolean @default(true)
   updatedAt         DateTime @default(now()) @updatedAt
 }
 

@@ -11,8 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit2, Loader2, Save, User, CheckCircle, Clock, Ban, MapPin, X, ArrowRight, Handshake, ChevronRight, RotateCcw, ShieldAlert, FileX } from "lucide-react";
+import { Edit2, Loader2, Save, User, CheckCircle, Clock, Ban, MapPin, X, ArrowRight, Handshake, ChevronRight, RotateCcw, ShieldAlert, FileX, FileText } from "lucide-react";
 import { updateWpRegion } from "@/app/actions/tax-update-actions";
+import { checkArchiveByNop } from "@/app/actions/settings-actions";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
@@ -50,6 +51,7 @@ export function TaxDetailDialog({
   const [isTransferSubmitting, setIsTransferSubmitting] = useState(false);
   const [selectedAdminPenarik, setSelectedAdminPenarik] = useState<string>(item?.penarikId || "");
   const [isAssignSubmitting, setIsAssignSubmitting] = useState(false);
+  const [archiveFile, setArchiveFile] = useState<string | null>(null);
 
   useEffect(() => {
     if (item) {
@@ -58,6 +60,12 @@ export function TaxDetailDialog({
       setEditRw(item.rw || "");
       setSelectedAdminPenarik(item.penarikId || "none");
       setIsEditing(false);
+      setArchiveFile(null);
+      
+      // Auto detect archive
+      checkArchiveByNop(item.nop, item.tahun).then(file => {
+        setArchiveFile(file);
+      });
     }
   }, [item]);
 
@@ -155,6 +163,29 @@ export function TaxDetailDialog({
 
             {/* List Attributes */}
             <div className="space-y-2">
+              {/* Archive Detection */}
+              {archiveFile && (
+                <div className="flex items-center justify-between rounded-2xl bg-blue-500/5 p-3 border border-blue-500/10 mb-2">
+                   <div className="flex items-center gap-3">
+                      <div className="bg-blue-500/10 p-2 rounded-xl">
+                        <FileText className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-600/70">Arsip Digital</p>
+                        <p className="text-xs font-bold text-blue-700 truncate max-w-[120px]">{archiveFile}</p>
+                      </div>
+                   </div>
+                   <a 
+                    href={`/arsip-pbb/${item.tahun}/${archiveFile}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors uppercase tracking-widest"
+                   >
+                    Lihat PDF
+                   </a>
+                </div>
+              )}
+
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-xs font-semibold">Penarik</span>
                 <div className="flex items-center gap-1.5">

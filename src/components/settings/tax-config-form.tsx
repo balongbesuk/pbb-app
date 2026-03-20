@@ -18,6 +18,8 @@ export function TaxConfigForm() {
   const [bapendaUrl, setBapendaUrl] = useState("");
   const [isJombangBapenda, setIsJombangBapenda] = useState(true);
   const [showNominal, setShowNominal] = useState(false);
+  const [enableArchive, setEnableArchive] = useState(true);
+  const [archiveOnlyLunas, setArchiveOnlyLunas] = useState(true);
   const [rawConfig, setRawConfig] = useState<any>(null);
 
   const DEFAULT_JOMBANG_URL = "https://bapenda.jombangkab.go.id/cek-bayar/ceknopbayar-jmb.kab?module=pbb";
@@ -30,6 +32,8 @@ export function TaxConfigForm() {
       setBapendaUrl(data.bapendaUrl || "");
       setIsJombangBapenda(data.isJombangBapenda ?? true);
       setShowNominal(!!data.showNominalPajak);
+      setEnableArchive(data.enableDigitalArchive ?? true);
+      setArchiveOnlyLunas(data.archiveOnlyLunas ?? true);
       setRawConfig(data);
       setLoading(false);
     }
@@ -46,6 +50,8 @@ export function TaxConfigForm() {
       bapendaUrl: bapendaUrl,
       isJombangBapenda: isJombangBapenda,
       showNominalPajak: !!showNominal,
+      enableDigitalArchive: !!enableArchive,
+      archiveOnlyLunas: !!archiveOnlyLunas,
     });
     if (res.success) {
       toast.success("Konfigurasi sistem diperbarui");
@@ -151,6 +157,43 @@ export function TaxConfigForm() {
               className="size-5 rounded-lg border-2"
             />
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-primary/5 border-primary/10 flex items-center justify-between rounded-2xl border p-4">
+              <div className="space-y-1">
+                <Label className="flex items-center gap-2 text-sm font-bold">
+                  {enableArchive ? <Eye className="h-4 w-4 text-blue-500" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+                  Arsip Digital Publik
+                </Label>
+                <p className="text-muted-foreground text-[10px]">
+                  Aktifkan fitur lihat E-SPPT untuk warga di portal publik.
+                </p>
+              </div>
+              <Checkbox
+                checked={!!enableArchive}
+                onCheckedChange={(checked) => setEnableArchive(!!checked)}
+                className="size-5 rounded-lg border-2"
+              />
+            </div>
+
+            <div className={`transition-all duration-300 ${!enableArchive ? 'opacity-50 pointer-events-none' : ''} bg-primary/5 border-primary/10 flex items-center justify-between rounded-2xl border p-4`}>
+              <div className="space-y-1">
+                <Label className="flex items-center gap-2 text-sm font-bold">
+                  Hanya Tampilkan Jika Lunas
+                </Label>
+                <p className="text-muted-foreground text-[10px]">
+                  E-SPPT hanya bisa dilihat/download jika status pembayaran sudah LUNAS.
+                </p>
+              </div>
+              <Checkbox
+                disabled={!enableArchive}
+                checked={!!archiveOnlyLunas}
+                onCheckedChange={(checked) => setArchiveOnlyLunas(!!checked)}
+                className="size-5 rounded-lg border-2"
+              />
+            </div>
+          </div>
+
           <div className="pt-2">
             <Button type="submit" className="gap-2" disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}

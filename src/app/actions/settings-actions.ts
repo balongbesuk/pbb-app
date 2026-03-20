@@ -2,6 +2,17 @@
 import fs from "fs";
 import path from "path";
 
+// Comprehensive Browser Polyfills for Server-side PDF Parsing
+const noopClass = class {};
+if (typeof (global as any).DOMMatrix === "undefined") (global as any).DOMMatrix = noopClass;
+if (typeof (global as any).DOMPoint === "undefined") (global as any).DOMPoint = noopClass;
+if (typeof (global as any).DOMRect === "undefined") (global as any).DOMRect = noopClass;
+if (typeof (global as any).HTMLElement === "undefined") (global as any).HTMLElement = noopClass;
+if (typeof (global as any).HTMLCanvasElement === "undefined") (global as any).HTMLCanvasElement = noopClass;
+if (typeof (global as any).Navigator === "undefined") (global as any).Navigator = noopClass;
+if (typeof (global as any).Image === "undefined") (global as any).Image = noopClass;
+if (typeof (global as any).ReadableStream === "undefined") (global as any).ReadableStream = noopClass;
+
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -108,11 +119,27 @@ export const getVillageConfig = cache(async () => {
         bapendaUrl: null,
         isJombangBapenda: true,
         showNominalPajak: false,
+        enableDigitalArchive: true,
+        archiveOnlyLunas: true,
       },
     });
   } catch (e) {
     console.error(e);
-    return { id: 1, namaDesa: "", kecamatan: "", kabupaten: "", tahunPajak: 2026, jatuhTempo: "31 Agustus", bapendaUrl: null, isJombangBapenda: true, logoUrl: null, showNominalPajak: false, updatedAt: new Date() };
+    return { 
+      id: 1, 
+      namaDesa: "", 
+      kecamatan: "", 
+      kabupaten: "", 
+      tahunPajak: 2026, 
+      jatuhTempo: "31 Agustus", 
+      bapendaUrl: null, 
+      isJombangBapenda: true, 
+      logoUrl: null, 
+      showNominalPajak: false, 
+      enableDigitalArchive: true,
+      archiveOnlyLunas: true,
+      updatedAt: new Date() 
+    };
   }
 });
 
@@ -145,6 +172,14 @@ export async function updateVillageConfig(raw: any) {
 
     if (data.showNominalPajak !== undefined) {
       updateData.showNominalPajak = data.showNominalPajak;
+    }
+
+    if (data.enableDigitalArchive !== undefined) {
+      updateData.enableDigitalArchive = data.enableDigitalArchive;
+    }
+
+    if (data.archiveOnlyLunas !== undefined) {
+      updateData.archiveOnlyLunas = data.archiveOnlyLunas;
     }
 
     await prisma.villageConfig.update({
@@ -264,5 +299,187 @@ export async function checkImportRequirements(tahun: number) {
   } catch (error) {
     console.error("Check Requirements Error:", error);
     return { success: false, message: "Gagal mengecek persyaratan import" };
+  }
+}
+
+// --- Arsip Digital PBB ---
+import { PDFDocument } from "pdf-lib";
+const pdf = require("pdf-parse/lib/pdf-parse.js");
+
+const BASE_ARCHIVE_DIR = path.join(process.cwd(), "public", "arsip-pbb");
+
+function getArchiveDir(year: number) {
+  return path.join(BASE_ARCHIVE_DIR, year.toString());
+}
+
+/** Smart Action to Split Large PDF by NOP */
+export async function processSmartArchive(formData: FormData) {
+  const logPath = path.join(process.cwd(), "public", "pbb_process_log.txt");
+  fs.writeFileSync(logPath, `--- STARTING SMART SCAN --- ${new Date().toISOString()}\n`);
+  
+  try {
+    await requireAdmin();
+    const file = formData.get("file") as File;
+    const yearRaw = formData.get("year");
+    const year = yearRaw ? parseInt(yearRaw.toString()) : new Date().getFullYear();
+    const archiveDir = getArchiveDir(year);
+
+    if (!file || file.size === 0) {
+       fs.appendFileSync(logPath, "ERROR: File is empty or not found\n");
+       return { success: false, message: "File kosong" };
+    }
+
+    fs.appendFileSync(logPath, `Processing file: ${file.name} (${file.size} bytes)\n`);
+
+    const arrayBuffer = await file.arrayBuffer();
+    let buffer: Buffer | null = Buffer.from(arrayBuffer);
+    const mainPdfDoc = await PDFDocument.load(buffer);
+    
+    // Clear buffer to free memory
+    buffer = null;
+
+    const totalPages = mainPdfDoc.getPageCount();
+
+    fs.appendFileSync(logPath, `Total Pages: ${totalPages}\n`);
+
+    if (!fs.existsSync(archiveDir)) {
+      fs.mkdirSync(archiveDir, { recursive: true });
+    }
+
+    let detectedCount = 0;
+    let skippedCount = 0;
+
+    for (let i = 0; i < totalPages; i++) {
+        try {
+          const subPdfDoc = await PDFDocument.create();
+          const [copiedPage] = await subPdfDoc.copyPages(mainPdfDoc, [i]);
+          subPdfDoc.addPage(copiedPage);
+          const subPdfBytes = await subPdfDoc.save();
+
+          // Extract text
+          let rawText = "";
+          try {
+            const data = await pdf(Buffer.from(subPdfBytes));
+            rawText = data.text || "";
+          } catch (e) {
+            fs.appendFileSync(logPath, `PAGE ${i+1}: Extraction library error -> ${e}\n`);
+          }
+
+          const cleanText = rawText.replace(/\D/g, "");
+          
+          fs.appendFileSync(logPath, `PAGE ${i+1}: FULL RAW TEXT: \n${rawText}\n`);
+
+          // Cari NOP
+          let nop = "";
+          const matches = cleanText.match(/3517\d{14}/g);
+          
+          if (matches && matches[0]) {
+            nop = matches[0];
+          } else {
+            const any18 = cleanText.match(/\d{18}/g);
+            if (any18 && any18[0]) nop = any18[0];
+          }
+
+          if (nop) {
+            const filename = `${nop}.pdf`;
+            fs.writeFileSync(path.join(archiveDir, filename), subPdfBytes);
+            detectedCount++;
+            fs.appendFileSync(logPath, `PAGE ${i+1}: NOP FOUND -> ${nop}\n`);
+          } else {
+            fs.appendFileSync(logPath, `PAGE ${i+1}: NO NOP DETECTED IN CLEAN TEXT\n`);
+            skippedCount++;
+          }
+        } catch (pageError) {
+          fs.appendFileSync(logPath, `PAGE ${i+1}: FATAL ERROR -> ${pageError}\n`);
+          skippedCount++;
+        }
+    }
+
+    revalidatePath("/admin/settings");
+    return { 
+      success: true, 
+      message: `Pemindaian selesai! Berhasil: ${detectedCount}, Terlewati: ${skippedCount}.` 
+    };
+  } catch (error) {
+    fs.appendFileSync(logPath, `FATAL CRASH: ${error}\n`);
+    return { success: false, message: "Gagal fatal. Cek log pbb_process_log.txt" };
+  }
+}
+
+/** Get list of all archive filenames by year */
+export async function getArchiveList(year: number) {
+  try {
+    const archiveDir = getArchiveDir(year);
+    if (!fs.existsSync(archiveDir)) return [];
+    const files = fs.readdirSync(archiveDir);
+    return files.filter(f => !f.startsWith(".")).sort();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+/** Check if an archive exists for a specific NOP and year */
+export async function checkArchiveByNop(nop: string, year: number) {
+  try {
+    const cleanNop = nop.replace(/\D/g, "");
+    const archiveDir = getArchiveDir(year);
+    if (!fs.existsSync(archiveDir)) return null;
+    
+    const files = fs.readdirSync(archiveDir);
+    const matched = files.find(f => f.replace(/\D/g, "").startsWith(cleanNop));
+    
+    return matched || null;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+/** Action to upload archives */
+export async function uploadArchives(formData: FormData) {
+  try {
+    await requireAdmin();
+    const files = formData.getAll("files") as File[];
+    const yearRaw = formData.get("year");
+    const year = yearRaw ? parseInt(yearRaw.toString()) : new Date().getFullYear();
+    const archiveDir = getArchiveDir(year);
+    
+    if (!fs.existsSync(archiveDir)) {
+      fs.mkdirSync(archiveDir, { recursive: true });
+    }
+
+    let successCount = 0;
+    for (const file of files) {
+      if (!file.name || file.size === 0) continue;
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const filename = file.name.replace(/\s+/g, "_"); 
+      fs.writeFileSync(path.join(archiveDir, filename), buffer);
+      successCount++;
+    }
+
+    revalidatePath("/admin/settings");
+    return { success: true, message: `${successCount} file arsip berhasil diunggah.` };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Gagal mengunggah arsip." };
+  }
+}
+
+/** Action to delete an archive file by year */
+export async function deleteArchive(filename: string, year: number) {
+  try {
+    await requireAdmin();
+    const archiveDir = getArchiveDir(year);
+    const filePath = path.join(archiveDir, filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    revalidatePath("/admin/settings");
+    revalidatePath("/arsip-pbb");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Gagal menghapus file arsip" };
   }
 }

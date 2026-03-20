@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle, Calendar, CreditCard, HelpCircle, History } from "lucide-react";
+import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle, Calendar, CreditCard, HelpCircle, History, Download, Eye } from "lucide-react";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
 import { formatCurrency, formatDate, formatDateNoTime, formatJatuhTempo, cn } from "@/lib/utils";
 
@@ -27,7 +27,12 @@ export function PublicSearch({
   const [bapendaUrl, setBapendaUrl] = useState<string | null>(null);
   const [isJombangBapenda, setIsJombangBapenda] = useState(true);
   const { theme } = usePublicThemeContext();
+  const [openPdfMap, setOpenPdfMap] = useState<Record<string, boolean>>({});
   const isDark = theme === "dark";
+
+  const togglePdf = (nop: string) => {
+    setOpenPdfMap(prev => ({ ...prev, [nop]: !prev[nop] }));
+  };
 
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -288,7 +293,47 @@ export function PublicSearch({
                       </p>
                     </CardFooter>
                   )}
+
+                  {/* Arspi Digital E-SPPT Viewer Actions */}
+                  {item.arsipUrl && (
+                    <div className={`p-4 border-t flex flex-wrap items-center justify-end gap-2 ${isDark ? 'bg-blue-950/10' : 'bg-blue-50/30'}`}>
+                      <span className="flex-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Arsip Digital Tersedia</span>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => togglePdf(item.nop)}
+                        className="h-9 gap-2 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-all"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        {openPdfMap[item.nop] ? "Tutup E-SPPT" : "Lihat E-SPPT"}
+                      </Button>
+                      <a 
+                        href={item.arsipUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={cn(
+                          buttonVariants({ variant: "outline", size: "sm" }),
+                          "h-9 gap-2 border-primary/20 hover:bg-primary/5 text-primary rounded-xl"
+                        )}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Unduh PDF
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Inline PDF Viewer */}
+                  {openPdfMap[item.nop] && item.arsipUrl && (
+                    <div className="border-t bg-black/5 dark:bg-black/20 p-2 sm:p-4 animate-in slide-in-from-top-2 duration-300">
+                      <iframe 
+                        src={`${item.arsipUrl}#toolbar=0&navpanes=0`} 
+                        className="w-full h-[60vh] sm:h-[500px] rounded-xl border-dashed border-2 border-primary/20 bg-white" 
+                        title={`E-SPPT NOP ${item.nop}`}
+                      />
+                    </div>
+                  )}
                 </Card>
+
               ))}
             </div>
         </div>

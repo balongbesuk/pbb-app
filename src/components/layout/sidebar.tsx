@@ -16,6 +16,7 @@ import {
   X,
   Globe,
   History,
+  Archive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -36,6 +37,7 @@ const menuItems = [
     href: "/data-pajak",
     allowedRoles: ["ADMIN", "PENARIK", "PENGGUNA"],
   },
+  { icon: Archive, label: "Arsip Digital PBB", href: "/arsip-pbb", allowedRoles: ["ADMIN"] },
   { icon: Users, label: "Pengguna & Penarik", href: "/pengguna", allowedRoles: ["ADMIN"] },
   {
     icon: FileText,

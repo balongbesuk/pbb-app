@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { checkRateLimit } from "@/lib/rate-limit";
+import path from "path";
+import fs from "fs";
 
 /**
  * Konfigurasi Rate Limit untuk pencarian publik.
@@ -92,26 +94,53 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
 
     const today = new Date();
     
-    // Map data structure for public view
-    const mapped = results.map(r => {
-      return {
-        id: r.id,
-        nop: r.nop,
-        namaWp: r.namaWp,
-        alamat: r.alamatObjek,
-        luasTanah: r.luasTanah,
-        luasBangunan: r.luasBangunan,
-        tagihan: r.sisaTagihan,
-        status: r.paymentStatus,
-        updatedAt: r.updatedAt,
-        tanggalBayar: r.tanggalBayar,
-        petugas: r.penarik ? {
-          nama: r.penarik.name,
-          kontak: r.penarik.phoneNumber || "Tidak ada nomor",
-          wilayah: `${r.penarik.dusun || ""} RT ${r.penarik.rt || "-"} RW ${r.penarik.rw || "-"}`,
-        } : null
-      };
-    });
+    // Scan arsip folder (Year-aware)
+    const archiveDir = path.join(process.cwd(), "public", "arsip-pbb", tahunPajak.toString());
+    let archiveFiles: string[] = [];
+    if (fs.existsSync(archiveDir)) {
+      archiveFiles = fs.readdirSync(archiveDir);
+    }
+
+      // Map data structure for public view
+      const mapped = results.map(r => {
+        // Cari file arsip (NOP)
+        const cleanNop = r.nop.replace(/\D/g, "");
+        const matchedArchive = archiveFiles.find(f => f.replace(/\D/g, "").startsWith(cleanNop));
+
+        // Pengaturan hak akses arsip digital
+        let finalArsipUrl: string | null = null;
+        const canShowArchive = config?.enableDigitalArchive ?? true;
+        const onlyLunas = config?.archiveOnlyLunas ?? true;
+
+        if (canShowArchive && matchedArchive) {
+           if (onlyLunas) {
+              if (r.paymentStatus === "LUNAS") {
+                finalArsipUrl = `/arsip-pbb/${tahunPajak}/${matchedArchive}`;
+              }
+           } else {
+              finalArsipUrl = `/arsip-pbb/${tahunPajak}/${matchedArchive}`;
+           }
+        }
+
+        return {
+          id: r.id,
+          nop: r.nop,
+          namaWp: r.namaWp,
+          alamat: r.alamatObjek,
+          luasTanah: r.luasTanah,
+          luasBangunan: r.luasBangunan,
+          tagihan: r.sisaTagihan,
+          status: r.paymentStatus,
+          updatedAt: r.updatedAt,
+          tanggalBayar: r.tanggalBayar,
+          arsipUrl: finalArsipUrl,
+          petugas: r.penarik ? {
+            nama: r.penarik.name,
+            kontak: r.penarik.phoneNumber || "Tidak ada nomor",
+            wilayah: `${r.penarik.dusun || ""} RT ${r.penarik.rt || "-"} RW ${r.penarik.rw || "-"}`,
+          } : null
+        };
+      });
 
     return { 
       success: true, 

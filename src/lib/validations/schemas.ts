@@ -34,6 +34,8 @@ export const VillageConfigSchema = z.object({
   bapendaUrl: z.string().url("Format URL tidak valid").or(z.literal("")).optional(),
   isJombangBapenda: z.boolean().optional(),
   showNominalPajak: z.boolean().optional(),
+  enableDigitalArchive: z.boolean().optional(),
+  archiveOnlyLunas: z.boolean().optional(),
 });
 
 export const PaymentStatusSchema = z.object({
