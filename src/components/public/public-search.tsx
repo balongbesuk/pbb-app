@@ -301,23 +301,23 @@ export function PublicSearch({
                   </CardContent>
                   
                   {item.status === "BELUM_LUNAS" && (
-                    <CardFooter className={`p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4 ${cardFooterCls}`}>
-                      <div className="flex items-center gap-2 text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-full border border-amber-500/20">
-                        <AlertCircle className="w-3.5 h-3.5" />
+                    <CardFooter className={`p-4 sm:p-5 border-t flex flex-col lg:flex-row items-center justify-between gap-5 ${cardFooterCls}`}>
+                      <div className="w-full lg:w-auto flex items-center justify-center gap-2 text-[11px] sm:text-xs font-bold uppercase tracking-tight text-amber-600 dark:text-amber-400 bg-amber-500/10 px-4 py-2.5 sm:py-2 rounded-2xl border border-amber-500/20">
+                        <AlertCircle className="w-4 h-4" />
                         Jatuh Tempo: {formatJatuhTempo(jatuhTempo)} {tahunPajak}
                       </div>
-                      <div className="flex flex-wrap items-center gap-2">
+
+                      <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full lg:w-auto">
                         {bapendaUrl && (
-                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                          <>
                             {enableBapendaSync && (
                               <Button
                                 variant="outline"
-                                size="sm"
-                                className="w-full sm:w-auto h-9 text-[11px] font-bold uppercase tracking-widest gap-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl"
+                                className="w-full sm:w-auto h-11 sm:h-10 text-[11px] font-black uppercase tracking-widest gap-2.5 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-2xl transition-all active:scale-95 shadow-sm"
                                 onClick={() => handleCheckBapenda(item.nop)}
                                 disabled={isCheckingAuto[item.nop]}
                               >
-                                {isCheckingAuto[item.nop] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCcw className="w-3.5 h-3.5" />}
+                                {isCheckingAuto[item.nop] ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
                                 Cek & Update Lunas
                               </Button>
                             )}
@@ -326,23 +326,22 @@ export function PublicSearch({
                               target="_blank" 
                               rel="noopener noreferrer"
                               className={cn(
-                                buttonVariants({ variant: "outline", size: "sm" }),
-                                "w-full sm:w-auto h-9 text-[11px] font-bold uppercase tracking-widest gap-2 border-zinc-500/30 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-500/10 rounded-xl"
+                                buttonVariants({ variant: "outline" }),
+                                "w-full sm:w-auto h-11 sm:h-10 text-[11px] font-black uppercase tracking-widest gap-2.5 border-zinc-500/30 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-500/10 rounded-2xl transition-all active:scale-95 shadow-sm"
                               )}
                             >
-                              <Info className="w-3.5 h-3.5" />
+                              <Info className="w-4 h-4" />
                               Web Bapenda
                             </a>
-                          </div>
+                          </>
                         )}
                         {item.petugas && item.petugas.kontak !== "Tidak ada nomor" && (
                           <Button
                             variant="outline"
-                            size="sm"
-                            className="w-full sm:w-auto h-9 text-[11px] font-bold uppercase tracking-widest gap-2 border-primary/30 text-primary hover:bg-primary/5 rounded-xl transition-all hover:scale-105 active:scale-95"
+                            className="w-full sm:w-auto h-11 sm:h-10 text-[11px] font-black uppercase tracking-widest gap-2.5 border-primary/40 text-primary hover:bg-primary/5 rounded-2xl transition-all hover:scale-[1.02] active:scale-95 shadow-sm"
                             onClick={() => window.open(`https://wa.me/${item.petugas.kontak.replace(/\D/g, "")}?text=Halo%20pak%20petugas%20PBB%20saya%20ingin%20cek%20pembayaran%20PBB%20saya%20dengan%20NOP%20${item.nop}`, "_blank")}
                           >
-                            <Phone className="w-3.5 h-3.5" />
+                            <Phone className="w-4 h-4" />
                             Hubungi Penarik
                           </Button>
                         )}
@@ -351,38 +350,40 @@ export function PublicSearch({
                   )}
 
                   {item.status === "LUNAS" && (
-                    <CardFooter className={`p-3 border-t text-center ${cardFooterCls}`}>
-                      <p className="w-full text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 opacity-80">
-                        Terima kasih Telah Membayar Pajak Anda
-                      </p>
+                    <CardFooter className={`p-4 sm:p-5 border-t text-center ${cardFooterCls}`}>
+                      <div className="w-full flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 py-3 rounded-2xl border border-emerald-500/10">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Terima Kasih, Pajak Anda Telah Lunas
+                      </div>
                     </CardFooter>
                   )}
 
                   {/* Arspi Digital E-SPPT Viewer Actions */}
                   {item.arsipUrl && (
-                    <div className={`p-4 border-t flex flex-wrap items-center justify-end gap-2 ${isDark ? 'bg-blue-950/10' : 'bg-blue-50/30'}`}>
-                      <span className="flex-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Arsip Digital Tersedia</span>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => togglePdf(item.nop)}
-                        className="h-9 gap-2 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-all"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        {openPdfMap[item.nop] ? "Tutup E-SPPT" : "Lihat E-SPPT"}
-                      </Button>
-                      <a 
-                        href={item.arsipUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className={cn(
-                          buttonVariants({ variant: "outline", size: "sm" }),
-                          "h-9 gap-2 border-primary/20 hover:bg-primary/5 text-primary rounded-xl"
-                        )}
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Unduh PDF
-                      </a>
+                    <div className={`p-4 sm:p-5 border-t flex flex-col sm:flex-row items-center gap-4 ${isDark ? 'bg-blue-950/10' : 'bg-blue-50/30'}`}>
+                      <span className="flex-1 text-[11px] font-bold text-blue-600/60 dark:text-blue-400/60 uppercase tracking-widest text-center sm:text-left">Arsip Digital Tersedia</span>
+                      <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => togglePdf(item.nop)}
+                          className="w-full sm:w-auto h-11 sm:h-10 text-[10px] font-black uppercase tracking-widest gap-2 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-2xl transition-all active:scale-95"
+                        >
+                          <Eye className="w-4 h-4" />
+                          {openPdfMap[item.nop] ? "Tutup E-SPPT" : "Lihat E-SPPT"}
+                        </Button>
+                        <a 
+                          href={item.arsipUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={cn(
+                            buttonVariants({ variant: "outline" }),
+                            "w-full sm:w-auto h-11 sm:h-10 text-[10px] font-black uppercase tracking-widest gap-2 border-primary/20 hover:bg-primary/5 text-primary rounded-2xl transition-all active:scale-95"
+                          )}
+                        >
+                          <Download className="w-4 h-4" />
+                          Unduh PDF
+                        </a>
+                      </div>
                     </div>
                   )}
 
@@ -430,12 +431,12 @@ export function PublicSearch({
             <Button 
                 variant="outline" 
                 onClick={() => setShowPayRedirect(null)}
-                className={`w-full sm:w-auto rounded-xl font-black uppercase tracking-widest text-[10px] h-12 border-zinc-200 dark:border-zinc-800 ${isDark ? "hover:bg-white/5 text-blue-200" : "hover:bg-zinc-50 text-slate-500"}`}
+                className={`w-full sm:w-auto rounded-2xl font-black uppercase tracking-widest text-[10px] h-12 border-zinc-200 dark:border-zinc-800 ${isDark ? "hover:bg-white/5 text-blue-200" : "hover:bg-zinc-50 text-slate-500"}`}
             >
               Nanti Saja
             </Button>
             <Button 
-                className={`w-full sm:flex-1 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg shadow-emerald-900/20 border-none group transition-all`}
+                className={`w-full sm:flex-1 h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg shadow-emerald-900/20 border-none group transition-all`}
                 onClick={() => {
                   if (showPayRedirect) {
                     window.open(`https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=${showPayRedirect.nop}`, "_blank");
