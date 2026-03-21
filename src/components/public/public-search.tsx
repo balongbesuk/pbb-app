@@ -313,7 +313,12 @@ export function PublicSearch({
                             {enableBapendaSync && (
                               <Button
                                 variant="outline"
-                                className="w-full sm:w-auto h-11 sm:h-10 text-[11px] font-black uppercase tracking-widest gap-2.5 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-2xl transition-all active:scale-95 shadow-sm"
+                                className={cn(
+                                  "w-full sm:w-auto h-11 sm:h-10 text-[11px] font-black uppercase tracking-widest gap-2.5 rounded-2xl transition-all active:scale-95 shadow-sm",
+                                  isDark 
+                                    ? "border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300" 
+                                    : "border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                                )}
                                 onClick={() => handleCheckBapenda(item.nop)}
                                 disabled={isCheckingAuto[item.nop]}
                               >
@@ -327,7 +332,10 @@ export function PublicSearch({
                               rel="noopener noreferrer"
                               className={cn(
                                 buttonVariants({ variant: "outline" }),
-                                "w-full sm:w-auto h-11 sm:h-10 text-[11px] font-black uppercase tracking-widest gap-2.5 border-zinc-500/30 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-500/10 rounded-2xl transition-all active:scale-95 shadow-sm"
+                                "w-full sm:w-auto h-11 sm:h-10 text-[11px] font-black uppercase tracking-widest gap-2.5 rounded-2xl transition-all active:scale-95 shadow-sm",
+                                isDark 
+                                  ? "border-zinc-500/20 text-zinc-400 hover:bg-zinc-500/20 hover:text-zinc-300" 
+                                  : "border-zinc-500/30 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-700"
                               )}
                             >
                               <Info className="w-4 h-4" />
@@ -338,7 +346,12 @@ export function PublicSearch({
                         {item.petugas && item.petugas.kontak !== "Tidak ada nomor" && (
                           <Button
                             variant="outline"
-                            className="w-full sm:w-auto h-11 sm:h-10 text-[11px] font-black uppercase tracking-widest gap-2.5 border-primary/40 text-primary hover:bg-primary/5 rounded-2xl transition-all hover:scale-[1.02] active:scale-95 shadow-sm"
+                            className={cn(
+                              "w-full sm:w-auto h-11 sm:h-10 text-[11px] font-black uppercase tracking-widest gap-2.5 rounded-2xl transition-all hover:scale-[1.02] active:scale-95 shadow-sm",
+                              isDark
+                                ? "border-primary/20 text-primary hover:bg-primary/20 hover:text-white"
+                                : "border-primary/40 text-primary hover:bg-primary/5"
+                            )}
                             onClick={() => window.open(`https://wa.me/${item.petugas.kontak.replace(/\D/g, "")}?text=Halo%20pak%20petugas%20PBB%20saya%20ingin%20cek%20pembayaran%20PBB%20saya%20dengan%20NOP%20${item.nop}`, "_blank")}
                           >
                             <Phone className="w-4 h-4" />
@@ -366,7 +379,12 @@ export function PublicSearch({
                         <Button 
                           variant="outline" 
                           onClick={() => togglePdf(item.nop)}
-                          className="w-full sm:w-auto h-11 sm:h-10 text-[10px] font-black uppercase tracking-widest gap-2 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-2xl transition-all active:scale-95"
+                          className={cn(
+                            "w-full sm:w-auto h-11 sm:h-10 text-[10px] font-black uppercase tracking-widest gap-2 rounded-2xl transition-all active:scale-95",
+                            isDark
+                              ? "border-blue-500/30 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300"
+                              : "border-blue-500/30 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                          )}
                         >
                           <Eye className="w-4 h-4" />
                           {openPdfMap[item.nop] ? "Tutup E-SPPT" : "Lihat E-SPPT"}
@@ -377,7 +395,10 @@ export function PublicSearch({
                           rel="noopener noreferrer"
                           className={cn(
                             buttonVariants({ variant: "outline" }),
-                            "w-full sm:w-auto h-11 sm:h-10 text-[10px] font-black uppercase tracking-widest gap-2 border-primary/20 hover:bg-primary/5 text-primary rounded-2xl transition-all active:scale-95"
+                            "w-full sm:w-auto h-11 sm:h-10 text-[10px] font-black uppercase tracking-widest gap-2 rounded-2xl transition-all active:scale-95",
+                            isDark
+                              ? "border-primary/20 text-primary hover:bg-primary/20 hover:text-white"
+                              : "border-primary/20 text-primary hover:bg-primary/5"
                           )}
                         >
                           <Download className="w-4 h-4" />
