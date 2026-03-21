@@ -406,13 +406,17 @@ export async function processSmartArchive(formData: FormData) {
   }
 }
 
-/** Get list of all archive filenames by year */
-export async function getArchiveList(year: number) {
+/** Get list of all archive filenames and sizes by year */
+export async function getArchiveList(year: number): Promise<{ name: string; size: number }[]> {
   try {
     const archiveDir = getArchiveDir(year);
     if (!fs.existsSync(archiveDir)) return [];
-    const files = fs.readdirSync(archiveDir);
-    return files.filter(f => !f.startsWith(".")).sort();
+    const files = fs.readdirSync(archiveDir).filter(f => !f.startsWith("."));
+    return files.map(f => {
+      const filePath = path.join(archiveDir, f);
+      const stat = fs.statSync(filePath);
+      return { name: f, size: stat.size };
+    }).sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
     console.error(error);
     return [];

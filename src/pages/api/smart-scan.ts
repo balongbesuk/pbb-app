@@ -3,9 +3,12 @@ import { PDFDocument } from "pdf-lib";
 import path from "path";
 import fs from "fs";
 import Busboy from "busboy";
+import { PrismaClient } from "@prisma/client";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+
+const prisma = new PrismaClient();
 
 export const config = {
   api: {
@@ -13,6 +16,19 @@ export const config = {
     responseLimit: false,
   },
 };
+
+// ── Cleanup chunk lama (>2 jam) ───────────────────────────────────────────────
+function cleanupStaleChunks(tempDir: string) {
+  try {
+    if (!fs.existsSync(tempDir)) return;
+    const now = Date.now();
+    const TWO_HOURS = 2 * 60 * 60 * 1000;
+    for (const file of fs.readdirSync(tempDir)) {
+      const filePath = path.join(tempDir, file);
+      if (now - fs.statSync(filePath).mtimeMs > TWO_HOURS) fs.unlinkSync(filePath);
+    }
+  } catch { /* silent */ }
+}
 
 function parseMeta(req: NextApiRequest): Promise<Record<string, string>> {
   return new Promise((resolve, reject) => {
@@ -25,7 +41,6 @@ function parseMeta(req: NextApiRequest): Promise<Record<string, string>> {
   });
 }
 
-/** Extract NOP from text block */
 function extractNop(text: string): string {
   const clean = text.replace(/\D/g, "");
   const m = clean.match(/3517\d{14}/g);
@@ -35,53 +50,43 @@ function extractNop(text: string): string {
   return "";
 }
 
-/** Process a batch of pages concurrently */
-async function processBatch(
-  mainPdfDoc: PDFDocument,
-  pageIndices: number[],
-  archiveDir: string,
-  nopMap: Map<number, string>,
-  logPath: string
-): Promise<{ detected: number; skipped: number }> {
-  let detected = 0;
-  let skipped = 0;
+/**
+ * Ekstrak teks per halaman dari seluruh PDF sekaligus via pdf-parse pagerender.
+ * JAUH lebih efisien.
+ */
+async function extractPerPageTexts(fileBuffer: Buffer, totalPages: number): Promise<string[]> {
+  const pageTexts: string[] = new Array(totalPages).fill("");
+  let currentPage = 0;
 
-  const tasks = pageIndices.map(async (i) => {
-    try {
-      const nop = nopMap.get(i);
-
-      if (nop) {
-        // Only create sub-PDF if we have a valid NOP
-        const subDoc = await PDFDocument.create();
-        const [page] = await subDoc.copyPages(mainPdfDoc, [i]);
-        subDoc.addPage(page);
-        const bytes = await subDoc.save();
-        fs.writeFileSync(path.join(archiveDir, `${nop}.pdf`), bytes);
-        fs.appendFileSync(logPath, `PAGE ${i + 1}: NOP -> ${nop}\n`);
-        detected++;
-      } else {
-        skipped++;
-      }
-    } catch (err) {
-      fs.appendFileSync(logPath, `PAGE ${i + 1}: ERROR -> ${err}\n`);
-      skipped++;
-    }
+  await pdfParse(fileBuffer, {
+    pagerender: async function (pageData: any) {
+      try {
+        const tc = await pageData.getTextContent();
+        const text = tc.items.map((item: any) => item.str || "").join(" ");
+        pageTexts[currentPage] = text;
+      } catch { /* skip */ }
+      currentPage++;
+      return "";
+    },
   });
 
-  await Promise.all(tasks);
-  return { detected, skipped };
+  return pageTexts;
 }
+
+
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
-  // Streaming NDJSON
   res.setHeader("Content-Type", "application/x-ndjson");
   res.setHeader("Transfer-Encoding", "chunked");
   res.setHeader("Cache-Control", "no-cache");
 
   const send = (obj: object) => res.write(JSON.stringify(obj) + "\n");
   const logPath = path.join(process.cwd(), "public", "pbb_process_log.txt");
+  const tempDir = path.join(process.cwd(), "tmp", "upload-chunks");
+
+  fs.writeFileSync(logPath, `--- SMART SCAN (TURBO MODE) --- ${new Date().toISOString()}\n`);
 
   try {
     const meta = await parseMeta(req);
@@ -94,9 +99,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.end();
     }
 
-    // ---- Step 1: Assemble chunks ----
+    cleanupStaleChunks(tempDir);
     send({ type: "status", message: "Menggabungkan file..." });
-    const tempDir = path.join(process.cwd(), "tmp", "upload-chunks");
+    fs.appendFileSync(logPath, `Session ID: ${sessionId}, chunks: ${totalChunksNum}\n`);
+
     const allBuffers: Buffer[] = [];
     for (let i = 0; i < totalChunksNum; i++) {
       const chunkPath = path.join(tempDir, `${sessionId}_${i}`);
@@ -108,92 +114,70 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     const fileBuffer = Buffer.concat(allBuffers);
 
-    // Clean up chunks immediately
     for (let i = 0; i < totalChunksNum; i++) {
       try { fs.unlinkSync(path.join(tempDir, `${sessionId}_${i}`)); } catch { /* ignore */ }
     }
 
-    fs.writeFileSync(
-      logPath,
-      `--- SMART SCAN OPTIMIZED --- ${new Date().toISOString()}\nFile: ${filename} (${fileBuffer.length} bytes), Year: ${year}\n`
-    );
+    fs.appendFileSync(logPath, `File: ${filename} (${fileBuffer.length} bytes), Year: ${year}\n`);
 
-    // ---- Step 2: Load PDF and get page count ----
     send({ type: "status", message: "Membaca PDF..." });
     const mainPdfDoc = await PDFDocument.load(fileBuffer);
     const totalPages = mainPdfDoc.getPageCount();
-    fs.appendFileSync(logPath, `Total Pages: ${totalPages}\n`);
+    
+    send({ type: "status", message: "Memuat daftar NOP dari database..." });
+    const dbNopRows = await prisma.taxData.findMany({ where: { tahun: year }, select: { nop: true } });
+    const validNopSet = new Set(dbNopRows.map(r => r.nop.replace(/\D/g, "")));
 
-    send({ type: "progress", current: 0, total: totalPages, phase: "extract" });
-
-    // ---- Step 3: Extract all text at once (FAST!) ----
-    send({ type: "status", message: `Mengekstrak teks dari ${totalPages} halaman sekaligus...` });
-    const startExtract = Date.now();
-
-    let fullText = "";
-    try {
-      const data = await pdfParse(fileBuffer);
-      fullText = data.text || "";
-    } catch (err) {
-      fs.appendFileSync(logPath, `Full PDF text extraction failed: ${err}\n`);
-    }
-
-    const extractTime = ((Date.now() - startExtract) / 1000).toFixed(1);
-    fs.appendFileSync(logPath, `Full text extraction: ${extractTime}s\n`);
-
-    // ---- Step 4: Extract text per-page for NOP matching ----
-    // We still need per-page text to match NOP to specific pages.
-    // But we do it in batches of 20 for speed.
-    send({ type: "status", message: "Mendeteksi NOP per halaman..." });
-
-    const nopMap = new Map<number, string>();
-    const EXTRACT_BATCH = 20;
-
-    for (let batch = 0; batch < totalPages; batch += EXTRACT_BATCH) {
-      const end = Math.min(batch + EXTRACT_BATCH, totalPages);
-      const extractTasks = [];
-
-      for (let i = batch; i < end; i++) {
-        extractTasks.push(
-          (async () => {
-            try {
-              const subDoc = await PDFDocument.create();
-              const [page] = await subDoc.copyPages(mainPdfDoc, [i]);
-              subDoc.addPage(page);
-              const bytes = await subDoc.save();
-              const data = await pdfParse(Buffer.from(bytes));
-              const nop = extractNop(data.text || "");
-              if (nop) nopMap.set(i, nop);
-            } catch {
-              // skip extraction error
-            }
-          })()
-        );
-      }
-
-      await Promise.all(extractTasks);
-
-      // Report progress every batch
-      send({ type: "progress", current: end, total: totalPages, phase: "extract" });
-    }
-
-    fs.appendFileSync(logPath, `NOP detection done: ${nopMap.size} found out of ${totalPages}\n`);
-
-    // ---- Step 5: Save PDFs only for pages with NOP (parallel batches of 10) ----
     const archiveDir = path.join(process.cwd(), "public", "arsip-pbb", year.toString());
     if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
+    const existingFiles = new Set(fs.readdirSync(archiveDir));
 
-    send({ type: "status", message: `Menyimpan ${nopMap.size} arsip...` });
+    send({ type: "status", message: `Mengekstrak teks ${totalPages} halaman...` });
+    send({ type: "progress", current: 0, total: totalPages, phase: "extract" });
+    const pageTexts = await extractPerPageTexts(fileBuffer, totalPages);
+    send({ type: "progress", current: totalPages, total: totalPages, phase: "extract" });
 
-    const pagesWithNop = Array.from(nopMap.keys()).sort((a, b) => a - b);
-    const SAVE_BATCH = 10;
-    let totalDetected = 0;
+    const nopMap = new Map<number, string>();
+    for (let i = 0; i < pageTexts.length; i++) {
+      const nop = extractNop(pageTexts[i]);
+      if (nop) nopMap.set(i, nop);
+    }
+
+    send({ type: "status", message: `Memeriksa hasil & Menyimpan (${nopMap.size} file mentah)...` });
+
+    let detected = 0, duplicates = 0, invalidDb = 0, skipped = 0;
+    const pagesWithNop = Array.from(nopMap.entries()).sort(([a], [b]) => a - b);
+    
+    // Batch raksasa pun aman tanpa WASM memori, tapi dibatasi 20 agar stabil (pdf-lib murni)
+    const SAVE_BATCH = 20;
 
     for (let batch = 0; batch < pagesWithNop.length; batch += SAVE_BATCH) {
-      const batchPages = pagesWithNop.slice(batch, batch + SAVE_BATCH);
-      const result = await processBatch(mainPdfDoc, batchPages, archiveDir, nopMap, logPath);
-      totalDetected += result.detected;
+      const batchSlice = pagesWithNop.slice(batch, batch + SAVE_BATCH);
+      await Promise.all(
+        batchSlice.map(async ([i, nop]) => {
+          try {
+            const fname = `${nop}.pdf`;
+            if (existingFiles.has(fname)) { duplicates++; return; }
+            if (validNopSet.size > 0 && !validNopSet.has(nop)) { invalidDb++; return; }
 
+            // 1. Ekstrak 1 halaman dari PDF utama via pdf-lib
+            const subDoc = await PDFDocument.create();
+            const [page] = await subDoc.copyPages(mainPdfDoc, [i]);
+            subDoc.addPage(page);
+            
+            // 2. Simpan hasil mentahan ke harddisk (Super Cepat)
+            const rawBytes = await subDoc.save({ useObjectStreams: true });
+            fs.writeFileSync(path.join(archiveDir, fname), rawBytes);
+            existingFiles.add(fname);
+            fs.appendFileSync(logPath, `PAGE ${i + 1}: SAVED (${(rawBytes.length / 1024).toFixed(0)} KB) -> ${nop}\n`);
+            detected++;
+          } catch (err) {
+            fs.appendFileSync(logPath, `PAGE ${i + 1}: ERROR -> ${err}\n`);
+            skipped++;
+          }
+        })
+      );
+      
       send({
         type: "progress",
         current: Math.min(batch + SAVE_BATCH, pagesWithNop.length),
@@ -202,20 +186,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const totalSkipped = totalPages - totalDetected;
-    const totalTime = ((Date.now() - startExtract) / 1000).toFixed(1);
-    fs.appendFileSync(logPath, `DONE in ${totalTime}s: ${totalDetected} saved, ${totalSkipped} skipped\n`);
+    const pagesNoNop = totalPages - nopMap.size;
+    const lines = [
+      `✅ Tersimpan: ${detected}`,
+      duplicates > 0 ? `⚠️ Duplikat: ${duplicates}` : null,
+      invalidDb > 0 ? `🔍 Tidak ada DB: ${invalidDb}` : null,
+      pagesNoNop > 0 ? `📄 Tanpa NOP: ${pagesNoNop}` : null,
+    ].filter(Boolean).join(" | ");
 
-    send({
-      type: "done",
-      success: true,
-      message: `Pemindaian selesai dalam ${totalTime}s! Berhasil: ${totalDetected}, Terlewati: ${totalSkipped}.`,
-    });
+    fs.appendFileSync(logPath, `DONE: ${lines}\n`);
+    send({ type: "done", success: true, message: `Pindai Selesai (Cepat Sekali)! ${lines}` });
+
   } catch (error: any) {
     console.error("[smart-scan]", error);
     fs.appendFileSync(logPath, `FATAL: ${error}\n`);
     send({ type: "done", success: false, message: error.message || "Server Error" });
   } finally {
+    await prisma.$disconnect();
     res.end();
   }
 }

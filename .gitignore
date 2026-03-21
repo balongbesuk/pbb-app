@@ -64,3 +64,7 @@ build.log
 !/public/uploads/.gitkeep
 /public/uploads/avatars/*
 !/public/uploads/avatars/.gitkeep
+/public/arsip-pbb/
+/public/pbb_process_log.txt
+/temp_extracted.txt
+test_qr.js

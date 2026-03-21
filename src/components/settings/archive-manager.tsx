@@ -1,21 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileStack, Upload, Trash2, Loader2, FileText, Search, Download, Zap, ChevronLeft, ChevronRight, Info, AlertCircle, FileUp, Files } from "lucide-react";
+import { FileStack, Upload, Trash2, Loader2, FileText, Search, Download, Zap, ChevronLeft, ChevronRight, Info, AlertCircle, FileUp, Files, HardDriveDownload, UploadCloud } from "lucide-react";
 import { getArchiveList, uploadArchives, deleteArchive, processSmartArchive } from "@/app/actions/settings-actions";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function ArchiveManager() {
-  const [files, setFiles] = useState<string[]>([]);
+  const [files, setFiles] = useState<{ name: string; size: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedYear, setSelectedYear] = useState(2026);
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,6 +24,102 @@ export function ArchiveManager() {
   
   const [isSmartOpen, setIsSmartOpen] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+
+  const handleBackup = async () => {
+    setIsBackingUp(true);
+    toast.info("Membuat backup arsip... Mohon tunggu.");
+    try {
+      const resp = await fetch("/api/backup-archive", { method: "POST" });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Gagal" }));
+        toast.error(err.error || "Backup gagal.");
+        return;
+      }
+      const blob = await resp.blob();
+      const disposition = resp.headers.get("Content-Disposition") || "";
+      const nameMatch = disposition.match(/filename="([^"]+)"/);
+      const filename = nameMatch ? nameMatch[1] : `backup-arsip-pbb.zip`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Backup berhasil diunduh!");
+    } catch (e: any) {
+      toast.error(`Gagal backup: ${e.message}`);
+    }
+    setIsBackingUp(false);
+  };
+
+  const [isRestoring, setIsRestoring] = useState(false);
+
+  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".zip")) {
+      toast.error("Pilih file ZIP hasil backup.");
+      return;
+    }
+    if (!confirm(`Restore akan menimpa arsip yang ada dengan isi file "${file.name}". Lanjutkan?`)) return;
+
+    setIsRestoring(true);
+    const CHUNK_SIZE = 2 * 1024 * 1024;
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    const sessionId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+
+    try {
+      for (let i = 0; i < totalChunks; i++) {
+        const chunk = file.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        const fd = new FormData();
+        fd.append("chunk", new File([chunk], file.name));
+        fd.append("sessionId", sessionId);
+        fd.append("chunkIndex", i.toString());
+        fd.append("filename", file.name);
+        const r = await fetch("/api/upload-chunk", { method: "POST", body: fd });
+        if (!r.ok) { toast.error(`Gagal upload bagian ${i + 1}`); setIsRestoring(false); return; }
+        const pct = Math.round(((i + 1) / totalChunks) * 100);
+        toast.info(`Mengunggah ZIP... ${pct}%`, { id: "restore-progress" });
+      }
+      toast.dismiss("restore-progress");
+      toast.info("Mengekstrak arsip...");
+
+      const fd = new FormData();
+      fd.append("sessionId", sessionId);
+      fd.append("filename", file.name);
+      fd.append("totalChunks", totalChunks.toString());
+      const resp = await fetch("/api/restore-archive", { method: "POST", body: fd });
+      if (!resp.ok || !resp.body) { toast.error(`Error: ${resp.status}`); setIsRestoring(false); return; }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split("\n"); buf = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const msg = JSON.parse(line);
+            if (msg.type === "status") toast.info(msg.message, { id: "restore-progress" });
+            else if (msg.type === "progress") toast.info(`Memulihkan file ${msg.current}/${msg.total}...`, { id: "restore-progress" });
+            else if (msg.type === "done") {
+              toast.dismiss("restore-progress");
+              if (msg.success) { toast.success(msg.message); fetchArchives(selectedYear); }
+              else toast.error(msg.message);
+            }
+          } catch { /* skip */ }
+        }
+      }
+    } catch (err: any) {
+      toast.error(`Gagal restore: ${err.message}`);
+    }
+    setIsRestoring(false);
+    e.target.value = "";
+  };
 
   useEffect(() => {
     async function init() {
@@ -50,6 +147,73 @@ export function ArchiveManager() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
+
+  // Ref untuk nyimpen abort controller agar bisa dibatalkan secara live
+  const compressAbortRef = useRef<AbortController | null>(null);
+
+  const handleCompressMassal = async () => {
+    if (!confirm("Fitur ini akan mengecilkan semua ukuran PDF secara massal di latar belakang (Bisa memakan waktu lama tergantung jumlah file). Lanjutkan?")) return;
+    
+    setIsCompressing(true);
+    const controller = new AbortController();
+    compressAbortRef.current = controller;
+
+    try {
+      const resp = await fetch("/api/compress-archives-api", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ year: selectedYear }),
+        signal: controller.signal // pasang signal pemutus
+      });
+      
+      if (!resp.ok || !resp.body) {
+        toast.error("Gagal memulai kompresi massal.");
+        setIsCompressing(false);
+        return;
+      }
+      
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const msg = JSON.parse(line);
+            if (msg.type === "progress") {
+               toast.info(`Mengompres file ${msg.current}/${msg.total} (${msg.percent}%)...`, { id: "compress-progress" });
+            } else if (msg.type === "done") {
+               toast.dismiss("compress-progress");
+               if (msg.success) toast.success(msg.message);
+               else toast.error(msg.message);
+               fetchArchives(selectedYear);
+            }
+          } catch { /* skip */ }
+        }
+      }
+    } catch (e: any) {
+      if (e.name === "AbortError") {
+        toast.dismiss("compress-progress");
+        toast.error("Kompresi Dibatalkan.");
+      } else {
+        toast.error(`Terjadi kesalahan kompresi: ${e.message}`);
+        toast.dismiss("compress-progress");
+      }
+    }
+    setIsCompressing(false);
+    compressAbortRef.current = null;
+  };
+
+  const handleCancelCompress = () => {
+    if (compressAbortRef.current) {
+      compressAbortRef.current.abort();
+    }
+  };
 
   const handleSmartScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -123,7 +287,7 @@ export function ArchiveManager() {
               toast.info(msg.message, { id: "scan-progress" });
             } else if (msg.type === "progress") {
               const label = msg.phase === "save"
-                ? `Menyimpan arsip ${msg.current} / ${msg.total}...`
+                ? `Mentransfer arsip mentah ${msg.current} / ${msg.total}...`
                 : `Mendeteksi NOP ${msg.current} / ${msg.total}...`;
               toast.info(label, { id: "scan-progress" });
             } else if (msg.type === "done" || msg.success !== undefined) {
@@ -185,7 +349,7 @@ export function ArchiveManager() {
     }
   };
 
-  const filteredFiles = files.filter(f => f.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredFiles = files.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   // Pagination logic
   const totalPages = Math.ceil(filteredFiles.length / itemsPerPage);
@@ -193,15 +357,23 @@ export function ArchiveManager() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  
+  const totalSizeB = filteredFiles.reduce((acc, f) => acc + f.size, 0);
+  const totalSizeMB = (totalSizeB / 1024 / 1024).toFixed(2);
+  const totalSizeGB = (totalSizeB / 1024 / 1024 / 1024).toFixed(2);
+  const displaySize = totalSizeB > 1024 * 1024 * 1024 ? `${totalSizeGB} GB` : `${totalSizeMB} MB`;
 
   return (
-    <Card className="glass border-none shadow-lg">
+    <Card className="glass border-none shadow-lg mt-6">
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <CardTitle className="flex items-center gap-2 text-xl font-bold">
               <FileStack className="h-5 w-5 text-blue-500" />
-              Arsip Digital PBB (E-SPPT)
+              Arsip Digital PBB 
+              <span className="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                Kapasitas: {displaySize}
+              </span>
             </CardTitle>
             <CardDescription className="mt-1">
               Beri nama file sesuai NOP (misal: 3517...pdf) agar otomatis terdeteksi saat pencarian publik.
@@ -223,156 +395,230 @@ export function ArchiveManager() {
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-            <Input
-              placeholder="Cari file arsip..."
-              className="pl-9 bg-white/50 dark:bg-[#111827]/50"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+              <Input
+                placeholder="Cari file arsip..."
+                className="pl-9 bg-white/50 dark:bg-[#111827]/50 w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 w-full lg:w-auto">
+              {/* Pop-up Smart Scan */}
+              <Dialog open={isSmartOpen} onOpenChange={setIsSmartOpen}>
+                <DialogTrigger 
+                  render={
+                    <Button 
+                      variant="default"
+                      className="w-full sm:w-auto gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-none shadow-lg shadow-orange-500/20 rounded-xl"
+                    />
+                  }
+                >
+                  <FileStack className="h-4 w-4 fill-white text-white" />
+                  Upload & Pemilahan Cepat
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md rounded-3xl border-none">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <FileStack className="h-5 w-5 text-amber-500" />
+                      Memilah PDF Arsip
+                    </DialogTitle>
+                    <DialogDescription>
+                      Pecah PDF besar (bundle) menjadi file individu otomatis berdasarkan NOP dalam kecepatan kilat. 
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-4 py-4">
+                    <Alert variant="default" className="bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      <AlertTitle className="font-bold text-xs uppercase tracking-widest">Informasi</AlertTitle>
+                      <AlertDescription className="text-xs leading-relaxed">
+                        Sistem ini sekarang memilah file secara *instan* tanpa kompresi, agar Anda dapat meng-upload file tebal sekaligus. Jika ukurannya jadi besar, jalankan **Kompresi Massal** dari Dashboard ini nanti!
+                      </AlertDescription>
+                    </Alert>
+
+                    <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-8 bg-zinc-50 dark:bg-zinc-900/50">
+                      {scanning ? (
+                        <div className="flex flex-col items-center gap-3">
+                           <Loader2 className="h-10 w-10 animate-spin text-amber-500" />
+                           <p className="text-xs font-bold animate-pulse text-amber-600">Sedang memilah super cepat...</p>
+                        </div>
+                      ) : (
+                        <>
+                          <FileUp className="h-10 w-10 text-zinc-300 mb-3" />
+                          <p className="text-xs text-muted-foreground mb-4 text-center">Tarik file ke sini atau klik tombol di bawah (Bisa Tembus Ribuan Lembar)</p>
+                          <input
+                            type="file"
+                            id="smart-scan-input"
+                            className="hidden"
+                            onChange={handleSmartScan}
+                            accept=".pdf"
+                            disabled={scanning}
+                          />
+                          <Button 
+                            variant="secondary" 
+                            className="w-full sm:w-auto rounded-xl font-bold"
+                            onClick={() => document.getElementById("smart-scan-input")?.click()}
+                          >
+                            Pilih Bundle PDF
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Pop-up Manual Upload */}
+              <Dialog open={isManualOpen} onOpenChange={setIsManualOpen}>
+                <DialogTrigger 
+                  render={
+                    <Button 
+                      variant="outline"
+                      className="w-full sm:w-auto gap-2 rounded-xl"
+                    />
+                  }
+                >
+                  <Upload className="h-4 w-4" />
+                  Manual Upload
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md rounded-3xl border-none">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Files className="h-5 w-5 text-blue-500" />
+                      Manual Upload
+                    </DialogTitle>
+                    <DialogDescription>
+                      Unggah satu atau banyak file PDF/Gambar secara manual.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-4 py-4">
+                    <div className="bg-blue-500/5 border border-blue-500/10 p-4 rounded-2xl space-y-2">
+                       <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Aturan Penamaan</p>
+                       <p className="text-[11px] text-blue-700/80 leading-relaxed italic">
+                          "Agar terdeteksi di pencarian publik, pastikan nama file adalah **NOMOR NOP** warga. Contoh: **351704001900100100.pdf**"
+                       </p>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-8 bg-zinc-50 dark:bg-zinc-900/50">
+                      {uploading ? (
+                        <div className="flex flex-col items-center gap-3">
+                           <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+                           <p className="text-xs font-bold animate-pulse text-blue-600">Mengunggah file...</p>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="h-10 w-10 text-zinc-300 mb-3" />
+                          <p className="text-xs text-muted-foreground mb-4 text-center">Pilih file PDF atau Gambar (JPG/PNG)</p>
+                          <input
+                            type="file"
+                            id="manual-upload-input"
+                            multiple
+                            className="hidden"
+                            onChange={handleManualUpload}
+                            accept=".pdf,image/*"
+                            disabled={uploading}
+                          />
+                          <Button 
+                            variant="secondary" 
+                            className="rounded-xl font-bold"
+                            onClick={() => document.getElementById("manual-upload-input")?.click()}
+                          >
+                            Pilih File
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                    
+                    <div className="text-[10px] text-center text-muted-foreground">
+                      File akan disimpan ke folder arsip tahun **{selectedYear}**.
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
           
-          <div className="flex flex-wrap gap-2">
-            {/* Pop-up Smart Scan */}
-            <Dialog open={isSmartOpen} onOpenChange={setIsSmartOpen}>
-              <DialogTrigger 
-                render={
-                  <Button 
-                    variant="default"
-                    className="gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-none shadow-lg shadow-orange-500/20"
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center sm:justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-900/40 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50">
+            <div className="flex items-center justify-center sm:justify-start gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground w-full sm:w-auto px-2 pb-2 sm:pb-0 border-b border-zinc-200/50 sm:border-none">
+              <Zap className="h-3.5 w-3.5 text-emerald-500" />
+              Alat Pemeliharaan
+            </div>
+            
+            <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
+              {/* Tombol Kompresi Massal */}
+              {isCompressing ? (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="w-full sm:w-auto gap-2 bg-rose-500 hover:bg-rose-600 text-white border-none shadow-md shadow-rose-500/20 rounded-xl"
+                  onClick={handleCancelCompress}
+                >
+                  <div className="h-3 w-3 rounded-sm border-2 border-white bg-white/20 animate-pulse" />
+                  Batalkan Kompresi
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="w-full sm:w-auto gap-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white border-none shadow-md shadow-green-500/20 rounded-xl"
+                  onClick={handleCompressMassal}
+                  disabled={files.length === 0}
+                >
+                  <Zap className="h-3 w-3 fill-white" />
+                  Kompresi Massal
+                </Button>
+              )}
+
+              <div className="grid grid-cols-2 sm:flex items-center gap-2">
+                {/* Backup Arsip */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full sm:w-auto gap-2 rounded-xl border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                  onClick={handleBackup}
+                  disabled={isBackingUp}
+                >
+                  {isBackingUp
+                    ? <Loader2 className="h-3 w-3 animate-spin" />
+                    : <HardDriveDownload className="h-3 w-3" />
+                  }
+                  <span className="hidden sm:inline">Backup</span>
+                  <span className="sm:hidden">Backup</span>
+                </Button>
+
+                {/* Restore Arsip */}
+                <>
+                  <input
+                    type="file"
+                    id="restore-zip-input"
+                    className="hidden"
+                    accept=".zip"
+                    onChange={handleRestore}
+                    disabled={isRestoring}
                   />
-                }
-              >
-                <Zap className="h-4 w-4 fill-white" />
-                Smart Scan PDF
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md rounded-3xl border-none">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
-                    Smart Scan PDF
-                  </DialogTitle>
-                  <DialogDescription>
-                    Pecah PDF besar (bundle) menjadi file individu otomatis berdasarkan NOP.
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-4 py-4">
-                  <Alert variant="default" className="bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400">
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                    <AlertTitle className="font-bold text-xs uppercase tracking-widest">Peringatan Kapasitas</AlertTitle>
-                    <AlertDescription className="text-xs leading-relaxed">
-                      Untuk menjaga stabilitas sistem, mohon **bagi file PDF Anda menjadi maksimal 500 halaman** per unggahan.
-                    </AlertDescription>
-                  </Alert>
-
-                  <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-8 bg-zinc-50 dark:bg-zinc-900/50">
-                    {scanning ? (
-                      <div className="flex flex-col items-center gap-3">
-                         <Loader2 className="h-10 w-10 animate-spin text-amber-500" />
-                         <p className="text-xs font-bold animate-pulse text-amber-600">Sedang memproses halaman...</p>
-                      </div>
-                    ) : (
-                      <>
-                        <FileUp className="h-10 w-10 text-zinc-300 mb-3" />
-                        <p className="text-xs text-muted-foreground mb-4 text-center">Tarik file ke sini atau klik tombol di bawah</p>
-                        <input
-                          type="file"
-                          id="smart-scan-input"
-                          className="hidden"
-                          onChange={handleSmartScan}
-                          accept=".pdf"
-                          disabled={scanning}
-                        />
-                        <Button 
-                          variant="secondary" 
-                          className="rounded-xl font-bold"
-                          onClick={() => document.getElementById("smart-scan-input")?.click()}
-                        >
-                          Pilih File PDF
-                        </Button>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="flex items-start gap-2 text-[10px] text-muted-foreground bg-zinc-100 dark:bg-zinc-800 p-3 rounded-xl">
-                    <Info className="h-3 w-3 shrink-0 mt-0.5" />
-                    <p>Sistem akan memindai teks, mencari NOP, dan menyimpan potongan PDF ke folder tahun **{selectedYear}** secara otomatis.</p>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            {/* Pop-up Manual Upload */}
-            <Dialog open={isManualOpen} onOpenChange={setIsManualOpen}>
-              <DialogTrigger 
-                render={
-                  <Button 
+                  <Button
+                    size="sm"
                     variant="outline"
-                    className="gap-2 rounded-xl"
-                  />
-                }
-              >
-                <Upload className="h-4 w-4" />
-                Manual Upload
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md rounded-3xl border-none">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <Files className="h-5 w-5 text-blue-500" />
-                    Manual Upload
-                  </DialogTitle>
-                  <DialogDescription>
-                    Unggah satu atau banyak file PDF/Gambar secara manual.
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-4 py-4">
-                  <div className="bg-blue-500/5 border border-blue-500/10 p-4 rounded-2xl space-y-2">
-                     <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Aturan Penamaan</p>
-                     <p className="text-[11px] text-blue-700/80 leading-relaxed italic">
-                        "Agar terdeteksi di pencarian publik, pastikan nama file adalah **NOMOR NOP** warga. Contoh: **351704001900100100.pdf**"
-                     </p>
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-8 bg-zinc-50 dark:bg-zinc-900/50">
-                    {uploading ? (
-                      <div className="flex flex-col items-center gap-3">
-                         <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
-                         <p className="text-xs font-bold animate-pulse text-blue-600">Mengunggah file...</p>
-                      </div>
-                    ) : (
-                      <>
-                        <Upload className="h-10 w-10 text-zinc-300 mb-3" />
-                        <p className="text-xs text-muted-foreground mb-4 text-center">Pilih file PDF atau Gambar (JPG/PNG)</p>
-                        <input
-                          type="file"
-                          id="manual-upload-input"
-                          multiple
-                          className="hidden"
-                          onChange={handleManualUpload}
-                          accept=".pdf,image/*"
-                          disabled={uploading}
-                        />
-                        <Button 
-                          variant="secondary" 
-                          className="rounded-xl font-bold"
-                          onClick={() => document.getElementById("manual-upload-input")?.click()}
-                        >
-                          Pilih File
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                  
-                  <div className="text-[10px] text-center text-muted-foreground">
-                    File akan disimpan ke folder arsip tahun **{selectedYear}**.
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                    className="w-full sm:w-auto gap-2 rounded-xl border-violet-500/30 text-violet-700 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30"
+                    onClick={() => document.getElementById("restore-zip-input")?.click()}
+                    disabled={isRestoring}
+                  >
+                    {isRestoring
+                      ? <Loader2 className="h-3 w-3 animate-spin" />
+                      : <UploadCloud className="h-3 w-3" />
+                    }
+                    <span className="hidden sm:inline">Restore</span>
+                    <span className="sm:hidden">Restore</span>
+                  </Button>
+                </>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -392,7 +638,7 @@ export function ArchiveManager() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
                 {paginatedFiles.map((file) => (
                   <div 
-                    key={file}
+                    key={file.name}
                     className="group relative flex items-center justify-between p-3 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 transition-all overflow-hidden"
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -400,22 +646,25 @@ export function ArchiveManager() {
                         <FileText className="h-4 w-4 text-blue-500" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold truncate pr-8">{file}</p>
-                        <a 
-                          href={`/arsip-pbb/${selectedYear}/${file}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-[9px] text-blue-500 hover:underline font-bold uppercase tracking-tighter"
-                        >
-                          Lihat File
-                        </a>
+                        <p className="text-xs font-bold truncate pr-8">{file.name}</p>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[9px] text-muted-foreground font-medium bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-sm">{(file.size / 1024).toFixed(1)} KB</span>
+                            <a 
+                            href={`/arsip-pbb/${selectedYear}/${file.name}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-[9px] text-blue-500 hover:underline font-bold uppercase tracking-tighter"
+                            >
+                            Lihat File
+                            </a>
+                        </div>
                       </div>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleDelete(file)}
+                      onClick={() => handleDelete(file.name)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
