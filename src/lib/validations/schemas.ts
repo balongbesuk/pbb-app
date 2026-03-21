@@ -33,6 +33,7 @@ export const VillageConfigSchema = z.object({
   jatuhTempo: z.string().min(1, "Jatuh tempo harus diisi").optional(),
   bapendaUrl: z.string().url("Format URL tidak valid").or(z.literal("")).optional(),
   isJombangBapenda: z.boolean().optional(),
+  enableBapendaSync: z.boolean().optional(),
   showNominalPajak: z.boolean().optional(),
   enableDigitalArchive: z.boolean().optional(),
   archiveOnlyLunas: z.boolean().optional(),

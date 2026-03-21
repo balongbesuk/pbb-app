@@ -118,6 +118,7 @@ export const getVillageConfig = cache(async () => {
         jatuhTempo: "31 Agustus",
         bapendaUrl: null,
         isJombangBapenda: true,
+        enableBapendaSync: true,
         showNominalPajak: false,
         enableDigitalArchive: true,
         archiveOnlyLunas: true,
@@ -134,6 +135,7 @@ export const getVillageConfig = cache(async () => {
       jatuhTempo: "31 Agustus", 
       bapendaUrl: null, 
       isJombangBapenda: true, 
+      enableBapendaSync: true,
       logoUrl: null, 
       showNominalPajak: false, 
       enableDigitalArchive: true,
@@ -168,6 +170,10 @@ export async function updateVillageConfig(raw: any) {
 
     if (data.isJombangBapenda !== undefined) {
       updateData.isJombangBapenda = data.isJombangBapenda;
+    }
+    
+    if (data.enableBapendaSync !== undefined) {
+      updateData.enableBapendaSync = data.enableBapendaSync;
     }
 
     if (data.showNominalPajak !== undefined) {

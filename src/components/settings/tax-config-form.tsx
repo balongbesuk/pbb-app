@@ -17,6 +17,7 @@ export function TaxConfigForm() {
   const [jatuhTempo, setJatuhTempo] = useState("31 Agustus");
   const [bapendaUrl, setBapendaUrl] = useState("");
   const [isJombangBapenda, setIsJombangBapenda] = useState(true);
+  const [enableBapendaSync, setEnableBapendaSync] = useState(true);
   const [showNominal, setShowNominal] = useState(false);
   const [enableArchive, setEnableArchive] = useState(true);
   const [archiveOnlyLunas, setArchiveOnlyLunas] = useState(true);
@@ -31,6 +32,7 @@ export function TaxConfigForm() {
       setJatuhTempo(data.jatuhTempo || "31 Agustus");
       setBapendaUrl(data.bapendaUrl || "");
       setIsJombangBapenda(data.isJombangBapenda ?? true);
+      setEnableBapendaSync(data.enableBapendaSync ?? true);
       setShowNominal(!!data.showNominalPajak);
       setEnableArchive(data.enableDigitalArchive ?? true);
       setArchiveOnlyLunas(data.archiveOnlyLunas ?? true);
@@ -49,6 +51,7 @@ export function TaxConfigForm() {
       jatuhTempo: jatuhTempo,
       bapendaUrl: bapendaUrl,
       isJombangBapenda: isJombangBapenda,
+      enableBapendaSync: enableBapendaSync,
       showNominalPajak: !!showNominal,
       enableDigitalArchive: !!enableArchive,
       archiveOnlyLunas: !!archiveOnlyLunas,
@@ -107,6 +110,18 @@ export function TaxConfigForm() {
                 id="is-jombang" 
                 checked={isJombangBapenda} 
                 onCheckedChange={(checked) => setIsJombangBapenda(!!checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between border-t border-primary/10 pt-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="enable-sync">Auto-Sync Bapenda (Real-Time)</Label>
+                <p className="text-[10px] text-muted-foreground">Izinkan sistem mencocokkan data pelunasan secara otomatis ke website Kabupaten Jombang.</p>
+              </div>
+              <Checkbox 
+                id="enable-sync" 
+                checked={enableBapendaSync} 
+                onCheckedChange={(checked) => setEnableBapendaSync(!!checked)}
               />
             </div>
 

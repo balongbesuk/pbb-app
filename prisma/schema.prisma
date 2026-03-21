@@ -166,6 +166,7 @@ model VillageConfig {
   jatuhTempo        String  @default("31 Agustus")
   bapendaUrl        String?
   isJombangBapenda  Boolean @default(true)
+  enableBapendaSync Boolean @default(true)
   logoUrl           String?
   showNominalPajak  Boolean @default(false)
   enableDigitalArchive Boolean @default(true)

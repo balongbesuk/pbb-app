@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,9 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit2, Loader2, Save, User, CheckCircle, Clock, Ban, MapPin, X, ArrowRight, Handshake, ChevronRight, RotateCcw, ShieldAlert, FileX, FileText } from "lucide-react";
+import { Edit2, Loader2, Save, User, CheckCircle, Clock, Ban, MapPin, X, ArrowRight, Handshake, ChevronRight, RotateCcw, ShieldAlert, FileX, FileText, RefreshCcw, Wallet, Info, CreditCard } from "lucide-react";
 import { updateWpRegion } from "@/app/actions/tax-update-actions";
-import { checkArchiveByNop } from "@/app/actions/settings-actions";
+import { checkArchiveByNop, getVillageConfig as fetchConfig } from "@/app/actions/settings-actions";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
@@ -52,6 +52,10 @@ export function TaxDetailDialog({
   const [selectedAdminPenarik, setSelectedAdminPenarik] = useState<string>(item?.penarikId || "");
   const [isAssignSubmitting, setIsAssignSubmitting] = useState(false);
   const [archiveFile, setArchiveFile] = useState<string | null>(null);
+  const [isCheckingBapenda, setIsCheckingBapenda] = useState(false);
+  const [showPayRedirect, setShowPayRedirect] = useState(false);
+  const [enableBapendaSync, setEnableBapendaSync] = useState(true);
+  const [lastCheckTime, setLastCheckTime] = useState(0);
 
   useEffect(() => {
     if (item) {
@@ -65,6 +69,11 @@ export function TaxDetailDialog({
       // Auto detect archive
       checkArchiveByNop(item.nop, item.tahun).then(file => {
         setArchiveFile(file);
+      });
+
+      // Fetch config to check if sync is enabled
+      fetchConfig().then(config => {
+        setEnableBapendaSync(config.enableBapendaSync ?? true);
       });
     }
   }, [item]);
@@ -124,6 +133,44 @@ export function TaxDetailDialog({
       onClose();
     } finally {
       setIsAssignSubmitting(false);
+    }
+  };
+
+  const handleCheckBapenda = async () => {
+    if (!item) return;
+
+    const now = Date.now();
+    const COOLDOWN_MS = 15000;
+    if (now - lastCheckTime < COOLDOWN_MS) {
+      const remainingSeconds = Math.ceil((COOLDOWN_MS - (now - lastCheckTime)) / 1000);
+      toast.warning(`Mohon tunggu ${remainingSeconds} detik lagi sebelum mengecek kembali.`);
+      return;
+    }
+
+    setIsCheckingBapenda(true);
+    setLastCheckTime(now);
+    toast.info("Mengambil data dari server Bapenda...");
+    try {
+      const res = await fetch("/api/check-bapenda", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nop: item.nop, tahun: item.tahun })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      if (data.isPaid) {
+        toast.success(data.message);
+        queryClient.invalidateQueries({ queryKey: ["tax-data"] });
+        onClose();
+      } else {
+        toast.warning(data.message);
+        setShowPayRedirect(true);
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Gagal cek Bapenda");
+    } finally {
+      setIsCheckingBapenda(false);
     }
   };
 
@@ -239,6 +286,19 @@ export function TaxDetailDialog({
                   {formatCurrency(item.ketetapan)}
                 </span>
               </div>
+              
+              {item.paymentStatus === "BELUM_LUNAS" && enableBapendaSync && (
+                 <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mt-2 flex items-center justify-center gap-2 border-emerald-500/30 text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
+                  onClick={handleCheckBapenda}
+                  disabled={isCheckingBapenda}
+                >
+                  {isCheckingBapenda ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
+                  Cek Bapenda (Auto-Lunas)
+                </Button>
+              )}
             </div>
           </div>
 
@@ -529,6 +589,52 @@ export function TaxDetailDialog({
         )}
 
       </DialogContent>
+
+      {/* Admin Sub-Dialog Redirect Pembayaran */}
+      <Dialog open={showPayRedirect} onOpenChange={setShowPayRedirect}>
+        <DialogContent className="rounded-3xl border-none p-6 shadow-2xl bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100">
+          <DialogHeader className="space-y-3">
+            <div className="flex items-center gap-3">
+               <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-600">
+                  <Wallet className="w-5 h-5" />
+               </div>
+               <DialogTitle className="text-xl font-black uppercase tracking-tighter">
+                 Petunjuk Pembayaran
+               </DialogTitle>
+            </div>
+            <DialogDescription className="pt-2 font-medium leading-relaxed dark:text-zinc-400">
+              Hasil cek sinkronisasi: Wajib Pajak <strong className="font-black text-primary uppercase">{item?.namaWp}</strong> masih tercatat <span className="text-rose-500 font-black">BELUM LUNAS</span> di Bapenda.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="my-4 p-4 rounded-2xl border bg-emerald-50 dark:bg-emerald-500/5 border-emerald-200 dark:border-emerald-500/20">
+             <p className="text-xs font-bold leading-relaxed flex items-center gap-2">
+               <Info className="w-4 h-4 text-emerald-600" />
+               Arahkan warga untuk membayar via E-PAY Bapenda Jombang atau gunakan link di bawah ini.
+             </p>
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-2">
+            <Button 
+                variant="ghost" 
+                onClick={() => setShowPayRedirect(false)}
+                className="rounded-xl font-black uppercase tracking-widest text-[10px] h-11"
+            >
+              Tutup
+            </Button>
+            <Button 
+                className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg shadow-emerald-900/40 border-none group transition-all"
+                onClick={() => {
+                   window.open(`https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=${item?.nop}`, "_blank");
+                   setShowPayRedirect(false);
+                }}
+            >
+              <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              Buka Layanan E-PAY
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

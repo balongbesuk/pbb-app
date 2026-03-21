@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User, Loader2, UserMinus, MapPin, Calculator, XCircle, CheckCircle2, Ban } from "lucide-react";
+import { User, Loader2, UserMinus, MapPin, Calculator, XCircle, CheckCircle2, Ban, RefreshCcw } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { updatePaymentStatus, bulkUpdatePaymentStatus } from "@/app/actions/tax-update-actions";
 import { 
@@ -59,15 +59,15 @@ export function TaxDataTable({
   const queryClient = useQueryClient();
 
   // Query parameters from URL
-  const q = searchParams.get("q") || "";
-  const page = searchParams.get("page") || "1";
-  const tahun = searchParams.get("tahun") || new Date().getFullYear().toString();
-  const dusun = searchParams.get("dusun") || "";
-  const rw = searchParams.get("rw") || "";
-  const rt = searchParams.get("rt") || "";
-  const penarik = searchParams.get("penarik") || "";
-  const regionStatus = searchParams.get("regionStatus") || "all";
-  const paymentStatus = searchParams.get("paymentStatus") || "all";
+  const q = searchParams?.get("q") || "";
+  const page = searchParams?.get("page") || "1";
+  const tahun = searchParams?.get("tahun") || new Date().getFullYear().toString();
+  const dusun = searchParams?.get("dusun") || "";
+  const rw = searchParams?.get("rw") || "";
+  const rt = searchParams?.get("rt") || "";
+  const penarik = searchParams?.get("penarik") || "";
+  const regionStatus = searchParams?.get("regionStatus") || "all";
+  const paymentStatus = searchParams?.get("paymentStatus") || "all";
 
   const {
     data: queryData,
@@ -76,7 +76,7 @@ export function TaxDataTable({
   } = useQuery({
     queryKey: ["tax-data", { q, page, tahun, dusun, rw, rt, penarik, regionStatus, paymentStatus }],
     queryFn: async () => {
-      const params = new URLSearchParams(searchParams);
+      const params = new URLSearchParams((searchParams as any) || "");
       const res = await fetch(`/api/tax?${params.toString()}`);
       if (!res.ok) throw new Error("Gagal mengambil data");
       return res.json();
@@ -169,7 +169,7 @@ export function TaxDataTable({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams((searchParams as any) || "");
     if (search) params.set("q", search);
     else params.delete("q");
     if (filterDusun && filterDusun !== "all") params.set("dusun", filterDusun);
@@ -191,7 +191,7 @@ export function TaxDataTable({
   };
 
   const handleFilterChange = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams((searchParams as any) || "");
     if (value && value !== "all") params.set(key, value);
     else params.delete(key);
     params.set("page", "1");
@@ -210,7 +210,7 @@ export function TaxDataTable({
     if (filterRw && filterRw !== "all") params.set("rw", filterRw);
     if (filterRt && filterRt !== "all") params.set("rt", filterRt);
     if (filterPenarik && filterPenarik !== "all") params.set("penarik", filterPenarik);
-    params.set("tahun", searchParams.get("tahun") || new Date().getFullYear().toString());
+    params.set("tahun", searchParams?.get("tahun") || new Date().getFullYear().toString());
     window.open(`/api/export-tax?${params.toString()}`, "_blank");
   };
 
@@ -279,6 +279,52 @@ export function TaxDataTable({
     } else toast.error(res.message);
     
     setIsAssigning(false);
+  };
+
+  const handleBulkBapendaSync = async () => {
+    if (selectedIds.size === 0) return;
+    setIsAssigning(true);
+    
+    const ids = Array.from(selectedIds);
+    let successCount = 0;
+    let failCount = 0;
+    
+    toast.promise(
+      (async () => {
+        for (const id of ids) {
+          const item = displayData.find((d: any) => d.id === id);
+          if (!item) continue;
+          
+          try {
+            const res = await fetch("/api/check-bapenda", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nop: item.nop }),
+            });
+            const data = await res.json();
+            if (data.isPaid) successCount++;
+            else failCount++;
+          } catch (e) {
+            failCount++;
+          }
+          // Slight delay to be nice to Bapenda
+          await new Promise(r => setTimeout(r, 400));
+        }
+
+        queryClient.invalidateQueries({ queryKey: ["tax-data"] });
+        setSelectedIds(new Set());
+        setSelectedAmounts(new Map());
+        setIsAllFilteredSelected(false);
+        setIsAssigning(false);
+        
+        return `${successCount} data WP terdeteksi LUNAS. ${failCount} masih Belum Lunas/Gagal.`;
+      })(),
+      {
+        loading: `Menyingkronkan ${ids.length} data dengan Bapenda Jombang...`,
+        success: (msg) => `Sinkronisasi Selesai: ${msg}`,
+        error: "Terjadi kesalahan saat sinkronisasi massal",
+      }
+    );
   };
 
   const selectedSum = Array.from(selectedAmounts.values()).reduce((acc, obj) => acc + obj.amount, 0);
@@ -438,6 +484,17 @@ export function TaxDataTable({
                 Atur Wilayah
               </Button>
 
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-emerald-500/30 hover:bg-emerald-50 text-emerald-600 dark:text-emerald-400 dark:border-emerald-500/20 dark:hover:bg-emerald-500/10 h-10 rounded-xl px-4 text-xs font-black transition-all shadow-sm"
+                onClick={handleBulkBapendaSync}
+                disabled={isAssigning}
+              >
+                <RefreshCcw className={cn("mr-2 h-4 w-4", isAssigning && "animate-spin")} />
+                Sync Bapenda ({isAllFilteredSelected ? displayTotal : selectedIds.size})
+              </Button>
+
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
@@ -488,6 +545,15 @@ export function TaxDataTable({
                       </DropdownMenuItem>
                     ))}
                   </div>
+                  <DropdownMenuSeparator className="opacity-50" />
+                  <DropdownMenuItem
+                    className="flex cursor-pointer gap-2 rounded-xl px-3 py-2.5 font-bold transition-all text-emerald-600 focus:text-emerald-600 focus:bg-emerald-50 dark:focus:bg-emerald-500/10"
+                    onClick={handleBulkBapendaSync}
+                    disabled={isAssigning}
+                  >
+                    <RefreshCcw className={cn("h-4 w-4", isAssigning && "animate-spin")} />
+                    <span>Sync Massal Bapenda</span>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -731,7 +797,7 @@ export function TaxDataTable({
         total={displayTotal}
         shownCount={displayData.length}
         onPageChange={(p: number) => {
-          const params = new URLSearchParams(searchParams);
+          const params = new URLSearchParams((searchParams as any) || "");
           params.set("page", p.toString());
           router.push(`${pathname}?${params.toString()}`);
         }}

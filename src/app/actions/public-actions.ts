@@ -148,6 +148,7 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
       jatuhTempo: jatuhTempoStr,
       bapendaUrl,
       isJombangBapenda,
+      enableBapendaSync: config?.enableBapendaSync ?? true,
       remaining: rateLimitResult.remaining 
     };
   } catch (error) {

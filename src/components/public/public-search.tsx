@@ -5,10 +5,12 @@ import { searchPublicTaxData } from "@/app/actions/public-actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle, Calendar, CreditCard, HelpCircle, History, Download, Eye } from "lucide-react";
+import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle, Calendar, CreditCard, HelpCircle, History, Download, Eye, RefreshCcw } from "lucide-react";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
 import { formatCurrency, formatDate, formatDateNoTime, formatJatuhTempo, cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function PublicSearch({ 
   tahunPajak, 
@@ -26,8 +28,12 @@ export function PublicSearch({
   const [jatuhTempo, setJatuhTempo] = useState("31 Agustus");
   const [bapendaUrl, setBapendaUrl] = useState<string | null>(null);
   const [isJombangBapenda, setIsJombangBapenda] = useState(true);
+  const [enableBapendaSync, setEnableBapendaSync] = useState(true);
   const { theme } = usePublicThemeContext();
   const [openPdfMap, setOpenPdfMap] = useState<Record<string, boolean>>({});
+  const [isCheckingAuto, setIsCheckingAuto] = useState<Record<string, boolean>>({});
+  const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
+  const [showPayRedirect, setShowPayRedirect] = useState<{ nop: string, namaWp: string } | null>(null);
   const isDark = theme === "dark";
 
   const togglePdf = (nop: string) => {
@@ -35,8 +41,8 @@ export function PublicSearch({
   };
 
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!query.trim()) return;
     setLoading(true);
     setHasSearched(true);
@@ -51,6 +57,7 @@ export function PublicSearch({
       if ((res as any).bapendaUrl) {
         setBapendaUrl((res as any).bapendaUrl);
         setIsJombangBapenda(!!(res as any).isJombangBapenda);
+        setEnableBapendaSync(!!(res as any).enableBapendaSync);
       } else {
         setBapendaUrl(null);
       }
@@ -62,6 +69,48 @@ export function PublicSearch({
       }
     }
     setLoading(false);
+  };
+
+  const handleCheckBapenda = async (nop: string) => {
+    const lastCheck = cooldowns[nop] || 0;
+    const now = Date.now();
+    const COOLDOWN_MS = 15000; // 15 detik jeda aman
+
+    if (now - lastCheck < COOLDOWN_MS) {
+      const remainingSeconds = Math.ceil((COOLDOWN_MS - (now - lastCheck)) / 1000);
+      toast.warning(`Mohon tunggu ${remainingSeconds} detik lagi sebelum mengecek NOP ini kembali.`);
+      return;
+    }
+
+    setIsCheckingAuto(prev => ({ ...prev, [nop]: true }));
+    setCooldowns(prev => ({ ...prev, [nop]: now }));
+    toast.info("Mengambil status terbaru dari Bapenda...");
+    try {
+      const res = await fetch("/api/check-bapenda", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nop, tahun: tahunPajak })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      if (data.isPaid) {
+        toast.success(data.message);
+        // Refresh data dari server agar arsipUrl ikut ke-load
+        await handleSearch();
+      } else {
+        toast.warning(data.message);
+        // Tampilkan popup bayar
+        const item = results.find(r => r.nop === nop);
+        if (item) {
+          setShowPayRedirect({ nop: item.nop, namaWp: item.namaWp });
+        }
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Gagal menghubungi Bapenda.");
+    } finally {
+      setIsCheckingAuto(prev => ({ ...prev, [nop]: false }));
+    }
   };
 
 
@@ -95,6 +144,7 @@ export function PublicSearch({
     ? "border-emerald-800/30 hover:bg-emerald-950/30 text-emerald-400 bg-emerald-950/10"
     : "border-emerald-200 hover:bg-emerald-50 text-emerald-700";
   const msgBgCls = isDark ? "bg-orange-950/40 border-orange-500/30 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-800";
+  const badgeCls = "shadow-sm border-none font-black tracking-widest uppercase text-[10px] px-3 py-1 rounded-full";
 
   const getBapendaUrl = (nop: string) => {
     if (!bapendaUrl) return "#";
@@ -177,15 +227,15 @@ export function PublicSearch({
               <Card key={i} className={`rounded-2xl transition-colors shadow-sm overflow-hidden ${resultCardCls}`}>
                 <CardHeader className={`p-5 pb-3 bg-gradient-to-r border-b flex flex-row items-center justify-between gap-4 ${cardHeaderBgCls}`}>
                   <div className="min-w-0 flex-1">
-                    <p className={`text-[10px] font-bold uppercase tracking-widest leading-none mb-1.5 ${nopCls}`}>{item.nop}</p>
-                    <h3 className={`text-lg font-black truncate ${nameCls}`}>{item.namaWp}</h3>
+                    <p className={`text-[10px] font-black uppercase tracking-widest leading-none mb-1.5 opacity-60 ${nopCls}`}>{item.nop}</p>
+                    <h3 className={`text-lg sm:text-xl font-black ${nameCls} leading-tight`}>{item.namaWp}</h3>
                   </div>
-                  <Badge variant={item.status === "LUNAS" ? "success" : "warning"} className="h-7 px-4 text-[10px] font-black shadow-sm ring-1 ring-white/10">
-                    {item.status === "LUNAS" ? (
-                      <><CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> LUNAS</>
-                    ) : (
-                      <><AlertCircle className="w-3.5 h-3.5 mr-1.5" /> BELUM LUNAS</>
-                    )}
+                  <Badge className={`${badgeCls} ${
+                    item.status === "LUNAS" 
+                      ? "bg-emerald-500 text-white shadow-emerald-500/20" 
+                      : "bg-amber-500 text-white shadow-amber-500/20"
+                  }`}>
+                    {item.status === "LUNAS" ? "Lunas" : "Blm Lunas"}
                   </Badge>
                 </CardHeader>
                 <CardContent className={`p-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-sm ${bodyTextCls}`}>
@@ -244,7 +294,7 @@ export function PublicSearch({
                       {item.status === "LUNAS" ? (
                         <>Terbayar: <span className="font-bold">{formatDateNoTime(item.tanggalBayar)}</span></>
                       ) : (
-                        <>Terakhir Dicek: <span className="font-bold">{formatDateNoTime(item.updatedAt)}</span></>
+                        <>Terakhir Dicek: <span className="font-bold">{formatDate(item.updatedAt)}</span></>
                       )}
                     </p>
                   </div>
@@ -258,18 +308,32 @@ export function PublicSearch({
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         {bapendaUrl && (
-                          <a 
-                            href={getBapendaUrl(item.nop)} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className={cn(
-                              buttonVariants({ variant: "outline", size: "sm" }),
-                              "w-full sm:w-auto h-9 text-[11px] font-bold uppercase tracking-widest gap-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl"
+                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            {enableBapendaSync && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full sm:w-auto h-9 text-[11px] font-bold uppercase tracking-widest gap-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl"
+                                onClick={() => handleCheckBapenda(item.nop)}
+                                disabled={isCheckingAuto[item.nop]}
+                              >
+                                {isCheckingAuto[item.nop] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCcw className="w-3.5 h-3.5" />}
+                                Cek & Update Lunas
+                              </Button>
                             )}
-                          >
-                            <Info className="w-3.5 h-3.5" />
-                            Cek di BAPENDA Resmi
-                          </a>
+                            <a 
+                              href={getBapendaUrl(item.nop)} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className={cn(
+                                buttonVariants({ variant: "outline", size: "sm" }),
+                                "w-full sm:w-auto h-9 text-[11px] font-bold uppercase tracking-widest gap-2 border-zinc-500/30 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-500/10 rounded-xl"
+                              )}
+                            >
+                              <Info className="w-3.5 h-3.5" />
+                              Web Bapenda
+                            </a>
+                          </div>
                         )}
                         {item.petugas && item.petugas.kontak !== "Tidak ada nomor" && (
                           <Button
@@ -338,6 +402,53 @@ export function PublicSearch({
             </div>
         </div>
       )}
+      {/* Dialog Redirect Pembayaran */}
+      <Dialog open={!!showPayRedirect} onOpenChange={(open) => !open && setShowPayRedirect(null)}>
+        <DialogContent className={`rounded-3xl border-none p-5 sm:p-8 max-w-[95vw] sm:max-w-[420px] shadow-2xl ${isDark ? "bg-[#0A192F] text-white" : "bg-white text-slate-900"}`}>
+          <DialogHeader className="space-y-4">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3">
+               <div className="p-3 bg-emerald-500/10 rounded-2xl">
+                  <Wallet className="w-5 h-5 text-emerald-500" />
+               </div>
+               <DialogTitle className="text-xl sm:text-2xl font-black uppercase tracking-tighter">
+                 Tagihan Belum Lunas
+               </DialogTitle>
+            </div>
+            <DialogDescription className={`pt-2 text-[13px] sm:text-sm font-medium leading-relaxed text-center sm:text-left ${isDark ? "text-blue-100/70" : "text-slate-600"}`}>
+              Sistem telah mengecek ke Bapenda Jombang. Tagihan atas nama <strong className="font-black text-primary uppercase">{showPayRedirect?.namaWp}</strong> dengan NOP <span className="font-bold underline decoration-zinc-500/30 underline-offset-4">{showPayRedirect?.nop}</span> masih tercatat <span className="text-rose-600 dark:text-rose-400 font-black">BELUM LUNAS</span>.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className={`my-4 p-4 rounded-2xl border ${isDark ? "bg-emerald-500/5 border-emerald-500/20" : "bg-emerald-50 border-emerald-200"}`}>
+             <p className="text-xs font-bold leading-relaxed flex items-center justify-center sm:justify-start gap-2 text-center sm:text-left">
+               <Info className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+               Ingin melunasi sekarang secara online? Anda bisa menggunakan layanan resmi E-PAY Bapenda Jombang.
+             </p>
+          </div>
+
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 mt-4">
+            <Button 
+                variant="outline" 
+                onClick={() => setShowPayRedirect(null)}
+                className={`w-full sm:w-auto rounded-xl font-black uppercase tracking-widest text-[10px] h-12 border-zinc-200 dark:border-zinc-800 ${isDark ? "hover:bg-white/5 text-blue-200" : "hover:bg-zinc-50 text-slate-500"}`}
+            >
+              Nanti Saja
+            </Button>
+            <Button 
+                className={`w-full sm:flex-1 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg shadow-emerald-900/20 border-none group transition-all`}
+                onClick={() => {
+                  if (showPayRedirect) {
+                    window.open(`https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=${showPayRedirect.nop}`, "_blank");
+                    setShowPayRedirect(null);
+                  }
+                }}
+            >
+              <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              Bayar Online Sekarang
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
