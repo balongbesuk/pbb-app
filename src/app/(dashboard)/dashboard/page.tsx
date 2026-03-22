@@ -158,7 +158,9 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
     select: { id: true, name: true },
   });
 
-  const penarikMap = new Map(penarikUsers.map((u) => [u.id, u.name]));
+  const penarikMap = new Map<string, string | null>(
+    penarikUsers.map((u: { id: string; name: string | null }) => [u.id, u.name])
+  );
   const topPenariks = penarikStats
     .map((s: { penarikId: string | null; _sum: { pembayaran: number | null; ketetapan: number | null } }) => ({
       name: s.penarikId ? penarikMap.get(s.penarikId) || "Petugas" : "Belum Alokasi",
