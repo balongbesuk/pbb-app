@@ -45,8 +45,12 @@ export function TaxConfigForm() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    
+    // Pastikan kita ambil data terbaru (siapa tahu baru diisi profilnya di sebelah)
+    const latest = await getVillageConfig();
+    
     const res = await updateVillageConfig({
-      ...rawConfig,
+      ...latest,
       tahunPajak: tahun,
       jatuhTempo: jatuhTempo,
       bapendaUrl: bapendaUrl,

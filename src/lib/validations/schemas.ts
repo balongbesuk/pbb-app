@@ -26,9 +26,9 @@ export const TransferRequestSchema = z.object({
 });
 
 export const VillageConfigSchema = z.object({
-  namaDesa: z.string().min(1, "Nama desa harus diisi"),
-  kecamatan: z.string().min(1, "Kecamatan harus diisi"),
-  kabupaten: z.string().min(1, "Kabupaten harus diisi"),
+  namaDesa: z.string().min(1, "Nama desa harus diisi").optional().or(z.literal("")),
+  kecamatan: z.string().min(1, "Kecamatan harus diisi").optional().or(z.literal("")),
+  kabupaten: z.string().min(1, "Kabupaten harus diisi").optional().or(z.literal("")),
   tahunPajak: z.number().int().min(2000).max(2100).optional(),
   jatuhTempo: z.string().min(1, "Jatuh tempo harus diisi").optional(),
   bapendaUrl: z.string().url("Format URL tidak valid").or(z.literal("")).optional(),

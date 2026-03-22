@@ -151,11 +151,10 @@ export async function updateVillageConfig(raw: any) {
     await requireAdmin();
     const data = VillageConfigSchema.parse(raw);
 
-    const updateData: any = {
-      namaDesa: data.namaDesa.toUpperCase(),
-      kecamatan: data.kecamatan.toUpperCase(),
-      kabupaten: data.kabupaten.toUpperCase(),
-    };
+    const updateData: any = {};
+    if (data.namaDesa) updateData.namaDesa = data.namaDesa.toUpperCase();
+    if (data.kecamatan) updateData.kecamatan = data.kecamatan.toUpperCase();
+    if (data.kabupaten) updateData.kabupaten = data.kabupaten.toUpperCase();
 
     if (data.tahunPajak) {
       updateData.tahunPajak = data.tahunPajak;

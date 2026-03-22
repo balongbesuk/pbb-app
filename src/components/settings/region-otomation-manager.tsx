@@ -111,7 +111,11 @@ export function RegionOtomationManager() {
           <Input
             placeholder={`No ${type} (Misal: 01)`}
             value={newCode}
-            onChange={(e) => setNewCode(e.target.value)}
+            maxLength={2}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, ""); // Hanya angka
+              setNewCode(val);
+            }}
             className="bg-white/50 dark:bg-[#111827]/50 dark:text-white dark:placeholder:text-gray-500"
           />
 
