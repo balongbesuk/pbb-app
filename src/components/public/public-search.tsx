@@ -199,7 +199,7 @@ export function PublicSearch({
           <div className={`mt-5 flex items-start gap-3 rounded-2xl border p-4 text-[11px] sm:text-xs ${disclaimerCls}`}>
             <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
             <p className="leading-relaxed font-medium">
-              <strong className="font-bold">Info:</strong> Data pelunasan diperbarui secara manual oleh petugas desa. Untuk status resmi, silakan cek sistem BAPENDA Kabupaten.
+              <strong className="font-bold">Info:</strong> Warga dapat mengecek dan menyinkronkan status pelunasan dari BAPENDA langsung dari halaman ini. Untuk verifikasi mandiri, Anda juga bisa membuka situs resmi BAPENDA Kabupaten.
             </p>
           </div>
         </CardContent>

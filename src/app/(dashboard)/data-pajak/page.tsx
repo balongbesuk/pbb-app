@@ -38,10 +38,6 @@ export default async function DataPajakPage({
     tahun,
   };
 
-  if (session?.user.role === "PENGGUNA") {
-    whereClause.penarikId = "__NO_ACCESS__";
-  }
-
   if (paymentStatus !== "all") {
     whereClause.paymentStatus = paymentStatus as any;
   }

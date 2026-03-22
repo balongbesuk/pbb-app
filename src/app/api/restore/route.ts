@@ -89,12 +89,9 @@ export async function POST(req: NextRequest) {
 
     // Otomatis sinkronisasi schema jika database versi lama
     try {
-      // 1. Sinkronkan schema (menambah kolom yang kurang tanpa hapus data)
+      // Sinkronkan schema (menambah kolom yang kurang tanpa mengubah kredensial pengguna)
       await execAsync("npx prisma db push --accept-data-loss");
-      
-      // 2. Reset/Update admin password ke bawaan agar pasti bisa login
-      await execAsync("npx prisma db seed");
-      
+
       console.log("Database restoration sync completed successfully.");
     } catch (syncError: any) {
       console.error("Sync/Seed Error during restore:", syncError);
@@ -112,6 +109,7 @@ export async function POST(req: NextRequest) {
 
     // Hapus cookie sesi agar pengguna dipaksa login ulang
     response.cookies.delete("next-auth.session-token");
+    response.cookies.delete("__Secure-next-auth.session-token");
     
     return response;
   } catch (error: any) {

@@ -14,12 +14,13 @@ export function DashboardFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const currentParams = new URLSearchParams(searchParams?.toString() ?? "");
 
-  const currentYear = searchParams.get("tahun") || new Date().getFullYear().toString();
+  const currentYear = currentParams.get("tahun") || new Date().getFullYear().toString();
   const years = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString());
 
   const handleYearChange = (val: string) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(currentParams);
     params.set("tahun", val);
     router.push(`${pathname}?${params.toString()}`);
   };

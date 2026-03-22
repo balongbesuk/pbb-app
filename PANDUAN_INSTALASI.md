@@ -138,4 +138,66 @@ Gunakan akun ini untuk masuk pertama kali:
 *   **Gagal saat `npm install`:** Pastikan koneksi internet stabil.
 
 ---
+
+## 🐧 Panduan Khusus: Instalasi di Armbian / VPS (RAM ≤ 2GB)
+
+Jika Anda ingin menjalankan aplikasi ini di perangkat ARM (seperti HG68p, Orange Pi, dll) atau VPS dengan RAM terbatas (≤ 2GB), ikuti langkah tambahan berikut:
+
+### 1. Siapkan Sistem
+```bash
+sudo apt-get update && sudo apt-get upgrade -y
+sudo apt-get install -y build-essential python3 make g++ git curl
+```
+
+### 2. Install Node.js 20 LTS
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+node -v  # Pastikan v20.x
+```
+
+### 3. Tambahkan Swap Memory (WAJIB untuk RAM ≤ 2GB)
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Buat permanent
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# Verifikasi
+free -h  # Pastikan muncul Swap: 2.0G
+```
+
+### 4. Clone & Install
+```bash
+git clone https://github.com/balongbesuk/pbb-app.git
+cd pbb-app
+cp .env.example .env
+# Edit .env sesuai kebutuhan (nano .env)
+
+PUPPETEER_SKIP_DOWNLOAD=true npm install
+npx prisma generate
+npx prisma db push
+npx prisma db seed
+```
+
+### 5. Build & Jalankan
+```bash
+# Build dengan memory limit
+NODE_OPTIONS="--max-old-space-size=1536" npm run build
+
+# Jalankan mode produksi
+npm run start
+```
+
+### 💡 Alternatif: Build di PC, Deploy ke Armbian
+Jika build tetap gagal karena keterbatasan RAM, Anda bisa build di PC Windows lalu transfer hasilnya:
+
+1.  Di PC: Jalankan `npm run build`
+2.  Transfer folder berikut ke Armbian: `.next/`, `node_modules/`, `prisma/`, `public/`, `package.json`, `next.config.ts`, `.env`
+3.  Di Armbian: Cukup jalankan `npm run start`
+
+---
 *Dibuat untuk mempermudah digitalisasi desa. Selamat mencoba!*

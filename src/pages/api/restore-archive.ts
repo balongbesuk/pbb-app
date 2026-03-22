@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import Busboy from "busboy";
 import AdmZip from "adm-zip";
+import { assertSafeSessionId, resolveSafeChildPath } from "@/lib/file-security";
 
 export const config = {
   api: {
@@ -49,12 +50,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.end();
     }
 
+    const safeSessionId = assertSafeSessionId(sessionId);
+
     // Gabungkan chunks
     send({ type: "status", message: "Menggabungkan file..." });
     const tempDir = path.join(process.cwd(), "tmp", "upload-chunks");
     const allBuffers: Buffer[] = [];
     for (let i = 0; i < totalChunksNum; i++) {
-      const chunkPath = path.join(tempDir, `${sessionId}_${i}`);
+      const chunkPath = path.join(tempDir, `${safeSessionId}_${i}`);
       if (!fs.existsSync(chunkPath)) {
         send({ type: "done", success: false, message: `Chunk ${i} tidak ditemukan. Upload ulang.` });
         return res.end();
@@ -65,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Bersihkan chunks
     for (let i = 0; i < totalChunksNum; i++) {
-      try { fs.unlinkSync(path.join(tempDir, `${sessionId}_${i}`)); } catch { /* ignore */ }
+      try { fs.unlinkSync(path.join(tempDir, `${safeSessionId}_${i}`)); } catch { /* ignore */ }
     }
 
     // Ekstrak ZIP
@@ -91,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (entry.isDirectory) continue;
 
-      const targetPath = path.join(publicDir, entry.entryName);
+      const targetPath = resolveSafeChildPath(publicDir, entry.entryName);
       const targetDir = path.dirname(targetPath);
 
       if (!fs.existsSync(targetDir)) {

@@ -61,12 +61,13 @@ export function TaxTableFilters({
   currentUser,
 }: TaxTableFiltersProps) {
   const searchParams = useSearchParams();
+  const focusTarget = searchParams?.get("focus");
   const inputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
-    if (searchParams.get("focus") === "search") {
+    if (focusTarget === "search") {
       // Focus mobile input (visible on small screens)
       if (window.innerWidth < 768) {
         mobileInputRef.current?.focus();
@@ -77,7 +78,7 @@ export function TaxTableFilters({
         inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
-  }, [searchParams]);
+  }, [focusTarget]);
 
   // Count active filters (excluding "all"/empty)
   const activeFilterCount = [

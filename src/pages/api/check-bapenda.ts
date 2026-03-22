@@ -1,10 +1,27 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import * as cheerio from "cheerio";
-import { PrismaClient } from "@prisma/client";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rate-limit";
 
-const prisma = new PrismaClient();
+const PUBLIC_BAPENDA_RATE_LIMIT = {
+  limit: 10,
+  windowMs: 60 * 1000,
+};
+
+function getClientIp(req: NextApiRequest): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string") {
+    return forwarded.split(",")[0].trim();
+  }
+  if (Array.isArray(forwarded) && forwarded.length > 0) {
+    return forwarded[0].split(",")[0].trim();
+  }
+  const realIp = req.headers["x-real-ip"];
+  if (typeof realIp === "string") {
+    return realIp;
+  }
+  return req.socket.remoteAddress || "unknown";
+}
 
 const parseBapendaDate = (dateStr: string) => {
   // Bapenda format is often DD-MMM-YY, e.g. "11-AGT-25" or "05-06-2024"
@@ -53,9 +70,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    const ip = getClientIp(req);
+    const rateLimitKey = `public-bapenda:${ip}:${cleanNop}`;
+    const rateLimitResult = checkRateLimit(rateLimitKey, PUBLIC_BAPENDA_RATE_LIMIT);
+    if (!rateLimitResult.allowed) {
+      return res.status(429).json({
+        error: `Terlalu banyak percobaan sinkronisasi. Coba lagi dalam ${rateLimitResult.retryAfter} detik.`,
+      });
+    }
+
     const config = await prisma.villageConfig.findFirst({ where: { id: 1 } });
     if (!config?.enableBapendaSync) {
       return res.status(403).json({ error: "Fitur Sinkronisasi Bapenda sedang dinonaktifkan oleh Admin." });
+    }
+
+    const taxRecords = await prisma.taxData.findMany({
+      where: {
+        tahun: parseInt(tahun.toString(), 10),
+        OR: [{ nop }, { nop: cleanNop }],
+      },
+      select: {
+        id: true,
+        nop: true,
+        namaWp: true,
+        penarikId: true,
+        ketetapan: true,
+        paymentStatus: true,
+      },
+    });
+
+    if (taxRecords.length === 0) {
+      return res.status(404).json({ error: "Data pajak tidak ditemukan untuk NOP dan tahun tersebut." });
+    }
+
+    const unpaidRecords = taxRecords.filter((record) => record.paymentStatus !== "LUNAS");
+    if (unpaidRecords.length === 0) {
+      return res.status(200).json({
+        success: true,
+        isPaid: true,
+        message: "Data sudah berstatus LUNAS di sistem desa.",
+      });
     }
 
     const p1 = cleanNop.substring(0, 2);
@@ -113,30 +167,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
        if (paymentDateStr) {
          parsedTgl = parseBapendaDate(paymentDateStr);
        }
-       
-       // Ambil data untuk notifikasi
-       const taxRecords = await prisma.taxData.findMany({
-         where: { nop: nop, tahun: parseInt(tahun.toString()) },
-         select: { id: true, namaWp: true, penarikId: true }
-       });
 
-       const result = await prisma.taxData.updateMany({
-         where: { nop: nop, tahun: parseInt(tahun.toString()) },
-         data: { 
-           paymentStatus: "LUNAS",
-           tanggalBayar: parsedTgl,
-           tempatBayar: "Bapenda (Auto-Sync)",
-           updatedAt: new Date()
-         }
-       });
+       await prisma.$transaction(
+         unpaidRecords.map((record) =>
+           prisma.taxData.update({
+             where: { id: record.id },
+             data: {
+               paymentStatus: "LUNAS",
+               pembayaran: record.ketetapan,
+               sisaTagihan: 0,
+               tanggalBayar: parsedTgl,
+               tempatBayar: "Bapenda (Auto-Sync)",
+               updatedAt: new Date(),
+             },
+           })
+         )
+       );
 
-       const session = await getServerSession(req, res, authOptions);
        const detailsText = `Auto-Sync Bapenda: Wajib Pajak NOP ${cleanNop} (${taxRecords[0]?.namaWp || 'Seseorang'}) telah LUNAS pada ${paymentDateStr || 'Bapenda'}`;
        
        await prisma.auditLog.create({
          data: {
-           userId: (session?.user as any)?.id || null,
-           action: "UPDATE_PAYMENT",
+           action: "PUBLIC_BAPENDA_SYNC",
            entity: "TaxData",
            details: detailsText
          }
@@ -148,7 +200,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const targetUsers = new Set<string>();
           admins.forEach(a => targetUsers.add(a.id));
           
-          taxRecords.forEach(r => {
+          unpaidRecords.forEach(r => {
             if (r.penarikId) targetUsers.add(r.penarikId);
           });
 
@@ -174,20 +226,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           message: `Otomatis dilunaskan! Tercatat dibayar pada ${paymentDateStr || 'Bapenda'}`
        });
     }
-
-    const session = await getServerSession(req, res, authOptions);
     
     // 1. Update timestamp record di database (agar label "Terakhir Dicek" terupdate)
     await prisma.taxData.updateMany({
-      where: { nop: nop, tahun: parseInt(tahun.toString()) },
+      where: { id: { in: unpaidRecords.map((record) => record.id) } },
       data: { updatedAt: new Date() }
     });
 
     // 2. Catat ke Log Aktivitas (Audit Log)
     await prisma.auditLog.create({
       data: {
-        userId: (session?.user as any)?.id || null,
-        action: "CHECK_PAYMENT",
+        action: "PUBLIC_BAPENDA_CHECK",
         entity: "TaxData",
         details: `Sync Bapenda: Pengecekan status NOP ${cleanNop} (Hasil: Masih Belum Lunas)`
       }
@@ -203,4 +252,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: error.message || "Terdapat kesalahan koneksi ke server pusat." });
   }
 }
-

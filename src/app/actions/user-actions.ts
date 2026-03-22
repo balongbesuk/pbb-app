@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { createAuditLog } from "./log-actions";
 import { UserSchema, formatZodError } from "@/lib/validations/schemas";

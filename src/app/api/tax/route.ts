@@ -24,10 +24,6 @@ export async function GET(req: NextRequest) {
     tahun,
   };
 
-  if (session.user.role === "PENGGUNA") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
- 
   if (paymentStatus !== "all") {
     whereClause.paymentStatus = paymentStatus as any;
   }

@@ -25,7 +25,12 @@ function getClientIp(req: NextRequest): string {
 // Route Definitions & Helpers
 // ──────────────────────────────────────────────────────────────
 const PUBLIC_ROUTES = ["/", "/login"];
-const PUBLIC_API_PREFIXES = ["/api/auth", "/api/village-config", "/api/download-template"];
+const PUBLIC_API_PREFIXES = [
+  "/api/auth",
+  "/api/village-config",
+  "/api/download-template",
+  "/api/check-bapenda",
+];
 
 const ADMIN_ONLY_ROUTES = ["/upload-pbb", "/pengguna", "/settings", "/log-aktivitas"];
 const ADMIN_ONLY_API_PREFIXES = [

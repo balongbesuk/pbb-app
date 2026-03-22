@@ -56,18 +56,20 @@ export function TaxDataTable({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams?.toString() ?? "";
+  const currentParams = new URLSearchParams(searchParamsString);
   const queryClient = useQueryClient();
 
   // Query parameters from URL
-  const q = searchParams?.get("q") || "";
-  const page = searchParams?.get("page") || "1";
-  const tahun = searchParams?.get("tahun") || new Date().getFullYear().toString();
-  const dusun = searchParams?.get("dusun") || "";
-  const rw = searchParams?.get("rw") || "";
-  const rt = searchParams?.get("rt") || "";
-  const penarik = searchParams?.get("penarik") || "";
-  const regionStatus = searchParams?.get("regionStatus") || "all";
-  const paymentStatus = searchParams?.get("paymentStatus") || "all";
+  const q = currentParams.get("q") || "";
+  const page = currentParams.get("page") || "1";
+  const tahun = currentParams.get("tahun") || new Date().getFullYear().toString();
+  const dusun = currentParams.get("dusun") || "";
+  const rw = currentParams.get("rw") || "";
+  const rt = currentParams.get("rt") || "";
+  const penarik = currentParams.get("penarik") || "";
+  const regionStatus = currentParams.get("regionStatus") || "all";
+  const paymentStatus = currentParams.get("paymentStatus") || "all";
 
   const {
     data: queryData,
@@ -76,7 +78,7 @@ export function TaxDataTable({
   } = useQuery({
     queryKey: ["tax-data", { q, page, tahun, dusun, rw, rt, penarik, regionStatus, paymentStatus }],
     queryFn: async () => {
-      const params = new URLSearchParams((searchParams as any) || "");
+      const params = new URLSearchParams(searchParamsString);
       const res = await fetch(`/api/tax?${params.toString()}`);
       if (!res.ok) throw new Error("Gagal mengambil data");
       return res.json();
@@ -144,7 +146,7 @@ export function TaxDataTable({
   const switchToOwnAssignments = () => {
     if (!isPenarik || !currentUser?.id) return;
 
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParamsString);
     params.set("penarik", currentUser.id);
     params.set("page", "1");
     setSelectedIds(new Set());
@@ -169,7 +171,7 @@ export function TaxDataTable({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams((searchParams as any) || "");
+    const params = new URLSearchParams(searchParamsString);
     if (search) params.set("q", search);
     else params.delete("q");
     if (filterDusun && filterDusun !== "all") params.set("dusun", filterDusun);
@@ -191,7 +193,7 @@ export function TaxDataTable({
   };
 
   const handleFilterChange = (key: string, value: string) => {
-    const params = new URLSearchParams((searchParams as any) || "");
+    const params = new URLSearchParams(searchParamsString);
     if (value && value !== "all") params.set(key, value);
     else params.delete(key);
     params.set("page", "1");
@@ -210,7 +212,7 @@ export function TaxDataTable({
     if (filterRw && filterRw !== "all") params.set("rw", filterRw);
     if (filterRt && filterRt !== "all") params.set("rt", filterRt);
     if (filterPenarik && filterPenarik !== "all") params.set("penarik", filterPenarik);
-    params.set("tahun", searchParams?.get("tahun") || new Date().getFullYear().toString());
+    params.set("tahun", currentParams.get("tahun") || new Date().getFullYear().toString());
     window.open(`/api/export-tax?${params.toString()}`, "_blank");
   };
 
@@ -299,7 +301,7 @@ export function TaxDataTable({
             const res = await fetch("/api/check-bapenda", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ nop: item.nop }),
+              body: JSON.stringify({ nop: item.nop, tahun: item.tahun }),
             });
             const data = await res.json();
             if (data.isPaid) successCount++;
@@ -797,7 +799,7 @@ export function TaxDataTable({
         total={displayTotal}
         shownCount={displayData.length}
         onPageChange={(p: number) => {
-          const params = new URLSearchParams((searchParams as any) || "");
+          const params = new URLSearchParams(searchParamsString);
           params.set("page", p.toString());
           router.push(`${pathname}?${params.toString()}`);
         }}

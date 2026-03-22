@@ -9,6 +9,7 @@ export function LogSearch({ defaultValue }: { defaultValue: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams?.toString() ?? "";
   const [value, setValue] = useState(defaultValue);
   const debouncedValue = useDebounce(value, 500);
 
@@ -18,12 +19,12 @@ export function LogSearch({ defaultValue }: { defaultValue: string }) {
   }, [defaultValue]);
 
   useEffect(() => {
-    const currentQuery = searchParams.get("q") || "";
+    const currentQuery = new URLSearchParams(searchParamsString).get("q") || "";
 
     // Only update the URL if the value has actually changed from what's in the current URL
     // This prevents resetting page=1 when we are just paginating, or infinite loops
     if (debouncedValue !== currentQuery) {
-      const params = new URLSearchParams(searchParams);
+      const params = new URLSearchParams(searchParamsString);
       if (debouncedValue) {
         params.set("q", debouncedValue);
       } else {
@@ -32,7 +33,7 @@ export function LogSearch({ defaultValue }: { defaultValue: string }) {
       params.set("page", "1"); // Reset to page 1 on search
       router.push(`${pathname}?${params.toString()}`);
     }
-  }, [debouncedValue, pathname, router, searchParams]);
+  }, [debouncedValue, pathname, router, searchParamsString]);
 
   return (
     <Input

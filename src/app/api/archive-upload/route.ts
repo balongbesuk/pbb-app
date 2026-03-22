@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import path from "path";
 import fs from "fs";
+import { assertSafeFilename, resolveSafeChildPath } from "@/lib/file-security";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,8 @@ export async function POST(req: NextRequest) {
       if (file.size > 0) {
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        const filePath = path.join(archiveDir, file.name);
+        const safeFilename = assertSafeFilename(file.name);
+        const filePath = resolveSafeChildPath(archiveDir, safeFilename);
         fs.writeFileSync(filePath, buffer);
         count++;
       }

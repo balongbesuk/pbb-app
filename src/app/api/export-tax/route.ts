@@ -12,6 +12,11 @@ export async function GET(req: NextRequest) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const user = session.user as any;
+    if (user.role === "PENGGUNA") {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
     const dusun = searchParams.get("dusun") || "all";
@@ -38,7 +43,6 @@ export async function GET(req: NextRequest) {
     }
 
     // Role-based access control matching the data-pajak page
-    const user = session.user as any;
     if (user.role === "PENARIK") {
       // PENARIK can only see their own assigned tax data
       whereClause.penarikId = user.id;

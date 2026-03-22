@@ -7,6 +7,40 @@ import { requireAdmin } from "@/lib/server-auth";
 import { createAuditLog } from "./log-actions";
 import { formatZodError } from "@/lib/validations/schemas";
 
+async function syncTaxMappingsForRecords(
+  records: Array<{
+    nop: string;
+    dusun: string | null;
+    rt: string | null;
+    rw: string | null;
+  }>,
+  penarikId: string | null
+) {
+  const mappingPayload = records
+    .filter((record) => record.dusun && record.rt && record.rw)
+    .map((record) => ({
+      nop: record.nop,
+      dusun: record.dusun!,
+      rt: record.rt!,
+      rw: record.rw!,
+      penarikId,
+    }));
+
+  if (mappingPayload.length === 0) {
+    return;
+  }
+
+  await prisma.$transaction(
+    mappingPayload.map((mapping) =>
+      prisma.taxMapping.upsert({
+        where: { nop: mapping.nop },
+        update: mapping,
+        create: mapping,
+      })
+    )
+  );
+}
+
 export async function assignPenarikByFilter(
   filters: {
     tahun: number;
@@ -60,12 +94,25 @@ export async function assignPenarikByFilter(
       whereClause.AND = andFilters;
     }
 
-    const res = await prisma.taxData.updateMany({
+    const matchingRecords = await prisma.taxData.findMany({
       where: whereClause,
+      select: {
+        id: true,
+        nop: true,
+        dusun: true,
+        rt: true,
+        rw: true,
+      },
+    });
+
+    const res = await prisma.taxData.updateMany({
+      where: { id: { in: matchingRecords.map((record) => record.id) } },
       data: {
         penarikId,
       },
     });
+
+    await syncTaxMappingsForRecords(matchingRecords, penarikId);
 
     const penarik = penarikId
       ? await prisma.user.findUnique({ where: { id: penarikId }, select: { name: true } })
@@ -89,7 +136,17 @@ export async function assignPenarikByFilter(
 export async function assignPenarik(taxId: string, penarikId: string | null) {
   try {
     await requireAdmin();
-    const data = await prisma.taxData.findUnique({ where: { id: parseInt(taxId) } });
+    const data = await prisma.taxData.findUnique({
+      where: { id: parseInt(taxId) },
+      select: {
+        id: true,
+        nop: true,
+        namaWp: true,
+        dusun: true,
+        rt: true,
+        rw: true,
+      },
+    });
     if (!data) throw new Error("Not found");
 
     await prisma.taxData.update({
@@ -98,6 +155,8 @@ export async function assignPenarik(taxId: string, penarikId: string | null) {
         penarikId,
       },
     });
+
+    await syncTaxMappingsForRecords([data], penarikId);
 
     const penarik = penarikId
       ? await prisma.user.findUnique({ where: { id: penarikId }, select: { name: true } })
@@ -120,12 +179,24 @@ export async function assignPenarik(taxId: string, penarikId: string | null) {
 export async function assignPenarikBulk(taxIds: number[], penarikId: string | null) {
   try {
     await requireAdmin();
+    const records = await prisma.taxData.findMany({
+      where: { id: { in: taxIds } },
+      select: {
+        nop: true,
+        dusun: true,
+        rt: true,
+        rw: true,
+      },
+    });
+
     await prisma.taxData.updateMany({
       where: { id: { in: taxIds } },
       data: {
         penarikId,
       },
     });
+
+    await syncTaxMappingsForRecords(records, penarikId);
 
     const penarik = penarikId
       ? await prisma.user.findUnique({ where: { id: penarikId }, select: { name: true } })

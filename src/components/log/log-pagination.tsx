@@ -14,9 +14,10 @@ export function LogPagination({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const currentParams = new URLSearchParams(searchParams?.toString() ?? "");
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(currentParams);
     params.set("page", page.toString());
     router.push(`${pathname}?${params.toString()}`);
   };

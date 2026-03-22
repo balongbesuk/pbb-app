@@ -18,6 +18,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/server-auth";
 import { VillageConfigSchema, formatZodError } from "@/lib/validations/schemas";
+import { assertSafeFilename, resolveSafeChildPath } from "@/lib/file-security";
 
 export async function deleteAllTaxData() {
   try {
@@ -320,7 +321,11 @@ function getArchiveDir(year: number) {
 
 /** Smart Action to Split Large PDF by NOP */
 export async function processSmartArchive(formData: FormData) {
-  const logPath = path.join(process.cwd(), "public", "pbb_process_log.txt");
+  const logDir = path.join(process.cwd(), "tmp");
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+  }
+  const logPath = path.join(logDir, "pbb_process_log.txt");
   fs.writeFileSync(logPath, `--- STARTING SMART SCAN --- ${new Date().toISOString()}\n`);
   
   try {
@@ -373,7 +378,7 @@ export async function processSmartArchive(formData: FormData) {
 
           const cleanText = rawText.replace(/\D/g, "");
           
-          fs.appendFileSync(logPath, `PAGE ${i+1}: FULL RAW TEXT: \n${rawText}\n`);
+          fs.appendFileSync(logPath, `PAGE ${i+1}: Extracted text length ${rawText.length}\n`);
 
           // Cari NOP
           let nop = "";
@@ -463,8 +468,9 @@ export async function uploadArchives(formData: FormData) {
     for (const file of files) {
       if (!file.name || file.size === 0) continue;
       const buffer = Buffer.from(await file.arrayBuffer());
-      const filename = file.name.replace(/\s+/g, "_"); 
-      fs.writeFileSync(path.join(archiveDir, filename), buffer);
+      const filename = assertSafeFilename(file.name);
+      const filePath = resolveSafeChildPath(archiveDir, filename);
+      fs.writeFileSync(filePath, buffer);
       successCount++;
     }
 
@@ -481,7 +487,8 @@ export async function deleteArchive(filename: string, year: number) {
   try {
     await requireAdmin();
     const archiveDir = getArchiveDir(year);
-    const filePath = path.join(archiveDir, filename);
+    const safeFilename = assertSafeFilename(filename);
+    const filePath = resolveSafeChildPath(archiveDir, safeFilename);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
