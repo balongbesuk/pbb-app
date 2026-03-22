@@ -480,3 +480,59 @@ export async function updateWpRegionByFilter(
     return { success: false, message: formatZodError(error) };
   }
 }
+export async function syncBapendaByFilter(filters: {
+  tahun: number;
+  q?: string;
+  dusun?: string;
+  rw?: string;
+  rt?: string;
+  penarik?: string;
+  regionStatus?: string;
+  paymentStatus?: string;
+}) {
+  try {
+    const { role, userId } = await requireAuth();
+    
+    // Build where clause
+    const whereClause: Prisma.TaxDataWhereInput = {
+      tahun: filters.tahun,
+    };
+
+    const andFilters: Prisma.TaxDataWhereInput[] = [];
+    if (filters.q) {
+      andFilters.push({
+        OR: [
+          { nop: { contains: filters.q } },
+          { namaWp: { contains: filters.q } },
+        ],
+      });
+    }
+
+    if (filters.dusun && filters.dusun !== "all") whereClause.dusun = filters.dusun;
+    if (filters.rw && filters.rw !== "all") whereClause.rw = filters.rw;
+    if (filters.rt && filters.rt !== "all") whereClause.rt = filters.rt;
+    if (filters.penarik && filters.penarik !== "all") {
+      if (filters.penarik === "none") whereClause.penarikId = null;
+      else whereClause.penarikId = filters.penarik;
+    }
+    if (filters.paymentStatus && filters.paymentStatus !== "all") {
+      whereClause.paymentStatus = filters.paymentStatus as any;
+    }
+
+    if (andFilters.length > 0) whereClause.AND = andFilters;
+    if (role === "PENARIK") whereClause.penarikId = userId;
+
+    const allData = await prisma.taxData.findMany({
+      where: whereClause,
+      select: { id: true, nop: true, tahun: true }
+    });
+
+    if (allData.length === 0) return { success: true, count: 0 };
+
+    // This is still a loop but on server, it can be optimized with better background jobs
+    // For now, let's process in batches or just return IDs for client to handle but with better logic
+    return { success: true, data: allData, count: allData.length };
+  } catch (error) {
+    return { success: false, message: "Gagal mengambil data filter" };
+  }
+}

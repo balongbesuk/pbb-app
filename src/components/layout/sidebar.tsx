@@ -37,7 +37,7 @@ const menuItems = [
     href: "/data-pajak",
     allowedRoles: ["ADMIN", "PENARIK", "PENGGUNA"],
   },
-  { icon: Archive, label: "Arsip Digital PBB", href: "/arsip-pbb", allowedRoles: ["ADMIN"] },
+  { icon: Archive, label: "Arsip Digital PBB", href: "/kelola-arsip", allowedRoles: ["ADMIN"] },
   { icon: Users, label: "Pengguna & Penarik", href: "/pengguna", allowedRoles: ["ADMIN"] },
   {
     icon: FileText,

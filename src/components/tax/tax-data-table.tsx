@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { User, Loader2, UserMinus, MapPin, Calculator, XCircle, CheckCircle2, Ban, RefreshCcw } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { updatePaymentStatus, bulkUpdatePaymentStatus } from "@/app/actions/tax-update-actions";
+import { updatePaymentStatus, bulkUpdatePaymentStatus, syncBapendaByFilter } from "@/app/actions/tax-update-actions";
 import { 
   assignPenarik, 
   assignPenarikBulk, 
@@ -284,49 +284,84 @@ export function TaxDataTable({
   };
 
   const handleBulkBapendaSync = async () => {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0 && !isAllFilteredSelected) return;
     setIsAssigning(true);
     
-    const ids = Array.from(selectedIds);
+    let ids: any[] = [];
     let successCount = 0;
     let failCount = 0;
     
-    toast.promise(
-      (async () => {
-        for (const id of ids) {
+    // Toast setup
+    const toastId = toast.loading(`Menyiapkan sinkronisasi massal dengan Bapenda...`);
+
+    try {
+      // 1. Get IDs for sync
+      if (isAllFilteredSelected) {
+        toast.loading(`Mengambil data filter (${displayTotal})...`, { id: toastId });
+        const res = await syncBapendaByFilter({
+           tahun: parseInt(tahun),
+           q,
+           dusun,
+           rw,
+           rt,
+           penarik,
+           regionStatus,
+           paymentStatus
+        });
+        if (!res.success) throw new Error(res.message);
+        ids = res.data || [];
+      } else {
+        const selectedIdArray = Array.from(selectedIds);
+        ids = selectedIdArray.map(id => {
           const item = displayData.find((d: any) => d.id === id);
-          if (!item) continue;
-          
-          try {
-            const res = await fetch("/api/check-bapenda", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ nop: item.nop, tahun: item.tahun }),
-            });
-            const data = await res.json();
-            if (data.isPaid) successCount++;
-            else failCount++;
-          } catch (e) {
-            failCount++;
-          }
-          // Slight delay to be nice to Bapenda
-          await new Promise(r => setTimeout(r, 400));
+          return { id, nop: item?.nop, tahun: item?.tahun };
+        });
+      }
+
+      const totalToSync = ids.length;
+      if (totalToSync === 0) {
+        toast.dismiss(toastId);
+        setIsAssigning(false);
+        return;
+      }
+
+      // 2. Start Sync Loop
+      for (let i = 0; i < totalToSync; i++) {
+        const item = ids[i];
+        if (!item?.nop) continue;
+        
+        // Progress notification for batch
+        if (i % 5 === 0) {
+          toast.loading(`Sinkronisasi: ${i+1}/${totalToSync} data sedang diproses...`, { id: toastId });
         }
 
-        queryClient.invalidateQueries({ queryKey: ["tax-data"] });
-        setSelectedIds(new Set());
-        setSelectedAmounts(new Map());
-        setIsAllFilteredSelected(false);
-        setIsAssigning(false);
+        try {
+          const res = await fetch("/api/check-bapenda", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nop: item.nop, tahun: item.tahun || tahun }),
+          });
+          const data = await res.json();
+          if (data.isPaid) successCount++;
+          else failCount++;
+        } catch (e) {
+          failCount++;
+        }
         
-        return `${successCount} data WP terdeteksi LUNAS. ${failCount} masih Belum Lunas/Gagal.`;
-      })(),
-      {
-        loading: `Menyingkronkan ${ids.length} data dengan Bapenda Jombang...`,
-        success: (msg) => `Sinkronisasi Selesai: ${msg}`,
-        error: "Terjadi kesalahan saat sinkronisasi massal",
+        // 400ms delay to respect Bapenda rate limits
+        await new Promise(r => setTimeout(r, 400));
       }
-    );
+
+      toast.success(`Sinkronisasi Selesai: ${successCount} Lunas, ${failCount} Tetap.`, { id: toastId });
+      queryClient.invalidateQueries({ queryKey: ["tax-data"] });
+      setSelectedIds(new Set());
+      setSelectedAmounts(new Map());
+      setIsAllFilteredSelected(false);
+    } catch (error: any) {
+      toast.error(error.message || "Gagal melakukan sinkronisasi massal", { id: toastId });
+    } finally {
+      setIsAssigning(false);
+    }
   };
 
   const selectedSum = Array.from(selectedAmounts.values()).reduce((acc, obj) => acc + obj.amount, 0);

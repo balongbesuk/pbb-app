@@ -68,3 +68,4 @@ build.log
 /public/pbb_process_log.txt
 /temp_extracted.txt
 test_qr.js
+/storage/

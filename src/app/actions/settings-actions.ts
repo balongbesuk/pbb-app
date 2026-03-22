@@ -312,7 +312,7 @@ export async function checkImportRequirements(tahun: number) {
 import { PDFDocument } from "pdf-lib";
 const pdf = require("pdf-parse/lib/pdf-parse.js");
 
-const BASE_ARCHIVE_DIR = path.join(process.cwd(), "public", "arsip-pbb");
+const BASE_ARCHIVE_DIR = path.join(process.cwd(), "storage", "arsip-pbb");
 
 function getArchiveDir(year: number) {
   return path.join(BASE_ARCHIVE_DIR, year.toString());
@@ -405,7 +405,8 @@ export async function processSmartArchive(formData: FormData) {
         }
     }
 
-    revalidatePath("/admin/settings");
+    revalidatePath("/kelola-arsip");
+    revalidatePath("/settings");
     return { 
       success: true, 
       message: `Pemindaian selesai! Berhasil: ${detectedCount}, Terlewati: ${skippedCount}.` 
@@ -473,7 +474,8 @@ export async function uploadArchives(formData: FormData) {
       successCount++;
     }
 
-    revalidatePath("/admin/settings");
+    revalidatePath("/kelola-arsip");
+    revalidatePath("/settings");
     return { success: true, message: `${successCount} file arsip berhasil diunggah.` };
   } catch (error) {
     console.error(error);
@@ -492,7 +494,7 @@ export async function deleteArchive(filename: string, year: number) {
       fs.unlinkSync(filePath);
     }
     revalidatePath("/admin/settings");
-    revalidatePath("/arsip-pbb");
+    revalidatePath("/kelola-arsip");
     return { success: true };
   } catch (error) {
     console.error(error);

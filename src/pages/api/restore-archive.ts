@@ -78,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const entries = zip.getEntries();
     const totalEntries = entries.length;
 
-    const publicDir = path.join(process.cwd(), "public");
+    const storageDir = path.join(process.cwd(), "storage");
 
     let restored = 0;
     let skipped = 0;
@@ -94,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (entry.isDirectory) continue;
 
-      const targetPath = resolveSafeChildPath(publicDir, entry.entryName);
+      const targetPath = resolveSafeChildPath(storageDir, entry.entryName);
       const targetDir = path.dirname(targetPath);
 
       if (!fs.existsSync(targetDir)) {

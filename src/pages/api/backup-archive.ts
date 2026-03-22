@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== "POST") return res.status(405).end();
 
   try {
-    const BASE_ARCHIVE_DIR = path.join(process.cwd(), "public", "arsip-pbb");
+    const BASE_ARCHIVE_DIR = path.join(process.cwd(), "storage", "arsip-pbb");
     if (!fs.existsSync(BASE_ARCHIVE_DIR)) {
       return res.status(404).json({ error: "Folder arsip tidak ditemukan." });
     }

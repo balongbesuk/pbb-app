@@ -95,7 +95,7 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
     const today = new Date();
     
     // Scan arsip folder (Year-aware)
-    const archiveDir = path.join(process.cwd(), "public", "arsip-pbb", tahunPajak.toString());
+    const archiveDir = path.join(process.cwd(), "storage", "arsip-pbb", tahunPajak.toString());
     let archiveFiles: string[] = [];
     if (fs.existsSync(archiveDir)) {
       archiveFiles = fs.readdirSync(archiveDir);
@@ -121,6 +121,8 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
               finalArsipUrl = `/arsip-pbb/${tahunPajak}/${matchedArchive}`;
            }
         }
+
+        console.log(`Pencarian: ${r.namaWp} -> Arsip: ${finalArsipUrl || 'Kosong'}`);
 
         return {
           id: r.id,
