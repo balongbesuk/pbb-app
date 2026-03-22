@@ -152,7 +152,7 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
   const persentase = totalNominalValue > 0 ? (sudahDibayarValue / totalNominalValue) * 100 : 0;
 
   // Get penarik names
-  const penarikIds = penarikStats.map((s) => s.penarikId).filter(Boolean) as string[];
+  const penarikIds = penarikStats.map((s: { penarikId: string | null }) => s.penarikId).filter(Boolean) as string[];
   const penarikUsers = await prisma.user.findMany({
     where: { id: { in: penarikIds } },
     select: { id: true, name: true },
@@ -160,7 +160,7 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
 
   const penarikMap = new Map(penarikUsers.map((u) => [u.id, u.name]));
   const topPenariks = penarikStats
-    .map((s) => ({
+    .map((s: { penarikId: string | null; _sum: { pembayaran: number | null; ketetapan: number | null } }) => ({
       name: s.penarikId ? penarikMap.get(s.penarikId) || "Petugas" : "Belum Alokasi",
       nominal: s._sum.pembayaran || 0,
       target: s._sum.ketetapan || 0,
