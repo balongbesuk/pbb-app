@@ -165,12 +165,12 @@ model VillageConfig {
   tahunPajak        Int     @default(2026)
   jatuhTempo        String  @default("31 Agustus")
   bapendaUrl        String?
-  isJombangBapenda  Boolean @default(true)
-  enableBapendaSync Boolean @default(true)
+  isJombangBapenda  Boolean @default(false)
+  enableBapendaSync Boolean @default(false)
   logoUrl           String?
   showNominalPajak  Boolean @default(false)
-  enableDigitalArchive Boolean @default(true)
-  archiveOnlyLunas     Boolean @default(true)
+  enableDigitalArchive Boolean @default(false)
+  archiveOnlyLunas     Boolean @default(false)
   updatedAt         DateTime @default(now()) @updatedAt
 }
 

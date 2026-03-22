@@ -16,11 +16,11 @@ export function TaxConfigForm() {
   const [tahun, setTahun] = useState(2026);
   const [jatuhTempo, setJatuhTempo] = useState("31 Agustus");
   const [bapendaUrl, setBapendaUrl] = useState("");
-  const [isJombangBapenda, setIsJombangBapenda] = useState(true);
-  const [enableBapendaSync, setEnableBapendaSync] = useState(true);
+  const [isJombangBapenda, setIsJombangBapenda] = useState(false);
+  const [enableBapendaSync, setEnableBapendaSync] = useState(false);
   const [showNominal, setShowNominal] = useState(false);
-  const [enableArchive, setEnableArchive] = useState(true);
-  const [archiveOnlyLunas, setArchiveOnlyLunas] = useState(true);
+  const [enableArchive, setEnableArchive] = useState(false);
+  const [archiveOnlyLunas, setArchiveOnlyLunas] = useState(false);
   const [rawConfig, setRawConfig] = useState<any>(null);
 
   const DEFAULT_JOMBANG_URL = "https://bapenda.jombangkab.go.id/cek-bayar/ceknopbayar-jmb.kab?module=pbb";
@@ -31,11 +31,11 @@ export function TaxConfigForm() {
       setTahun(data.tahunPajak);
       setJatuhTempo(data.jatuhTempo || "31 Agustus");
       setBapendaUrl(data.bapendaUrl || "");
-      setIsJombangBapenda(data.isJombangBapenda ?? true);
-      setEnableBapendaSync(data.enableBapendaSync ?? true);
+      setIsJombangBapenda(data.isJombangBapenda ?? false);
+      setEnableBapendaSync(data.enableBapendaSync ?? false);
       setShowNominal(!!data.showNominalPajak);
-      setEnableArchive(data.enableDigitalArchive ?? true);
-      setArchiveOnlyLunas(data.archiveOnlyLunas ?? true);
+      setEnableArchive(data.enableDigitalArchive ?? false);
+      setArchiveOnlyLunas(data.archiveOnlyLunas ?? false);
       setRawConfig(data);
       setLoading(false);
     }
