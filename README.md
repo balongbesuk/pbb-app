@@ -65,31 +65,31 @@ Tata cara menggunakan fitur pencarian arsip warka cerdas, cara mengekstrak PDF B
 
 ---
 
-## 🚀 Instalasi Singkat (Untuk Developer)
-Jika Anda sudah familiar dengan Node.js dan Git:
+## 🚀 Instalasi Singkat (Sangat Mudah)
 
-```bash
-# 1. Clone & Install
-git clone https://github.com/balongbesuk/pbb-app.git
-cd pbb-app
-npm install
+Kini jauh lebih cepat! Anda tidak perlu lagi melakukan konfigurasi manual yang rumit. Cukup:
 
-# 2. Setup Environment
-cp .env.example .env
-# Edit .env dan isi NEXTAUTH_SECRET
+1. **Clone Repo:**
+   ```bash
+   git clone https://github.com/balongbesuk/pbb-app.git
+   cd pbb-app
+   ```
 
-# 3. Setup Database & Seed
-npx prisma generate
-npx prisma db push
-npx prisma db seed
+2. **Instalasi & Setup Otomatis:**
+   Jalankan satu perintah ini untuk mendownload kebutuhan sekaligus menyiapkan database otomatis:
+   ```bash
+   npm install
+   ```
 
-# 4a. Run Development
-npm run dev
+3. **Jalankan Aplikasi:**
+   ```bash
+   # Mode Development
+   npm run dev
 
-# 4b. Run Production (Stable)
-npm run build
-npm run start
-```
+   # Mode Production (Standar VPS)
+   npm run build
+   npm run start
+   ```
 
 **Akun Default:** `admin` / `admin123`
 
@@ -97,15 +97,15 @@ npm run start
 
 ## 🔄 Update Aplikasi ke Versi Terbaru (v6.0)
 
-Jika Anda sudah menggunakan aplikasi ini sebelumnya namun versinya lawas, jalankan rentetan ini di Command Prompt:
+Jika Anda sudah menggunakan versi lama, cukup jalankan ini untuk memperbaruinya ke v6.0:
 
 ```bash
 git pull origin main
 npm install
-npx prisma db push
 npm run build
 npm run start
 ```
+*Script otomatis kami akan mengurus pembaruan database dan konfigurasi di latar belakang.*
 
 ---
 
