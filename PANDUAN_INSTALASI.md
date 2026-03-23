@@ -49,47 +49,22 @@ Sangat direkomendasikan untuk membuka dan mengedit file proyek.
 
 ---
 
-## ⚙️ Langkah 3: Konfigurasi Keamanan (.env)
+## ⚙️ Langkah 3: Instalasi & Setup Otomatis
 
-Aplikasi membutuhkan file "rahasia" untuk menyimpan settingan.
-1. Cari file bernama `.env.example` di dalam folder `pbb-app`.
-2. **Copy** file tersebut dan **Paste** di folder yang sama.
-3. Ubah nama file hasil copy tadi menjadi `.env` (tanpa .example).
-4. Klik kanan file `.env`, pilih **Open with Notepad**.
-5. Cari bagian `NEXTAUTH_SECRET`. Anda bisa mengisinya dengan kata acak apa saja, contoh:
-   ```env
-   NEXTAUTH_SECRET="pbb-desa-mantap-sekali-123"
-   ```
-6. Simpan (*Save*) dan tutup Notepad.
+Sekarang bagian terbaiknya! Anda tidak perlu lagi melakukan konfigurasi manual yang rumit. Cukup jalankan satu perintah:
 
----
-
-## 📦 Langkah 4: Instalasi Mandiri
-
-Kembali ke Command Prompt/Terminal yang masih terbuka di folder `pbb-app`, jalankan perintah ini satu per satu:
-
-1. **Instal Paket Pendukung:**
+1. Di Command Prompt/Terminal, jalankan:
    ```bash
    npm install
    ```
-   *Tunggu sampai selesai. Proses ini mendownload bahan-bahan yang dibutuhkan aplikasi.*
-
-2. **Siapkan Database:**
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   ```
-   *Ini akan membuat file database otomatis di dalam folder.*
-
-3. **Isi Data Awal (Akun Admin):**
-   ```bash
-   npx prisma db seed
-   ```
-   *Ini akan membuat akun admin otomatis agar Anda bisa login.*
+2. **Tunggu sampai selesai.** Selama proses ini, aplikasi akan otomatis:
+   - Mendownload bahan-bahan yang dibutuhkan (*dependencies*).
+   - Membuat file konfigurasi `.env` secara otomatis.
+   - Menyiapkan database dan membuat akun **Admin** default.
 
 ---
 
-## 🏃 Langkah 5: Menjalankan Aplikasi
+## 🏃 Langkah 4: Menjalankan Aplikasi
 
 Sekarang semuanya sudah siap! Jalankan aplikasi dengan perintah:
 ```bash
@@ -106,7 +81,7 @@ Jika berhasil, akan muncul tulisan:
 
 ---
 
-## 🚀 Langkah 6: Running Production (Mode Stabil)
+## 🚀 Langkah 5: Running Production (Mode Stabil)
 
 Jika Anda ingin menjalankan aplikasi secara resmi (untuk penggunaan harian yang lebih cepat dan stabil), gunakan perintah ini:
 
@@ -170,17 +145,13 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 free -h  # Pastikan muncul Swap: 2.0G
 ```
 
-### 4. Clone & Install
+### 4. Clone & Setup Otomatis
 ```bash
 git clone https://github.com/balongbesuk/pbb-app.git
 cd pbb-app
-cp .env.example .env
-# Edit .env sesuai kebutuhan (nano .env)
 
+# Instalasi otomatis (mengatur .env & database)
 PUPPETEER_SKIP_DOWNLOAD=true npm install
-npx prisma generate
-npx prisma db push
-npx prisma db seed
 ```
 
 ### 5. Build & Jalankan

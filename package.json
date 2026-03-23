@@ -4,9 +4,10 @@
   "private": false,
   "license": "MIT",
   "scripts": {
-    "dev": "next dev",
+    "dev": "npx prisma generate && next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "npx prisma generate && next start",
+    "postinstall": "node scripts/init.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "lint:errors": "eslint src/ --quiet",
