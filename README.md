@@ -1,14 +1,14 @@
-<img width="2536" height="923" alt="image" src="https://github.com/user-attachments/assets/d540a662-121b-41d0-8882-5cb8455aa37b" />
+<img width="2536" height="923" alt="PBB Manager Dashboard" src="https://github.com/user-attachments/assets/d540a662-121b-41d0-8882-5cb8455aa37b" />
 
-# 🏦 PBB Manager — Sistem Manajemen Pajak Desa `v6.0`
+# 🏦 PBB Manager — Solusi Digitalisasi Pajak Desa `v6.0`
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
 [![Prisma](https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma)](https://prisma.io)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css)](https://tailwindcss.com)
 [![Version](https://img.shields.io/badge/Version-6.0-blue)](https://github.com/balongbesuk/pbb-app/tags)
-[![License](https://img.shields.io/badge/License-MIT-blue)](./LICENSE)
 
-**PBB Manager v6.0** hadir dengan update besar **"Smart Scan & Digital Archive"** untuk menunjang kebutuhan desa modern dalam tata kelola pendataan, penagihan, dan pengarsipan elektronik Pajak Bumi dan Bangunan (PBB) E-SPPT warga yang lebih efisien, akurat, dan profesional.
+**PBB Manager v6.0** adalah platform manajemen pajak desa modern yang dirancang untuk mentransformasi tata kelola PBB secara digital. Menghadirkan efisiensi dalam pendataan, transparansi penagihan, serta kecanggihan pengarsipan elektronik (E-SPPT) untuk desa yang lebih mandiri dan profesional.
 
 ---
 
@@ -16,88 +16,70 @@
 
 | Fitur | Deskripsi |
 |---|---|
-| **Arsip Digital (Smart Scan)** | **BARU:** Arsip E-SPPT/PDF warka secara otomatis dipecah berdasar nomor NOP dalam kecepatan kilat. Warga bisa mendownload E-SPPT-nya langsung dari Portal Pencarian. |
-| **Kompresi PDF Massal** | **BARU:** Mengecilkan (compress) ukuran ribuan PDF E-SPPT secara masif di latar belakang dengan Streaming tanpa takut *crash* untuk menghemat penyimpanan disk Server. |
-| **Smart Sync (Excel)** | Update data via Excel tanpa menghapus data lama. Sinkronisasi cerdas NOP, status, dan nominal secara otomatis. |
-| **Global Allocation** | Alokasi masal ribuan data hasil filter ke penarik dalam satu klik, tanpa terbatas paginasi. |
-| **Auto Normalization** | Standarisasi otomatis format RT/RW menjadi 2 digit (01, 02) untuk keakuratan laporan wilayah. |
-| **Dashboard Real-Time** | Pantau tren realisasi harian, statistik wilayah, dan performa petugas secara langsung |
-| **Portal Warga Modern** | Pencarian tagihan publik dengan efek *glassmorphism*, fitur download E-SPPT, dan desain premium |
-| **Branding Dinamis** | Ubah logo desa, nama desa, kecamatan, dan kabupaten langsung dari menu Pengaturan |
-| **Audit Trail** | Rekam seluruh aktivitas: login, perubahan status, rotasi hak akses — tidak bisa dimanipulasi |
-| **Backup & Restore Arsip** | Unduh ZIP backup ribuan arsip dan pulihkan jika terjadi perpindahan server menggunakan *Streaming Tech*. |
+| **🚀 Arsip Digital (Smart Scan)** | **BARU:** Algoritma ekstraksi otomatis yang memecah ribuan lembar E-SPPT menjadi file personal berdasarkan NOP secara instan. |
+| **📉 Kompresi PDF Intelligent** | **BARU:** Teknologi *Streaming Compression* untuk mengecilkan ukuran PDF massal tanpa membebani memori server, menghemat penyimpanan hingga 80%. |
+| **🔄 Smart Sync (Excel)** | Integrasi DHKP cerdas yang memungkinkan pembaruan data ribuan wajib pajak tanpa risiko duplikasi atau penghapusan manual. |
+| **⚡ Mass Allocation** | Distribusi tugas penarikan pajak ke petugas lapangan dalam satu klik menggunakan filter wilayah yang fleksibel. |
+| **📏 Auto Normalization** | Standarisasi otomatis format wilayah (RT/RW) untuk memastikan keakuratan laporan dan statistik tanpa *inputan* manual yang salah. |
+| **📊 Dashboard Eksekutif** | Visualisasi statistik realisasi harian, performa petugas per dusun, dan tren pembayaran secara *real-time*. |
+| **📱 Portal Warga Premium** | Antarmuka publik yang elegan dengan efek *glassmorphism*, memudahkan warga mengecek tagihan dan mengunduh E-SPPT secara mandiri. |
+| **🔒 Audit Trail & Security** | Pencatatan setiap log aktivitas untuk transparansi penuh, dilengkapi dengan sistem hak akses (*Role-Based Access Control*). |
 
 ---
 
-## 👥 Sistem Peran (*Role System*)
+## 👥 Hirarki Akses
 
-Tiga level akses untuk menjaga integritas data pajak:
+Sistem keamanan berlapis untuk menjaga integritas data desa:
 
-### 👑 ADMIN — Kepala Desa / Petugas IT / Admin PBB
-- Kontrol penuh terhadap seluruh sistem & pengaturan profil instansi.
-- Mengaktifkan **Smart Sync** untuk pembaruan data DHKP tahunan/berkala.
-- Mengontrol modul **Arsip Digital**, melakukan Smart Scan E-SPPT, Kompresi file gajah, dan Restore.
-- Penugasan massal petugas (**Smart Selection**) berdasarkan wilayah/filter.
-- Mengelola akun pengguna (buat, edit, reset password, hapus).
-
-### 📱 PENARIK — Kepala Dusun / Petugas Lapangan
-- Antarmuka mobile-friendly, ringan di HP.
-- Mengubah status WP: **Belum Lunas** → **Lunas**.
-- Rotasi Wajib Pajak antar petugas dengan sistem persetujuan (Request/Transfer).
-
-### 🛡️ PENGGUNA — Staf / Akun Baru
-- Peran default saat akun pertama kali dibuat (View-Only).
-- Hak akses baca laporan dan data tanpa izin modifikasi.
+*   **👑 ADMIN (Kepala Desa / Admin IT)**: Memegang kendali penuh atas konfigurasi instansi, sinkronisasi data pusat, pengelolaan arsip digital, dan manajemen akun pengguna.
+*   **📱 PENARIK (Kepala Dusun / Petugas)**: Antarmuka yang dioptimalkan untuk perangkat mobile. Fokus pada pembaruan status bayar di lapangan dan manajemen rotasi wajib pajak.
+*   **🛡️ PENGGUNA (Viewer)**: Akses terbatas hanya untuk melihat data dan laporan tanpa izin modifikasi (Read-Only).
 
 ---
 
-## 🛠️ Buku Panduan
+## 🛠️ Dokumentasi & Panduan
 
-Kami menyediakan berbagai panduan spesifik yang terpisah untuk mempermudah Anda:
+Kami telah menyusun panduan lengkap agar Anda dapat mengoperasikan sistem ini dengan mudah:
 
-### 🔰 1. Panduan Instalasi Pemula
-Jika Anda baru pertama kali mencoba menjalankan aplikasi berbasis web di komputer, silakan baca dokumentasi rinci ini:
-👉 **[PANDUAN_INSTALASI.md](./PANDUAN_INSTALASI.md)**
-
-### 📂 2. Panduan Arsip Digital E-SPPT (Khusus Petugas IT)
-Tata cara menggunakan fitur pencarian arsip warka cerdas, cara mengekstrak PDF Bapenda yang berisi ribuan lembar secara kilat, dan petunjuk teknis terkait kompresi serta migrasi / *backup*:
-👉 **[PANDUAN_ARSIP_DIGITAL.md](./PANDUAN_ARSIP_DIGITAL.md)**
+1.  **[Panduan Instalasi Pemula](./PANDUAN_INSTALASI.md)**: Langkah demi langkah instalasi dari nol untuk pengguna baru.
+2.  **[Panduan Arsip Digital E-SPPT](./PANDUAN_ARSIP_DIGITAL.md)**: Petunjuk teknis penggunaan fitur Smart Scan, Kompresi, dan Manajemen File.
+3.  **[Dokumentasi Penggunaan](./DOKUMENTASI_PENGGUNAAN.md)**: Panduan operasional fitur harian bagi admin dan petugas.
 
 ---
 
-## 🚀 Instalasi Singkat (Sangat Mudah)
+## 🚀 Instalasi Cepat (Automated Setup)
 
-Kini jauh lebih cepat! Anda tidak perlu lagi melakukan konfigurasi manual yang rumit. Cukup:
+Instalasi sekarang sepenuhnya otomatis. Cukup pastikan Anda memiliki **Node.js (v20+)** dan **Git**.
 
-1. **Clone Repo:**
+1. **Clone Proyek:**
    ```bash
    git clone https://github.com/balongbesuk/pbb-app.git
    cd pbb-app
    ```
 
-2. **Instalasi & Setup Otomatis:**
-   Jalankan satu perintah ini untuk mendownload kebutuhan sekaligus menyiapkan database otomatis:
+2. **Setup Otomatis:**
+   Gunakan satu perintah ini untuk menyiapkan konfigurasi `.env`, mendownload library, dan menginisialisasi database:
    ```bash
    npm install
    ```
 
-3. **Jalankan Aplikasi:**
+3. **Jalankan:**
    ```bash
-   # Mode Development
+   # Mode Pengembangan
    npm run dev
 
-   # Mode Production (Standar VPS)
+   # Mode Produksi (Direkomendasikan)
    npm run build
    npm run start
    ```
 
-**Akun Default:** `admin` / `admin123`
+**Kredensial Default:** `admin` / `admin123`
 
 ---
 
-## 🔄 Update Aplikasi ke Versi Terbaru (v6.0)
+## 🔄 Pembaruan (Update)
 
-Jika Anda sudah menggunakan versi lama, cukup jalankan ini untuk memperbaruinya ke v6.0:
+Untuk memperbarui aplikasi ke versi terbaru tanpa kehilangan data:
 
 ```bash
 git pull origin main
@@ -105,8 +87,18 @@ npm install
 npm run build
 npm run start
 ```
-*Script otomatis kami akan mengurus pembaruan database dan konfigurasi di latar belakang.*
+*Sistem kami akan otomatis mendeteksi perubahan skema database dan melakukan pembaruan di latar belakang.*
 
 ---
 
-*Dibuat oleh Tim Digitalisasi PBB Desa — Terakhir Diperbarui: Maret 2026*
+## 📡 Tech Stack
+
+*   **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS
+*   **Backend**: Next.js Server Actions, Prisma ORM
+*   **Database**: SQLite (Local) / PostgreSQL (Optional)
+*   **Storage**: Local Streaming File System
+
+---
+
+*Dikembangkan untuk kemajuan digitalisasi desa di Indonesia.*
+*Terakhir Diperbarui: Maret 2026*
