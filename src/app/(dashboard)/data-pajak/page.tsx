@@ -90,7 +90,7 @@ export default async function DataPajakPage({
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { nop: "asc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),

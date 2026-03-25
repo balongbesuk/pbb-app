@@ -213,7 +213,7 @@ export async function getWpByRegion(dusun: string | null, rw: string | null, tah
         ketetapan: true,
       },
       orderBy: {
-        namaWp: "asc",
+        nop: "asc",
       },
     });
     return { success: true, data };
@@ -253,7 +253,7 @@ export async function getWpByPenarik(
           paymentStatus: true,
         },
         orderBy: {
-          namaWp: "asc",
+          nop: "asc",
         },
         skip: (page - 1) * pageSize,
         take: pageSize,

@@ -80,6 +80,7 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
           }
         }
       },
+      orderBy: { nop: "asc" },
       take: 10, // batasi max 10 hasil agar tidak berat/spam
     });
 
