@@ -291,7 +291,7 @@ export function TaxTableFilters({
                   return (
                     <button key={s} onClick={() => onPaymentStatusChange(s)}
                       className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold transition-all",
-                        filterPaymentStatus === s ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                        filterPaymentStatus === s ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                       {label}
                     </button>
                   );
@@ -306,13 +306,13 @@ export function TaxTableFilters({
                 <div className="flex flex-wrap gap-1.5">
                   <button onClick={() => onDusunChange("all")}
                     className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold transition-all",
-                      filterDusun === "all" ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                      filterDusun === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                     Semua
                   </button>
                   {availableFilters.dusun.map((d: string) => (
                     <button key={d} onClick={() => onDusunChange(d)}
                       className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold transition-all",
-                        filterDusun === d ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                        filterDusun === d ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                       {d}
                     </button>
                   ))}
@@ -327,13 +327,13 @@ export function TaxTableFilters({
                 <div className="flex flex-wrap gap-1">
                   <button onClick={() => onRwChange("all")}
                     className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
-                      filterRw === "all" ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                      filterRw === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                     Semua
                   </button>
                   {availableFilters.rw.map((rw: string) => (
                     <button key={rw} onClick={() => onRwChange(rw)}
                       className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
-                        filterRw === rw ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                        filterRw === rw ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                       {rw}
                     </button>
                   ))}
@@ -344,13 +344,13 @@ export function TaxTableFilters({
                 <div className="flex flex-wrap gap-1 max-h-[60px] overflow-y-auto">
                   <button onClick={() => onRtChange("all")}
                     className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
-                      filterRt === "all" ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                      filterRt === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                     Semua
                   </button>
                   {availableFilters.rt.map((rt: string) => (
                     <button key={rt} onClick={() => onRtChange(rt)}
                       className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
-                        filterRt === rt ? "bg-primary text-white border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                        filterRt === rt ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                       {rt}
                     </button>
                   ))}
@@ -419,7 +419,7 @@ export function TaxTableFilters({
               <CheckCircle2 className="h-4 w-4" />
               Terapkan Filter
               {activeFilterCount > 0 && (
-                <span className="bg-white text-primary rounded-full px-2 py-0.5 text-[10px] font-black shadow-sm">
+                <span className="bg-primary-foreground text-primary rounded-full px-2 py-0.5 text-[10px] font-black shadow-sm">
                   {activeFilterCount} aktif
                 </span>
               )}
