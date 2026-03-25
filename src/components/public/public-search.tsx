@@ -5,12 +5,13 @@ import { searchPublicTaxData } from "@/app/actions/public-actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle, Calendar, CreditCard, HelpCircle, History, Download, Eye, RefreshCcw } from "lucide-react";
+import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle, Calendar, CreditCard, HelpCircle, History, Download, Eye, RefreshCcw, Copy, Check } from "lucide-react";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
 import { formatCurrency, formatDate, formatDateNoTime, formatJatuhTempo, cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
 
 export function PublicSearch({ 
   tahunPajak, 
@@ -34,6 +35,7 @@ export function PublicSearch({
   const [isCheckingAuto, setIsCheckingAuto] = useState<Record<string, boolean>>({});
   const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
   const [showPayRedirect, setShowPayRedirect] = useState<{ nop: string, namaWp: string } | null>(null);
+  const [copiedNop, setCopiedNop] = useState<string | null>(null);
   const isDark = theme === "dark";
 
   const togglePdf = (nop: string) => {
@@ -111,6 +113,14 @@ export function PublicSearch({
     } finally {
       setIsCheckingAuto(prev => ({ ...prev, [nop]: false }));
     }
+  };
+
+  const handleCopyNop = (nop: string) => {
+    const cleanNop = nop.replace(/\D/g, "");
+    navigator.clipboard.writeText(cleanNop);
+    setCopiedNop(nop);
+    toast.success(`NOP ${cleanNop} disalin`);
+    setTimeout(() => setCopiedNop(null), 2000);
   };
 
 
@@ -227,7 +237,23 @@ export function PublicSearch({
               <Card key={i} className={`rounded-2xl transition-colors shadow-sm overflow-hidden ${resultCardCls}`}>
                 <CardHeader className={`p-5 pb-3 bg-gradient-to-r border-b flex flex-row items-center justify-between gap-4 ${cardHeaderBgCls}`}>
                   <div className="min-w-0 flex-1">
-                    <p className={`text-[10px] font-black uppercase tracking-widest leading-none mb-1.5 opacity-60 ${nopCls}`}>{item.nop}</p>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <p className={`text-[10px] font-black uppercase tracking-widest leading-none opacity-60 ${nopCls}`}>{item.nop}</p>
+                      <button 
+                        onClick={() => handleCopyNop(item.nop)}
+                        className={cn(
+                          "transition-all active:scale-90 hover:opacity-100 opacity-40 p-1 -m-1 rounded-md",
+                          isDark ? "hover:bg-white/10" : "hover:bg-black/5"
+                        )}
+                        title="Salin NOP"
+                      >
+                        {copiedNop === item.nop ? (
+                          <Check className="w-3 h-3 text-emerald-500" />
+                        ) : (
+                          <Copy className="w-3 h-3" />
+                        )}
+                      </button>
+                    </div>
                     <h3 className={`text-lg sm:text-xl font-black ${nameCls} leading-tight`}>{item.namaWp}</h3>
                   </div>
                   <Badge className={`${badgeCls} ${
@@ -425,52 +451,13 @@ export function PublicSearch({
         </div>
       )}
       {/* Dialog Redirect Pembayaran */}
-      <Dialog open={!!showPayRedirect} onOpenChange={(open) => !open && setShowPayRedirect(null)}>
-        <DialogContent className={`rounded-3xl border-none p-5 sm:p-8 max-w-[95vw] sm:max-w-[420px] shadow-2xl ${isDark ? "bg-[#0A192F] text-white" : "bg-white text-slate-900"}`}>
-          <DialogHeader className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3">
-               <div className="p-3 bg-emerald-500/10 rounded-2xl">
-                  <Wallet className="w-5 h-5 text-emerald-500" />
-               </div>
-               <DialogTitle className="text-xl sm:text-2xl font-black uppercase tracking-tighter">
-                 Tagihan Belum Lunas
-               </DialogTitle>
-            </div>
-            <DialogDescription className={`pt-2 text-[13px] sm:text-sm font-medium leading-relaxed text-center sm:text-left ${isDark ? "text-blue-100/70" : "text-slate-600"}`}>
-              Sistem telah mengecek ke Bapenda Jombang. Tagihan atas nama <strong className="font-black text-primary uppercase">{showPayRedirect?.namaWp}</strong> dengan NOP <span className="font-bold underline decoration-zinc-500/30 underline-offset-4">{showPayRedirect?.nop}</span> masih tercatat <span className="text-rose-600 dark:text-rose-400 font-black">BELUM LUNAS</span>.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className={`my-4 p-4 rounded-2xl border ${isDark ? "bg-emerald-500/5 border-emerald-500/20" : "bg-emerald-50 border-emerald-200"}`}>
-             <p className="text-xs font-bold leading-relaxed flex items-center justify-center sm:justify-start gap-2 text-center sm:text-left">
-               <Info className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-               Ingin melunasi sekarang secara online? Anda bisa menggunakan layanan resmi E-PAY Bapenda Jombang.
-             </p>
-          </div>
-
-          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 mt-4">
-            <Button 
-                variant="outline" 
-                onClick={() => setShowPayRedirect(null)}
-                className={`w-full sm:w-auto rounded-2xl font-black uppercase tracking-widest text-[10px] h-12 border-zinc-200 dark:border-zinc-800 ${isDark ? "hover:bg-white/5 text-blue-200" : "hover:bg-zinc-50 text-slate-500"}`}
-            >
-              Nanti Saja
-            </Button>
-            <Button 
-                className={`w-full sm:flex-1 h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg shadow-emerald-900/20 border-none group transition-all`}
-                onClick={() => {
-                  if (showPayRedirect) {
-                    window.open(`https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=${showPayRedirect.nop}`, "_blank");
-                    setShowPayRedirect(null);
-                  }
-                }}
-            >
-              <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              Bayar Online Sekarang
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <UnpaidBillDialog 
+        open={!!showPayRedirect} 
+        onOpenChange={(open) => !open && setShowPayRedirect(null)}
+        nop={showPayRedirect?.nop || ""}
+        namaWp={showPayRedirect?.namaWp || ""}
+        isDark={isDark}
+      />
     </div>
   );
 }

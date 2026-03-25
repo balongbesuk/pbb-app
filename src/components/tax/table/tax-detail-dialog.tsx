@@ -11,9 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit2, Loader2, Save, User, CheckCircle, Clock, Ban, MapPin, X, ArrowRight, Handshake, ChevronRight, RotateCcw, ShieldAlert, FileX, FileText, RefreshCcw, Wallet, Info, CreditCard } from "lucide-react";
+import { Edit2, Loader2, Save, User, CheckCircle, Clock, Ban, MapPin, X, ArrowRight, Handshake, ChevronRight, RotateCcw, ShieldAlert, FileX, FileText, RefreshCcw, Wallet, Info, CreditCard, Copy, Check } from "lucide-react";
 import { updateWpRegion } from "@/app/actions/tax-update-actions";
 import { checkArchiveByNop, getVillageConfig as fetchConfig } from "@/app/actions/settings-actions";
+import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
@@ -56,6 +57,7 @@ export function TaxDetailDialog({
   const [showPayRedirect, setShowPayRedirect] = useState(false);
   const [enableBapendaSync, setEnableBapendaSync] = useState(true);
   const [lastCheckTime, setLastCheckTime] = useState(0);
+  const [copiedNop, setCopiedNop] = useState(false);
 
   useEffect(() => {
     if (item) {
@@ -174,6 +176,14 @@ export function TaxDetailDialog({
     }
   };
 
+  const handleCopyNop = (nop: string) => {
+    const cleanNop = nop.replace(/\D/g, "");
+    navigator.clipboard.writeText(cleanNop);
+    setCopiedNop(true);
+    toast.success(`NOP ${cleanNop} disalin`);
+    setTimeout(() => setCopiedNop(false), 2000);
+  };
+
   return (
     <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-[95vw] overflow-hidden overflow-y-auto rounded-3xl border-none bg-white p-0 shadow-2xl sm:max-w-3xl dark:bg-zinc-950">
@@ -187,9 +197,22 @@ export function TaxDetailDialog({
               <h2 className="text-foreground text-lg font-bold tracking-tight leading-tight">
                 Detail Objek Pajak
               </h2>
-              <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-                {item.nop}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                  {item.nop}
+                </p>
+                <button 
+                  onClick={() => handleCopyNop(item.nop)}
+                  className="opacity-40 hover:opacity-100 transition-opacity active:scale-90"
+                  title="Salin NOP"
+                >
+                  {copiedNop ? (
+                    <Check className="h-3 w-3 text-emerald-500" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -591,50 +614,13 @@ export function TaxDetailDialog({
       </DialogContent>
 
       {/* Admin Sub-Dialog Redirect Pembayaran */}
-      <Dialog open={showPayRedirect} onOpenChange={setShowPayRedirect}>
-        <DialogContent className="rounded-3xl border-none p-6 shadow-2xl bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100">
-          <DialogHeader className="space-y-3">
-            <div className="flex items-center gap-3">
-               <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-600">
-                  <Wallet className="w-5 h-5" />
-               </div>
-               <DialogTitle className="text-xl font-black uppercase tracking-tighter">
-                 Petunjuk Pembayaran
-               </DialogTitle>
-            </div>
-            <DialogDescription className="pt-2 font-medium leading-relaxed dark:text-zinc-400">
-              Hasil cek sinkronisasi: Wajib Pajak <strong className="font-black text-primary uppercase">{item?.namaWp}</strong> masih tercatat <span className="text-rose-500 font-black">BELUM LUNAS</span> di Bapenda.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="my-4 p-4 rounded-2xl border bg-emerald-50 dark:bg-emerald-500/5 border-emerald-200 dark:border-emerald-500/20">
-             <p className="text-xs font-bold leading-relaxed flex items-center gap-2">
-               <Info className="w-4 h-4 text-emerald-600" />
-               Arahkan warga untuk membayar via E-PAY Bapenda Jombang atau gunakan link di bawah ini.
-             </p>
-          </div>
-
-          <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-2">
-            <Button 
-                variant="ghost" 
-                onClick={() => setShowPayRedirect(false)}
-                className="rounded-xl font-black uppercase tracking-widest text-[10px] h-11"
-            >
-              Tutup
-            </Button>
-            <Button 
-                className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg shadow-emerald-900/40 border-none group transition-all"
-                onClick={() => {
-                   window.open(`https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=${item?.nop}`, "_blank");
-                   setShowPayRedirect(false);
-                }}
-            >
-              <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              Buka Layanan E-PAY
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <UnpaidBillDialog 
+        open={showPayRedirect} 
+        onOpenChange={setShowPayRedirect}
+        nop={item?.nop || ""}
+        namaWp={item?.namaWp || ""}
+        isDark={false} // Currently tax-detail-dialog is light by default but supports dark via next-themes
+      />
     </Dialog>
   );
 }

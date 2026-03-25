@@ -98,8 +98,8 @@ export function UserDialog({
           )
         }
       />
-      <DialogContent className="overflow-hidden rounded-3xl border-none p-0 shadow-2xl sm:max-w-[480px]">
-        <div className="bg-primary/5 border-primary/10 border-b p-8">
+      <DialogContent className="max-h-[96vh] overflow-y-auto rounded-3xl border-none p-0 shadow-2xl sm:max-w-[480px]">
+        <div className="bg-primary/5 border-primary/10 border-b p-4 sm:p-6">
           <DialogHeader className="space-y-1">
             <DialogTitle className="text-2xl font-bold tracking-tight">
               {isEdit ? "Edit Profile Pengguna" : "Tambah Akun Baru"}
@@ -112,8 +112,8 @@ export function UserDialog({
           </DialogHeader>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-6 p-8 pt-6">
-          <div className="grid gap-6">
+        <form onSubmit={onSubmit} className="space-y-4 p-4 pt-3 sm:space-y-5 sm:p-6 sm:pt-4">
+          <div className="grid gap-4">
             <div className="space-y-2">
               <Label
                 htmlFor="name"
@@ -174,7 +174,7 @@ export function UserDialog({
               {(() => {
                 const cfg = ROLE_BADGE[(selectedRole as UserRoleKey)] ?? ROLE_BADGE.PENGGUNA;
                 return (
-                  <div className="mt-2 flex items-center gap-2.5 rounded-xl border border-zinc-100 bg-zinc-50 px-3.5 py-2.5 dark:border-zinc-800 dark:bg-zinc-900/50">
+                  <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-zinc-100 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/50">
                     <Badge
                       variant="outline"
                       className={cn(
@@ -193,7 +193,7 @@ export function UserDialog({
             </div>
           </div>
 
-          <div className="space-y-4 rounded-2xl border border-zinc-100 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="space-y-3 rounded-2xl border border-zinc-100 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
             <h4 className="text-muted-foreground/60 mb-2 px-1 text-[10px] font-black tracking-[0.2em] uppercase">
               Wilayah Penugasan
             </h4>
@@ -310,7 +310,7 @@ export function DeleteUserButton({ id }: { id: string }) {
       <DialogTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium text-rose-500 transition-colors hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-rose-950/50">
         <Trash2 className="h-4 w-4" />
       </DialogTrigger>
-      <DialogContent className="overflow-hidden rounded-3xl border-none p-8 shadow-2xl sm:max-w-[420px]">
+      <DialogContent className="max-h-[96vh] overflow-y-auto rounded-3xl border-none p-5 shadow-2xl sm:max-w-[420px] sm:p-8">
         <DialogHeader className="space-y-4">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-rose-50 text-rose-500 dark:bg-rose-950/30">
             <Trash2 className="h-8 w-8" />
