@@ -118,7 +118,12 @@ export async function GET(
       );
     }
 
-    if (onlyLunas && taxData.paymentStatus !== "LUNAS") {
+    // Perketat pengecekan pembayaran
+    const statusPajak = String(taxData.paymentStatus || "").toUpperCase().trim();
+    
+    // Jika archiveOnlyLunas diaktifkan, maka WAJIB "LUNAS"
+    // Pengecekan ini di-skip khusus untuk ADMIN
+    if (onlyLunas && statusPajak !== "LUNAS") {
        return new NextResponse(
         createErrorPage("Belum Lunas", "E-SPPT Digital hanya tersedia bagi Wajib Pajak yang sudah melakukan pelunasan dan telah terverifikasi sinkron dengan Bapenda.", "amber"), 
         { headers: { "Content-Type": "text/html" }, status: 403 }
@@ -139,3 +144,5 @@ export async function GET(
     return new NextResponse("Kesalahan Server", { status: 500 });
   }
 }
+
+
