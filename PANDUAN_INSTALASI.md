@@ -59,8 +59,19 @@ Sekarang bagian terbaiknya! Anda tidak perlu lagi melakukan konfigurasi manual y
    ```
 2. **Tunggu sampai selesai.** Selama proses ini, aplikasi akan otomatis:
    - Mendownload bahan-bahan yang dibutuhkan (*dependencies*).
-   - Membuat file konfigurasi `.env` secara otomatis.
+   - Membuat file konfigurasi `.env` secara otomatis (jika belum ada).
    - Menyiapkan database dan membuat akun **Admin** default.
+
+3. **PENTING: Konfigurasi Password (Wajib)**
+   Buka file `.env` menggunakan VS Code atau Notepad, lalu cari dan sesuaikan baris berikut:
+   ```env
+   # Password untuk akun 'admin' saat pertama kali instal (seed)
+   ADMIN_PASSWORD="isi_password_kuat_anda"
+
+   # Password default untuk user baru (PENARIK) dan saat Reset Password
+   DEFAULT_USER_PASSWORD="password_petugas_anda"
+   ```
+   **Catatan:** Jika Anda lupa mengisi ini, aplikasi akan memberikan pesan error saat dijalankan karena faktor keamanan.
 
 ---
 
@@ -102,7 +113,19 @@ Sekarang aplikasi berjalan dalam mode **Production** yang jauh lebih ringan dan 
 ## 🔑 Data Login Default
 Gunakan akun ini untuk masuk pertama kali:
 - **Username:** `admin`
-- **Password:** `admin123`
+- **Password:** (Sesuai yang Anda isi di `ADMIN_PASSWORD` pada file `.env`)
+
+---
+
+## 🛡️ Langkah 6: Verifikasi Keamanan (Smoke Test)
+
+Untuk memastikan aplikasi terinstal dengan benar dan semua celah keamanan tertutup rapat, Anda bisa menjalankan perintah audit otomatis:
+
+```bash
+npx tsx scripts/smoke-test.ts
+```
+
+Jika semuanya muncul **"PASSED" (Hijau)**, berarti aplikasi Anda sudah aman dan siap digunakan secara resmi.
 
 ---
 

@@ -76,10 +76,10 @@ Setiap awal tahun, lakukan langkah berikut sebelum Excel DHKP dibagikan:
 
 1. Buka menu **Pengguna**
 2. Klik **Tambah Akun** untuk membuat pengguna baru
-   - Password awal: sesuai konfigurasi (default: `pbb12345`)
-   - Informasikan password ini ke pengguna bersangkutan untuk segera diganti
+   - Password awal: sesuai pengaturan server (`DEFAULT_USER_PASSWORD` di `.env`)
+   - Informasikan password ini ke petugas untuk segera diganti
 3. Klik ikon ✏️ pada kartu pengguna untuk mengubah data atau peran
-4. Klik ikon 🔑 di dalam form edit untuk **Reset Password** ke password default
+4. Klik ikon 🔑 di dalam form edit untuk **Reset Password** ke password default server
 5. Klik ikon 🗑️ untuk menghapus akun (khusus non-Admin)
 
 ---
@@ -107,10 +107,12 @@ Setiap awal tahun, lakukan langkah berikut sebelum Excel DHKP dibagikan:
 2. Klik **Backup Alokasi Penarik (Excel)**
 3. File Excel yang terunduh berisi daftar Wajib Pajak lengkap dengan petugasnya saat ini. Simpan file ini sebagai referensi alokasi tahun depan.
 
-**Restore Database:**
+**Restore Database (Paling Aman):**
 1. Di halaman Utilitas, klik **Pulihkan Database**
-2. Pilih file backup (.sql) yang ingin dipulihkan
-3. Konfirmasi — data saat ini akan diganti dengan isi backup
+2. Pilih file cadangan (.zip atau .db) yang ingin dipulihkan
+3. Klik **Mulai Pemulihan**. 
+4. **Sistem Terproteksi (v3.0)**: Sistem menggunakan **Atomic Swap & Rollback**. Database akan diperiksa di folder staging terlebih dahulu. Jika file rusak atau gagal ekstrak, sistem otomatis membatalkan perubahan dan mengembalikan database lama secara instan tanpa merusak data Anda.
+5. Konfirmasi — Sesi Anda akan otomatis keluar (Log Out) untuk sinkronisasi pemulihan.
 
 **Memulihkan Alokasi Penarik (Restore Alokasi):**
 Jika Anda baru saja mengimpor data PBB tahun baru dan datanya masih kosong (Tanpa Petugas), gunakan fitur ini:
@@ -167,7 +169,8 @@ Jika Wajib Pajak ternyata bukan di wilayah tanggung jawab Anda:
 1. Di tabel **Data Pajak**, klik ikon **⇄ Transfer** pada baris WP tersebut
 2. Pilih jenis: **Serahkan** (kirim ke penarik lain) atau **Ambil Alih** (minta dari penarik lain)
 3. Pilih nama Penarik tujuan dan tulis pesan opsional
-4. Klik **Kirim Permintaan** — Penarik tujuan akan mendapat notifikasi untuk menyetujui/menolak
+4. **Proteksi Peran**: Pemindahan hanya dapat dilakukan antar petugas aktif (**PENARIK**). Admin tidak muncul di menu ini karena Admin mengelola penugasan langsung via alokasi masal.
+5. Klik **Kirim Permintaan** — Penarik tujuan akan mendapat notifikasi untuk menyetujui/menolak di dalam transaksi aman.
 
 ---
 
@@ -222,4 +225,4 @@ Tampilan v2.0 sudah dioptimalkan. Jika terasa lambat, coba bersihkan *cache* bro
 
 ---
 
-*Dokumentasi terakhir diperbarui: 13 Maret 2026 (v2.0 - Smart Sync & Bulk Allocation Update)*
+*Dokumentasi terakhir diperbarui: 27 Maret 2026 (v3.0 - Security, Atomic Restore & Transaksional Update)*
