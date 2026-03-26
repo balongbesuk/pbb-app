@@ -239,7 +239,7 @@ export function ArchiveManager() {
 
     const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB per chunk
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    const sessionId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    const sessionId = generateSecureSessionId();
 
     try {
       // Step 1: Upload file in chunks
