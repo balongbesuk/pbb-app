@@ -105,6 +105,16 @@ export async function assignPenarikByFilter(
       },
     });
 
+    if (penarikId) {
+      const targetUser = await prisma.user.findUnique({
+        where: { id: penarikId },
+        select: { role: true }
+      });
+      if (!targetUser || targetUser.role !== "PENARIK") {
+        throw new Error("Target alokasi harus merupakan petugas lapangan (PENARIK) yang aktif.");
+      }
+    }
+
     const res = await prisma.taxData.updateMany({
       where: { id: { in: matchingRecords.map((record) => record.id) } },
       data: {
@@ -149,6 +159,16 @@ export async function assignPenarik(taxId: string, penarikId: string | null) {
     });
     if (!data) throw new Error("Not found");
 
+    if (penarikId) {
+      const targetUser = await prisma.user.findUnique({
+        where: { id: penarikId },
+        select: { role: true }
+      });
+      if (!targetUser || targetUser.role !== "PENARIK") {
+        throw new Error("Target alokasi harus merupakan petugas lapangan (PENARIK) yang aktif.");
+      }
+    }
+
     await prisma.taxData.update({
       where: { id: parseInt(taxId) },
       data: {
@@ -188,6 +208,16 @@ export async function assignPenarikBulk(taxIds: number[], penarikId: string | nu
         rw: true,
       },
     });
+
+    if (penarikId) {
+      const targetUser = await prisma.user.findUnique({
+        where: { id: penarikId },
+        select: { role: true }
+      });
+      if (!targetUser || targetUser.role !== "PENARIK") {
+        throw new Error("Target alokasi harus merupakan petugas lapangan (PENARIK) yang aktif.");
+      }
+    }
 
     await prisma.taxData.updateMany({
       where: { id: { in: taxIds } },

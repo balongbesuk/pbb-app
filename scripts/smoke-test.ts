@@ -129,6 +129,20 @@ async function runSecurityAudit() {
       }
   }
 
+  log("\n🎯 Checking Administrative Role Enforcement...");
+  const adminAssignFile = path.join(process.cwd(), "src/app/actions/tax-assign-actions.ts");
+  if (fs.existsSync(adminAssignFile)) {
+    const content = fs.readFileSync(adminAssignFile, "utf-8");
+    const hasRoleCheck = content.includes('role !== "PENARIK"') || content.includes('role !== \'PENARIK\'');
+    
+    if (hasRoleCheck) {
+      log("✅ [ADMIN] Admin-to-User assignment is restricted to PENARIK only.", GREEN);
+    } else {
+      log("❌ [ADMIN] Admin assignment is MISSING PENARIK role check!", RED);
+      totalErrors++;
+    }
+  }
+
   // --- FINISH ---
   log("\n-------------------------------------------");
   if (totalErrors === 0) {
