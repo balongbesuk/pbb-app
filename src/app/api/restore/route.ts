@@ -10,21 +10,9 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
-function getSafeUploadPath(basePath: string, entryName: string) {
-  const relativePath = entryName.replace(/^uploads\//, "");
-  const normalizedPath = path.normalize(relativePath);
-  const targetFile = path.resolve(basePath, normalizedPath);
-  const uploadsRoot = path.resolve(basePath);
-
-  if (!targetFile.startsWith(`${uploadsRoot}${path.sep}`) && targetFile !== uploadsRoot) {
-    throw new Error(`Path ZIP tidak valid: ${entryName}`);
-  }
-
-  return targetFile;
-}
-
 export async function POST(req: NextRequest) {
   try {
+    // --- AUTH CHECK ---
     const session = await getServerSession(authOptions);
     if (!session || (session.user as any).role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -44,6 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Format ZIP tidak valid" }, { status: 400 });
     }
 
+    // --- STEP 1: VALIDASI ISI ZIP ---
     const zipEntries = zip.getEntries();
     const dbEntry = zipEntries.find((entry) => entry.entryName.endsWith(".db"));
 
@@ -54,60 +43,132 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const timestamp = Date.now();
+    const stagingDir = path.join(process.cwd(), "tmp", `restore-staging-${timestamp}`);
+    const backupDir = path.join(process.cwd(), "backups");
+    
+    if (!fs.existsSync(stagingDir)) fs.mkdirSync(stagingDir, { recursive: true });
+    if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+
     const dbPath = path.join(process.cwd(), "prisma", "dev.db");
     const uploadsPath = path.join(process.cwd(), "public", "uploads");
 
-    // Putuskan koneksi Prisma agar file dev.db tidak terkunci (khususnya untuk Windows)
+    // --- STEP 2: EKSTRAK KE STAGING DIRECTORY ---
+    console.log("[Restore] Staging files...");
+    const stagedDbPath = path.join(stagingDir, "dev.db");
+    const stagedUploadsDir = path.join(stagingDir, "uploads");
+
+    // 1. Ekstrak data DB ke staging
+    const dbBuffer = dbEntry.getData();
+    fs.writeFileSync(stagedDbPath, dbBuffer);
+
+    // 2. Ekstrak folder uploads ke staging
+    const uploadEntries = zipEntries.filter(entry => entry.entryName.startsWith("uploads/"));
+    if (uploadEntries.length > 0) {
+      if (!fs.existsSync(stagedUploadsDir)) fs.mkdirSync(stagedUploadsDir, { recursive: true });
+      uploadEntries.forEach(entry => {
+          if (!entry.isDirectory) {
+              const relPath = entry.entryName.replace(/^uploads\//, "");
+              const target = path.join(stagedUploadsDir, relPath);
+              const targetParent = path.dirname(target);
+              if (!fs.existsSync(targetParent)) fs.mkdirSync(targetParent, { recursive: true });
+              fs.writeFileSync(target, entry.getData());
+          }
+      });
+    }
+
+    // --- STEP 3: BACKUP DATABASE SAAT INI ---
+    if (fs.existsSync(dbPath)) {
+        console.log("[Restore] Backing up current DB...");
+        const backupPath = path.join(backupDir, `pre-restore-${timestamp}.db`);
+        fs.copyFileSync(dbPath, backupPath);
+    }
+
+    // --- STEP 4: ATOMIC SWAP (RENAME & REPLACE) WITH ROLLBACK ---
+    console.log("[Restore] Performing atomic swap...");
     await prisma.$disconnect();
 
-    // 1. Ekstrak database (.db)
-    const dbBuffer = dbEntry.getData();
-    fs.writeFileSync(dbPath, dbBuffer);
-
-    // 2. Ekstrak folder uploads secara mendalam (termasuk subfolder seperti avatars)
-    const uploadEntries = zipEntries.filter(entry => entry.entryName.startsWith("uploads/"));
+    const oldDbPath = `${dbPath}.old-${timestamp}`;
+    const oldUploadsPath = `${uploadsPath}-old-${timestamp}`;
     
-    if (uploadEntries.length > 0) {
-      console.log(`Found ${uploadEntries.length} files in backup uploads...`);
-      
-      uploadEntries.forEach(entry => {
-        if (!entry.isDirectory) {
-          const targetFile = getSafeUploadPath(uploadsPath, entry.entryName);
-          const targetDir = path.dirname(targetFile);
-          
-          // Pastikan subfolder (seperti 'avatars') sudah ada
-          if (!fs.existsSync(targetDir)) {
-            fs.mkdirSync(targetDir, { recursive: true });
-          }
-          
-          // Tulis filenya
-          fs.writeFileSync(targetFile, entry.getData());
+    let dbMovedToOld = false;
+    let dbStagedToLive = false;
+    let uploadsMovedToOld = false;
+    let uploadsStagedToLive = false;
+
+    try {
+        // 1. Swap Database
+        if (fs.existsSync(dbPath)) {
+            fs.renameSync(dbPath, oldDbPath);
+            dbMovedToOld = true;
         }
-      });
-      console.log("Restoration of uploads folder (logo & avatars) finished.");
+        fs.renameSync(stagedDbPath, dbPath);
+        dbStagedToLive = true;
+
+        // 2. Swap Uploads
+        if (fs.existsSync(stagedUploadsDir)) {
+          if (fs.existsSync(uploadsPath)) {
+              fs.renameSync(uploadsPath, oldUploadsPath);
+              uploadsMovedToOld = true;
+          }
+          fs.renameSync(stagedUploadsDir, uploadsPath);
+          uploadsStagedToLive = true;
+        }
+        
+        // --- SUCCESS: Cleanup old versions ---
+        if (dbMovedToOld && fs.existsSync(oldDbPath)) {
+          try { fs.unlinkSync(oldDbPath); } catch (e) {}
+        }
+        if (uploadsMovedToOld && fs.existsSync(oldUploadsPath)) {
+          try { fs.rmSync(oldUploadsPath, { recursive: true, force: true }); } catch(e) {}
+        }
+        
+    } catch (swapError: any) {
+        console.error("[Restore] Swap failed! Attempting rollback...", swapError);
+        
+        // --- ROLLBACK LOGIC ---
+        try {
+            // Rollback Uploads if it was partially swapped
+            if (uploadsStagedToLive) {
+                // If staged was already moved to live, we might need to delete it if we want to restore old
+                // but let's just try to put old back if possible
+            }
+            if (uploadsMovedToOld && fs.existsSync(oldUploadsPath)) {
+                if (fs.existsSync(uploadsPath)) fs.rmSync(uploadsPath, { recursive: true, force: true });
+                fs.renameSync(oldUploadsPath, uploadsPath);
+            }
+
+            // Rollback Database
+            if (dbMovedToOld && fs.existsSync(oldDbPath)) {
+                if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
+                fs.renameSync(oldDbPath, dbPath);
+            }
+        } catch (rollbackError: any) {
+            console.error("[Restore] CRITICAL: Rollback failed!", rollbackError);
+        }
+
+        throw new Error(`Gagal saat proses swap data: ${swapError.message}. Sistem telah mencoba melakukan rollback.`);
     }
 
-    // Otomatis sinkronisasi schema jika database versi lama
+    // --- POST-RESTORE: SYNC & RECONNECT ---
     try {
+      await prisma.$connect();
       // Sinkronkan schema (menambah kolom yang kurang tanpa mengubah kredensial pengguna)
       await execAsync("npx prisma db push --accept-data-loss");
-
-      console.log("Database restoration sync completed successfully.");
+      console.log("[Restore] Database synchronization completed.");
     } catch (syncError: any) {
-      console.error("Sync/Seed Error during restore:", syncError);
-      // Tetap lanjutkan karena file sudah ter-copy, tapi user mungkin butuh sinkronisasi manual
+      console.warn("[Restore] Sync failed, but files are restored.", syncError);
     }
 
-    // Buka kembali koneksinya
-    await prisma.$connect();
+    // Cleanup Staging Folder
+    try { fs.rmSync(stagingDir, { recursive: true, force: true }); } catch (e) {}
 
-    // Hancurkan sesi dengan menghapus cookie (Force Logout)
     const response = NextResponse.json({
       success: true,
-      message: "Database berhasil dipulihkan dan disinkronkan ke versi terbaru. Anda akan dialihkan ke halaman login.",
+      message: "Database dan aset berhasil dipulihkan dengan verifikasi staging & backup otomatis.",
     });
 
-    // Hapus cookie sesi agar pengguna dipaksa login ulang
+    // Logout user after restore complete
     response.cookies.delete("next-auth.session-token");
     response.cookies.delete("__Secure-next-auth.session-token");
     
@@ -120,4 +181,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

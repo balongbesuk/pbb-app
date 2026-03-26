@@ -1,9 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { PDFDocument } from "pdf-lib";
 import path from "path";
 import fs from "fs";
 import Busboy from "busboy";
 import { PrismaClient } from "@prisma/client";
+import { assertSafeSessionId } from "@/lib/file-security";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const pdfParse = require("pdf-parse/lib/pdf-parse.js");
@@ -78,6 +81,11 @@ async function extractPerPageTexts(fileBuffer: Buffer, totalPages: number): Prom
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
+  const session = await getServerSession(req, res, authOptions);
+  if (!session || (session.user as any)?.role !== "ADMIN") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   res.setHeader("Content-Type", "application/x-ndjson");
   res.setHeader("Transfer-Encoding", "chunked");
   res.setHeader("Cache-Control", "no-cache");
@@ -94,18 +102,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const year = parseInt(yearRaw) || new Date().getFullYear();
     const totalChunksNum = parseInt(totalChunks) || 0;
 
-    if (!sessionId || !filename || !totalChunksNum) {
-      send({ type: "done", success: false, message: "Data tidak lengkap." });
+    let safeSessionId: string;
+    try {
+      safeSessionId = assertSafeSessionId(sessionId);
+    } catch (e: any) {
+      send({ type: "done", success: false, message: e.message || "Session upload tidak valid." });
       return res.end();
     }
 
     cleanupStaleChunks(tempDir);
     send({ type: "status", message: "Menggabungkan file..." });
-    fs.appendFileSync(logPath, `Session ID: ${sessionId}, chunks: ${totalChunksNum}\n`);
+    fs.appendFileSync(logPath, `Session ID: ${safeSessionId}, chunks: ${totalChunksNum}\n`);
 
     const allBuffers: Buffer[] = [];
     for (let i = 0; i < totalChunksNum; i++) {
-      const chunkPath = path.join(tempDir, `${sessionId}_${i}`);
+      const chunkPath = path.join(tempDir, `${safeSessionId}_${i}`);
       if (!fs.existsSync(chunkPath)) {
         send({ type: "done", success: false, message: `Chunk ${i} tidak ditemukan. Upload ulang.` });
         return res.end();
@@ -115,7 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fileBuffer = Buffer.concat(allBuffers);
 
     for (let i = 0; i < totalChunksNum; i++) {
-      try { fs.unlinkSync(path.join(tempDir, `${sessionId}_${i}`)); } catch { /* ignore */ }
+      try { fs.unlinkSync(path.join(tempDir, `${safeSessionId}_${i}`)); } catch { /* ignore */ }
     }
 
     fs.appendFileSync(logPath, `File: ${filename} (${fileBuffer.length} bytes), Year: ${year}\n`);
@@ -128,7 +139,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const dbNopRows = await prisma.taxData.findMany({ where: { tahun: year }, select: { nop: true } });
     const validNopSet = new Set(dbNopRows.map(r => r.nop.replace(/\D/g, "")));
 
-    const archiveDir = path.join(process.cwd(), "public", "arsip-pbb", year.toString());
+    const archiveDir = path.join(process.cwd(), "storage", "arsip-pbb", year.toString());
     if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
     const existingFiles = new Set(fs.readdirSync(archiveDir));
 

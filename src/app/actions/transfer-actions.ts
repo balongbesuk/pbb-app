@@ -19,8 +19,19 @@ export async function sendTransferRequest(
   try {
     TransferRequestSchema.parse({ taxId, receiverId, type, message });
     const session = await getServerSession(authOptions);
-    if (!session) throw new Error("Unauthorized");
+    if (!session || (session.user as any).role !== "PENARIK") {
+      throw new Error("Hanya petugas lapangan (PENARIK) yang dapat melakukan pemindahan data.");
+    }
     const senderId = (session.user as any).id;
+
+    const receiverUser = await prisma.user.findUnique({
+      where: { id: receiverId },
+      select: { name: true, role: true },
+    });
+
+    if (!receiverUser || receiverUser.role !== "PENARIK") {
+      throw new Error("Target pemindahan harus merupakan petugas lapangan (PENARIK) yang aktif.");
+    }
 
     // 1. Verify tax data
     const taxData = await prisma.taxData.findUnique({
@@ -72,11 +83,6 @@ export async function sendTransferRequest(
       },
     });
 
-    // 5. Audit Log
-    const receiverUser = await prisma.user.findUnique({
-      where: { id: receiverId },
-      select: { name: true },
-    });
     const typeLabel = type === "GIVE" ? "penyerahan" : "pengambilan";
     await createAuditLog(
       "TRANSFER_REQUEST",
@@ -97,71 +103,91 @@ export async function sendTransferRequest(
 export async function handleTransferResponse(requestId: string, status: "ACCEPTED" | "REJECTED") {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) throw new Error("Unauthorized");
+    if (!session || (session.user as any).role !== "PENARIK") {
+      throw new Error("Hanya petugas lapangan (PENARIK) yang dapat memproses permintaan ini.");
+    }
     const userId = (session.user as any).id;
 
-    const request = await prisma.transferRequest.findUnique({
-      where: { id: requestId },
-      include: { taxData: true, sender: true, receiver: true },
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Ambil data request terbaru di dalam transaction
+      const request = await tx.transferRequest.findUnique({
+        where: { id: requestId },
+        include: { taxData: true, sender: true, receiver: true },
+      });
+
+      if (!request || request.receiverId !== userId || request.status !== "PENDING") {
+        throw new Error("Permintaan tidak valid atau sudah diproses.");
+      }
+
+      if (status === "ACCEPTED") {
+        // 2. Validasi Stale Data (Cek apakah owner masih sama seperti saat request dibuat)
+        const currentTax = await tx.taxData.findUnique({
+          where: { id: request.taxId },
+        });
+
+        if (!currentTax) throw new Error("Data pajak tidak ditemukan.");
+
+        // GIVE: Pengirim memberi ke Penerima. Owner saat ini harus Pengirim.
+        if (request.type === "GIVE" && currentTax.penarikId !== request.senderId) {
+           throw new Error("Permintaan sudah tidak valid karena penugasan data telah berubah.");
+        }
+        // TAKE: Pengirim mengambil dari Penerima. Owner saat ini harus Penerima.
+        if (request.type === "TAKE" && currentTax.penarikId !== request.receiverId) {
+           throw new Error("Permintaan sudah tidak valid karena penugasan data telah berubah.");
+        }
+
+        const newPenarikId = request.type === "GIVE" ? request.receiverId : request.senderId;
+
+        // 3. Update Penarik
+        await tx.taxData.update({
+          where: { id: request.taxId },
+          data: { penarikId: newPenarikId },
+        });
+
+        // 4. Update request status
+        await tx.transferRequest.update({
+          where: { id: requestId },
+          data: { status: "ACCEPTED" },
+        });
+
+        // 5. Notify sender
+        await tx.notification.create({
+          data: {
+            userId: request.senderId,
+            title: "Permintaan Disetujui",
+            message: `${session.user?.name} telah menyetujui ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`,
+            type: "ACCEPTED",
+          },
+        });
+      } else {
+        // REJECTED flow
+        await tx.transferRequest.update({
+          where: { id: requestId },
+          data: { status: "REJECTED" },
+        });
+
+        await tx.notification.create({
+          data: {
+            userId: request.senderId,
+            title: "Permintaan Ditolak",
+            message: `${session.user?.name} menolak ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`,
+            type: "REJECTED",
+          },
+        });
+      }
+      
+      return request;
     });
-
-    if (!request || request.receiverId !== userId || request.status !== "PENDING") {
-      throw new Error("Permintaan tidak valid.");
-    }
-
-    if (status === "ACCEPTED") {
-      // 1. Determine who gets the data
-      // If GIVE: Receiver gets data. If TAKE: Sender gets data.
-      const newPenarikId = request.type === "GIVE" ? request.receiverId : request.senderId;
-
-      // 2. Perform the transfer
-      await prisma.taxData.update({
-        where: { id: request.taxId },
-        data: { penarikId: newPenarikId },
-      });
-
-      // 3. Update request status
-      await prisma.transferRequest.update({
-        where: { id: requestId },
-        data: { status: "ACCEPTED" },
-      });
-
-      // 4. Notify sender
-      await prisma.notification.create({
-        data: {
-          userId: request.senderId,
-          title: "Permintaan Disetujui",
-          message: `${session.user?.name} telah menyetujui ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`,
-          type: "ACCEPTED",
-        },
-      });
-    } else {
-      // 1. Update request status
-      await prisma.transferRequest.update({
-        where: { id: requestId },
-        data: { status: "REJECTED" },
-      });
-
-      // 2. Notify sender
-      await prisma.notification.create({
-        data: {
-          userId: request.senderId,
-          title: "Permintaan Ditolak",
-          message: `${session.user?.name} menolak ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`,
-          type: "REJECTED",
-        },
-      });
-    }
 
     revalidatePath("/data-pajak");
 
     const statusLabel = status === "ACCEPTED" ? "Menyetujui" : "Menolak";
-    const typeLabel = request.type === "GIVE" ? "penyerahan" : "pengambilan";
+    const typeLabel = result.type === "GIVE" ? "penyerahan" : "pengambilan";
     await createAuditLog(
       "TRANSFER_RESPONSE",
       "TaxData",
-      request.taxData.namaWp,
-      `${statusLabel} permintaan ${typeLabel} data WP ${request.taxData.namaWp} dari petugas: ${request.sender.name || request.senderId}`
+      result.taxData.namaWp,
+      `${statusLabel} permintaan ${typeLabel} data WP ${result.taxData.namaWp} dari petugas: ${result.sender.name || result.senderId}`
     );
 
     return { success: true };

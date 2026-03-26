@@ -11,7 +11,8 @@ export async function createUser(raw: any) {
   try {
     await requireAdmin();
     const data = UserSchema.parse(raw);
-    const DEFAULT_PASS = process.env.DEFAULT_USER_PASSWORD ?? "pbb12345";
+    const DEFAULT_PASS = process.env.DEFAULT_USER_PASSWORD;
+    if (!DEFAULT_PASS) throw new Error("Pengaturan password default (DEFAULT_USER_PASSWORD) belum dikonfigurasi di server.");
     const passwordToHash = data.password || DEFAULT_PASS;
     const hashedPassword = await bcrypt.hash(passwordToHash, 10);
 
@@ -104,7 +105,8 @@ export async function resetPassword(id: string) {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) throw new Error("Pengguna tidak ditemukan");
 
-    const DEFAULT_PASS = process.env.DEFAULT_USER_PASSWORD ?? "pbb12345";
+    const DEFAULT_PASS = process.env.DEFAULT_USER_PASSWORD;
+    if (!DEFAULT_PASS) throw new Error("Pengaturan password default (DEFAULT_USER_PASSWORD) belum dikonfigurasi di server.");
     const hashedPassword = await bcrypt.hash(DEFAULT_PASS, 12);
     await prisma.user.update({
       where: { id },

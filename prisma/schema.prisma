@@ -148,8 +148,10 @@ model TaxMapping {
 model RegionOtomation {
   id    String @id @default(cuid())
   type  String @default("RW") // "RW" atau "RT"
-  code  String @unique       // Nomor RW atau RT
+  code  String               // Nomor RW atau RT
   dusun String
+
+  @@unique([type, code])
 }
 model VillageConfig {
   id                Int     @id @default(1)

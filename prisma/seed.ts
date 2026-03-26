@@ -4,7 +4,11 @@ const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
 async function main() {
-  const hashedPassword = await bcrypt.hash("admin123", 10);
+  const adminPass = process.env.ADMIN_PASSWORD;
+  if (!adminPass) {
+    throw new Error("❌ ERROR: ADMIN_PASSWORD environment variable is not defined! Seed process halted.");
+  }
+  const hashedPassword = await bcrypt.hash(adminPass, 10);
   
   const admin = await prisma.user.upsert({
     where: { username: "admin" },

@@ -73,7 +73,7 @@ Instalasi sekarang sepenuhnya otomatis. Cukup pastikan Anda memiliki **Node.js (
    npm run start
    ```
 
-**Kredensial Default:** `admin` / `admin123`
+**Kredensial Default:** `admin` / (Sesuai `ADMIN_PASSWORD` di `.env`)
 
 ---
 

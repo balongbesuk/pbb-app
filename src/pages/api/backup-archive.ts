@@ -3,12 +3,20 @@ import path from "path";
 import fs from "fs";
 import archiver from "archiver";
 
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+
 export const config = {
   api: { responseLimit: false },
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
+
+  const session = await getServerSession(req, res, authOptions);
+  if (!session || (session.user as any)?.role !== "ADMIN") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
   try {
     const BASE_ARCHIVE_DIR = path.join(process.cwd(), "storage", "arsip-pbb");

@@ -1,9 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import fs from "fs";
 import path from "path";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
+
+  const session = await getServerSession(req, res, authOptions);
+  if (!session || (session.user as any)?.role !== "ADMIN") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
   const { year } = req.body || {};
   if (!year) return res.status(400).json({ error: "Missing year parameter" });
@@ -13,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   res.setHeader("Cache-Control", "no-cache");
   const send = (obj: object) => res.write(JSON.stringify(obj) + "\n");
 
-  const baseDir = path.join(process.cwd(), "public", "arsip-pbb", year.toString());
+  const baseDir = path.join(process.cwd(), "storage", "arsip-pbb", year.toString());
   
   if (!fs.existsSync(baseDir)) {
     send({ type: "done", success: false, message: "Folder tahun tersebut tidak ditemukan." });

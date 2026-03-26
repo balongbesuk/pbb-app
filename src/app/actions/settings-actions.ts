@@ -259,8 +259,13 @@ export async function addRegionOtomation(type: "RT" | "RW", code: string, dusun:
     if (!normCode || !dusun) throw new Error("Kode dan Dusun harus diisi");
 
     await prisma.regionOtomation.upsert({
-      where: { code: normCode },
-      update: { dusun, type },
+      where: {
+        type_code: {
+          type: type,
+          code: normCode,
+        },
+      },
+      update: { dusun },
       create: { type, code: normCode, dusun },
     });
 
