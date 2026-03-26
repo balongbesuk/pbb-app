@@ -17,11 +17,16 @@ const PublicThemeContext = createContext<PublicThemeContextValue>({
 export function PublicThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<PublicTheme>("dark");
 
-  // Read from localStorage on mount
+  // Read from localStorage or system preference on mount
   useEffect(() => {
     const saved = localStorage.getItem("public-theme") as PublicTheme | null;
+    
     if (saved === "light" || saved === "dark") {
       setTheme(saved);
+    } else {
+      // If no saved theme, check system preference
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setTheme(prefersDark ? "dark" : "light");
     }
   }, []);
 
