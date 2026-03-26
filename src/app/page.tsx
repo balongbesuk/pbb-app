@@ -3,9 +3,8 @@ import { toTitleCase } from "@/lib/utils";
 import { PublicSearch } from "@/components/public/public-search";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, MapPin } from "lucide-react";
+import { Building2, Github, MapPin } from "lucide-react";
 import { PublicThemeWrapper } from "@/components/public/public-theme-wrapper";
-import { PublicModeToggle } from "@/components/public/public-mode-toggle";
 import { PublicNav } from "@/components/public/public-nav";
 import "./public.css";
 
@@ -38,8 +37,8 @@ export default async function IndexPage() {
       <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center gap-12 mt-12 sm:mt-20">
         <div className="text-center space-y-4 max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both">
           <div className="public-badge inline-flex items-center gap-2 px-3 py-1 rounded-full mb-2">
-             <MapPin className="w-3.5 h-3.5" />
-             <span className="text-[10px] font-black tracking-widest uppercase">Portal Pajak Bumi dan Bangunan</span>
+            <MapPin className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-black tracking-widest uppercase">Portal Pajak Bumi dan Bangunan</span>
           </div>
           <h1 className="public-heading text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.1]">
             Cek Tagihan &amp; Bayar <span className="public-heading-accent block sm:inline mt-1 sm:mt-0 px-2 bg-clip-text text-transparent pb-2 font-black">PBB</span> Lebih Mudah.
@@ -59,17 +58,18 @@ export default async function IndexPage() {
         </div>
       </main>
 
-      <footer className="mt-auto pt-24 text-center pb-6 opacity-60 hover:opacity-100 transition-opacity">
+      <footer className="mt-auto pt-24 text-center pb-8 opacity-60 hover:opacity-100 transition-opacity">
         <p className="public-footer-text text-xs font-bold uppercase tracking-widest mb-1.5">PBB Manager &copy; {new Date().getFullYear()}</p>
         <p className="public-footer-text text-[10px] font-medium mb-3">{namaDesa ? `Pemerintah Desa ${namaDesa}` : "PBB Manager"}</p>
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-3">
           <a
             href="https://github.com/balongbesuk/pbb-app"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[10px] font-bold text-primary hover:underline hover:opacity-100 transition-all opacity-80"
+            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors opacity-40 hover:opacity-100"
+            title="GitHub Repository"
           >
-            GitHub: balongbesuk/pbb-app
+            <Github className="w-5 h-5 text-foreground" />
           </a>
         </div>
       </footer>
