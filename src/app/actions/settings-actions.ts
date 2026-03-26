@@ -33,7 +33,6 @@ export async function deleteAllTaxData() {
     await prisma.regionOtomation.deleteMany();
     await prisma.taxMapping.deleteMany();
     await prisma.villageRegion.deleteMany();
-    await prisma.addressLearning.deleteMany();
     await prisma.notification.deleteMany();
 
     // Reset Village Config / Profile to empty defaults

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -257,7 +258,9 @@ export default async function DashboardPage({
             </p>
           </div>
         </div>
-        <DashboardFilters />
+        <Suspense fallback={<div className="h-9 w-[190px] animate-pulse bg-muted rounded-xl" />}>
+          <DashboardFilters />
+        </Suspense>
       </div>
 
       {personalStats && (

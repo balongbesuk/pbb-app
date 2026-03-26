@@ -50,8 +50,20 @@ export async function GET(
   try {
     const { year, file } = await params;
     
+    // --- SECURITY: Path Traversal Sanitization ---
+    // Pastikan year dan file tidak mengandung '..' atau karakter berbahaya
+    const safeYear = year.replace(/[^0-9]/g, "");
+    const safeFile = path.basename(file); // Mengambil nama file murni, membuang path apa pun sebelumnya
+
+    if (!safeYear || !safeFile || safeFile !== file) {
+       return new NextResponse(
+        createErrorPage("Akses Ditolak", "Request tidak valid atau mengandung karakter berbahaya."), 
+        { headers: { "Content-Type": "text/html" }, status: 400 }
+      );
+    }
+    
     // 1. Dapatkan file path yang asli (di folder privat /storage)
-    const storagePath = path.join(process.cwd(), "storage", "arsip-pbb", year, file);
+    const storagePath = path.join(process.cwd(), "storage", "arsip-pbb", safeYear, safeFile);
 
     if (!fs.existsSync(storagePath)) {
       return new NextResponse(

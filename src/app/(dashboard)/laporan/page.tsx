@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -130,7 +131,9 @@ export default async function LaporanPage({
           </p>
         </div>
         <div className="flex flex-col gap-4 md:flex-row md:items-center">
-          <DashboardFilters />
+          <Suspense fallback={<div className="h-9 w-[190px] animate-pulse bg-muted rounded-xl" />}>
+            <DashboardFilters />
+          </Suspense>
           <LaporanActionButtons tahun={currentYear} currentUser={currentUser} />
         </div>
       </div>

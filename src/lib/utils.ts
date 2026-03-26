@@ -64,3 +64,37 @@ export function formatJatuhTempo(val: string | null) {
   }
   return val;
 }
+
+/** Standardize color styling for Payment Status across the app */
+export function getPaymentStatusColor(status: string | null) {
+  switch (status) {
+    case "LUNAS":
+      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border-emerald-500/20";
+    case "BELUM_LUNAS":
+      return "bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-500/20";
+    case "SUSPEND":
+      return "bg-rose-500/10 text-rose-600 dark:text-rose-500 border-rose-500/20";
+    case "TIDAK_TERBIT":
+      return "bg-zinc-500/10 text-zinc-600 dark:text-zinc-500 border-zinc-500/20";
+    default:
+      return "bg-muted text-muted-foreground border-border";
+  }
+}
+
+/** Standardize label for Payment Status across the app */
+export function getPaymentStatusLabel(status: string | null) {
+  switch (status) {
+    case "LUNAS":
+      return "Lunas";
+    case "BELUM_LUNAS":
+      return "Blm Lunas";
+    case "SUSPEND":
+      return "Sengketa";
+    case "TIDAK_TERBIT":
+      return "Tdk Terbit";
+    default:
+      return "Status " + (status || "-");
+  }
+}
+
+

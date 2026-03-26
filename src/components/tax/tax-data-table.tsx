@@ -1,19 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { User, Loader2, UserMinus, MapPin, Calculator, XCircle, CheckCircle2, Ban, RefreshCcw } from "lucide-react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Loader2 } from "lucide-react";
+
 import { updatePaymentStatus, bulkUpdatePaymentStatus, syncBapendaByFilter } from "@/app/actions/tax-update-actions";
 import { 
   assignPenarik, 
@@ -26,14 +15,24 @@ import { BulkRegionDialog } from "./table/bulk-region-dialog";
 
 import { cn, formatCurrency } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Sub-components
 import { TaxTableRow } from "./table/tax-table-row";
 import { TaxTableFilters } from "./table/tax-table-filters";
 import { TaxTablePagination } from "./table/tax-table-pagination";
 import { TaxDetailDialog } from "./table/tax-detail-dialog";
+import { TAX_TABLE_WIDTHS } from "@/constants/table-layout";
+// This comment is added to force a refresh on the dashboard page.
+import { TaxBulkActions } from "./table/tax-bulk-actions";
+import { TaxMobileCard } from "./table/tax-mobile-card";
+import { TaxTableSkeleton } from "./table/tax-skeleton";
+
+// Hooks
+import { useTaxFilters } from "@/hooks/use-tax-filters";
+import { useTaxSelection } from "@/hooks/use-tax-selection";
+
 
 import type { TaxDataItem, AppUser, PenarikInfo, AvailableFilters } from "@/types/app";
 import type { PaymentStatus } from "@prisma/client";
@@ -53,23 +52,21 @@ export function TaxDataTable({
   availableFilters?: AvailableFilters;
   currentUser?: AppUser;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const searchParamsString = searchParams?.toString() ?? "";
-  const currentParams = new URLSearchParams(searchParamsString);
   const queryClient = useQueryClient();
+  const {
+    q, setQ,
+    page, setPage,
+    tahun,
+    dusun, setDusun,
+    rw, setRw,
+    rt, setRt,
+    penarik, setPenarik,
+    regionStatus, setRegionStatus,
+    paymentStatus, setPaymentStatus,
+  } = useTaxFilters();
 
-  // Query parameters from URL
-  const q = currentParams.get("q") || "";
-  const page = currentParams.get("page") || "1";
-  const tahun = currentParams.get("tahun") || new Date().getFullYear().toString();
-  const dusun = currentParams.get("dusun") || "";
-  const rw = currentParams.get("rw") || "";
-  const rt = currentParams.get("rt") || "";
-  const penarik = currentParams.get("penarik") || "";
-  const regionStatus = currentParams.get("regionStatus") || "all";
-  const paymentStatus = currentParams.get("paymentStatus") || "all";
+  // Derive the initial filter state from URL params to detect if we're on the default view
+  const isDefaultFilter = !q && page === 1 && (!dusun || dusun === "all") && (!rw || rw === "all") && (!rt || rt === "all") && (!penarik || penarik === "all") && (!regionStatus || regionStatus === "all") && (!paymentStatus || paymentStatus === "all");
 
   const {
     data: queryData,
@@ -78,52 +75,71 @@ export function TaxDataTable({
   } = useQuery({
     queryKey: ["tax-data", { q, page, tahun, dusun, rw, rt, penarik, regionStatus, paymentStatus }],
     queryFn: async () => {
-      const params = new URLSearchParams(searchParamsString);
+      const params = new URLSearchParams({
+        q: q || "",
+        page: page.toString(),
+        tahun: tahun || "",
+        dusun: dusun || "all",
+        rw: rw || "all",
+        rt: rt || "all",
+        penarik: penarik || "all",
+        regionStatus: regionStatus || "all",
+        paymentStatus: paymentStatus || "all",
+      });
       const res = await fetch(`/api/tax?${params.toString()}`);
       if (!res.ok) throw new Error("Gagal mengambil data");
       return res.json();
     },
-    initialData: { data: initialData, total: total, page: parseInt(page), pageSize },
-    staleTime: 1000 * 60, // 1 minute
+    // Only use server-rendered initialData when on the default (unfiltered) view
+    // so that changing a filter always triggers a fresh fetch
+    initialData: isDefaultFilter ? { data: initialData, total: total, page: 1, pageSize } : undefined,
+    staleTime: 0, // Always refetch when filters change
+    placeholderData: (prev) => prev, // Keep previous data while fetching (smooth UX)
   });
 
   const displayData = queryData?.data || [];
   const displayTotal = queryData?.total || 0;
 
-  const [search, setSearch] = useState(q);
-  const [filterDusun, setFilterDusun] = useState(dusun || "all");
-  const [filterRw, setFilterRw] = useState(rw || "all");
-  const [filterRt, setFilterRt] = useState(rt || "all");
-  const [filterPenarik, setFilterPenarik] = useState(penarik || "all");
-  const [filterRegionStatus, setFilterRegionStatus] = useState(regionStatus || "all");
-  const [filterPaymentStatus, setFilterPaymentStatus] = useState(paymentStatus || "all");
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [selectedAmounts, setSelectedAmounts] = useState<Map<number, { amount: number; name: string }>>(new Map());
-  const [isAllFilteredSelected, setIsAllFilteredSelected] = useState(false);
+  const isPenarik = currentUser?.role === "PENARIK";
+  const ownPenarikFilterActive = !isPenarik || penarik === currentUser?.id;
+
+  const switchToOwnAssignments = () => {
+    if (!isPenarik || !currentUser?.id) return;
+    setPenarik(currentUser.id);
+    setPage(1);
+    toast.info("Checklist dialihkan ke Tugas Saya agar hanya data milik Anda yang bisa dipilih.");
+  };
+
+  const {
+    selectedIds,
+    selectedAmounts,
+    isAllFilteredSelected,
+    setIsAllFilteredSelected,
+    selectedSum,
+    resetSelection,
+    isRowSelectable,
+    getSelectionHint,
+    toggleSelectAll,
+    toggleSelect,
+  } = useTaxSelection({
+    displayData,
+    currentUser,
+    isPenarik,
+    ownPenarikFilterActive,
+    onSwitchToOwnAssignments: switchToOwnAssignments,
+  });
+
   const [isAssigning, setIsAssigning] = useState(false);
   const [isBulkRegionOpen, setIsBulkRegionOpen] = useState(false);
+
   const [selectedDetailItem, setSelectedDetailItem] = useState<TaxDataItem | null>(null);
-
-  const totalPages = Math.ceil(displayTotal / pageSize);
-  const currentPage = parseInt(page);
-
-  // Update local state when URL changes (for back/forward buttons)
-  useEffect(() => {
-    setSearch(q);
-    setFilterDusun(dusun || "all");
-    setFilterRw(rw || "all");
-    setFilterRt(rt || "all");
-    setFilterPenarik(penarik || "all");
-    setFilterRegionStatus(regionStatus || "all");
-    setFilterPaymentStatus(paymentStatus || "all");
-  }, [q, dusun, rw, rt, penarik, regionStatus, paymentStatus]);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize(); // Check on mount
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -135,120 +151,36 @@ export function TaxDataTable({
     overscan: 25,
   });
 
-  // Force re-measure all items when isMobile changes
   useEffect(() => {
     rowVirtualizer.measure();
   }, [isMobile, rowVirtualizer]);
 
-  const isPenarik = currentUser?.role === "PENARIK";
-  const ownPenarikFilterActive = !isPenarik || filterPenarik === currentUser?.id;
 
-  const switchToOwnAssignments = () => {
-    if (!isPenarik || !currentUser?.id) return;
-
-    const params = new URLSearchParams(searchParamsString);
-    params.set("penarik", currentUser.id);
-    params.set("page", "1");
-    setSelectedIds(new Set());
-    setSelectedAmounts(new Map());
-    setIsAllFilteredSelected(false);
-    setFilterPenarik(currentUser.id);
-    router.push(`${pathname}?${params.toString()}`);
-    toast.info("Checklist dialihkan ke Tugas Saya agar hanya data milik Anda yang bisa dipilih.");
-  };
-
-  const isRowSelectable = (item: TaxDataItem) => {
-    if (!isPenarik) return true;
-    return item.penarikId === currentUser?.id && item.paymentStatus !== "LUNAS";
-  };
-
-  const getSelectionHint = (item: TaxDataItem) => {
-    if (!isPenarik) return undefined;
-    if (item.paymentStatus === "LUNAS") return "Data yang sudah lunas tidak bisa dicentang.";
-    if (item.penarikId !== currentUser?.id) return "Hanya data milik Anda yang bisa dicentang untuk aksi massal.";
-    return undefined;
-  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams(searchParamsString);
-    if (search) params.set("q", search);
-    else params.delete("q");
-    if (filterDusun && filterDusun !== "all") params.set("dusun", filterDusun);
-    else params.delete("dusun");
-    if (filterRw && filterRw !== "all") params.set("rw", filterRw);
-    else params.delete("rw");
-    if (filterRt && filterRt !== "all") params.set("rt", filterRt);
-    else params.delete("rt");
-    if (filterPenarik && filterPenarik !== "all") params.set("penarik", filterPenarik);
-    else params.delete("penarik");
-    if (filterRegionStatus && filterRegionStatus !== "all")
-      params.set("regionStatus", filterRegionStatus);
-    else params.delete("regionStatus");
-    if (filterPaymentStatus && filterPaymentStatus !== "all")
-      params.set("paymentStatus", filterPaymentStatus);
-    else params.delete("paymentStatus");
-    params.set("page", "1");
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const handleFilterChange = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParamsString);
-    if (value && value !== "all") params.set(key, value);
-    else params.delete(key);
-    params.set("page", "1");
-    if (key === "dusun") setFilterDusun(value);
-    if (key === "rw") setFilterRw(value);
-    if (key === "rt") setFilterRt(value);
-    if (key === "penarik") setFilterPenarik(value);
-    if (key === "regionStatus") setFilterRegionStatus(value);
-    router.push(`${pathname}?${params.toString()}`);
+    setPage(1);
   };
 
   const handlePrint = () => {
     const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    if (filterDusun && filterDusun !== "all") params.set("dusun", filterDusun);
-    if (filterRw && filterRw !== "all") params.set("rw", filterRw);
-    if (filterRt && filterRt !== "all") params.set("rt", filterRt);
-    if (filterPenarik && filterPenarik !== "all") params.set("penarik", filterPenarik);
-    params.set("tahun", currentParams.get("tahun") || new Date().getFullYear().toString());
+    if (q) params.set("search", q);
+    if (dusun && dusun !== "all") params.set("dusun", dusun);
+    if (rw && rw !== "all") params.set("rw", rw);
+    if (rt && rt !== "all") params.set("rt", rt);
+    if (penarik && penarik !== "all") params.set("penarik", penarik);
+    params.set("tahun", tahun || new Date().getFullYear().toString());
     window.open(`/api/export-tax?${params.toString()}`, "_blank");
   };
 
-  const handleUpdateStatus = async (
-    id: string,
-    status: PaymentStatus
-  ) => {
-    const res = await updatePaymentStatus(id, status);
-    if (res.success) {
-      toast.success(`Status diperbarui`);
-      queryClient.invalidateQueries({ queryKey: ["tax-data"] });
-    } else toast.error(`Gagal: ${res.message}`);
-  };
 
-  const handleAssignPenarik = async (taxId: string, penarikId: string | null) => {
-    const res = await assignPenarik(taxId, penarikId);
-    if (res.success) {
-      toast.success("Penarik diatur");
-      queryClient.invalidateQueries({ queryKey: ["tax-data"] });
-    } else toast.error(res.message);
-  };
 
   const handleBulkAssign = async (penarikId: string | null) => {
-    if (selectedIds.size === 0 && !isAllFilteredSelected) return;
     setIsAssigning(true);
-    
     let res;
     if (isAllFilteredSelected) {
       res = await assignPenarikByFilter({
-        tahun: parseInt(tahun),
-        q,
-        dusun,
-        rw,
-        rt,
-        penarik,
-        regionStatus
+        tahun: parseInt(tahun || "0"), q: q || undefined, dusun: dusun || undefined, rw: rw || undefined, rt: rt || undefined, penarik: penarik || undefined, regionStatus: regionStatus || undefined
       }, penarikId);
     } else {
       res = await assignPenarikBulk(Array.from(selectedIds), penarikId);
@@ -256,216 +188,100 @@ export function TaxDataTable({
 
     if (res.success) {
       toast.success(`Berhasil mengalokasikan ${res.count} data`);
-      setSelectedIds(new Set());
-      setSelectedAmounts(new Map());
-      setIsAllFilteredSelected(false);
+      resetSelection();
       queryClient.invalidateQueries({ queryKey: ["tax-data"] });
     } else toast.error(res.message);
     setIsAssigning(false);
   };
 
-  const handleBulkPayment = async (status: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT" | "SUSPEND") => {
-    if (selectedIds.size === 0) return;
+  const handleBulkPayment = async (status: PaymentStatus) => {
     setIsAssigning(true);
-    
-    // For bulk payments, we only allow explicit selection, no smart filtered selection yet for simplicity
-    const ids = Array.from(selectedIds);
-    const res = await bulkUpdatePaymentStatus(ids, status);
-    
+    const res = await bulkUpdatePaymentStatus(Array.from(selectedIds), status);
     if (res.success) {
-      toast.success(`Berhasil mengupdate ${res.count} data wp menjadi ${status}`);
-      setSelectedIds(new Set());
-      setSelectedAmounts(new Map());
-      setIsAllFilteredSelected(false);
+      toast.success(`Berhasil mengupdate ${res.count} data`);
+      resetSelection();
       queryClient.invalidateQueries({ queryKey: ["tax-data"] });
     } else toast.error(res.message);
-    
     setIsAssigning(false);
   };
 
   const handleBulkBapendaSync = async () => {
-    if (selectedIds.size === 0 && !isAllFilteredSelected) return;
     setIsAssigning(true);
-    
-    let ids: any[] = [];
-    let successCount = 0;
-    let failCount = 0;
-    
-    // Toast setup
-    const toastId = toast.loading(`Menyiapkan sinkronisasi massal dengan Bapenda...`);
-
+    const toastId = toast.loading(`Menyiapkan sinkronisasi massal...`);
     try {
-      // 1. Get IDs for sync
+      let ids: any[] = [];
       if (isAllFilteredSelected) {
-        toast.loading(`Mengambil data filter (${displayTotal})...`, { id: toastId });
+        toast.loading(`Mengambil data filter...`, { id: toastId });
         const res = await syncBapendaByFilter({
-           tahun: parseInt(tahun),
-           q,
-           dusun,
-           rw,
-           rt,
-           penarik,
-           regionStatus,
-           paymentStatus
+           tahun: parseInt(tahun || "0"), q: q || undefined, dusun: dusun || undefined, rw: rw || undefined, rt: rt || undefined, penarik: penarik || undefined, regionStatus: regionStatus || undefined, paymentStatus: paymentStatus || undefined
         });
         if (!res.success) throw new Error(res.message);
         ids = res.data || [];
       } else {
-        const selectedIdArray = Array.from(selectedIds);
-        ids = selectedIdArray.map(id => {
+        ids = Array.from(selectedIds).map(id => {
           const item = displayData.find((d: any) => d.id === id);
           return { id, nop: item?.nop, tahun: item?.tahun };
         });
       }
 
-      const totalToSync = ids.length;
-      if (totalToSync === 0) {
+      const totalSyncItems = ids.length;
+      if (totalSyncItems === 0) {
         toast.dismiss(toastId);
         setIsAssigning(false);
         return;
       }
 
-      // 2. Start Sync Loop
-      for (let i = 0; i < totalToSync; i++) {
+      let successCount = 0;
+      let failCount = 0;
+
+      for (let i = 0; i < ids.length; i++) {
         const item = ids[i];
         if (!item?.nop) continue;
         
-        // Progress notification for batch
         if (i % 5 === 0) {
-          toast.loading(`Sinkronisasi: ${i+1}/${totalToSync} data sedang diproses...`, { id: toastId });
+          toast.loading(`Sinkronisasi: ${i+1}/${totalSyncItems} data...`, { id: toastId });
         }
 
         try {
           const res = await fetch("/api/check-bapenda", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nop: item.nop, tahun: item.tahun || tahun }),
+            body: JSON.stringify({ nop: item.nop, tahun: item.tahun }),
           });
           const data = await res.json();
           if (data.isPaid) successCount++;
           else failCount++;
-        } catch (e) {
-          failCount++;
-        }
+        } catch (e) { failCount++; }
         
-        // 400ms delay to respect Bapenda rate limits
         await new Promise(r => setTimeout(r, 400));
       }
 
-      toast.success(`Sinkronisasi Selesai: ${successCount} Lunas, ${failCount} Tetap.`, { id: toastId });
+      toast.success(`Selesai: ${successCount} Lunas, ${failCount} Tetap.`, { id: toastId });
       queryClient.invalidateQueries({ queryKey: ["tax-data"] });
-      setSelectedIds(new Set());
-      setSelectedAmounts(new Map());
-      setIsAllFilteredSelected(false);
+      resetSelection();
     } catch (error: any) {
-      toast.error(error.message || "Gagal melakukan sinkronisasi massal", { id: toastId });
-    } finally {
-      setIsAssigning(false);
-    }
-  };
-
-  const selectedSum = Array.from(selectedAmounts.values()).reduce((acc, obj) => acc + obj.amount, 0);
-
-  const handleTransferRequestAction = async (
-    taxId: number,
-    receiverId: string,
-    type: "GIVE" | "TAKE"
-  ) => {
-    const res = await sendTransferRequest(taxId, receiverId, type);
-    if (res.success) toast.success("Permintaan dikirim");
-    else toast.error(res.message);
-  };
-
-  const getSelectableItems = () => {
-    if (isPenarik) {
-      return displayData.filter((d: TaxDataItem) => isRowSelectable(d));
-    }
-    return displayData;
-  };
-
-  const toggleSelectAll = () => {
-    if (isPenarik && !ownPenarikFilterActive) {
-      switchToOwnAssignments();
-      return;
-    }
-
-    const selectable = getSelectableItems();
-    // Use Array.every properly on non-empty selectable array
-    const allSelected = selectable.length > 0 && selectable.every((item: TaxDataItem) => selectedIds.has(item.id));
-
-    if (allSelected) {
-      const newSet = new Set(selectedIds);
-      const newAmounts = new Map(selectedAmounts);
-      selectable.forEach((d: TaxDataItem) => {
-        newSet.delete(d.id);
-        newAmounts.delete(d.id);
-      });
-      setSelectedIds(newSet);
-      setSelectedAmounts(newAmounts);
-      setIsAllFilteredSelected(false);
-    } else {
-      const newSet = new Set(selectedIds);
-      const newAmounts = new Map(selectedAmounts);
-      selectable.forEach((d: TaxDataItem) => {
-        newSet.add(d.id);
-        newAmounts.set(d.id, {
-          amount: d.sisaTagihan > 0 ? d.sisaTagihan : d.ketetapan,
-          name: d.namaWp
-        });
-      });
-      setSelectedIds(newSet);
-      setSelectedAmounts(newAmounts);
-    }
-  };
-
-  const toggleSelect = (id: number) => {
-    const newSet = new Set(selectedIds);
-    const newAmounts = new Map(selectedAmounts);
-    if (newSet.has(id)) {
-      newSet.delete(id);
-      newAmounts.delete(id);
-      setIsAllFilteredSelected(false);
-      setSelectedIds(newSet);
-      setSelectedAmounts(newAmounts);
-      return;
-    }
-
-    if (isPenarik && !ownPenarikFilterActive) {
-      switchToOwnAssignments();
-      return;
-    }
-
-    const item = displayData.find((d: TaxDataItem) => d.id === id);
-    if (!item || !isRowSelectable(item)) return;
-
-    newSet.add(id);
-    newAmounts.set(id, { 
-      amount: item.sisaTagihan > 0 ? item.sisaTagihan : item.ketetapan,
-      name: item.namaWp
-    });
-
-    setSelectedIds(newSet);
-    setSelectedAmounts(newAmounts);
+      toast.error(error.message || "Gagal sinkronisasi", { id: toastId });
+    } finally { setIsAssigning(false); }
   };
 
   return (
     <div className="space-y-4 pt-4">
       <TaxTableFilters
-        search={search}
-        onSearchChange={setSearch}
+        search={q || ""}
+        onSearchChange={setQ}
         onSearchSubmit={handleSearch}
-        filterDusun={filterDusun}
-        onDusunChange={(v: string) => handleFilterChange("dusun", v)}
-        filterRw={filterRw}
-        onRwChange={(v: string) => handleFilterChange("rw", v)}
-        filterRt={filterRt}
-        onRtChange={(v: string) => handleFilterChange("rt", v)}
-        filterPenarik={filterPenarik}
-        onPenarikChange={(v: string) => handleFilterChange("penarik", v)}
-        filterRegionStatus={filterRegionStatus}
-        onRegionStatusChange={(v: string) => handleFilterChange("regionStatus", v)}
-        filterPaymentStatus={filterPaymentStatus}
-        onPaymentStatusChange={(v: string) => handleFilterChange("paymentStatus", v)}
+        filterDusun={dusun || "all"}
+        onDusunChange={setDusun}
+        filterRw={rw || "all"}
+        onRwChange={setRw}
+        filterRt={rt || "all"}
+        onRtChange={setRt}
+        filterPenarik={penarik || "all"}
+        onPenarikChange={setPenarik}
+        filterRegionStatus={regionStatus || "all"}
+        onRegionStatusChange={setRegionStatus}
+        filterPaymentStatus={paymentStatus || "all"}
+        onPaymentStatusChange={setPaymentStatus}
         availableFilters={availableFilters}
         onPrint={handlePrint}
         showPrint={currentUser?.role !== "PENGGUNA"}
@@ -473,371 +289,106 @@ export function TaxDataTable({
         currentUser={currentUser}
       />
 
-      {/* Desktop & Mobile Mass Actions */}
-      {selectedIds.size > 0 && currentUser?.role !== "PENGGUNA" && (
-        <div className="bg-primary/5 border-primary/20 animate-in fade-in zoom-in-95 duration-300 flex flex-col gap-4 rounded-2xl border p-4 shadow-xl shadow-primary/5 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-xl">
-              <Checkbox
-                checked={selectedIds.size > 0}
-                onCheckedChange={toggleSelectAll}
-                className="border-primary/30"
-              />
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-2">
-                <span className="text-primary text-sm font-black">
-                  {isAllFilteredSelected 
-                    ? `Seluruh ${displayTotal.toLocaleString("id-ID")} Data Pajak Terpilih` 
-                    : `${selectedIds.size} Baris Dipilih`}
-                </span>
-                {isAllFilteredSelected && (
-                  <span className="bg-primary/10 text-primary flex h-5 items-center rounded-full px-2 text-[9px] font-black uppercase tracking-widest">
-                    Smart Selection
-                  </span>
-                )}
-              </div>
-              
-              {displayTotal > displayData.length && !isAllFilteredSelected && selectedIds.size === displayData.length && currentUser?.role === "ADMIN" && (
-                <button 
-                  onClick={() => setIsAllFilteredSelected(true)}
-                  className="text-primary/70 hover:text-primary w-fit text-left text-[11px] font-bold underline decoration-primary/30 underline-offset-4 transition-colors"
-                >
-                  Pilih seluruh <span className="text-primary font-black">{displayTotal.toLocaleString("id-ID")}</span> data sesuai filter
-                </button>
-              )}
-            </div>
-          </div>
-          
-          {currentUser?.role === "ADMIN" && (
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-primary/30 hover:bg-primary/10 h-10 rounded-xl px-4 text-xs font-bold transition-all text-primary dark:bg-primary/5"
-                onClick={() => setIsBulkRegionOpen(true)}
-              >
-                <MapPin className="mr-2 h-4 w-4" />
-                Atur Wilayah
-              </Button>
+      <TaxBulkActions
+        selectedCount={selectedIds.size}
+        totalFiltered={displayTotal}
+        isAllFilteredSelected={isAllFilteredSelected}
+        currentUser={currentUser}
+        penariks={penariks}
+        isAssigning={isAssigning}
+        selectedSum={selectedSum}
+        selectedDetails={selectedAmounts}
+        onToggleSelectAll={toggleSelectAll}
+        onSelectAllFiltered={() => setIsAllFilteredSelected(true)}
+        onBulkRegion={() => setIsBulkRegionOpen(true)}
+        onBulkSync={handleBulkBapendaSync}
+        onBulkAssign={handleBulkAssign}
+        onBulkPayment={handleBulkPayment}
+        onRemoveItem={toggleSelect}
+      />
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-emerald-500/30 hover:bg-emerald-50 text-emerald-600 dark:text-emerald-400 dark:border-emerald-500/20 dark:hover:bg-emerald-500/10 h-10 rounded-xl px-4 text-xs font-black transition-all shadow-sm"
-                onClick={handleBulkBapendaSync}
-                disabled={isAssigning}
-              >
-                <RefreshCcw className={cn("mr-2 h-4 w-4", isAssigning && "animate-spin")} />
-                Sync Bapenda ({isAllFilteredSelected ? displayTotal : selectedIds.size})
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <Button 
-                      className="shadow-primary/20 h-10 rounded-xl px-5 text-xs font-black shadow-lg transition-all hover:scale-[1.02] active:scale-95" 
-                      disabled={isAssigning}
-                    >
-                      {isAssigning ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <User className="mr-2 h-4 w-4" />
-                      )}
-                      Alokasikan ({isAllFilteredSelected ? displayTotal : selectedIds.size})
-                    </Button>
-                  }
-                />
-                <DropdownMenuContent align="end" className="w-[260px] rounded-2xl border-none p-2 shadow-2xl">
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel className="text-muted-foreground px-3 pt-3 pb-2 text-[10px] font-bold tracking-widest uppercase">
-                      Pilih Penarik Kolektor
-                    </DropdownMenuLabel>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator className="opacity-50" />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive flex cursor-pointer gap-2 rounded-xl px-3 py-2.5 font-bold transition-all"
-                    onClick={() => handleBulkAssign(null)}
-                  >
-                    <UserMinus className="h-4 w-4" /> 
-                    <span>Kosongkan Alokasi</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="opacity-50" />
-                  <div className="max-h-[320px] space-y-1 overflow-y-auto pr-1">
-                    {penariks.map((p) => (
-                      <DropdownMenuItem
-                        key={p.id}
-                        onClick={() => handleBulkAssign(p.id)}
-                        className="group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all focus:bg-primary/5"
-                      >
-                        <div className="bg-primary/10 text-primary group-focus:bg-primary/20 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition-colors">
-                          {(p.name || "?").charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex flex-col truncate">
-                          <span className="truncate text-sm font-bold tracking-tight">{p.name}</span>
-                          <span className="text-muted-foreground group-focus:text-primary/70 truncate text-[10px] font-medium italic">
-                            {p.dusun || "-"} • RT {p.rt || "0"}/{p.rw || "0"}
-                          </span>
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </div>
-                  <DropdownMenuSeparator className="opacity-50" />
-                  <DropdownMenuItem
-                    className="flex cursor-pointer gap-2 rounded-xl px-3 py-2.5 font-bold transition-all text-emerald-600 focus:text-emerald-600 focus:bg-emerald-50 dark:focus:bg-emerald-500/10"
-                    onClick={handleBulkBapendaSync}
-                    disabled={isAssigning}
-                  >
-                    <RefreshCcw className={cn("h-4 w-4", isAssigning && "animate-spin")} />
-                    <span>Sync Massal Bapenda</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-
-          {currentUser?.role === "PENARIK" && (
-            <div className="flex w-full flex-col gap-3">
-              <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3">
-                <div className="flex items-center gap-2 bg-background border px-4 py-2 rounded-xl shadow-inner w-full sm:w-auto">
-                   <Calculator className="h-4 w-4 text-muted-foreground" />
-                   <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Total Bayar:</span>
-                   <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(selectedSum)}</span>
-                </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Button
-                    size="sm"
-                    className="h-10 w-full sm:w-auto rounded-xl px-6 text-xs font-black shadow-xl transition-all hover:scale-[1.02] active:scale-95 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 shadow-emerald-500/20 border-none" 
-                    disabled={isAssigning}
-                    onClick={() => handleBulkPayment("LUNAS")}
-                  >
-                    {isAssigning ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
-                    Bayar Sekaligus ({selectedIds.size})
-                  </Button>
-                </div>
-              </div>
-
-              {/* Shopping Cart area for Penarik */}
-              <div className="bg-white/50 dark:bg-zinc-900/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 p-3">
-                <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 flex items-center justify-between">
-                   <span>Daftar PBB Terpilih</span>
-                   <span className="text-zinc-500">Klik 'X' untuk hapus</span>
-                </p>
-                <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1">
-                   {Array.from(selectedAmounts.entries()).map(([id, data]) => (
-                     <div key={id} className="bg-white dark:bg-zinc-800 border shadow-sm rounded-lg px-2 py-1 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-1 duration-300">
-                        <div className="flex flex-col">
-                           <span className="text-[10px] font-bold truncate max-w-[100px]">{data.name}</span>
-                           <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-black">{formatCurrency(data.amount)}</span>
-                        </div>
-                        <button 
-                          onClick={() => toggleSelect(id)}
-                          className="hover:bg-rose-500/10 p-0.5 rounded-md transition-colors group"
-                        >
-                          <XCircle className="h-3 w-3 text-zinc-300 group-hover:text-rose-500" />
-                        </button>
-                     </div>
-                   ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Unified Virtualized Container */}
       <div 
         ref={parentRef}
         className="border-border/50 bg-background relative overflow-auto rounded-2xl border shadow-xl max-h-[75vh] min-h-[400px]"
       >
-        {/* Inner content: on desktop enforces min-width so columns don't squeeze.
-            On mobile this has no min-width so cards render normally. */}
-        <div className="md:min-w-[1100px]">
-          {/* Desktop Table Header (Sticky) — hidden on mobile */}
-          <div className="hidden md:flex sticky top-0 z-30 bg-muted border-b border-border/80 w-full items-center h-12 px-4 text-foreground font-black uppercase tracking-tight text-[11px]">
-            {currentUser?.role !== "PENGGUNA" && <div className="w-[50px] shrink-0" />}
-            <div className="w-[180px] shrink-0">NOP</div>
-            <div className="flex-1 min-w-[300px] px-4">Nama Wajib Pajak</div>
-            <div className="w-[150px] shrink-0 px-4">Wilayah</div>
-            <div className="w-[130px] shrink-0 text-right px-4">Tagihan</div>
-            <div className="w-[120px] shrink-0 px-4">Status</div>
-            <div className="w-[150px] shrink-0 px-4">Penarik</div>
-          </div>
-
-          {/* Virtual rows */}
-          <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-          {isLoading ? (
-            <div className="p-8 text-center flex flex-col items-center justify-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm font-medium animate-pulse">Memuat Data Pajak...</p>
+        {isLoading ? (
+          <TaxTableSkeleton isMobile={isMobile} />
+        ) : (
+          <div className={TAX_TABLE_WIDTHS.minContainerWidth}>
+            {/* Desktop Table Header */}
+            <div className="hidden md:flex sticky top-0 z-30 bg-muted/80 backdrop-blur-md border-b border-border/80 w-full items-center h-12 px-4 text-foreground font-black uppercase tracking-tight text-[11px]">
+              {currentUser?.role !== "PENGGUNA" && <div className={TAX_TABLE_WIDTHS.checkbox} />}
+              <div className={TAX_TABLE_WIDTHS.nop}>NOP</div>
+              <div className={TAX_TABLE_WIDTHS.wpInfo + " px-4"}>Nama Wajib Pajak</div>
+              <div className={TAX_TABLE_WIDTHS.wilayah + " px-4"}>Wilayah</div>
+              <div className={TAX_TABLE_WIDTHS.tagihan + " px-4 text-right"}>Tagihan</div>
+              <div className={TAX_TABLE_WIDTHS.status + " px-4"}>Status</div>
+              <div className={TAX_TABLE_WIDTHS.penarik + " px-4 text-center"}>Penarik</div>
             </div>
-          ) : displayData.length === 0 ? (
-            <div className="flex items-center justify-center h-40 text-muted-foreground italic text-sm">
-               Data pajak tidak ditemukan
-            </div>
-          ) : (
-            rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const item = displayData[virtualRow.index];
-              if (!item) return null;
-              
-              const isSelectable = isRowSelectable(item);
-              const selectionHint = getSelectionHint(item);
 
-              return (
-                <div
-                  key={item.id}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: `${virtualRow.size}px`,
-                    transform: `translateY(${virtualRow.start}px)`,
-                    padding: isMobile ? '10px 12px' : '0px', 
-                  }}
-                >
-                  {/* Desktop view (md and up) */}
-                  <div className="hidden md:block h-full">
-                    <TaxTableRow
-                      item={item}
-                      selected={selectedIds.has(item.id)}
-                      onToggle={toggleSelect}
-                      onOpenDetail={setSelectedDetailItem}
-                      role={currentUser?.role || "PENGGUNA"}
-                      selectionDisabled={!isRowSelectable(item)}
-                      selectionHint={getSelectionHint(item)}
-                      style={{ height: '100%' }}
-                    />
-                  </div>
-
-                  {/* Mobile Card Redesign (Structured Sections) */}
-                  <div className="md:hidden h-full">
-                    <div 
-                      onClick={() => setSelectedDetailItem(item)}
-                      className={cn(
-                        "group relative h-full flex flex-col bg-white dark:bg-zinc-900 border transition-all duration-300 overflow-hidden rounded-2xl shadow-sm",
-                        selectedIds.has(item.id) 
-                          ? "border-primary ring-2 ring-primary/20 bg-primary/5 shadow-primary/10 shadow-lg" 
-                          : "border-border/60 shadow-md",
-                      )}
-                    >
-                      {/* Section 1: Header - Identitas Objek */}
-                      <div className="flex items-center justify-between px-4 py-2.5 bg-muted/30 border-b border-border/40">
-                         <div className="flex flex-col">
-                            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-0.5">NOMOR OBJEK PAJAK</span>
-                            <span className="text-[11px] font-mono font-bold text-foreground/80 tracking-tighter">
-                               {item.nop}
-                            </span>
-                         </div>
-                         <div className={cn(
-                           "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm",
-                           item.paymentStatus === "LUNAS" 
-                             ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" 
-                             : item.paymentStatus === "BELUM_LUNAS"
-                               ? "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-                               : item.paymentStatus === "SUSPEND"
-                                 ? "bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20"
-                                 : "bg-zinc-50 text-zinc-600 border-zinc-200 dark:bg-zinc-500/10 dark:text-zinc-400 dark:border-zinc-500/20"
-                         )}>
-                           {item.paymentStatus === "LUNAS" ? "Lunas" : 
-                            item.paymentStatus === "BELUM_LUNAS" ? "Blm Lunas" :
-                            item.paymentStatus === "SUSPEND" ? "Sengketa" : "Tdk Terbit"}
-                         </div>
-                      </div>
-
-                      {/* Section 2: Body - Detail Wajib Pajak */}
-                      <div className="flex-1 px-4 py-3.5 flex items-start justify-between">
-                        <div className="min-w-0 space-y-1">
-                          <h3 className="font-black text-[16px] text-foreground tracking-tight uppercase leading-tight truncate">
-                            {item.namaWp}
-                          </h3>
-                          <div className="flex items-start gap-1.5 opacity-80 mt-1">
-                             <MapPin className="h-3 w-3 mt-0.5 shrink-0 text-primary" />
-                             <p className="text-[10px] font-medium text-muted-foreground italic leading-tight line-clamp-1">
-                               {item.alamatObjek || "Alamat tidak lengkap"}
-                             </p>
-                          </div>
-                        </div>
-                        
-                        {currentUser?.role !== "PENGGUNA" && (
-                          <div 
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              toggleSelect(item.id); 
-                            }}
-                            className="flex h-10 w-10 items-center justify-center -mr-2 -mt-1"
-                            title={selectionHint}
-                          >
-                             <div className="relative">
-                               <Checkbox 
-                                 checked={selectedIds.has(item.id)} 
-                                 disabled={!isSelectable}
-                                 className="h-6 w-6 rounded-lg border-primary/30 bg-background shadow-sm" 
-                               />
-                               {!isSelectable && (
-                                 <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                   <Ban className="h-5 w-5 text-rose-500/85" />
-                                 </span>
-                               )}
-                             </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Section 3: Data Grid - Administrasi & Lokasi */}
-                      <div className="grid grid-cols-2 border-t border-border/40 divide-x divide-border/40">
-                         <div className="px-4 py-3 flex flex-col justify-center">
-                            <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 tracking-widest mb-0.5">TAGIHAN PAJAK</span>
-                            <div className="text-lg font-black text-primary tracking-tighter">
-                               {formatCurrency(item.ketetapan)}
-                            </div>
-                         </div>
-                         <div className="px-4 py-3 flex flex-col justify-center overflow-hidden">
-                            <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 tracking-widest mb-0.5 whitespace-nowrap">LOKASI WILAYAH</span>
-                            <div className="text-[10px] font-black text-foreground/80 flex items-center gap-1 uppercase truncate">
-                               <span>{item.dusun || "-"}</span>
-                               <span className="text-zinc-300 mx-0.5">•</span>
-                               <span className="whitespace-nowrap">RT {item.rt}/{item.rw}</span>
-                            </div>
-                         </div>
-                      </div>
-
-                      {/* Section 4: Footer - Alokasi Petugas */}
-                      <div className="px-4 py-2 bg-muted/20 border-t border-border/40 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                           <div className="bg-primary/10 text-primary h-6 w-6 rounded-full flex items-center justify-center border border-primary/20 text-[9px] font-black">
-                              {(item.penarik?.name || "?").charAt(0).toUpperCase()}
-                           </div>
-                           <div className="flex items-baseline gap-2 overflow-hidden">
-                             <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest leading-none">PENARIK:</span>
-                             <span className="text-[10px] font-black text-foreground/60 tracking-tight uppercase truncate max-w-[120px]">
-                               {item.penarik?.name || "BELUM DIALOKASIKAN"}
-                             </span>
-                           </div>
-                        </div>
-                        <div className="flex h-1.5 w-1.5 rounded-full bg-primary/40" />
-                      </div>
-                    </div>
-                  </div>
+            <div className="relative" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+              {displayData.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground gap-4">
+                   <div className="bg-muted p-4 rounded-full">
+                     <Loader2 className="h-8 w-8 text-muted-foreground/50" />
+                   </div>
+                   <p className="italic text-sm font-medium">Data pajak tidak ditemukan</p>
                 </div>
-              );
-            })
-          )}
+              ) : (
+                rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const item = displayData[virtualRow.index];
+                  if (!item) return null;
+                  
+                  return (
+                    <div
+                      key={item.id}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: `${virtualRow.size}px`,
+                        transform: `translateY(${virtualRow.start}px)`,
+                        padding: isMobile ? '10px 12px' : '0px', 
+                      }}
+                    >
+                      {isMobile ? (
+                        <TaxMobileCard
+                          item={item}
+                          selected={selectedIds.has(item.id)}
+                          onToggle={toggleSelect}
+                          onOpenDetail={setSelectedDetailItem}
+                          isSelectable={isRowSelectable(item)}
+                          selectionHint={getSelectionHint(item)}
+                          isPengguna={currentUser?.role === "PENGGUNA"}
+                        />
+                      ) : (
+                        <TaxTableRow
+                          item={item}
+                          selected={selectedIds.has(item.id)}
+                          onToggle={toggleSelect}
+                          onOpenDetail={setSelectedDetailItem}
+                          role={currentUser?.role || "PENGGUNA"}
+                          selectionDisabled={!isRowSelectable(item)}
+                          selectionHint={getSelectionHint(item)}
+                          style={{ height: '100%' }}
+                        />
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-
       <TaxTablePagination
-        currentPage={currentPage}
-        totalPages={totalPages}
+        currentPage={page}
+        totalPages={Math.ceil(displayTotal / pageSize)}
         total={displayTotal}
-        shownCount={displayData.length}
-        onPageChange={(p: number) => {
-          const params = new URLSearchParams(searchParamsString);
-          params.set("page", p.toString());
-          router.push(`${pathname}?${params.toString()}`);
-        }}
+        onPageChange={setPage}
+        label="N.O.P"
       />
 
       <TaxDetailDialog
@@ -845,9 +396,27 @@ export function TaxDataTable({
         onClose={() => setSelectedDetailItem(null)}
         availableFilters={availableFilters}
         currentUser={currentUser}
-        onUpdateStatus={handleUpdateStatus}
-        onTransferRequest={handleTransferRequestAction}
-        onAssignPenarik={handleAssignPenarik}
+        onUpdateStatus={async (id, status) => {
+          const res = await updatePaymentStatus(id, status);
+          if (res.success) {
+            toast.success("Status diperbarui");
+            queryClient.invalidateQueries({ queryKey: ["tax-data"] });
+            setSelectedDetailItem(null);
+          } else toast.error(res.message);
+        }}
+        onTransferRequest={async (taxId, receiverId, type) => {
+          const res = await sendTransferRequest(taxId, receiverId, type);
+          if (res.success) {
+            toast.success("Permintaan dikirim");
+          } else toast.error(res.message);
+        }}
+        onAssignPenarik={async (id, pId) => {
+          const res = await assignPenarik(id.toString(), pId);
+          if (res.success) {
+            toast.success("Penarik diatur");
+            queryClient.invalidateQueries({ queryKey: ["tax-data"] });
+          } else toast.error(res.message);
+        }}
       />
 
       <BulkRegionDialog
@@ -856,18 +425,12 @@ export function TaxDataTable({
         selectedIds={Array.from(selectedIds)}
         isAllFilteredSelected={isAllFilteredSelected}
         filters={{
-          tahun: parseInt(tahun),
-          q,
-          dusun,
-          rw,
-          rt,
-          penarik,
-          regionStatus
+          tahun: parseInt(tahun || "0"), q: q || undefined, dusun: dusun || undefined, rw: rw || undefined, rt: rt || undefined
         }}
         availableFilters={availableFilters}
         onSuccess={() => {
-          setSelectedIds(new Set());
-          setIsAllFilteredSelected(false);
+          resetSelection();
+          queryClient.invalidateQueries({ queryKey: ["tax-data"] });
         }}
       />
     </div>

@@ -5,13 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { MapPin, Plus, Trash2, Loader2 } from "lucide-react";
 import { getDusuns, addDusun, deleteDusun } from "@/app/actions/settings-actions";
 import { toast } from "sonner";
@@ -167,52 +161,23 @@ export function DusunManager() {
         </CardContent>
       </Card>
 
-      {/* ─── Premium Confirmation Dialog ────────────────────────────────────── */}
-      <Dialog
+      <DeleteConfirmDialog
         open={!!selectedToDelete}
         onOpenChange={(open) => {
           if (!open && !deleting) setSelectedToDelete(null);
         }}
-      >
-        <DialogContent className="overflow-hidden rounded-3xl border-none p-0 shadow-2xl sm:max-w-[400px]">
-          {/* Header strip */}
-          <div className="flex flex-col items-center gap-4 bg-rose-50 px-8 pt-8 pb-6 dark:bg-rose-950/20">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-100 bg-white shadow-sm dark:border-rose-900 dark:bg-rose-950/30">
-              <Trash2 className="h-7 w-7 text-rose-500" />
-            </div>
-            <DialogHeader className="space-y-1 p-0 text-center">
-              <DialogTitle className="text-lg font-bold">Hapus Dusun?</DialogTitle>
-              <DialogDescription className="text-muted-foreground/80 text-sm leading-relaxed">
-                Anda akan menghapus{" "}
-                <strong className="text-foreground">{selectedToDelete?.name}</strong>.
-                <br />
-                Deteksi otomatis untuk nama ini akan dinonaktifkan.
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-
-          {/* Footer actions */}
-          <div className="flex flex-col justify-end gap-3 bg-white px-8 py-6 sm:flex-row dark:bg-zinc-950">
-            <Button
-              variant="outline"
-              onClick={() => setSelectedToDelete(null)}
-              disabled={deleting}
-              className="h-10 rounded-xl border-zinc-200 px-6 font-bold dark:border-zinc-800"
-            >
-              Batal
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleting}
-              className="h-10 gap-2 rounded-xl px-6 font-bold shadow-sm shadow-rose-500/20"
-            >
-              {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {deleting ? "Menghapus..." : "Ya, Hapus"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        title="Hapus Dusun?"
+        itemName={selectedToDelete?.name}
+        description={
+          <>
+            Anda akan menghapus <strong className="text-foreground">{selectedToDelete?.name}</strong>.
+            <br />
+            Deteksi otomatis untuk nama ini akan dinonaktifkan.
+          </>
+        }
+        onConfirm={handleDelete}
+        isDeleting={deleting}
+      />
     </>
   );
 }

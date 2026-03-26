@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import type { AppUser } from "@/types/app";
+import { Suspense } from "react";
+import { TaxTableSkeleton } from "@/components/tax/table/tax-skeleton";
+
 
 export default async function DataPajakPage({
   searchParams,
@@ -144,14 +147,16 @@ export default async function DataPajakPage({
           <CardTitle>Daftar Wajib Pajak {tahun}</CardTitle>
         </CardHeader>
         <CardContent>
-          <TaxDataTable
-            initialData={JSON.parse(JSON.stringify(data))}
-            total={total}
-            pageSize={pageSize}
-            penariks={JSON.parse(JSON.stringify(penariks))}
-            availableFilters={availableFilters}
-            currentUser={session?.user as AppUser | undefined}
-          />
+          <Suspense fallback={<TaxTableSkeleton isMobile={false} />}>
+            <TaxDataTable
+              initialData={JSON.parse(JSON.stringify(data))}
+              total={total}
+              pageSize={pageSize}
+              penariks={JSON.parse(JSON.stringify(penariks))}
+              availableFilters={availableFilters}
+              currentUser={session?.user as AppUser | undefined}
+            />
+          </Suspense>
         </CardContent>
       </Card>
     </div>

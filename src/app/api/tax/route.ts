@@ -6,7 +6,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  
+  // Perketat akses: Hanya ADMIN dan PENARIK yang bisa lihat daftar tabel pajak (Internal Data)
+  // PENGGUNA (Warga) hanya boleh pakai Pencarian Publik (public-actions)
+  if (!session?.user || !["ADMIN", "PENARIK"].includes((session.user as any).role)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const { searchParams } = new URL(req.url);
   const query = searchParams.get("q") || "";
@@ -15,9 +20,9 @@ export async function GET(req: NextRequest) {
   const filterDusun = searchParams.get("dusun") || "";
   const filterRw = searchParams.get("rw") || "";
   const filterRt = searchParams.get("rt") || "";
-   const filterPenarik = searchParams.get("penarik") || "";
-   const regionStatus = searchParams.get("regionStatus") || "all";
-   const paymentStatus = searchParams.get("paymentStatus") || "all";
+  const filterPenarik = searchParams.get("penarik") || "";
+  const regionStatus = searchParams.get("regionStatus") || "all";
+  const paymentStatus = searchParams.get("paymentStatus") || "all";
    const pageSize = 50;
  
   const whereClause: Prisma.TaxDataWhereInput = {
@@ -46,10 +51,10 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  if (filterDusun) whereClause.dusun = filterDusun;
-  if (filterRw) whereClause.rw = filterRw;
-  if (filterRt) whereClause.rt = filterRt;
-  if (filterPenarik) {
+  if (filterDusun && filterDusun !== "all") whereClause.dusun = filterDusun;
+  if (filterRw && filterRw !== "all") whereClause.rw = filterRw;
+  if (filterRt && filterRt !== "all") whereClause.rt = filterRt;
+  if (filterPenarik && filterPenarik !== "all") {
     if (filterPenarik === "none") {
       whereClause.penarikId = null;
     } else {

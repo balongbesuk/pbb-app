@@ -75,6 +75,8 @@ export function RegionOtomationManager() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm("Hapus aturan pemetaan ini?")) return;
+    
     const res = await deleteRegionOtomation(id);
     if (res.success) {
       toast.success("Aturan dihapus");

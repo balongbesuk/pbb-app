@@ -90,6 +90,8 @@ model TaxData {
   @@index([tahun, penarikId])
   @@index([tahun, dusun])
   @@index([tahun, paymentStatus])
+  @@index([tahun, paymentStatus, dusun])
+  @@index([tahun, paymentStatus, penarikId])
 }
 
 model Notification {
@@ -143,15 +145,6 @@ model TaxMapping {
   penarik    User?  @relation(fields: [penarikId], references: [id], onDelete: SetNull)
 }
 
-model AddressLearning {
-  id              String @id @default(cuid())
-  addressPattern  String @unique
-  rt              String
-  rw              String
-  dusun           String
-  confidence      Float
-}
-
 model RegionOtomation {
   id    String @id @default(cuid())
   type  String @default("RW") // "RW" atau "RT"
@@ -185,8 +178,8 @@ model AuditLog {
   details   String?  // Additional JSON or string details
   createdAt DateTime @default(now())
 
-  @@index([action])
+  @@index([action, createdAt])
   @@index([entity])
   @@index([createdAt])
-  @@index([userId])
+  @@index([userId, createdAt])
 }

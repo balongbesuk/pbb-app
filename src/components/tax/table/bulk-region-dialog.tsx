@@ -79,6 +79,8 @@ export function BulkRegionDialog({
     setIsLoading(false);
   };
 
+  if (!availableFilters) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md rounded-3xl border-none p-0 shadow-2xl overflow-hidden bg-white dark:bg-zinc-950">

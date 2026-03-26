@@ -18,7 +18,7 @@ import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
-import { formatCurrency, normalizeNum } from "@/lib/utils";
+import { formatCurrency, normalizeNum, cn, getPaymentStatusColor, getPaymentStatusLabel } from "@/lib/utils";
 import type { TaxDataItem, AppUser, AvailableFilters } from "@/types/app";
 import type { PaymentStatus } from "@prisma/client";
 
@@ -271,24 +271,13 @@ export function TaxDetailDialog({
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-xs font-semibold">Status</span>
                 <Badge
-                  variant={
-                    (item.paymentStatus === "LUNAS"
-                      ? "success"
-                      : item.paymentStatus === "BELUM_LUNAS"
-                        ? "warning"
-                        : item.paymentStatus === "SUSPEND"
-                          ? "destructive"
-                          : "outline") as any
-                  }
-                  className="rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase"
+                  variant="outline"
+                  className={cn(
+                    "rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase border-transparent",
+                    getPaymentStatusColor(item.paymentStatus)
+                  )}
                 >
-                  {item.paymentStatus === "LUNAS"
-                    ? "Lunas"
-                    : item.paymentStatus === "BELUM_LUNAS"
-                      ? "Belum Lunas"
-                      : item.paymentStatus === "SUSPEND"
-                        ? "Suspend / Sengketa"
-                        : "Tdk Terbit"}
+                  {getPaymentStatusLabel(item.paymentStatus)}
                 </Badge>
               </div>
 

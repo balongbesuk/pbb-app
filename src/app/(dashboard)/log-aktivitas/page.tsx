@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { LogSearch } from "@/components/log/log-search";
-import { LogPagination } from "@/components/log/log-pagination";
+import { LogTablePagination } from "@/components/log/log-table-pagination";
 import { cn } from "@/lib/utils";
 
 function getActionLabel(action: string, details?: string | null) {
@@ -326,7 +326,7 @@ export default async function AuditLogPage({
               })
             )}
           </div>
-          <LogPagination totalPages={totalPages} currentPage={page} />
+          <LogTablePagination totalPages={totalPages} currentPage={page} total={total} />
         </CardContent>
       </Card>
     </div>

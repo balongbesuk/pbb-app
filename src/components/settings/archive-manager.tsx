@@ -10,6 +10,7 @@ import { getArchiveList, uploadArchives, deleteArchive, processSmartArchive } fr
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { TaxTablePagination } from "@/components/tax/table/tax-table-pagination";
 
 export function ArchiveManager() {
   const [files, setFiles] = useState<{ name: string; size: number }[]>([]);
@@ -672,33 +673,15 @@ export function ArchiveManager() {
                 ))}
               </div>
 
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t p-4 px-6 bg-zinc-50/50 dark:bg-zinc-900/50 rounded-b-2xl">
-                  <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    Halaman {currentPage} dari {totalPages} ({filteredFiles.length} total file)
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 rounded-lg"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 rounded-lg"
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <div className="border-t pt-4 px-2">
+                  <TaxTablePagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    total={filteredFiles.length}
+                    label="Arsip PDF"
+                    onPageChange={setCurrentPage}
+                  />
                 </div>
-              )}
             </>
           )}
         </div>

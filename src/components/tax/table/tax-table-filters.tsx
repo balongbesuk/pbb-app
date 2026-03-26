@@ -66,6 +66,35 @@ export function TaxTableFilters({
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  // --- Local Search State (Debounce & > 3 chars) ---
+  const [localSearch, setLocalSearch] = useState(search);
+
+  useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localSearch.length >= 3 || localSearch.length === 0) {
+        if (localSearch !== search) {
+          onSearchChange(localSearch);
+        }
+      }
+    }, 400); // 400ms debounce
+    return () => clearTimeout(handler);
+  }, [localSearch, search, onSearchChange]);
+
+  const handleLocalSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (localSearch.length >= 3 || localSearch.length === 0) {
+      if (localSearch !== search) {
+        onSearchChange(localSearch);
+      }
+    }
+    onSearchSubmit(e);
+  };
+  // ------------------------------------------------
+
   useEffect(() => {
     if (focusTarget === "search") {
       // Focus mobile input (visible on small screens)
@@ -105,87 +134,7 @@ export function TaxTableFilters({
     : filterPaymentStatus === "SUSPEND" ? "🚫 Sengketa"
     : "📄 Tdk Terbit";
 
-  // Reusable filter dropdowns
-  const FilterDropdowns = () => (
-    <>
-      <Select value={filterDusun} onValueChange={(v) => onDusunChange(v || "all")}>
-        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[130px]">
-          <span className="flex flex-1 truncate text-left">{filterDusun === "all" ? "Semua Dusun" : filterDusun}</span>
-        </SelectTrigger>
-        <SelectContent className="rounded-xl border-border shadow-2xl">
-          <SelectItem value="all" className="font-bold">Semua Dusun</SelectItem>
-          {availableFilters.dusun.map((d: string) => (
-            <SelectItem key={d} value={d}>{d}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
 
-      <Select value={filterRw} onValueChange={(v) => onRwChange(v || "all")}>
-        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px]">
-          <span className="flex flex-1 truncate text-left">{filterRw === "all" ? "Semua RW" : `RW ${filterRw}`}</span>
-        </SelectTrigger>
-        <SelectContent className="rounded-xl border-border shadow-2xl">
-          <SelectItem value="all" className="font-bold">Semua RW</SelectItem>
-          {availableFilters.rw.map((rw: string) => (
-            <SelectItem key={rw} value={rw}>RW {rw}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={filterRt} onValueChange={(v) => onRtChange(v || "all")}>
-        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px]">
-          <span className="flex flex-1 truncate text-left">{filterRt === "all" ? "Semua RT" : `RT ${filterRt}`}</span>
-        </SelectTrigger>
-        <SelectContent className="rounded-xl border-border shadow-2xl">
-          <SelectItem value="all" className="font-bold">Semua RT</SelectItem>
-          {availableFilters.rt.map((rt: string) => (
-            <SelectItem key={rt} value={rt}>RT {rt}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={filterPenarik} onValueChange={(v) => onPenarikChange(v || "all")}>
-        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[160px]">
-          <span className="flex flex-1 truncate text-left">
-            {filterPenarik === "all" ? "Semua Penarik" : filterPenarik === "none" ? "Tanpa Petugas"
-              : availableFilters.penarik?.find((p) => p.id === filterPenarik)?.name || "Pilih"}
-          </span>
-        </SelectTrigger>
-        <SelectContent className="rounded-xl border-border shadow-2xl">
-          <SelectItem value="all" className="font-bold">Semua Penarik</SelectItem>
-          <SelectItem value="none" className="text-destructive font-black">Tanpa Petugas</SelectItem>
-          {availableFilters.penarik?.map((p) => (
-            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={filterRegionStatus} onValueChange={(v) => onRegionStatusChange(v || "all")}>
-        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-xs font-bold shadow-sm lg:w-[140px]">
-          <span className="flex flex-1 truncate text-left">
-            {filterRegionStatus === "all" ? "Semua Wilayah" : "⚠️ Belum Lengkap"}
-          </span>
-        </SelectTrigger>
-        <SelectContent className="rounded-xl border-border shadow-2xl">
-          <SelectItem value="all">Semua Wilayah</SelectItem>
-          <SelectItem value="incomplete" className="text-destructive font-black">⚠️ Belum Lengkap</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <Select value={filterPaymentStatus} onValueChange={(v) => onPaymentStatusChange(v || "all")}>
-        <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-xs font-bold shadow-sm lg:w-[150px]">
-          <span className="flex flex-1 truncate text-left">{paymentStatusLabel}</span>
-        </SelectTrigger>
-        <SelectContent className="rounded-xl border-border shadow-2xl">
-          <SelectItem value="all">Semua Status</SelectItem>
-          <SelectItem value="BELUM_LUNAS" className="font-bold text-amber-600">⏳ Belum Lunas</SelectItem>
-          <SelectItem value="LUNAS" className="text-emerald-600">✅ Lunas</SelectItem>
-          <SelectItem value="SUSPEND" className="text-rose-600 font-bold">🚫 Sengketa</SelectItem>
-          <SelectItem value="TIDAK_TERBIT" className="font-bold text-zinc-500">📄 Tdk Terbit</SelectItem>
-        </SelectContent>
-      </Select>
-    </>
-  );
 
   return (
     <div className="space-y-3">
@@ -193,14 +142,14 @@ export function TaxTableFilters({
       <div className="md:hidden space-y-2">
         {/* Row 1: Search + Filter Button */}
         <div className="flex items-center gap-2">
-          <form onSubmit={onSearchSubmit} className="relative flex-1">
+          <form onSubmit={handleLocalSubmit} className="relative flex-1">
             <Search className="absolute top-1/2 left-3.5 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
             <Input
               ref={mobileInputRef}
               placeholder="Cari NOP atau Nama..."
               className="focus-visible:ring-primary/20 h-10 rounded-xl border-border bg-muted/20 pl-10 text-xs font-medium transition-all"
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
             />
           </form>
 
@@ -432,14 +381,14 @@ export function TaxTableFilters({
       <div className="hidden md:block space-y-4">
         <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
           <div className="flex w-full items-center gap-3 lg:w-auto">
-            <form onSubmit={onSearchSubmit} className="relative flex-1 sm:min-w-[300px]">
+            <form onSubmit={handleLocalSubmit} className="relative flex-1 sm:min-w-[300px]">
               <Search className="absolute top-1/2 left-3.5 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400" />
               <Input
                 ref={inputRef}
                 placeholder="Cari NOP atau Nama..."
                 className="focus-visible:ring-primary/20 h-10 rounded-xl border-border bg-muted/20 pl-10 text-xs font-medium transition-all"
-                value={search}
-                onChange={(e) => onSearchChange(e.target.value)}
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
               />
             </form>
 
@@ -452,7 +401,82 @@ export function TaxTableFilters({
           </div>
 
           <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto">
-            <FilterDropdowns />
+            <Select value={filterDusun} onValueChange={(v) => onDusunChange(v || "all")}>
+              <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[130px]">
+                <span className="flex flex-1 truncate text-left">{filterDusun === "all" ? "Semua Dusun" : filterDusun}</span>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border shadow-2xl">
+                <SelectItem value="all" className="font-bold">Semua Dusun</SelectItem>
+                {availableFilters.dusun.map((d: string) => (
+                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterRw} onValueChange={(v) => onRwChange(v || "all")}>
+              <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px]">
+                <span className="flex flex-1 truncate text-left">{filterRw === "all" ? "Semua RW" : `RW ${filterRw}`}</span>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border shadow-2xl">
+                <SelectItem value="all" className="font-bold">Semua RW</SelectItem>
+                {availableFilters.rw.map((rw: string) => (
+                  <SelectItem key={rw} value={rw}>RW {rw}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterRt} onValueChange={(v) => onRtChange(v || "all")}>
+              <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px]">
+                <span className="flex flex-1 truncate text-left">{filterRt === "all" ? "Semua RT" : `RT ${filterRt}`}</span>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border shadow-2xl">
+                <SelectItem value="all" className="font-bold">Semua RT</SelectItem>
+                {availableFilters.rt.map((rt: string) => (
+                  <SelectItem key={rt} value={rt}>RT {rt}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterPenarik} onValueChange={(v) => onPenarikChange(v || "all")}>
+              <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[160px]">
+                <span className="flex flex-1 truncate text-left">
+                  {filterPenarik === "all" ? "Semua Penarik" : filterPenarik === "none" ? "Tanpa Petugas"
+                    : availableFilters.penarik?.find((p) => p.id === filterPenarik)?.name || "Pilih"}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border shadow-2xl">
+                <SelectItem value="all" className="font-bold">Semua Penarik</SelectItem>
+                <SelectItem value="none" className="text-destructive font-black">Tanpa Petugas</SelectItem>
+                {availableFilters.penarik?.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterRegionStatus} onValueChange={(v) => onRegionStatusChange(v || "all")}>
+              <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-xs font-bold shadow-sm lg:w-[140px]">
+                <span className="flex flex-1 truncate text-left">
+                  {filterRegionStatus === "all" ? "Semua Wilayah" : "⚠️ Belum Lengkap"}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border shadow-2xl">
+                <SelectItem value="all">Semua Wilayah</SelectItem>
+                <SelectItem value="incomplete" className="text-destructive font-black">⚠️ Belum Lengkap</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filterPaymentStatus} onValueChange={(v) => onPaymentStatusChange(v || "all")}>
+              <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-xs font-bold shadow-sm lg:w-[150px]">
+                <span className="flex flex-1 truncate text-left">{paymentStatusLabel}</span>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border shadow-2xl">
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="BELUM_LUNAS" className="font-bold text-amber-600">⏳ Belum Lunas</SelectItem>
+                <SelectItem value="LUNAS" className="text-emerald-600">✅ Lunas</SelectItem>
+                <SelectItem value="SUSPEND" className="text-rose-600 font-bold">🚫 Sengketa</SelectItem>
+                <SelectItem value="TIDAK_TERBIT" className="font-bold text-zinc-500">📄 Tdk Terbit</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

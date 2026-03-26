@@ -5,6 +5,7 @@ import { AuthProvider } from "@/components/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import QueryProvider from "@/components/query-provider";
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { getVillageConfig } from "@/app/actions/settings-actions";
 
@@ -60,10 +61,12 @@ export default function RootLayout({
         >
           <QueryProvider>
             <AuthProvider>
-              <div className="gradient-bg min-h-screen print:h-auto print:min-h-0 print:bg-white">
-                {children}
-              </div>
-              <Toaster position="top-right" />
+              <NuqsAdapter>
+                <div className="gradient-bg min-h-screen print:h-auto print:min-h-0 print:bg-white">
+                  {children}
+                </div>
+                <Toaster position="top-right" />
+              </NuqsAdapter>
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>
