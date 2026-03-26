@@ -22,6 +22,13 @@ import { formatCurrency, normalizeNum, cn, getPaymentStatusColor, getPaymentStat
 import type { TaxDataItem, AppUser, AvailableFilters } from "@/types/app";
 import type { PaymentStatus } from "@prisma/client";
 
+function sanitizeArchiveFilename(filename: string): string {
+  // Allow only safe characters in filenames (alphanumerics, dash, underscore, dot)
+  // and collapse any disallowed characters.
+  const cleaned = filename.replace(/[^a-zA-Z0-9._-]/g, "");
+  return cleaned;
+}
+
 interface TaxDetailDialogProps {
   item: TaxDataItem | null;
   onClose: () => void;
@@ -70,7 +77,7 @@ export function TaxDetailDialog({
       
       // Auto detect archive
       checkArchiveByNop(item.nop, item.tahun).then(file => {
-        setArchiveFile(file);
+        setArchiveFile(file ? sanitizeArchiveFilename(file) : null);
       });
 
       // Fetch config to check if sync is enabled
