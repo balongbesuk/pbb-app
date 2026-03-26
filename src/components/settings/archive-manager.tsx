@@ -12,6 +12,18 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { TaxTablePagination } from "@/components/tax/table/tax-table-pagination";
 
+function generateSecureSessionId(): string {
+  // Generate a cryptographically secure random 16-byte (128-bit) identifier,
+  // encoded in base36 for compactness, optionally prefixed with a timestamp.
+  const randomBytes = new Uint8Array(16);
+  crypto.getRandomValues(randomBytes);
+  const randomPart = Array.from(randomBytes)
+    .map((b) => b.toString(36).padStart(2, "0"))
+    .join("");
+  const timePart = Date.now().toString(36);
+  return `${timePart}-${randomPart}`;
+}
+
 export function ArchiveManager() {
   const [files, setFiles] = useState<{ name: string; size: number }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +80,7 @@ export function ArchiveManager() {
     setIsRestoring(true);
     const CHUNK_SIZE = 2 * 1024 * 1024;
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    const sessionId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    const sessionId = generateSecureSessionId();
 
     try {
       for (let i = 0; i < totalChunks; i++) {
