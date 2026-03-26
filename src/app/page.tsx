@@ -61,7 +61,17 @@ export default async function IndexPage() {
 
       <footer className="mt-auto pt-24 text-center pb-6 opacity-60 hover:opacity-100 transition-opacity">
         <p className="public-footer-text text-xs font-bold uppercase tracking-widest mb-1.5">PBB Manager &copy; {new Date().getFullYear()}</p>
-        <p className="public-footer-text text-[10px] font-medium">{namaDesa ? `Pemerintah Desa ${namaDesa}` : "PBB Manager"}</p>
+        <p className="public-footer-text text-[10px] font-medium mb-3">{namaDesa ? `Pemerintah Desa ${namaDesa}` : "PBB Manager"}</p>
+        <div className="flex justify-center">
+          <a
+            href="https://github.com/balongbesuk/pbb-app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] font-bold text-primary hover:underline hover:opacity-100 transition-all opacity-80"
+          >
+            GitHub: balongbesuk/pbb-app
+          </a>
+        </div>
       </footer>
     </PublicThemeWrapper>
   );

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Building2 } from "lucide-react";
+import { ArrowRight, Building2, Github } from "lucide-react";
 import { PublicModeToggle } from "./public-mode-toggle";
 import { usePublicThemeContext } from "./public-theme-provider";
 import { cn } from "@/lib/utils";
@@ -80,6 +80,15 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNav
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
+        <a
+          href="https://github.com/balongbesuk/pbb-app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-2.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors opacity-60 hover:opacity-100"
+          title="GitHub Repository"
+        >
+          <Github className="w-5 h-5 text-zinc-900 dark:text-zinc-100" />
+        </a>
         <PublicModeToggle />
         <Link
           href="/login"
