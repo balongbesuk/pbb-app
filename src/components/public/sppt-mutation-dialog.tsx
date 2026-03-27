@@ -581,12 +581,15 @@ export function SpptMutationDialog({
                <div className="space-y-4">
                   <Label className="text-xs font-black uppercase tracking-widest opacity-50">Nomor Surat Keterangan</Label>
                   <div className="relative">
-                    <FileText className="absolute left-3.5 top-3.5 h-5 w-5 opacity-30" />
+                    <FileText className={cn("absolute left-3.5 top-3.5 h-5 w-5", isDark ? "text-blue-400 opacity-60" : "opacity-30")} />
                     <Input 
                       placeholder="Contoh: 594 / 001 / 415.51.16 / 2026" 
                       className={cn(
-                        "pl-11 h-12 rounded-2xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-bold",
-                        formErrors.nomorSurat ? "border-rose-400 focus-visible:ring-rose-500" : "border-slate-200 dark:border-white/10"
+                        "pl-11 h-12 rounded-2xl font-bold",
+                        isDark 
+                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
+                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
+                        formErrors.nomorSurat ? "border-rose-400 focus-visible:ring-rose-500" : ""
                       )}
                       value={nomorSurat}
                       onChange={(e) => setNomorSurat(sanitizeNomorSurat(e.target.value))}
@@ -599,12 +602,15 @@ export function SpptMutationDialog({
                <div className="space-y-4">
                   <Label className="text-xs font-black uppercase tracking-widest opacity-50">Nama Pengaju (Pemohon)</Label>
                   <div className="relative">
-                    <User className="absolute left-3.5 top-3.5 h-5 w-5 opacity-30" />
+                    <User className={cn("absolute left-3.5 top-3.5 h-5 w-5", isDark ? "text-blue-400 opacity-60" : "opacity-30")} />
                     <Input 
                       placeholder="Contoh: Siti Rohmah" 
                       className={cn(
-                        "pl-11 h-12 rounded-2xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-bold",
-                        formErrors.pemohon ? "border-rose-400 focus-visible:ring-rose-500" : "border-slate-200 dark:border-white/10"
+                        "pl-11 h-12 rounded-2xl font-bold",
+                        isDark 
+                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
+                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
+                        formErrors.pemohon ? "border-rose-400 focus-visible:ring-rose-500" : ""
                       )}
                       value={pemohon}
                       onChange={(e) => setPemohon(sanitizeText(e.target.value))}
@@ -617,12 +623,15 @@ export function SpptMutationDialog({
                <div className="space-y-4">
                   <Label className="text-xs font-black uppercase tracking-widest opacity-50">NIK Pemohon</Label>
                   <div className="relative">
-                    <ShieldAlert className="absolute left-3.5 top-3.5 h-5 w-5 opacity-30" />
+                    <ShieldAlert className={cn("absolute left-3.5 top-3.5 h-5 w-5", isDark ? "text-blue-400 opacity-60" : "opacity-30")} />
                     <Input 
                       placeholder="Contoh: 351708..." 
                       className={cn(
-                        "pl-11 h-12 rounded-2xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-bold",
-                        formErrors.nikPemohon ? "border-rose-400 focus-visible:ring-rose-500" : "border-slate-200 dark:border-white/10"
+                        "pl-11 h-12 rounded-2xl font-bold",
+                        isDark 
+                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
+                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
+                        formErrors.nikPemohon ? "border-rose-400 focus-visible:ring-rose-500" : ""
                       )}
                       value={nikPemohon}
                       onChange={(e) => setNikPemohon(sanitizeNumberString(e.target.value, 16))}
@@ -636,12 +645,15 @@ export function SpptMutationDialog({
                <div className="space-y-4">
                   <Label className="text-xs font-black uppercase tracking-widest opacity-50">Nama Kepala Desa</Label>
                   <div className="relative">
-                    <User className="absolute left-3.5 top-3.5 h-5 w-5 opacity-30" />
+                    <User className={cn("absolute left-3.5 top-3.5 h-5 w-5", isDark ? "text-blue-400 opacity-60" : "opacity-30")} />
                     <Input 
                       placeholder="Contoh: MOCHAMAD SAIFUR, S.Sos." 
                       className={cn(
-                        "pl-11 h-12 rounded-2xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-bold",
-                        formErrors.namaKades ? "border-rose-400 focus-visible:ring-rose-500" : "border-slate-200 dark:border-white/10"
+                        "pl-11 h-12 rounded-2xl font-bold",
+                        isDark 
+                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
+                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
+                        formErrors.namaKades ? "border-rose-400 focus-visible:ring-rose-500" : ""
                       )}
                       value={namaKades}
                       onChange={(e) => setNamaKades(sanitizeText(e.target.value))}
@@ -688,7 +700,6 @@ export function SpptMutationDialog({
                           </Button>
                         )}
                       </div>
-
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 px-1">NOP SPPT Baru</Label>
@@ -696,8 +707,11 @@ export function SpptMutationDialog({
                             value={item.nop}
                             onChange={(e) => handleUpdateNewData(index, "nop", sanitizeNumberString(e.target.value, 18))}
                             className={cn(
-                              "h-11 rounded-xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-mono",
-                              newDataErrors[index]?.nop ? "border-rose-400 focus-visible:ring-rose-500" : "border-slate-200 dark:border-white/10"
+                              "h-11 rounded-xl font-mono",
+                              isDark 
+                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
+                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
+                              newDataErrors[index]?.nop ? "border-rose-400 focus-visible:ring-rose-500" : ""
                             )}
                             inputMode="numeric"
                             maxLength={18}
@@ -710,8 +724,11 @@ export function SpptMutationDialog({
                             value={item.namaWp}
                             onChange={(e) => handleUpdateNewData(index, "namaWp", sanitizeUpperText(e.target.value))}
                             className={cn(
-                              "h-11 rounded-xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-bold",
-                              newDataErrors[index]?.namaWp ? "border-rose-400 focus-visible:ring-rose-500" : "border-slate-200 dark:border-white/10"
+                              "h-11 rounded-xl font-bold",
+                              isDark 
+                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
+                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
+                              newDataErrors[index]?.namaWp ? "border-rose-400 focus-visible:ring-rose-500" : ""
                             )}
                             maxLength={MAX_TEXT_LENGTH}
                           />
@@ -723,8 +740,11 @@ export function SpptMutationDialog({
                             value={item.alamat}
                             onChange={(e) => handleUpdateNewData(index, "alamat", sanitizeUpperText(e.target.value, MAX_ADDRESS_LENGTH))}
                             className={cn(
-                              "h-11 rounded-xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-medium",
-                              newDataErrors[index]?.alamat ? "border-rose-400 focus-visible:ring-rose-500" : "border-slate-200 dark:border-white/10"
+                              "h-11 rounded-xl font-medium",
+                              isDark 
+                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
+                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
+                              newDataErrors[index]?.alamat ? "border-rose-400 focus-visible:ring-rose-500" : ""
                             )}
                             maxLength={MAX_ADDRESS_LENGTH}
                           />
@@ -737,22 +757,28 @@ export function SpptMutationDialog({
                             value={item.luasTanah}
                             onChange={(e) => handleUpdateNewData(index, "luasTanah", sanitizePositiveNumber(e.target.value))}
                             className={cn(
-                              "h-11 rounded-xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-bold",
-                              newDataErrors[index]?.luasTanah ? "border-rose-400 focus-visible:ring-rose-500" : "border-slate-200 dark:border-white/10"
+                              "h-11 rounded-xl font-bold",
+                              isDark 
+                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
+                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
+                              newDataErrors[index]?.luasTanah ? "border-rose-400 focus-visible:ring-rose-500" : ""
                             )}
                             min={0}
                           />
                           {newDataErrors[index]?.luasTanah && <p className="text-xs text-rose-500">{newDataErrors[index].luasTanah}</p>}
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-[10px) font-black uppercase tracking-widest opacity-50 px-1">Luas Bangunan (m²)</Label>
+                          <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 px-1">Luas Bangunan (m²)</Label>
                           <Input 
                             type="number"
                             value={item.luasBangunan}
                             onChange={(e) => handleUpdateNewData(index, "luasBangunan", sanitizePositiveNumber(e.target.value))}
                             className={cn(
-                              "h-11 rounded-xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-bold",
-                              newDataErrors[index]?.luasBangunan ? "border-rose-400 focus-visible:ring-rose-500" : "border-slate-200 dark:border-white/10"
+                              "h-11 rounded-xl font-bold",
+                              isDark 
+                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
+                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
+                              newDataErrors[index]?.luasBangunan ? "border-rose-400 focus-visible:ring-rose-500" : ""
                             )}
                             min={0}
                           />
