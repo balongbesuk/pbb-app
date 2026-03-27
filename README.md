@@ -41,9 +41,10 @@ Sistem keamanan berlapis untuk menjaga integritas data desa:
 
 Kami telah menyusun panduan lengkap agar Anda dapat mengoperasikan sistem ini dengan mudah:
 
-1.  **[Panduan Instalasi Pemula](./PANDUAN_INSTALASI.md)**: Langkah demi langkah instalasi dari nol untuk pengguna baru.
-2.  **[Panduan Arsip Digital E-SPPT](./PANDUAN_ARSIP_DIGITAL.md)**: Petunjuk teknis penggunaan fitur Smart Scan, Kompresi, dan Manajemen File.
-3.  **[Dokumentasi Penggunaan](./DOKUMENTASI_PENGGUNAAN.md)**: Panduan operasional fitur harian bagi admin dan petugas.
+1.  **[Wiki Teknis & Keamanan](./WIKI.md)**: Ringkasan arsitektur, hardening keamanan, dan indeks teknis.
+2.  **[Panduan Instalasi Pemula](./PANDUAN_INSTALASI.md)**: Langkah demi langkah instalasi dari nol untuk pengguna baru.
+3.  **[Panduan Arsip Digital E-SPPT](./PANDUAN_ARSIP_DIGITAL.md)**: Petunjuk teknis penggunaan fitur Smart Scan, Kompresi, dan Manajemen File.
+4.  **[Dokumentasi Penggunaan](./DOKUMENTASI_PENGGUNAAN.md)**: Panduan operasional fitur harian bagi admin dan petugas.
 
 ---
 
