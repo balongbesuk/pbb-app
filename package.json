@@ -52,7 +52,7 @@
     "nuqs": "^2.8.9",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
-    "pdfjs-dist": "^3.11.174",
+    "pdfjs-dist": "^4.2.67",
     "pngjs": "^7.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
