@@ -11,6 +11,10 @@ export async function GET() {
         kecamatan: true,
         kabupaten: true,
         logoUrl: true,
+        alamatKantor: true,
+        email: true,
+        kodePos: true,
+        namaKades: true,
       },
     });
 
@@ -22,7 +26,7 @@ export async function GET() {
   } catch (e) {
     console.error(e);
     return NextResponse.json(
-      { namaDesa: "", kecamatan: "", kabupaten: "", logoUrl: null },
+      { namaDesa: "", kecamatan: "", kabupaten: "", logoUrl: null, alamatKantor: "", email: "", kodePos: "", namaKades: "" },
       { status: 500 }
     );
   }

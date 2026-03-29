@@ -156,6 +156,10 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
       bapendaUrl,
       isJombangBapenda,
       enableBapendaSync: config?.enableBapendaSync ?? true,
+      alamatKantor: config?.alamatKantor || "",
+      email: config?.email || "",
+      kodePos: config?.kodePos || "",
+      namaKades: config?.namaKades || "",
       remaining: rateLimitResult.remaining 
     };
   } catch (error) {

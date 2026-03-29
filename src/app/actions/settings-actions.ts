@@ -114,6 +114,10 @@ export const getVillageConfig = cache(async () => {
         namaDesa: "",
         kecamatan: "",
         kabupaten: "",
+        alamatKantor: "",
+        email: "",
+        kodePos: "",
+        namaKades: "",
         tahunPajak: 2026,
         jatuhTempo: "31 Agustus",
         bapendaUrl: null,
@@ -131,6 +135,10 @@ export const getVillageConfig = cache(async () => {
       namaDesa: "", 
       kecamatan: "", 
       kabupaten: "", 
+      alamatKantor: "",
+      email: "",
+      kodePos: "",
+      namaKades: "",
       tahunPajak: 2026, 
       jatuhTempo: "31 Agustus", 
       bapendaUrl: null, 
@@ -151,9 +159,13 @@ export async function updateVillageConfig(raw: any) {
     const data = VillageConfigSchema.parse(raw);
 
     const updateData: any = {};
-    if (data.namaDesa) updateData.namaDesa = data.namaDesa.toUpperCase();
-    if (data.kecamatan) updateData.kecamatan = data.kecamatan.toUpperCase();
-    if (data.kabupaten) updateData.kabupaten = data.kabupaten.toUpperCase();
+    if (data.namaDesa) updateData.namaDesa = data.namaDesa;
+    if (data.kecamatan) updateData.kecamatan = data.kecamatan;
+    if (data.kabupaten) updateData.kabupaten = data.kabupaten;
+    if (data.alamatKantor !== undefined) updateData.alamatKantor = data.alamatKantor;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.kodePos !== undefined) updateData.kodePos = data.kodePos;
+    if (data.namaKades !== undefined) updateData.namaKades = data.namaKades;
 
     if (data.tahunPajak) {
       updateData.tahunPajak = data.tahunPajak;

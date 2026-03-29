@@ -158,6 +158,10 @@ model VillageConfig {
   namaDesa          String  @default("")
   kecamatan         String  @default("")
   kabupaten         String  @default("")
+  alamatKantor      String?
+  email             String?
+  kodePos           String?
+  namaKades         String?
   tahunPajak        Int     @default(2026)
   jatuhTempo        String  @default("31 Agustus")
   bapendaUrl        String?

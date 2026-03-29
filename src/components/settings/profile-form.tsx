@@ -16,15 +16,23 @@ export function ProfileForm() {
     namaDesa: "",
     kecamatan: "",
     kabupaten: "",
+    alamatKantor: "",
+    email: "",
+    kodePos: "",
+    namaKades: "",
   });
 
   useEffect(() => {
     async function load() {
       const data = await getVillageConfig();
       setConfig({
-        namaDesa: data.namaDesa,
-        kecamatan: data.kecamatan,
-        kabupaten: data.kabupaten,
+        namaDesa: data.namaDesa || "",
+        kecamatan: data.kecamatan || "",
+        kabupaten: data.kabupaten || "",
+        alamatKantor: data.alamatKantor || "",
+        email: data.email || "",
+        kodePos: data.kodePos || "",
+        namaKades: data.namaKades || "",
       });
       setLoading(false);
     }
@@ -86,13 +94,54 @@ export function ProfileForm() {
               />
             </div>
           </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="kabupaten">Kabupaten / Kota</Label>
+              <Input
+                id="kabupaten"
+                value={config.kabupaten}
+                onChange={(e) => setConfig({ ...config, kabupaten: e.target.value })}
+                className="bg-white/50 dark:bg-[#111827]/50"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="alamat-kantor">Alamat Kantor</Label>
+              <Input
+                id="alamat-kantor"
+                value={config.alamatKantor}
+                onChange={(e) => setConfig({ ...config, alamatKantor: e.target.value })}
+                className="bg-white/50 dark:bg-[#111827]/50"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="nama-kades">Nama Kepala Desa</Label>
+              <Input
+                id="nama-kades"
+                value={config.namaKades}
+                onChange={(e) => setConfig({ ...config, namaKades: e.target.value })}
+                className="bg-white/50 dark:bg-[#111827]/50"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="kode-pos">Kode Pos</Label>
+              <Input
+                id="kode-pos"
+                value={config.kodePos}
+                onChange={(e) => setConfig({ ...config, kodePos: e.target.value })}
+                className="bg-white/50 dark:bg-[#111827]/50"
+              />
+            </div>
+          </div>
           <div className="space-y-2">
-            <Label htmlFor="kabupaten">Kabupaten / Kota</Label>
+            <Label htmlFor="email-desa">Email Desa</Label>
             <Input
-              id="kabupaten"
-              value={config.kabupaten}
-              onChange={(e) => setConfig({ ...config, kabupaten: e.target.value })}
+              id="email-desa"
+              value={config.email}
+              onChange={(e) => setConfig({ ...config, email: e.target.value })}
               className="bg-white/50 dark:bg-[#111827]/50"
+              placeholder="desa... @gmail.com"
             />
           </div>
           <div className="pt-2">
