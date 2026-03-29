@@ -137,6 +137,10 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
           updatedAt: r.updatedAt,
           tanggalBayar: r.tanggalBayar,
           arsipUrl: finalArsipUrl,
+          tahun: r.tahun,
+          dusun: r.dusun,
+          rt: r.rt,
+          rw: r.rw,
           petugas: r.penarik ? {
             nama: r.penarik.name,
             kontak: r.penarik.phoneNumber || "Tidak ada nomor",

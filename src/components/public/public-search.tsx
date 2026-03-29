@@ -13,6 +13,30 @@ import { formatCurrency, formatDate, formatDateNoTime, formatJatuhTempo, cn } fr
 import { toast } from "sonner";
 import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
 import { SpptMutationDialog } from "./sppt-mutation-dialog";
+import { SpopFormDialog } from "./spop-form-dialog";
+
+interface PublicSearchResultItem {
+  id: number;
+  nop: string;
+  namaWp: string;
+  alamat: string;
+  luasTanah: number;
+  luasBangunan: number;
+  tagihan: number;
+  status: string;
+  updatedAt: string | Date;
+  tanggalBayar: string | Date | null;
+  arsipUrl: string | null;
+  tahun: number;
+  dusun: string | null;
+  rt: string | null;
+  rw: string | null;
+  petugas: {
+    nama: string | null;
+    kontak: string;
+    wilayah: string;
+  } | null;
+}
 
 export function PublicSearch({ 
   tahunPajak, 
@@ -23,7 +47,7 @@ export function PublicSearch({
 }) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<PublicSearchResultItem[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [message, setMessage] = useState("");
   const [isRateLimited, setIsRateLimited] = useState(false);
@@ -36,7 +60,8 @@ export function PublicSearch({
   const [isCheckingAuto, setIsCheckingAuto] = useState<Record<string, boolean>>({});
   const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
   const [showPayRedirect, setShowPayRedirect] = useState<{ nop: string, namaWp: string } | null>(null);
-  const [mutationItem, setMutationItem] = useState<any>(null);
+  const [mutationItem, setMutationItem] = useState<PublicSearchResultItem | null>(null);
+  const [spopItem, setSpopItem] = useState<PublicSearchResultItem | null>(null);
   const [copiedNop, setCopiedNop] = useState<string | null>(null);
   const isDark = theme === "dark";
 
@@ -387,6 +412,20 @@ export function PublicSearch({
                             Ajukan Perubahan
                           </Button>
 
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "h-9 text-[9px] sm:text-[10px] font-black uppercase tracking-widest gap-2 rounded-2xl transition-all active:scale-95 shadow-sm px-3",
+                              isDark
+                                ? "border-sky-500/20 bg-sky-500/5 text-sky-400 hover:bg-sky-500/10"
+                                : "border-sky-500/20 bg-sky-500/5 text-sky-700 hover:bg-sky-50"
+                            )}
+                            onClick={() => setSpopItem(item)}
+                          >
+                            <FileText className="w-3 h-3 opacity-70" />
+                            Isi SPOP / LSPOP
+                          </Button>
+
                           {item.petugas && item.petugas.kontak !== "Tidak ada nomor" && (
                             <Button
                               variant="outline"
@@ -396,7 +435,7 @@ export function PublicSearch({
                                   ? "border-primary/20 text-primary hover:bg-primary/20 hover:text-white"
                                   : "border-primary/40 text-primary hover:bg-primary/5"
                               )}
-                              onClick={() => window.open(`https://wa.me/${item.petugas.kontak.replace(/\D/g, "")}?text=Halo%20pak%20petugas%20PBB%20saya%20ingin%20cek%20pembayaran%20PBB%20saya%20dengan%20NOP%20${item.nop}`, "_blank")}
+                              onClick={() => window.open(`https://wa.me/${item.petugas?.kontak.replace(/\D/g, "")}?text=Halo%20pak%20petugas%20PBB%20saya%20ingin%20cek%20pembayaran%20PBB%20saya%20dengan%20NOP%20${item.nop}`, "_blank")}
                             >
                               <Phone className="w-3 h-3" />
                               <span className="hidden sm:inline">Hubungi </span>Penarik
@@ -427,6 +466,20 @@ export function PublicSearch({
                       >
                         <FileText className="w-4 h-4 opacity-70" />
                         Ajukan Perubahan
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full sm:w-auto h-11 sm:h-12 rounded-2xl font-black uppercase tracking-[0.1em] text-[10px] sm:text-[11px] gap-2.5 transition-all active:scale-95 shadow-sm px-6",
+                          isDark
+                            ? "border-sky-500/20 bg-sky-500/5 text-sky-400 hover:bg-sky-500/10"
+                            : "border-sky-500/20 bg-sky-500/10 text-sky-700 hover:bg-sky-500/20"
+                        )}
+                        onClick={() => setSpopItem(item)}
+                      >
+                        <FileText className="w-4 h-4 opacity-70" />
+                        Isi SPOP / LSPOP
                       </Button>
                     </CardFooter>
                   )}
@@ -508,6 +561,27 @@ export function PublicSearch({
           isDark={isDark}
         />
       )}
+
+      <SpopFormDialog
+        open={!!spopItem}
+        onOpenChange={(open) => !open && setSpopItem(null)}
+        taxItem={
+          spopItem
+            ? {
+                nop: spopItem.nop,
+                namaWp: spopItem.namaWp,
+                alamat: spopItem.alamat,
+                luasTanah: spopItem.luasTanah,
+                luasBangunan: spopItem.luasBangunan,
+                rt: spopItem.rt,
+                rw: spopItem.rw,
+                dusun: spopItem.dusun,
+                tahun: spopItem.tahun,
+              }
+            : null
+        }
+        isDark={isDark}
+      />
     </div>
   );
 }

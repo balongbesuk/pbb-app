@@ -5,8 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Printer, FileText, User, MapPin, Ruler, AlertCircle, ChevronRight, ChevronLeft, Check, History, ShieldAlert } from "lucide-react";
+import { Plus, Trash2, Printer, FileText, User, MapPin, Ruler, AlertCircle, ChevronRight, ChevronLeft, Check, History, ShieldAlert, Monitor } from "lucide-react";
 import { cn, formatDateNoTime } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface SpptData {
   nop: string;
@@ -66,10 +67,10 @@ const sanitizeAreaText = (value: string, maxLength = 40) =>
     .trimStart()
     .slice(0, maxLength);
 
-const sanitizePositiveNumber = (value: string) => {
-  const digits = value.replace(/\D/g, "");
+const sanitizePositiveNumber = (value: string, max = 99999) => {
+  const digits = value.replace(/\D/g, "").slice(0, String(max).length);
   if (!digits) return 0;
-  return Math.min(Number(digits), 999999999);
+  return Math.min(Number(digits), max);
 };
 
 
@@ -583,20 +584,19 @@ export function SpptMutationDialog({
                   <div className="relative">
                     <FileText className={cn("absolute left-3.5 top-3.5 h-5 w-5", isDark ? "text-blue-400 opacity-60" : "opacity-30")} />
                     <Input 
+                      id="f-mut-nomor"
                       placeholder="Contoh: 594 / 001 / 415.51.16 / 2026" 
                       className={cn(
-                        "pl-11 h-12 rounded-2xl font-bold",
+                        "pl-11 h-12 rounded-2xl font-bold transition-all",
                         isDark 
-                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
-                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
-                        formErrors.nomorSurat ? "border-rose-400 focus-visible:ring-rose-500" : ""
+                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 hover:bg-white/10" 
+                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 hover:bg-slate-100",
                       )}
                       value={nomorSurat}
-                      onChange={(e) => setNomorSurat(sanitizeNomorSurat(e.target.value))}
-                      maxLength={80}
+                      onChange={(e) => setNomorSurat(sanitizeNomorSurat(e.target.value).slice(0, 20))}
+                      maxLength={20}
                     />
                   </div>
-                  {formErrors.nomorSurat && <p className="text-xs text-rose-500">{formErrors.nomorSurat}</p>}
                </div>
 
                <div className="space-y-4">
@@ -604,20 +604,19 @@ export function SpptMutationDialog({
                   <div className="relative">
                     <User className={cn("absolute left-3.5 top-3.5 h-5 w-5", isDark ? "text-blue-400 opacity-60" : "opacity-30")} />
                     <Input 
+                      id="f-mut-pemohon"
                       placeholder="Contoh: Siti Rohmah" 
                       className={cn(
-                        "pl-11 h-12 rounded-2xl font-bold",
+                        "pl-11 h-12 rounded-2xl font-bold transition-all",
                         isDark 
-                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
-                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
-                        formErrors.pemohon ? "border-rose-400 focus-visible:ring-rose-500" : ""
+                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 hover:bg-white/10" 
+                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 hover:bg-slate-100",
                       )}
                       value={pemohon}
-                      onChange={(e) => setPemohon(sanitizeText(e.target.value))}
-                      maxLength={MAX_TEXT_LENGTH}
+                      onChange={(e) => setPemohon(sanitizeText(e.target.value, 20))}
+                      maxLength={20}
                     />
                   </div>
-                  {formErrors.pemohon && <p className="text-xs text-rose-500">{formErrors.pemohon}</p>}
                </div>
 
                <div className="space-y-4">
@@ -625,13 +624,13 @@ export function SpptMutationDialog({
                   <div className="relative">
                     <ShieldAlert className={cn("absolute left-3.5 top-3.5 h-5 w-5", isDark ? "text-blue-400 opacity-60" : "opacity-30")} />
                     <Input 
+                      id="f-mut-nik"
                       placeholder="Contoh: 351708..." 
                       className={cn(
-                        "pl-11 h-12 rounded-2xl font-bold",
+                        "pl-11 h-12 rounded-2xl font-bold transition-all",
                         isDark 
-                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
-                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
-                        formErrors.nikPemohon ? "border-rose-400 focus-visible:ring-rose-500" : ""
+                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 hover:bg-white/10" 
+                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 hover:bg-slate-100",
                       )}
                       value={nikPemohon}
                       onChange={(e) => setNikPemohon(sanitizeNumberString(e.target.value, 16))}
@@ -639,7 +638,6 @@ export function SpptMutationDialog({
                       maxLength={16}
                     />
                   </div>
-                  {formErrors.nikPemohon && <p className="text-xs text-rose-500">{formErrors.nikPemohon}</p>}
                </div>
 
                <div className="space-y-4">
@@ -647,20 +645,19 @@ export function SpptMutationDialog({
                   <div className="relative">
                     <User className={cn("absolute left-3.5 top-3.5 h-5 w-5", isDark ? "text-blue-400 opacity-60" : "opacity-30")} />
                     <Input 
+                      id="f-mut-kades"
                       placeholder="Contoh: MOCHAMAD SAIFUR, S.Sos." 
                       className={cn(
-                        "pl-11 h-12 rounded-2xl font-bold",
+                        "pl-11 h-12 rounded-2xl font-bold transition-all",
                         isDark 
-                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
-                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
-                        formErrors.namaKades ? "border-rose-400 focus-visible:ring-rose-500" : ""
+                          ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 hover:bg-white/10" 
+                          : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 hover:bg-slate-100",
                       )}
                       value={namaKades}
-                      onChange={(e) => setNamaKades(sanitizeText(e.target.value))}
-                      maxLength={MAX_TEXT_LENGTH}
+                      onChange={(e) => setNamaKades(sanitizeText(e.target.value, 20))}
+                      maxLength={20}
                     />
                   </div>
-                  {formErrors.namaKades && <p className="text-xs text-rose-500">{formErrors.namaKades}</p>}
                </div>
             </div>
           )}
@@ -704,85 +701,82 @@ export function SpptMutationDialog({
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 px-1">NOP SPPT Baru</Label>
                           <Input 
+                            id={`f-mut-nop-${index}`}
                             value={item.nop}
                             onChange={(e) => handleUpdateNewData(index, "nop", sanitizeNumberString(e.target.value, 18))}
                             className={cn(
-                              "h-11 rounded-xl font-mono",
+                              "h-11 rounded-xl font-mono transition-all",
                               isDark 
-                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
-                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
-                              newDataErrors[index]?.nop ? "border-rose-400 focus-visible:ring-rose-500" : ""
+                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 hover:bg-white/10" 
+                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 hover:bg-slate-100",
                             )}
                             inputMode="numeric"
                             maxLength={18}
                           />
-                          {newDataErrors[index]?.nop && <p className="text-xs text-rose-500">{newDataErrors[index].nop}</p>}
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 px-1">Nama Wajib Pajak Baru</Label>
                           <Input 
+                            id={`f-mut-nama-${index}`}
                             value={item.namaWp}
-                            onChange={(e) => handleUpdateNewData(index, "namaWp", sanitizeUpperText(e.target.value))}
+                            onChange={(e) => handleUpdateNewData(index, "namaWp", sanitizeUpperText(e.target.value, 20))}
                             className={cn(
-                              "h-11 rounded-xl font-bold",
+                              "h-11 rounded-xl font-bold transition-all",
                               isDark 
-                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
-                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
-                              newDataErrors[index]?.namaWp ? "border-rose-400 focus-visible:ring-rose-500" : ""
+                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 hover:bg-white/10" 
+                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 hover:bg-slate-100",
                             )}
-                            maxLength={MAX_TEXT_LENGTH}
+                            maxLength={20}
                           />
-                          {newDataErrors[index]?.namaWp && <p className="text-xs text-rose-500">{newDataErrors[index].namaWp}</p>}
                         </div>
                         <div className="sm:col-span-2 space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 px-1">Alamat Baru</Label>
                           <Input 
+                            id={`f-mut-alamat-${index}`}
                             value={item.alamat}
-                            onChange={(e) => handleUpdateNewData(index, "alamat", sanitizeUpperText(e.target.value, MAX_ADDRESS_LENGTH))}
+                            onChange={(e) => handleUpdateNewData(index, "alamat", sanitizeUpperText(e.target.value, 20))}
                             className={cn(
-                              "h-11 rounded-xl font-medium",
+                              "h-11 rounded-xl font-medium transition-all",
                               isDark 
-                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
-                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
-                              newDataErrors[index]?.alamat ? "border-rose-400 focus-visible:ring-rose-500" : ""
+                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 hover:bg-white/10" 
+                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 hover:bg-slate-100",
                             )}
-                            maxLength={MAX_ADDRESS_LENGTH}
+                            maxLength={20}
                           />
-                          {newDataErrors[index]?.alamat && <p className="text-xs text-rose-500">{newDataErrors[index].alamat}</p>}
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 px-1">Luas Tanah (m²)</Label>
                           <Input 
+                            id={`f-mut-luas-t-${index}`}
                             type="number"
                             value={item.luasTanah}
                             onChange={(e) => handleUpdateNewData(index, "luasTanah", sanitizePositiveNumber(e.target.value))}
                             className={cn(
-                              "h-11 rounded-xl font-bold",
+                              "h-11 rounded-xl font-bold transition-all",
                               isDark 
-                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
-                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
-                              newDataErrors[index]?.luasTanah ? "border-rose-400 focus-visible:ring-rose-500" : ""
+                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 hover:bg-white/10" 
+                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 hover:bg-slate-100",
                             )}
                             min={0}
+                            maxLength={5}
                           />
-                          {newDataErrors[index]?.luasTanah && <p className="text-xs text-rose-500">{newDataErrors[index].luasTanah}</p>}
                         </div>
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest opacity-50 px-1">Luas Bangunan (m²)</Label>
                           <Input 
+                            id={`f-mut-luas-b-${index}`}
                             type="number"
                             value={item.luasBangunan}
                             onChange={(e) => handleUpdateNewData(index, "luasBangunan", sanitizePositiveNumber(e.target.value))}
                             className={cn(
-                              "h-11 rounded-xl font-bold",
+                              "h-11 rounded-xl font-bold transition-all",
                               isDark 
-                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20" 
-                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400",
-                              newDataErrors[index]?.luasBangunan ? "border-rose-400 focus-visible:ring-rose-500" : ""
+                                ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 hover:bg-white/10" 
+                                : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 hover:bg-slate-100",
                             )}
                             min={0}
+                            maxLength={5}
                           />
-                          {newDataErrors[index]?.luasBangunan && <p className="text-xs text-rose-500">{newDataErrors[index].luasBangunan}</p>}
                         </div>
                       </div>
                    </div>
@@ -793,30 +787,31 @@ export function SpptMutationDialog({
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Luas Tanah & Bangunan Sebenarnya</Label>
                     <Input
+                      id="f-mut-luas-seb"
                       placeholder="Contoh: 3.655 m²"
                       value={luasSebenarnya}
-                      onChange={(e) => setLuasSebenarnya(sanitizeAreaText(e.target.value, 30))}
+                      onChange={(e) => setLuasSebenarnya(sanitizeNumberString(e.target.value, 5))}
                       className={cn(
-                        "h-12 rounded-2xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-bold",
-                        formErrors.luasSebenarnya ? "border-rose-400 focus-visible:ring-rose-500" : "border-slate-200 dark:border-white/10"
+                        "h-12 rounded-2xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-bold transition-all",
+                        isDark ? "border-white/10 hover:bg-white/10" : "border-slate-200 hover:bg-slate-100"
                       )}
-                      maxLength={30}
+                      maxLength={5}
+                      inputMode="numeric"
                     />
-                    {formErrors.luasSebenarnya && <p className="text-xs text-rose-500">{formErrors.luasSebenarnya}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest opacity-50">Status Sisa Tanah</Label>
                     <Input
+                      id="f-mut-sisa"
                       placeholder="Contoh: HABIS / Sisa 100 m²"
                       value={sisa}
                       onChange={(e) => setSisa(sanitizeUpperText(e.target.value, 30))}
                       className={cn(
-                        "h-12 rounded-2xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-bold",
-                        formErrors.sisa ? "border-rose-400 focus-visible:ring-rose-500" : "border-slate-200 dark:border-white/10"
+                        "h-12 rounded-2xl bg-slate-50 border text-slate-900 dark:bg-white/5 dark:text-white font-bold transition-all",
+                        isDark ? "border-white/10 hover:bg-white/10" : "border-slate-200 hover:bg-slate-100"
                       )}
                       maxLength={30}
                     />
-                    {formErrors.sisa && <p className="text-xs text-rose-500">{formErrors.sisa}</p>}
                   </div>
                </div>
 
@@ -1020,39 +1015,130 @@ export function SpptMutationDialog({
 
         <div className={cn(
           "p-4 sm:p-6 border-t flex flex-row gap-3 items-center mt-auto backdrop-blur-md",
-          isDark ? "bg-[#0A192F]/80 border-white/5" : "bg-white/80 border-slate-100"
+          isDark ? "bg-[#0A192F]/80 border-white/5" : "bg-white/80 border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]"
         )}>
           {step > 1 && (
             <Button 
               variant="outline" 
               onClick={() => setStep(step - 1)}
               className={cn(
-                "w-14 h-14 rounded-2xl flex items-center justify-center border-none transition-all active:scale-95 shrink-0",
-                isDark ? "bg-white/5 hover:bg-white/10 text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                "h-12 flex-1 rounded-2xl sm:flex-initial sm:min-w-32 font-bold transition-all active:scale-95",
+                isDark 
+                  ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white" 
+                  : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
               )}
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Kembali
             </Button>
           )}
           
           <Button 
-            onClick={() => step < 3 ? setStep(step + 1) : handlePrint()}
-            disabled={(step === 1 && !canGoNextFromStepOne) || (step === 2 && !canGoNextFromStepTwo) || (step === 3 && !canPrint)}
+            onClick={() => {
+              const focusField = (id: string) => {
+                const el = document.getElementById(id);
+                if (el) {
+                  el.focus();
+                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  el.classList.add('ring-2', 'ring-destructive');
+                  setTimeout(() => el.classList.remove('ring-2', 'ring-destructive'), 3000);
+                }
+              };
+
+              if (step === 1) {
+                if (!nomorSurat.trim() || nomorSurat.length < 6) {
+                  toast.error("Nomor surat wajib diisi (minimal 6 karakter)");
+                  focusField("f-mut-nomor");
+                  return;
+                }
+                if (!pemohon.trim() || pemohon.length < 3) {
+                  toast.error("Nama pemohon wajib diisi (minimal 3 karakter)");
+                  focusField("f-mut-pemohon");
+                  return;
+                }
+                if (!nikPemohon.trim() || nikPemohon.length !== 16) {
+                  toast.error("NIK pemohon wajib diisi (16 digit)");
+                  focusField("f-mut-nik");
+                  return;
+                }
+                if (!namaKades.trim() || namaKades.length < 3) {
+                  toast.error("Nama kepala desa wajib diisi (minimal 3 karakter)");
+                  focusField("f-mut-kades");
+                  return;
+                }
+                setStep(2);
+              } else if (step === 2) {
+                // Validate objects
+                for (let i = 0; i < newDataList.length; i++) {
+                  const item = newDataList[i];
+                  const label = `Objek #${i + 1}`;
+                  if (!item.nop.trim() || item.nop.replace(/\D/g, "").length !== 18) {
+                    toast.error(`${label}: NOP wajib diisi (18 digit)`);
+                    focusField(`f-mut-nop-${i}`);
+                    return;
+                  }
+                  if (!item.namaWp.trim() || item.namaWp.length < 3) {
+                    toast.error(`${label}: Nama wajib pajak wajib diisi`);
+                    focusField(`f-mut-nama-${i}`);
+                    return;
+                  }
+                  if (!item.alamat.trim() || item.alamat.length < 5) {
+                    toast.error(`${label}: Alamat wajib diisi`);
+                    focusField(`f-mut-alamat-${i}`);
+                    return;
+                  }
+                  if (item.luasTanah <= 0) {
+                    toast.error(`${label}: Luas tanah harus lebih dari 0`);
+                    focusField(`f-mut-luas-t-${i}`);
+                    return;
+                  }
+                  if (item.luasBangunan > item.luasTanah) {
+                    toast.error(`${label}: Luas bangunan tidak boleh melebihi luas tanah`);
+                    focusField(`f-mut-luas-b-${i}`);
+                    return;
+                  }
+                }
+
+                if (!luasSebenarnya.trim()) {
+                  toast.error("Luas sebenarnya wajib diisi");
+                  focusField("f-mut-luas-seb");
+                  return;
+                }
+                if (!sisa.trim()) {
+                  toast.error("Status sisa tanah wajib diisi");
+                  focusField("f-mut-sisa");
+                  return;
+                }
+
+                const totalLuas = newDataList.reduce((acc, curr) => acc + Number(curr.luasTanah || 0), 0);
+                if (totalLuas > oldData.luasTanah) {
+                  toast.error(`Total luas tanah baru (${totalLuas} m²) melebihi luas asal (${oldData.luasTanah} m²)`);
+                  focusField("f-mut-luas-t-0");
+                  return;
+                }
+
+                setStep(3);
+              } else {
+                handlePrint();
+              }
+            }}
             className={cn(
-              "flex-1 h-14 rounded-2xl font-black uppercase tracking-[0.15em] text-[11px] gap-3 shadow-2xl transition-all active:scale-[0.98] border-none",
+              "flex-1 h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] gap-3 shadow-lg transition-all active:scale-[0.98]",
               step === 3 
-                ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20"
-                : "bg-primary hover:bg-primary/90 text-white shadow-primary/20"
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+                : isDark
+                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
+                  : "bg-primary hover:bg-primary/90 text-white shadow-primary/20"
             )}
           >
             {step === 3 ? (
               <>
                 <Printer className="w-5 h-5 shrink-0" /> 
-                <span className="mt-0.5 truncate uppercase">Cetak Permohonan</span>
+                <span>Cetak Permohonan</span>
               </>
             ) : (
               <>
-                <span className="mt-0.5 truncate uppercase">{step === 1 ? "Lanjut Simpan Baru" : "Lihat Hasil Preview"}</span>
+                <span>{step === 1 ? "Lanjut Ke Objek Baru" : "Lihat Hasil Preview"}</span>
                 <ChevronRight className="w-5 h-5 shrink-0" />
               </>
             )}
