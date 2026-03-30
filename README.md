@@ -17,7 +17,8 @@
 | Fitur | Deskripsi |
 |---|---|
 | **🏢 Portal Mutasi (Self-Service)** | **BARU (v7.1):** Memungkinkan warga mengajukan perubahan data (Hibah, Waris, Jual Beli) dan mencetak draf dokumen resmi (Surat Permohonan & Keterangan Desa) secara mandiri. |
-| **🛡️ Keamanan Data & Sanitasi** | **BARU (v7.1):** Implementasi sistem sanitasi input global (`sanitizeText`) untuk menangkal serangan XSS dan validasi NIK 16-digit untuk integritas data kependudukan. |
+| **🛡️ Keamanan Data & Sanitasi** | **BARU (v7.1):** Implementasi sistem sanitasi input global (`sanitizeText`) dan *anti-XSS* pada form SPOP serta validasi NIK 16-digit. |
+| **🖨️ Cetak & Tipografi SPOP** | **BARU (v7.1):** Standarisasi cetak SPOP/LSPOP (12px proporsional), kop tanpa bingkai, dan form dinamis dengan profil desa terpusat. |
 | **🚀 Arsip Digital (Smart Scan)** | Algoritma ekstraksi otomatis yang memecah ribuan lembar E-SPPT menjadi file personal berdasarkan NOP secara instan. |
 | **📉 Kompresi PDF Intelligent** | Teknologi *Streaming Compression* untuk mengecilkan ukuran PDF massal tanpa membebani memori server, menghemat penyimpanan hingga 80%. |
 | **🔄 Smart Sync (Excel)** | Integrasi DHKP cerdas yang memungkinkan pembaruan data ribuan wajib pajak tanpa risiko duplikasi atau penghapusan manual. |

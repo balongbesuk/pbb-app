@@ -46,11 +46,11 @@ Gunakan panduan berikut untuk kebutuhan operasional Anda:
 
 ## 🛠️ Alur Kerja Teknis (Workflows)
 
-### Modul Mutasi SPPT (v7.1)
+### Modul Mutasi SPPT & SPOP (v7.1)
 Sistem mutasi menggunakan alur 3-langkah (Steper):
 1. **Identifikasi Data Lama**: Penarikan data *real-time* dari database utama berdasarkan NOP.
-2. **Input Data Baru**: Form input terenkripsi dengan validasi NIK yang ketat.
-3. **Smart Preview & Scaling**: Menggunakan rasio `215mm` (ukuran kertas F4/Fullfolio) dengan logika *scaling* otomatis untuk tampilan layar ponsel kecil tanpa merusak tata letak dokumen resmi.
+2. **Input Data Baru**: Form input terenkripsi dengan validasi NIK yang ketat dan *anti-XSS*.
+3. **Cetak & Tipografi SPOP**: Standarisasi cetak SPOP / SPPT Mutasi dengan rincian tipografi `12px`, pemisahan kolom alamat untuk meminimalkan *over-flow*, serta optimasi tampilan layar (Scaling F4/Fullfolio) agar tidak merusak tata letak dokumen resmi saat diakses melalui *smartphone*.
 
 ### Pemulihan Data (Restoration)
 API `/api/restore` dirancang untuk melakukan tugas berat dengan sistem *Rollback* otomatis. Jika proses pemulihan gagal, sistem akan berusaha mengembalikan database ke kondisi terakhir yang stabil.
