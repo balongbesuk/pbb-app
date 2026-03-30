@@ -149,6 +149,24 @@ Fitur *Self-Service* mempermudah warga untuk mengelola pengajuan perubahan data 
 
 ---
 
+### 9. Memulihkan Akun Admin (Reset Password Server)
+
+Jika Anda lupa password akun utama `admin` dan tidak bisa masuk sama sekali, Anda dapat melakukan *reset* paksa langsung dari server dengan memodifikasi konfigurasi database. Langkah ini aman dan tidak akan menghapus data warga.
+
+1. Buka folder instalasi proyek PBB Manager di server/komputer Anda.
+2. Buka file `.env` menggunakan teks editor (seperti Notepad / VS Code).
+3. Cari baris `ADMIN_PASSWORD=` dan ubah nilainya menjadi password sementara.
+   Contoh: `ADMIN_PASSWORD=PasswordBaruAdmin123!`
+4. Simpan perubahan pada file `.env`.
+5. Buka **Terminal** atau **Command Prompt** di folder proyek tersebut, lalu jalankan perintah pemulihan *seed* berikut:
+   ```bash
+   npx prisma db seed
+   ```
+6. Tunggu hingga proses memunculkan tulisan *Pembersihan data wilayah otomatis selesai*.
+7. Sekarang Anda dapat masuk (*Login*) ke aplikasi menggunakan username `admin` dan *password* sementara yang baru saja Anda atur. Setelah berhasil masuk, sistem akan meminta Anda untuk segera mengubah *password* tersebut demi keamanan lanjutan.
+
+---
+
 ## 📱 Panduan Penarik Pajak
 
 ### 1. Membuka Aplikasi di HP
@@ -208,7 +226,7 @@ Untuk mendapatkan akses lebih, hubungi **Admin** untuk menaikkan peran menjadi *
 ## ❓ FAQ & Troubleshooting
 
 **Q: Saya lupa password, bagaimana cara reset?**  
-Hubungi Admin untuk melakukan reset password. Admin bisa mereset password dari menu **Pengguna > Edit** dengan menekan ikon kunci 🔑.
+Hubungi Admin untuk melakukan reset password. Admin bisa mereset password dari menu **Pengguna > Edit** dengan menekan ikon kunci 🔑. Namun, jika Anda yang lupa adalah sang Admin sendiri, **silakan merujuk pada Panduan Admin poin ke-9 di atas (Memulihkan Akun Admin)**.
 
 **Q: Apakah data saya akan hilang jika saya upload file Excel baru?**  
 **TIDAK.** Dengan fitur *Smart Sync* v2.0, sistem hanya akan memperbarui data yang ada di file Excel. Data lama yang sudah ada di sistem tapi tidak ada di file Excel baru akan tetap aman (tidak dihapus).
