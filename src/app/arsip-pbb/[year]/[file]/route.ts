@@ -63,7 +63,8 @@ export async function GET(
     }
     
     // 1. Dapatkan file path yang asli (di folder privat /storage)
-    const storagePath = path.join(process.cwd(), "storage", "arsip-pbb", safeYear, safeFile);
+    const { getArchivePath } = require("@/lib/storage");
+    const storagePath = getArchivePath(safeYear, safeFile);
 
     if (!fs.existsSync(storagePath)) {
       return new NextResponse(

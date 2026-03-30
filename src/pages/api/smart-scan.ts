@@ -139,7 +139,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const dbNopRows = await prisma.taxData.findMany({ where: { tahun: year }, select: { nop: true } });
     const validNopSet = new Set(dbNopRows.map(r => r.nop.replace(/\D/g, "")));
 
-    const archiveDir = path.join(process.cwd(), "storage", "arsip-pbb", year.toString());
+    const { getArchivePath } = require("@/lib/storage");
+    const archiveDir = getArchivePath(year.toString());
     if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
     const existingFiles = new Set(fs.readdirSync(archiveDir));
 

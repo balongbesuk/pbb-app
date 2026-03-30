@@ -327,11 +327,10 @@ export async function checkImportRequirements(tahun: number) {
 // --- Arsip Digital PBB ---
 import { PDFDocument } from "pdf-lib";
 const pdf = require("pdf-parse/lib/pdf-parse.js");
-
-const BASE_ARCHIVE_DIR = path.join(process.cwd(), "storage", "arsip-pbb");
+const { getArchivePath } = require("@/lib/storage");
 
 function getArchiveDir(year: number) {
-  return path.join(BASE_ARCHIVE_DIR, year.toString());
+  return getArchivePath(year.toString());
 }
 
 /** Smart Action to Split Large PDF by NOP */

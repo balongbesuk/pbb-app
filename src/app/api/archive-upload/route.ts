@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
     const yearRaw = formData.get("year");
     const year = yearRaw ? parseInt(yearRaw.toString()) : new Date().getFullYear();
     
-    const BASE_ARCHIVE_DIR = path.join(process.cwd(), "storage", "arsip-pbb");
-    const archiveDir = path.join(BASE_ARCHIVE_DIR, year.toString());
+    const { getArchivePath } = require("@/lib/storage");
+    const archiveDir = getArchivePath(year.toString());
 
     if (!fs.existsSync(archiveDir)) {
       fs.mkdirSync(archiveDir, { recursive: true });

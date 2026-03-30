@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { getArchivePath } from "@/lib/storage";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
@@ -20,14 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   res.setHeader("Cache-Control", "no-cache");
   const send = (obj: object) => res.write(JSON.stringify(obj) + "\n");
 
-  const baseDir = path.join(process.cwd(), "storage", "arsip-pbb", year.toString());
+  const baseDir = getArchivePath(year.toString());
   
   if (!fs.existsSync(baseDir)) {
     send({ type: "done", success: false, message: "Folder tahun tersebut tidak ditemukan." });
     return res.end();
   }
 
-  const files = fs.readdirSync(baseDir).filter(f => f.endsWith('.pdf'));
+  const files = fs.readdirSync(baseDir).filter((f: string) => f.endsWith('.pdf'));
   
   if (files.length === 0) {
     send({ type: "done", success: true, message: "Tidak ada PDF di tahun ini." });

@@ -78,7 +78,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const entries = zip.getEntries();
     const totalEntries = entries.length;
 
-    const storageDir = path.join(process.cwd(), "storage");
+    const { getStorageRoot } = require("@/lib/storage");
+    const storageDir = getStorageRoot();
 
     let restored = 0;
     let skipped = 0;

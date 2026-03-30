@@ -19,7 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const BASE_ARCHIVE_DIR = path.join(process.cwd(), "storage", "arsip-pbb");
+    const { getArchivePath } = require("@/lib/storage");
+    const BASE_ARCHIVE_DIR = getArchivePath();
     if (!fs.existsSync(BASE_ARCHIVE_DIR)) {
       return res.status(404).json({ error: "Folder arsip tidak ditemukan." });
     }
