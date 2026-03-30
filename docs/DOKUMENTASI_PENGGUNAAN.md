@@ -139,6 +139,16 @@ Portal depan adalah wajah layanan publik Anda. Admin bisa menyesuaikannya:
 
 ---
 
+### 8. Portal Mutasi & Cetak Dokumen SPOP (v7.1)
+
+Fitur *Self-Service* mempermudah warga untuk mengelola pengajuan perubahan data SPPT PBB (Mutasi, Balik Nama, Pemecahan) secara mandiri.
+1. **Portal Publik**: Warga bisa mengakses form pengajuan mutasi ini dari halaman pencarian publik (*Public Search*) dengan mengklik opsi mutasi.
+2. **Keamanan Formulir**: Formulir meminta data secara aman (dilengkapi kontrol anti-XSS) termasuk input NIK ahli waris/pembeli yang spesifik berjumlah 16 digit.
+3. **Cetak Dokumen SPOP**: Admin dapat melakukan review data dan menggunakan fitur cetak PDF. Dokumen Form SPOP/LSPOP otomatis diformat seukuran kertas **F4/Fullfolio**, kop tanpa logo burung garuda, dengan tipografi dinamis `12px` yang tetap rapi meski dibuka melalui ponsel.
+4. **Otomatisasi Profil Desa**: Rincian profil seperti (alamat balai desa, kodepos, nama kepala desa) yang disetel di menu Profil Instansi otomatis diintegrasikan ke format dokumen surat keterangan ini.
+
+---
+
 ## 📱 Panduan Penarik Pajak
 
 ### 1. Membuka Aplikasi di HP
@@ -225,4 +235,4 @@ Tampilan v2.0 sudah dioptimalkan. Jika terasa lambat, coba bersihkan *cache* bro
 
 ---
 
-*Dokumentasi terakhir diperbarui: 27 Maret 2026 (v3.0 - Security, Atomic Restore & Transaksional Update)*
+*Dokumentasi terakhir diperbarui: 30 Maret 2026 (v7.1 - Portal Mutasi & SPOP Print)*
