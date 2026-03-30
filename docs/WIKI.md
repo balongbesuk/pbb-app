@@ -1,4 +1,4 @@
-# 📖 Wiki Sistem PBB Manager v7.0
+# 📖 Wiki Sistem PBB Manager v7.1
 
 Selamat datang di Wiki Teknis untuk proyek **PBB Manager**. Dokumen ini berfungsi sebagai pusat informasi mengenai arsitektur, keamanan, dan pemeliharaan sistem.
 
@@ -18,9 +18,9 @@ Sistem ini dibangun dengan stack modern yang dioptimalkan untuk performa dan kea
 
 ## 🔒 Hardening & Transparansi Keamanan (Update Akhir Maret 2026)
 
-Kami terus melakukan audit keamanan untuk memastikan data warga tetap terlindungi. Berikut adalah langkah-langkah *hardening* terbaru di v7.0:
+Kami terus melakukan audit keamanan untuk memastikan data warga tetap terlindungi. Berikut adalah langkah-langkah *hardening* terbaru di v7.1:
 
-### 1. Sanitasi Input & Anti-XSS (v7.0)
+### 1. Sanitasi Input & Anti-XSS (v7.1)
 - **Global Stripping**: Seluruh input teks pada portal publik (seperti Nama Pengaju, Alamat, dan Nomor Surat) kini diproses melalui algoritma pembersihan karakter HTML/Script berbahaya.
 - **Numeric Validation**: Validasi ketat pada NOP dan NIK menggunakan regex untuk memastikan hanya angka yang masuk ke sistem, mencegah injeksi SQL sederhana maupun kesalahan input.
 - **Format Normalization**: Otomatisasi pengubahan huruf kecil ke besar (Capitalization) dan penghapusan spasi berlebih pada data sensitif seperti NOP.
@@ -46,7 +46,7 @@ Gunakan panduan berikut untuk kebutuhan operasional Anda:
 
 ## 🛠️ Alur Kerja Teknis (Workflows)
 
-### Modul Mutasi SPPT (v7.0)
+### Modul Mutasi SPPT (v7.1)
 Sistem mutasi menggunakan alur 3-langkah (Steper):
 1. **Identifikasi Data Lama**: Penarikan data *real-time* dari database utama berdasarkan NOP.
 2. **Input Data Baru**: Form input terenkripsi dengan validasi NIK yang ketat.
@@ -60,4 +60,4 @@ API `/api/restore` dirancang untuk melakukan tugas berat dengan sistem *Rollback
 ## 📡 Kontak & Pemeliharaan
 Pastikan untuk selalu menjalankan `npm audit` secara berkala dan melakukan `git pull` untuk mendapatkan pembaruan keamanan terbaru.
 
-*Terakhir diperbarui: 28 Maret 2026*
+*Terakhir diperbarui: 30 Maret 2026*
