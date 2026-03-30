@@ -51,7 +51,7 @@ function page1(f: SpopFormData, config?: { kabupaten?: string; logoUrl?: string 
   <section class="page">
     <div class="pno">- 1 -</div>
     <div class="head">
-      <div class="head-l"><div class="logo emblem"><img src="${esc(config?.logoUrl || "/templates/jombang-emblem.png")}" alt="Lambang Kabupaten ${esc(config?.kabupaten || "Jombang")}" /></div><div class="gov-wrap"><div class="gov">PEMERINTAH KABUPATEN ${esc(config?.kabupaten || "JOMBANG")}</div><div class="gov gov-sub">BADAN PENDAPATAN DAERAH</div></div></div>
+      <div class="head-l"><div class="logo emblem"><img src="${esc(config?.logoUrl || "/uploads/logo-desa.png")}" alt="Lambang Kabupaten ${esc(config?.kabupaten || "Jombang")}" /></div><div class="gov-wrap"><div class="gov">PEMERINTAH KABUPATEN ${esc(config?.kabupaten || "JOMBANG")}</div><div class="gov gov-sub">BADAN PENDAPATAN DAERAH</div></div></div>
       <div class="head-r"><div class="fno-box"><span>No. Formulir</span>${cells("", 2, "tiny")}${cells("", 4, "tiny")}${cells("", 3, "tiny")}</div><div class="ins-box">Selain yang diisi oleh petugas (bagian yang diarsir)<br/>diisi oleh wajib pajak<br />Beri tanda silang pada kolom yang sesuai</div></div>
     </div>
     <div class="title">SURAT PEMBERITAHUAN OBJEK PAJAK</div>
