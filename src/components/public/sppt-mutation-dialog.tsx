@@ -348,7 +348,8 @@ export function SpptMutationDialog({
                 <p class="font-bold uppercase">PEMERINTAH KABUPATEN ${rName}</p>
                 <p class="font-bold uppercase">KECAMATAN ${dName}</p>
                 <p class="font-bold" style="font-size: 14pt; letter-spacing: 1px;">KANTOR DESA ${vName}</p>
-                <p class="letter-kop-address">${vAddress || `E-mail: ${vEmail || `desa${vName.toLowerCase()}@gmail.com`} | Kode Pos: ${vZip || "61471"}`}</p>
+                <p class="letter-kop-address">${vAddress}</p>
+                <p class="letter-kop-address">E-mail: ${vEmail || `desa${vName.toLowerCase()}@gmail.com`} | Kode Pos: ${vZip || "61471"}</p>
               </div>
             </div>
           </div>
