@@ -280,6 +280,7 @@ function LoginForm() {
                   name="username"
                   autoComplete="username"
                   placeholder="Masukkan username..."
+                  maxLength={15}
                   className={`h-12 rounded-xl pl-10 text-sm font-medium transition-all duration-200 ${inputCls}`}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -303,6 +304,7 @@ function LoginForm() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   placeholder="••••••••"
+                  maxLength={15}
                   className={`h-12 rounded-xl pr-12 pl-10 text-sm font-medium transition-all duration-200 ${inputCls}`}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

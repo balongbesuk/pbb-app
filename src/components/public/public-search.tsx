@@ -224,6 +224,7 @@ export function PublicSearch({
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Misal: 35.15.118... atau NAMA ANDA"
                 aria-label="Cari NOP atau Nama Wajib Pajak"
+                maxLength={30}
                 className={`pl-11 h-12 rounded-2xl w-full text-base shadow-sm ${inputCls}`}
               />
 
