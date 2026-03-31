@@ -44,7 +44,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -62,7 +61,7 @@ export default function RootLayout({
           <QueryProvider>
             <AuthProvider>
               <NuqsAdapter>
-                <div className="gradient-bg min-h-screen print:h-auto print:min-h-0 print:bg-white">
+                <div className="gradient-bg min-h-screen print:h-auto print:min-h-0 print:bg-white" style={{ position: "relative", zIndex: 2 }}>
                   {children}
                 </div>
                 <Toaster position="top-right" />
@@ -74,3 +73,4 @@ export default function RootLayout({
     </html>
   );
 }
+

@@ -144,10 +144,10 @@ export function SpopFormDialog({
   }, [taxItem]);
 
   const styles = useMemo(() => ({
-    panel: isDark ? "bg-white/5 border-white/10 text-white" : "bg-slate-50 border-slate-200 text-slate-900",
-    input: isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:bg-white/10" : "bg-white border-slate-200 text-slate-900 focus:bg-slate-50",
-    buttonSelected: isDark ? "bg-blue-500/10 border-blue-500 text-blue-400 shadow-lg shadow-blue-500/20 ring-1 ring-blue-500/20" : "bg-primary/10 border-primary text-primary shadow-lg shadow-primary/10",
-    buttonUnselected: isDark ? "border-transparent bg-white/5 text-white/40 hover:bg-white/10" : "border-transparent bg-slate-100/50 text-slate-400 hover:bg-slate-100",
+    panel: isDark ? "bg-[#111827] border-white/5 text-white" : "bg-slate-100 border-slate-200 text-slate-900",
+    input: isDark ? "bg-[#030712] border-white/10 text-white placeholder:text-white/20 focus:bg-[#030712]" : "bg-white border-slate-200 text-slate-900 focus:bg-slate-50",
+    buttonSelected: isDark ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20 ring-1 ring-blue-500/20" : "bg-primary border-primary text-white shadow-lg shadow-primary/10",
+    buttonUnselected: isDark ? "border-transparent bg-[#1f2937] text-white/40 hover:bg-[#374151]" : "border-transparent bg-slate-200 text-slate-400 hover:bg-slate-300",
     stepCircle: {
       active: "bg-primary text-white shadow-lg shadow-primary/30 scale-110",
       completed: "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20",
@@ -212,13 +212,20 @@ export function SpopFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          "h-[92vh] w-[94vw] !max-w-[94vw] overflow-hidden border-none p-0 sm:rounded-3xl lg:w-[1100px] lg:!max-w-[1100px]",
-          isDark ? "dark bg-[#0A192F] text-white" : "bg-white text-slate-900",
+          "h-[92vh] w-[94vw] !max-w-[94vw] overflow-hidden border-none p-0 sm:rounded-3xl lg:w-[1100px] lg:!max-w-[1100px] !opacity-100 shadow-[0_0_50px_rgba(0,0,0,0.5)]",
+          isDark ? "dark text-white" : "text-slate-900",
         )}
       >
+        <div 
+          className="absolute inset-0 -z-50 !opacity-100" 
+          style={{ 
+            backgroundColor: isDark ? '#050B14' : '#ffffff',
+            opacity: 1, 
+          }} 
+        />
         <DialogHeader className={cn(
           "border-b px-4 py-4 sm:px-6",
-          isDark ? "border-white/5 bg-[#0D1F3D]" : "border-black/5 bg-slate-50/50"
+          isDark ? "border-white/5 bg-[#0D1F3D]" : "border-black/5 bg-slate-100"
         )}>
           <DialogTitle className="text-lg font-black uppercase tracking-tight sm:text-xl">Form Tanya Jawab SPOP / LSPOP</DialogTitle>
           <DialogDescription className={cn("text-[11px] leading-relaxed sm:text-sm", isDark ? "text-blue-100/60" : "text-slate-500")}>
@@ -226,8 +233,8 @@ export function SpopFormDialog({
           </DialogDescription>
 
           <div className={cn(
-            "mt-4 rounded-3xl px-4 py-4 backdrop-blur-md flex items-center justify-between",
-            isDark ? "bg-white/5 border border-white/5" : "bg-black/5"
+            "mt-4 rounded-3xl px-4 py-4 flex items-center justify-between",
+            isDark ? "bg-[#030712] border border-white/5" : "bg-slate-100"
           )}>
             {steps.map((item) => (
               <div key={item.id} className="flex items-center gap-3">
@@ -261,7 +268,10 @@ export function SpopFormDialog({
         <div ref={scrollAreaRef} className="flex-1 overflow-y-auto p-4 sm:p-6">
           {step === 1 && (
             <div className="space-y-6 xl:grid xl:grid-cols-[360px_minmax(0,1fr)] xl:items-start xl:gap-8 xl:space-y-0 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div className={cn("rounded-3xl border p-5 xl:sticky xl:top-0 shadow-sm transition-all hover:shadow-md", styles.panel)}>
+              <div 
+                className={cn("rounded-3xl border p-5 xl:sticky xl:top-0 shadow-sm transition-all hover:shadow-md", isDark ? "border-white/10 text-white" : "border-slate-200 text-slate-900")}
+                style={{ backgroundColor: isDark ? '#0F172A' : '#f8fafc' }}
+              >
                 <div className="flex items-center gap-2 mb-4">
                    <div className="h-1.5 w-6 rounded-full bg-primary" />
                    <p className="text-xs font-black uppercase tracking-widest opacity-60">Data Terdeteksi</p>
@@ -807,7 +817,7 @@ export function SpopFormDialog({
                   <iframe 
                     title="Preview SPOP LSPOP" 
                     srcDoc={previewHtml}
-                    className="h-[58vh] w-full bg-white" 
+                    className="h-[58vh] w-full bg-white opacity-100" 
                   />
                 ) : (
                   <div className="flex h-[58vh] items-center justify-center text-sm opacity-60">
@@ -819,7 +829,7 @@ export function SpopFormDialog({
           )}
         </div>
 
-        <div className={cn("border-t px-5 py-6 sm:px-8", isDark ? "border-white/10 bg-[#0D1F3D]" : "border-slate-100 bg-white/80 backdrop-blur-md")}>
+        <div className={cn("border-t px-5 py-6 sm:px-8", isDark ? "border-white/10 bg-[#0D1F3D]" : "border-slate-100 bg-white")}>
           <div className="flex flex-row items-center gap-4">
             {step > 1 && (
               <button 

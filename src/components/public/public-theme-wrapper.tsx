@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePublicThemeContext, PublicThemeProvider } from "./public-theme-provider";
 import { cn } from "@/lib/utils";
+import { ParticleBackground } from "../particle-background";
 
 const DARK_CSS_VARS: [string, string][] = [
   ["--background", "#050B14"],
@@ -65,13 +66,12 @@ function PublicThemeInner({
     vars.forEach(([k, v]) => el.style.setProperty(k, v));
 
     if (isDark) {
-      el.style.backgroundColor = "#050B14";
-      el.style.backgroundImage =
-        "radial-gradient(ellipse at top, #0F203B 0%, #050B14 60%, #02060D 100%)";
+      el.style.backgroundColor = "transparent";
+      el.style.backgroundImage = "none";
       el.style.color = "#F8FAFC";
     } else {
-      el.style.backgroundColor = "#f8fafc";
-      el.style.backgroundImage = "linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%)";
+      el.style.backgroundColor = "transparent";
+      el.style.backgroundImage = "none";
       el.style.color = "#0f172a";
     }
   }, [isDark]);
@@ -81,11 +81,13 @@ function PublicThemeInner({
       ref={divRef}
       className={cn(
         isDark ? "public-dark" : "public-light",
-        "public-area min-h-screen",
-        className
+        "public-area min-h-screen relative overflow-hidden flex flex-col"
       )}
     >
-      {children}
+      <ParticleBackground isDark={isDark} />
+      <div className={cn("relative z-10 w-full flex-grow flex flex-col", className)}>
+        {children}
+      </div>
     </div>
   );
 }

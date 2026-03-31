@@ -237,10 +237,10 @@ export function SpptMutationDialog({
   };
 
   const styles = useMemo(() => ({
-    panel: isDark ? "bg-white/5 border-white/10 text-white" : "bg-slate-50 border-slate-200 text-slate-900",
-    input: isDark ? "bg-white/10 border-white/10 text-white focus:bg-white/20" : "bg-white border-slate-200 text-slate-900 focus:bg-slate-50",
-    buttonSelected: isDark ? "bg-blue-500/10 border-blue-500 text-blue-400 shadow-lg shadow-blue-500/20 ring-1 ring-blue-500/20" : "bg-primary/10 border-primary text-primary shadow-lg shadow-primary/10",
-    buttonUnselected: isDark ? "border-transparent bg-white/5 text-white/40 hover:bg-white/10" : "border-transparent bg-slate-100/50 text-slate-400 hover:bg-slate-100",
+    panel: isDark ? "bg-[#111827] border-white/5 text-white" : "bg-slate-100 border-slate-200 text-slate-900",
+    input: isDark ? "bg-[#030712] border-white/10 text-white focus:bg-[#030712]" : "bg-white border-slate-200 text-slate-900 focus:bg-slate-50",
+    buttonSelected: isDark ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20 ring-1 ring-blue-500/20" : "bg-primary border-primary text-white shadow-lg shadow-primary/10",
+    buttonUnselected: isDark ? "border-transparent bg-[#1f2937] text-white/40 hover:bg-[#374151]" : "border-transparent bg-slate-200 text-slate-400 hover:bg-slate-300",
     stepCircle: {
       active: "bg-primary text-white shadow-lg shadow-primary/30 scale-110",
       completed: "bg-emerald-500 text-white",
@@ -486,11 +486,20 @@ export function SpptMutationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(
-        "max-w-4xl w-[95vw] lg:w-[1100px] lg:max-w-[1100px] h-[92vh] overflow-hidden flex flex-col p-0 border-none sm:rounded-3xl shadow-2xl",
-        isDark ? "bg-[#0A192F] text-white" : "bg-white text-slate-900"
-      )}>
-        <DialogHeader className={cn("p-4 sm:p-6 pb-2 border-b", isDark ? "border-white/5 bg-[#0D1F3D]" : "border-slate-100 bg-slate-50/50")}>
+      <DialogContent 
+        className={cn(
+          "max-w-4xl w-[95vw] lg:w-[1100px] lg:max-w-[1100px] h-[92vh] overflow-hidden flex flex-col p-0 border-none sm:rounded-3xl shadow-2xl !opacity-100",
+          isDark ? "dark text-white" : "text-slate-900"
+        )}
+      >
+        <div 
+          className="absolute inset-0 -z-50 !opacity-100" 
+          style={{ 
+            backgroundColor: isDark ? '#050B14' : '#ffffff',
+            opacity: 1, 
+          }} 
+        />
+        <DialogHeader className={cn("p-4 sm:p-6 pb-2 border-b", isDark ? "border-white/5 bg-[#0D1F3D]" : "border-slate-100")}>
           <div className="flex items-center gap-4 mb-4">
              <div className="p-3 bg-primary/10 rounded-2xl group shadow-inner">
                 <FileText className="w-6 h-6 text-primary transition-transform group-hover:scale-110" />
@@ -500,7 +509,7 @@ export function SpptMutationDialog({
                <DialogDescription className={isDark ? "text-blue-100/60" : "text-slate-500"}>Formulir standar BAPENDA untuk permohonan pemecahan.</DialogDescription>
              </div>
           </div>
-          <div className={cn("flex items-center justify-between px-4 py-4 rounded-3xl backdrop-blur-md", isDark ? "bg-white/5 border border-white/5" : "bg-black/5")}>
+          <div className={cn("flex items-center justify-between px-4 py-4 rounded-3xl", isDark ? "bg-[#030712] border border-white/5" : "bg-slate-100")}>
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center gap-3">
                 <div className={cn("flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-black transition-all duration-300", step === s ? styles.stepCircle.active : step > s ? styles.stepCircle.completed : styles.stepCircle.pending)}>
@@ -532,7 +541,10 @@ export function SpptMutationDialog({
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3"><History className="w-4 h-4 text-primary" /><Label className="text-[11px] font-black uppercase tracking-widest opacity-60">Status Objek Lama</Label></div>
-                    <div className={cn("grid grid-cols-1 gap-5 p-6 rounded-3xl border transition-all", styles.panel)}>
+                    <div 
+                      className={cn("grid grid-cols-1 gap-5 p-6 rounded-3xl border transition-all", isDark ? "border-white/10 text-white" : "border-slate-200 text-slate-900")}
+                      style={{ backgroundColor: isDark ? '#0F172A' : '#f8fafc' }}
+                    >
                       <div className="space-y-1"><p className="text-[10px] font-black uppercase opacity-40">NOP</p><p className="font-mono text-base font-bold">{oldData.nop}</p></div>
                       <div className="space-y-1"><p className="text-[10px] font-black uppercase opacity-40">Wajib Pajak</p><p className="font-black text-sm uppercase">{oldData.namaWp}</p></div>
                       <div className="space-y-1"><p className="text-[10px] font-black uppercase opacity-40">Alamat</p><p className="font-bold text-xs uppercase leading-relaxed">{oldData.alamat}</p></div>
@@ -566,7 +578,7 @@ export function SpptMutationDialog({
                <div className="flex items-center justify-between"><Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Detail Objek Baru</Label><Button onClick={handleAddData} className="h-10 rounded-xl px-4 bg-primary/10 text-primary border border-primary/20 font-black uppercase text-[10px] active:scale-95 transition-all"><Plus className="w-3 h-3 mr-2" /> Tambah Objek Baru</Button></div>
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {newDataList.map((item, index) => (
-                  <div key={index} className={cn("relative p-6 rounded-[2rem] border-2 group transition-all hover:bg-white/5 shadow-sm", isDark ? "border-white/5 bg-white/5" : "border-slate-100 bg-slate-50/50")}>
+                  <div key={index} className={cn("relative p-6 rounded-[2rem] border-2 group transition-all shadow-sm", isDark ? "border-white/5 bg-[#0D1F3D]" : "border-slate-100 bg-slate-100")}>
                     <div className="absolute -top-3 left-6 px-4 py-1 bg-primary rounded-full shadow-lg"><span className="text-[10px] font-black text-white uppercase tracking-widest">Objek Baru #${index + 1}</span></div>
                     {newDataList.length > 1 && <Button onClick={() => handleRemoveData(index)} className="absolute -top-3 right-6 h-8 w-8 rounded-full bg-rose-500 hover:bg-rose-600 text-white shadow-lg transition-all active:scale-90"><Trash2 className="h-4 w-4" /></Button>}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
@@ -629,7 +641,7 @@ export function SpptMutationDialog({
           )}
         </div>
 
-        <div className={cn("border-t px-4 py-5 sm:px-10 sm:py-6", isDark ? "border-white/10 bg-[#0D1F3D]" : "border-slate-100 bg-white/80 backdrop-blur-md")}>
+        <div className={cn("border-t px-4 py-5 sm:px-10 sm:py-6", isDark ? "border-white/10 bg-[#0D1F3D]" : "border-slate-100 bg-white")}>
           <div className="flex items-center gap-3">
             {step > 1 && (
               <Button variant="outline" onClick={() => setStep((prev) => prev - 1)} className={cn("h-14 flex-1 sm:flex-initial sm:min-w-40 px-3 font-black uppercase tracking-widest text-xs sm:text-[10px] transition-all active:scale-95 rounded-2xl", isDark ? "border-white/10 bg-white/5 text-white/60 hover:text-white" : "border-slate-200 bg-white text-slate-500")}>

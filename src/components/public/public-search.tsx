@@ -153,8 +153,8 @@ export function PublicSearch({
 
   // Theme-aware class helpers
   const cardCls = isDark
-    ? "rounded-3xl border-0 shadow-2xl bg-[#0A192F]/60 backdrop-blur-xl text-white"
-    : "rounded-3xl border-0 shadow-2xl bg-white/60 backdrop-blur-xl text-slate-900";
+    ? "rounded-3xl border-0 shadow-2xl bg-[#0A192F] text-white"
+    : "rounded-3xl border-0 shadow-2xl bg-white text-slate-900";
   const titleCls = isDark ? "text-white" : "text-slate-900";
   const inputCls = isDark
     ? "bg-[#050B14] border-white/10 text-white placeholder:text-blue-200/30 focus-visible:ring-blue-500"
@@ -166,7 +166,7 @@ export function PublicSearch({
     ? "border-amber-500/30 bg-amber-50/10 text-amber-300"
     : "border-amber-200/60 bg-amber-50/50 text-amber-800";
   const resultCardCls = isDark
-    ? "border-white/5 hover:border-blue-500/30 bg-[#0A192F]/60 text-white"
+    ? "border-white/5 hover:border-blue-500/30 bg-[#0A192F] text-white"
     : "border-zinc-100 hover:border-primary/20 bg-white text-zinc-900";
   const cardHeaderBgCls = isDark
     ? "from-[#0F203B] to-[#0A192F]/50 border-white/5"
