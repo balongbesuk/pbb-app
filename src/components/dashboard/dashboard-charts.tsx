@@ -45,20 +45,16 @@ export function RWBarChart({ data }: { data: RwGroupStat[] }) {
             fontSize={12}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `Rp${(value / 1000000).toFixed(1)}M`}
+            tickFormatter={(value) => `Rp${(value / 1000000).toFixed(0)} Juta`}
           />
           <Tooltip
             contentStyle={{
               backgroundColor: "#fff",
-              borderRadius: "8px",
+              borderRadius: "12px",
               border: "none",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
             }}
-            formatter={(value) =>
-              new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(
-                Number(value || 0)
-              )
-            }
+            formatter={(value) => [`Rp${(Number(value) / 1000000).toFixed(2)} Juta`, ""]}
           />
           <Legend />
           <Bar dataKey="target" fill="#6366F1" radius={[4, 4, 0, 0]} name="Target" />
@@ -117,15 +113,11 @@ export function LineTrendChart({ data }: { data: MonthlyPayment[] }) {
           <Tooltip
             contentStyle={{
               backgroundColor: "#fff",
-              borderRadius: "8px",
+              borderRadius: "12px",
               border: "none",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
             }}
-            formatter={(value) =>
-              new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(
-                Number(value || 0)
-              )
-            }
+            formatter={(value) => [`Rp${(Number(value) / 1000000).toFixed(2)} Juta`, ""]}
           />
           <Line
             type="monotone"

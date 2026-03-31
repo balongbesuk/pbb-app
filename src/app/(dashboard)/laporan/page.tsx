@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, Printer } from "lucide-react";
+import { AlertCircle, Download, FileText, Printer, Target, TrendingUp, Users } from "lucide-react";
 import { RwWpDialog } from "@/components/laporan/rw-wp-dialog";
 import { PenarikWpDialog } from "@/components/laporan/penarik-wp-dialog";
 import { LaporanActionButtons } from "@/components/laporan/laporan-action-buttons";
@@ -140,26 +140,41 @@ export default async function LaporanPage({
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card className="space-y-2 rounded-2xl border border-zinc-100 bg-white p-4 shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
-          <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-            Total Wajib Pajak
-          </p>
+          <div className="flex items-center gap-3">
+             <div className="bg-blue-500/10 p-2 rounded-xl">
+                <Users className="w-4 h-4 text-blue-500" />
+             </div>
+             <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+               Total Wajib Pajak
+             </p>
+          </div>
           <div className="text-foreground text-xl font-black tracking-tight">
             {totalWp.toLocaleString()}{" "}
             <span className="text-muted-foreground text-[10px] font-bold">WP</span>
           </div>
         </Card>
         <Card className="space-y-2 rounded-2xl border border-zinc-100 bg-white p-4 shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
-          <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-            Target Penerimaan
-          </p>
+          <div className="flex items-center gap-3">
+             <div className="bg-indigo-500/10 p-2 rounded-xl">
+                <Target className="w-4 h-4 text-indigo-500" />
+             </div>
+             <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+               Target Penerimaan
+             </p>
+          </div>
           <div className="text-foreground text-xl font-black tracking-tighter">
             {formatCurrency(totalTarget)}
           </div>
         </Card>
         <Card className="space-y-1 rounded-2xl border border-zinc-100 bg-emerald-500/5 bg-white p-4 shadow-sm transition-all dark:border-zinc-900 dark:bg-zinc-950">
-          <p className="text-[10px] font-bold tracking-widest text-emerald-600 uppercase">
-            Total Realisasi
-          </p>
+          <div className="flex items-center gap-3">
+             <div className="bg-emerald-500/10 p-2 rounded-xl">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+             </div>
+             <p className="text-[10px] font-bold tracking-widest text-emerald-600 uppercase">
+               Total Realisasi
+             </p>
+          </div>
           <div className="text-xl font-black tracking-tighter text-emerald-700 dark:text-emerald-400">
             {formatCurrency(totalRealisasi)}
           </div>
@@ -168,9 +183,14 @@ export default async function LaporanPage({
           </p>
         </Card>
         <Card className="space-y-2 rounded-2xl border border-zinc-100 bg-rose-500/5 bg-white p-4 shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
-          <p className="text-[10px] font-bold tracking-widest text-rose-600 uppercase">
-            Sisa Piutang
-          </p>
+          <div className="flex items-center gap-3">
+             <div className="bg-rose-500/10 p-2 rounded-xl">
+                <AlertCircle className="w-4 h-4 text-rose-500" />
+             </div>
+             <p className="text-[10px] font-bold tracking-widest text-rose-600 uppercase">
+               Sisa Piutang
+             </p>
+          </div>
           <div className="text-xl font-black tracking-tighter text-rose-700 dark:text-rose-400">
             {formatCurrency(totalSisa)}
           </div>

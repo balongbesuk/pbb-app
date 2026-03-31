@@ -419,7 +419,12 @@ export default async function DashboardPage({
           <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
             <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
               <div>
-                <CardTitle className="text-xl font-bold tracking-tight">Progress Per RW</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-xl font-bold tracking-tight">
+                  <div className="bg-primary/5 rounded-lg p-1.5">
+                    <MapIcon className="text-primary h-4 w-4" />
+                  </div>
+                  Progress Per RW
+                </CardTitle>
                 <CardDescription className="text-xs font-medium">
                   Distribusi target dan realisasi tiap wilayah
                 </CardDescription>
@@ -434,13 +439,21 @@ export default async function DashboardPage({
           </Card>
 
           <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
-            <CardHeader className="border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
-              <CardTitle className="text-xl font-bold tracking-tight">
-                Analisa Tren Bulanan
-              </CardTitle>
-              <CardDescription className="text-xs font-medium">
-                Fluktuasi penerimaan pajak sepanjang tahun
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-xl font-bold tracking-tight">
+                  <div className="bg-primary/5 rounded-lg p-1.5">
+                    <History className="text-primary h-4 w-4" />
+                  </div>
+                  Analisa Tren Bulanan
+                </CardTitle>
+                <CardDescription className="text-xs font-medium">
+                  Fluktuasi penerimaan pajak sepanjang tahun
+                </CardDescription>
+              </div>
+              <div className="rounded-xl bg-zinc-50 p-2 dark:bg-zinc-900">
+                <TrendingUp className="h-4 w-4 text-zinc-400" />
+              </div>
             </CardHeader>
             <CardContent className="pt-6">
               <LineTrendChart data={stats.trenPembayaran} />
