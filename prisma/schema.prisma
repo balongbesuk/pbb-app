@@ -168,6 +168,9 @@ model VillageConfig {
   isJombangBapenda  Boolean @default(false)
   enableBapendaSync Boolean @default(false)
   logoUrl           String?
+  mapCenterLat      Float   @default(-7.5744)
+  mapCenterLng      Float   @default(112.235)
+  mapDefaultZoom    Int     @default(15)
   showNominalPajak  Boolean @default(false)
   enableDigitalArchive Boolean @default(false)
   archiveOnlyLunas     Boolean @default(false)

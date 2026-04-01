@@ -17,6 +17,7 @@ import {
   Globe,
   History,
   Archive,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -45,6 +46,7 @@ const menuItems = [
     href: "/laporan",
     allowedRoles: ["ADMIN", "PENARIK", "PENGGUNA"],
   },
+  { icon: MapPin, label: "Peta Wilayah", href: "/peta", allowedRoles: ["ADMIN"] },
   { icon: Activity, label: "Log Aktivitas", href: "/log-aktivitas", allowedRoles: ["ADMIN"] },
   { icon: Settings, label: "Pengaturan", href: "/settings", allowedRoles: ["ADMIN"] },
   { icon: History, label: "Riwayat Penagihan", href: "/riwayat", allowedRoles: ["PENARIK"] },
