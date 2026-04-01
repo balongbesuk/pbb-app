@@ -75,18 +75,18 @@ export function TaxTableFilters({
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (localSearch.length >= 3 || localSearch.length === 0) {
+      if (localSearch.length >= 2 || localSearch.length === 0) {
         if (localSearch !== search) {
           onSearchChange(localSearch);
         }
       }
-    }, 400); // 400ms debounce
+    }, 600); // 600ms debounce - prevents excessive queries while typing
     return () => clearTimeout(handler);
   }, [localSearch, search, onSearchChange]);
 
   const handleLocalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (localSearch.length >= 3 || localSearch.length === 0) {
+    if (localSearch.length >= 2 || localSearch.length === 0) {
       if (localSearch !== search) {
         onSearchChange(localSearch);
       }

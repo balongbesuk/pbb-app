@@ -66,10 +66,9 @@ export function SpopFormDialog({
     if (!taxItem) return;
     const defaults = buildSpopFormDefaults(taxItem);
     if (villageConfig) {
-      defaults.kabupaten = villageConfig.kabupaten || defaults.kabupaten || "";
       defaults.desaObjek = villageConfig.namaDesa || defaults.desaObjek || "";
-      defaults.kodePosSubjek = villageConfig.kodePos || defaults.kodePosSubjek || "";
     }
+    
     setForm(defaults);
     setStep(1);
     clearPreview();
@@ -429,7 +428,11 @@ export function SpopFormDialog({
                 <Input 
                   id="f-nama-wp"
                   value={form.namaSubjekPajak} 
-                  onChange={(e) => setField("namaSubjekPajak", e.target.value.toUpperCase().slice(0, 21))} 
+                  onChange={(e) => {
+                    const val = e.target.value.toUpperCase().slice(0, 21);
+                    setForm(prev => prev ? { ...prev, namaSubjekPajak: val, namaPenandatangan: val } : prev);
+                    clearPreview();
+                  }} 
                   className={cn("h-12 rounded-2xl font-black text-base uppercase", styles.input)} 
                   placeholder="BUDI SANTOSO"
                 />

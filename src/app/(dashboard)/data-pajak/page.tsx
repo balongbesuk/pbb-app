@@ -48,13 +48,23 @@ export default async function DataPajakPage({
   const andFilters: Prisma.TaxDataWhereInput[] = [];
 
   if (query) {
-    andFilters.push({
-      OR: [
-        { nop: { contains: query } },
-        { namaWp: { contains: query } },
-        { alamatObjek: { contains: query } },
-      ],
-    });
+    // Normalize: strip dots/dashes/spaces for NOP format variations
+    const cleanQuery = query.replace(/[.\-\s]/g, "");
+    const upperQuery = query.toUpperCase();
+    const lowerQuery = query.toLowerCase();
+    const orConditions: Prisma.TaxDataWhereInput[] = [
+      { nop: { contains: query } },
+      { namaWp: { contains: query } },
+      { namaWp: { contains: upperQuery } },
+      { namaWp: { contains: lowerQuery } },
+      { alamatObjek: { contains: query } },
+      { alamatObjek: { contains: upperQuery } },
+    ];
+    // If query has dots stripped, also search NOP without formatting
+    if (cleanQuery !== query && cleanQuery.length >= 3) {
+      orConditions.push({ nop: { contains: cleanQuery } });
+    }
+    andFilters.push({ OR: orConditions });
   }
 
   if (regionStatus === "incomplete") {
