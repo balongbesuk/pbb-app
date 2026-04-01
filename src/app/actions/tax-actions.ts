@@ -7,6 +7,7 @@ import { createAuditLog } from "./log-actions";
 import { requireAdmin } from "@/lib/server-auth";
 import { formatZodError } from "@/lib/validations/schemas";
 import { createDatabaseBackup } from "@/lib/backup";
+import * as cheerio from "cheerio";
 
 export async function previewTaxData(formData: FormData, tahun: number) {
   try {
@@ -160,5 +161,171 @@ export async function clearTaxData(tahun: number) {
   } catch (error) {
     console.error("Clear Error Action: ", error);
     return { success: false, message: formatZodError(error) };
+  }
+}
+
+export async function createManualTaxData(data: {
+  nop: string;
+  namaWp: string;
+  alamatObjek: string;
+  luasTanah: number;
+  luasBangunan: number;
+  ketetapan: number;
+  tahun: number;
+  dusun?: string;
+  rw?: string;
+  rt?: string;
+  paymentStatus?: "LUNAS" | "BELUM_LUNAS" | "SUSPEND" | "TIDAK_TERBIT";
+}) {
+  try {
+    await requireAdmin();
+    if (!data.nop || !data.namaWp || !data.alamatObjek || typeof data.ketetapan !== "number") {
+      throw new Error("Data tidak lengkap (NOP, Nama WP, Alamat Objek, dan Nominal Pajak wajib diisi)");
+    }
+
+    const cleanedNop = String(data.nop).replace(/[^\w.-]/g, '');
+
+    const exist = await prisma.taxData.findFirst({
+      where: { nop: cleanedNop, tahun: data.tahun },
+    });
+
+    if (exist) {
+      throw new Error(`Data dengan NOP ${cleanedNop} pada tahun ${data.tahun} sudah terdaftar.`);
+    }
+
+    const result = await prisma.taxData.create({
+      data: {
+        nop: cleanedNop,
+        namaWp: String(data.namaWp).trim().substring(0, 80),
+        alamatObjek: String(data.alamatObjek).trim().substring(0, 120),
+        luasTanah: Number(data.luasTanah) || 0,
+        luasBangunan: Number(data.luasBangunan) || 0,
+        ketetapan: Number(data.ketetapan) || 0,
+        tagihanDenda: 0,
+        pembayaran: data.paymentStatus === "LUNAS" ? Number(data.ketetapan) || 0 : 0,
+        pokok: Number(data.ketetapan) || 0,
+        denda: 0,
+        lebihBayar: 0,
+        sisaTagihan: data.paymentStatus === "LUNAS" ? 0 : Number(data.ketetapan) || 0,
+        dusun: data.dusun ? String(data.dusun).trim() : null,
+        rw: data.rw ? String(data.rw).trim() : null,
+        rt: data.rt ? String(data.rt).trim() : null,
+        tahun: Number(data.tahun),
+        paymentStatus: data.paymentStatus || "BELUM_LUNAS",
+      },
+    });
+
+    await createAuditLog(
+      "CREATE_TAX",
+      "TaxData",
+      result.id.toString(),
+      `Menambahkan data pajak manual untuk NOP ${cleanedNop} (${result.namaWp})`
+    );
+
+    revalidatePath("/data-pajak");
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Create manual tax error: ", error);
+    return { success: false, message: error instanceof Error ? error.message : "Terjadi kesalahan sistem" };
+  }
+}
+
+export async function fetchBapendaData(nop: string, tahun: number) {
+  try {
+    await requireAdmin();
+    const config = await prisma.villageConfig.findFirst({ where: { id: 1 } });
+    if (!config?.enableBapendaSync) {
+      throw new Error("Sistem Cek Pajak Jombang sedang dinonaktifkan di Pengaturan.");
+    }
+
+    const cleanNop = nop.replace(/\D/g, "");
+    if (cleanNop.length !== 18) throw new Error(`NOP harus 18 digit angka (Diterima ${cleanNop.length} digit).`);
+
+    const p1 = cleanNop.substring(0, 2);
+    const p2 = cleanNop.substring(2, 4);
+    const p3 = cleanNop.substring(4, 7);
+    const p4 = cleanNop.substring(7, 10);
+    const p5 = cleanNop.substring(10, 13);
+    const p6 = cleanNop.substring(13, 17);
+    const p7 = cleanNop.substring(17, 18);
+
+    const url = `https://bapenda.jombangkab.go.id/cek-bayar/ceknopbayar-jmb.kab?module=pbb&kata=${p1}&kata1=${p2}&kata2=${p3}&kata3=${p4}&kata4=${p5}&kata5=${p6}&kata6=${p7}&viewpbb=`;
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "text/html",
+      }
+    });
+
+    if (!res.ok) throw new Error("Gagal terhubung ke web Bapenda.");
+
+    const htmlText = await res.text();
+    const $ = cheerio.load(htmlText);
+
+    let namaWp = "";
+    let alamatObjek = "";
+    let luasTanah = "0";
+    let luasBangunan = "0";
+
+    $("td").each((i, el) => {
+      const text = $(el).text().trim().toLowerCase();
+      if (text === "nama wajib pajak") {
+        namaWp = $(el).next().next().text().trim();
+      }
+      else if (text.includes("letak obj") || text.includes("letak oby") || text.includes("alamat obj") || text.includes("alamat oby")) {
+        let rawAlamat = $(el).next().next().text().trim();
+        // Potong teks jika ketemu pattern awalan RT/RW untuk membersihkan alamat Objek
+        const rtIndex = rawAlamat.search(/\bRT\b/i);
+        if (rtIndex > -1) {
+          rawAlamat = rawAlamat.substring(0, rtIndex).trim();
+          // Hilangkan koma nyangkut di akhir misal "JALAN ABC, RT 01"
+          if (rawAlamat.endsWith(",")) {
+            rawAlamat = rawAlamat.slice(0, -1).trim();
+          }
+        }
+        alamatObjek = rawAlamat;
+      }
+      else if (text === "luas tanah") {
+        luasTanah = $(el).next().next().text().trim();
+      }
+      else if (text === "luas bangunan") {
+        luasBangunan = $(el).next().next().text().trim();
+      }
+    });
+
+    if (!namaWp) throw new Error("Data NOP tidak ditemukan di server Bapenda.");
+
+    let tagihan = 0;
+    $("tr").each((i, el) => {
+      const tds = $(el).find('td');
+      if (tds.length >= 10) {
+        const yearStr = $(tds[0]).text().trim();
+        if (yearStr === tahun.toString() || tahun === 0) {
+           const rawTagihan = $(tds[1]).text().trim();
+           // Menghapus format Rp Indonesia (pisahkan desimal koma, buang semua titik/karakter non-angka)
+           const withoutDecimals = rawTagihan.split(',')[0];
+           const cleanNumbersOnly = withoutDecimals.replace(/\D/g, '');
+           
+           if (cleanNumbersOnly && tagihan === 0) {
+             tagihan = parseInt(cleanNumbersOnly, 10);
+           }
+        }
+      }
+    });
+
+    return {
+      success: true,
+      data: {
+        namaWp,
+        alamatObjek,
+        luasTanah,
+        luasBangunan,
+        ketetapan: tagihan || 0
+      }
+    };
+  } catch (error: any) {
+    return { success: false, message: error.message || "Gagal sinkronisasi data Bapenda" };
   }
 }

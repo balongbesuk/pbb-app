@@ -287,9 +287,16 @@ export function PublicSearch({
                   <Badge className={`${badgeCls} ${
                     item.status === "LUNAS" 
                       ? "bg-emerald-500 text-white shadow-emerald-500/20" 
+                      : item.status === "TIDAK_TERBIT"
+                      ? "bg-zinc-500 text-white shadow-zinc-500/20"
+                      : item.status === "SUSPEND"
+                      ? "bg-rose-500 text-white shadow-rose-500/20"
                       : "bg-amber-500 text-white shadow-amber-500/20"
                   }`}>
-                    {item.status === "LUNAS" ? "Lunas" : "Blm Lunas"}
+                    {item.status === "LUNAS" ? "Lunas" 
+                     : item.status === "TIDAK_TERBIT" ? "Tidak Terbit"
+                     : item.status === "SUSPEND" ? "Sengketa"
+                     : "Blm Lunas"}
                   </Badge>
                 </CardHeader>
                 <CardContent className={`p-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-sm ${bodyTextCls}`}>
@@ -354,7 +361,7 @@ export function PublicSearch({
                   </div>
                   </CardContent>
                   
-                  {item.status === "BELUM_LUNAS" && (
+                  {(item.status === "BELUM_LUNAS" || item.status === "TIDAK_TERBIT" || item.status === "SUSPEND") && (
                     <CardFooter className={`p-4 sm:p-5 border-t flex flex-col gap-4 ${cardFooterCls}`}>
                       {/* Sub-Group 1: Info & Bapenda Actions */}
                       <div className="flex flex-col lg:flex-row items-center justify-between gap-4 w-full">

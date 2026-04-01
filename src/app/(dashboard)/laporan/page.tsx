@@ -54,10 +54,14 @@ export default async function LaporanPage({
     }
 
     const curr = penarikMapReduce.get(pId);
-    curr._count.nop += stat._count.nop;
-    curr._sum.ketetapan += stat._sum.ketetapan || 0;
-    curr._sum.pembayaran += stat._sum.pembayaran || 0;
-    curr._sum.sisaTagihan += stat._sum.sisaTagihan || 0;
+    
+    // Pengecualian penjumlahan untuk status SENGKETA (SUSPEND) dan TIDAK_TERBIT
+    if (stat.paymentStatus !== "SUSPEND" && stat.paymentStatus !== "TIDAK_TERBIT") {
+      curr._count.nop += stat._count.nop;
+      curr._sum.ketetapan += stat._sum.ketetapan || 0;
+      curr._sum.pembayaran += stat._sum.pembayaran || 0;
+      curr._sum.sisaTagihan += stat._sum.sisaTagihan || 0;
+    }
 
     if (stat.paymentStatus === "LUNAS") {
       curr.lunasCount += stat._count.nop;
