@@ -1,5 +1,27 @@
 # Changelog
 
+## v8.0 - 2026-04-02: The GIS Revolution 🛰️
+
+### Fitur Utama: GIS Command Center v2.0
+- **Peta Interaktif Admin**: Implementasi dashboard manajemen peta desa berbasis GeoJSON dan GPX yang canggih.
+- **Interactive Map Picker**: Penentuan titik pusat peta desa secara visual (klik pada peta) yang menggantikan input manual Latitude/Longitude.
+- **Bulk GPX Pipeline**: Sistem unggah massal file GPX dengan konversi otomatis dari format `LineString` ke `Polygon` area wilayah.
+- **Auto-Metadata Extraction**: Pengenalan otomatis struktur wilayah (RT, RW, Dusun, Desa) dari skema penamaan file GPX.
+- **Toggle Satellite Layer**: Integrasi layer citra satelit (World Imagery) pada peta utama dan jendela pemilihan koordinat.
+
+### Perbaikan & Konsolidasi Dashboard
+- **Unified Settings Experience**: Penggabungan menu "Pengaturan Peta" langsung ke dalam "Pengaturan Sistem" berbasis tab untuk alur kerja yang lebih efisien.
+- **Sidebar Navigation Optimization**: Pembersihan menu navigasi sidebar untuk menghilangkan redundansi dan menyederhanakan akses admin.
+- **Advanced UI/UX Refinement**: Perbaikan layout tab, optimasi Dark Mode secara menyuluruh, dan resolusi error hidrasi React pada komponen peta.
+- **Pro-Form Validation**: Pembatasan panjang input dan pembersihan otomatis karakter (koma ke titik) pada kolom koordinat.
+
+### Keamanan & Stabilitas GIS
+- **Admin API Guard**: Seluruh endpoint API manajemen peta (`upload` & `delete`) kini diproteksi oleh Server-side Session (Role ADMIN).
+- **Stored XSS Protection**: Sanitasi otomatis pada metadata (Dusun/RT/RW) yang ditampilkan di tooltip peta untuk mencegah injeksi script berbahaya.
+- **Conditional Layer State**: Logika pintar yang hanya mengaktifkan layer filter (RT/RW/Dusun) jika data wilayah terkait tersedia di sistem.
+
+---
+
 ## v7.2 - 2026-04-02
 
 ### Perbaikan & Penyempurnaan Sistem (Akurat Sesuai GitHub Commit)
