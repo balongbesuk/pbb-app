@@ -1,5 +1,21 @@
 # Changelog
 
+## v7.2 - 2026-04-02
+
+### Perbaikan & Penyempurnaan Sistem (Akurat Sesuai GitHub Commit)
+- **Refining SPOP Print Layout**: Pembersihan navigasi visual pada halaman 3 & 4 form SPOP, penghapusan garis border vertikal yang tidak perlu untuk tampilan yang lebih profesional.
+- **Tax Research Sync Optimization**: Sinkronisasi pencarian data pajak yang lebih cepat dan perbaikan fitur autofill pada mutasi form SPOP.
+- **Smart NOP Search**: Implementasi pencarian NOP yang lebih cerdas dan dukungan input data manual yang sudah difinalisasi.
+- **Build Performance Optimization**: Pemindahan direktori storage ke luar root project dan sentralisasi konfigurasi `STORAGE_ROOT` via `.env` untuk mempercepat proses kompilasi/build.
+
+### UI/UX & Keamanan (Polish)
+- **Login & Search Security**: Pembatasan jumlah karakter pada kolom input Login dan pencarian untuk mencegah serangan overflow sederhana dan meningkatkan validitas data.
+- **Enhanced Dashboard Visuals**: Penambahan ikon informatif pada kartu ringkasan dashboard dan penyesuaian label mata uang (jutaan) agar lebih mudah dibaca.
+- **Particles & Dialog Optimization**: Optimasi efek partikel latar belakang dan perbaikan kontras warna background pada komponen dialog agar tetap solid di berbagai mode.
+- **Admin Security**: Penambahan tutorial reset password admin dan pembersihan skrip middleware/test yang sudah tidak digunakan.
+
+---
+
 ## v7.1 - 2026-03-30
 
 ### Fitur Baru
