@@ -1,30 +1,29 @@
 <img width="2536" height="923" alt="PBB Manager Dashboard" src="https://github.com/user-attachments/assets/d540a662-121b-41d0-8882-5cb8455aa37b" />
 
-# 🏦 PBB Manager — Solusi Digitalisasi Pajak Desa `v7.1`
+# 🛰️ PBB Manager — The GIS Revolution `v8.0`
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
 [![Prisma](https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma)](https://prisma.io)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css)](https://tailwindcss.com)
-[![Version](https://img.shields.io/badge/Version-7.1-blue)](https://github.com/balongbesuk/pbb-app/tags)
+[![Version](https://img.shields.io/badge/Version-8.0-blue)](https://github.com/balongbesuk/pbb-app/tags)
 
-**PBB Manager v7.1** melompat lebih jauh dengan memperkenalkan **Portal Mutasi Mandiri** dan **Stabilitas Keamanan Tingkat Tinggi**. Platform ini dirancang untuk mentransformasi tata kelola PBB desa secara total—mulai dari pendataan, transparansi penagihan, hingga layanan mandiri bagi warga untuk pengajuan perubahan data SPPT secara digital dan aman.
+**PBB Manager v8.0 (The GIS Revolution)** menghadirkan lompatan teknologi dengan komando GIS penuh. Platform ini kini terintegrasi dengan pemetaan wilayah digital yang interaktif, memungkinkan visualisasi data pajak langsung dari peta satelit. Dirancang untuk mentransformasi tata kelola PBB desa secara total—mulai dari pendataan spasial, transparansi penagihan, hingga layanan mandiri digital yang aman.
 
 ---
 
-## ✨ Fitur Unggulan v7.1
+## ✨ Fitur Unggulan v8.0
 
 | Fitur | Deskripsi |
 |---|---|
-| **🏢 Portal Mutasi (Self-Service)** | **BARU (v7.1):** Memungkinkan warga mengajukan perubahan data (Hibah, Waris, Jual Beli) dan mencetak draf dokumen resmi (Surat Permohonan & Keterangan Desa) secara mandiri. |
-| **🛡️ Keamanan Data & Sanitasi** | **BARU (v7.1):** Implementasi sistem sanitasi input global (`sanitizeText`) dan *anti-XSS* pada form SPOP serta validasi NIK 16-digit. |
-| **🖨️ Cetak & Tipografi SPOP** | **BARU (v7.1):** Standarisasi cetak SPOP/LSPOP (12px proporsional), kop tanpa bingkai, dan form dinamis dengan profil desa terpusat. |
+| **🛰️ GIS Command Center v2.0** | **BARU (v8.0):** Dashboard peta interaktif berbasis GeoJSON/GPX untuk manajemen wilayah RT/RW/Dusun secara visual dengan layer citra satelit. |
+| **📍 Interactive Map Picker** | **BARU (v8.0):** Penentuan titik koordinat pusat wilayah langsung dari peta tanpa input manual Latitude/Longitude (Point-and-Click). |
+| **🏗️ Bulk GPX Pipeline** | **BARU (v8.0):** Unggah massal file GPX dengan ekstraksi metadata otomatis (RT/RW) dan konversi cerdas dari `LineString` ke `Polygon`. |
+| **🛡️ GIS Security & Guard** | **BARU (v8.0):** Proteksi API manajemen peta (Role ADMIN) dan sistem sanitasi otomatis pada tooltip peta untuk mencegah serangan Stored XSS. |
+| **🏢 Portal Mutasi (Self-Service)** | Memungkinkan warga mengajukan perubahan data (Hibah, Waris, Jual Beli) dan mencetak draf dokumen resmi secara mandiri. |
 | **🚀 Arsip Digital (Smart Scan)** | Algoritma ekstraksi otomatis yang memecah ribuan lembar E-SPPT menjadi file personal berdasarkan NOP secara instan. |
-| **📉 Kompresi PDF Intelligent** | Teknologi *Streaming Compression* untuk mengecilkan ukuran PDF massal tanpa membebani memori server, menghemat penyimpanan hingga 80%. |
-| **🔄 Smart Sync (Excel)** | Integrasi DHKP cerdas yang memungkinkan pembaruan data ribuan wajib pajak tanpa risiko duplikasi atau penghapusan manual. |
-| **⚡ Mass Allocation** | Distribusi tugas penarikan pajak ke petugas lapangan dalam satu klik menggunakan filter wilayah yang fleksibel. |
+| **🔄 Smart Sync (Excel)** | Integrasi DHKP cerdas yang memungkinkan pembaruan data ribuan wajib pajak tanpa risiko duplikasi. |
 | **📊 Dashboard Eksekutif** | Visualisasi statistik realisasi harian, performa petugas per dusun, dan tren pembayaran secara *real-time*. |
-| **📱 Pengalaman Mobile Premium** | Navigasi *thumb-friendly* dengan efek *glassmorphism* dan skalabilitas pratinjau dokumen yang cerdas untuk kenyamanan akses via ponsel. |
 
 ---
 
@@ -32,7 +31,7 @@
 
 Sistem keamanan berlapis untuk menjaga integritas data desa:
 
-*   **👑 ADMIN (Kepala Desa / Admin IT)**: Memegang kendali penuh atas konfigurasi instansi, sinkronisasi data pusat, pengelolaan arsip digital, dan manajemen akun pengguna.
+*   **👑 ADMIN (Kepala Desa / Admin IT)**: Memegang kendali penuh atas konfigurasi instansi, GIS, sinkronisasi data pusat, pengelolaan arsip digital, dan manajemen akun pengguna.
 *   **📱 PENARIK (Kepala Dusun / Petugas)**: Antarmuka yang dioptimalkan untuk perangkat mobile. Fokus pada pembaruan status bayar di lapangan dan manajemen rotasi wajib pajak.
 *   **🛡️ PENGGUNA (Viewer)**: Akses terbatas hanya untuk melihat data dan laporan tanpa izin modifikasi (Read-Only).
 
@@ -42,7 +41,7 @@ Sistem keamanan berlapis untuk menjaga integritas data desa:
 
 Kami telah menyusun panduan lengkap agar Anda dapat mengoperasikan sistem ini dengan mudah:
 
-1.  **[Wiki Teknis & Keamanan](./docs/WIKI.md)**: Ringkasan arsitektur, hardening keamanan, dan indeks teknis.
+1.  **[Wiki Teknis & Keamanan](./docs/WIKI.md)**: Ringkasan arsitektur, hardening keamanan, dan indeks teknis GIS.
 2.  **[Panduan Instalasi Pemula](./docs/PANDUAN_INSTALASI.md)**: Langkah demi langkah instalasi dari nol untuk pengguna baru.
 3.  **[Panduan Arsip Digital E-SPPT](./docs/PANDUAN_ARSIP_DIGITAL.md)**: Petunjuk teknis penggunaan fitur Smart Scan, Kompresi, dan Manajemen File.
 4.  **[Dokumentasi Penggunaan](./docs/DOKUMENTASI_PENGGUNAAN.md)**: Panduan operasional fitur harian bagi admin dan petugas.
@@ -96,6 +95,7 @@ npm run start
 ## 📡 Tech Stack
 
 *   **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS
+*   **GIS Engine**: Leaflet.js with Mapbox/Esri Satellites
 *   **Backend**: Next.js Server Actions, Prisma ORM
 *   **Database**: SQLite (Local) / PostgreSQL (Optional)
 *   **Storage**: Local Streaming File System
@@ -103,4 +103,4 @@ npm run start
 ---
 
 *Dikembangkan untuk kemajuan digitalisasi desa di Indonesia.*
-*Terakhir Diperbarui: Maret 2026*
+*Terakhir Diperbarui: April 2026*

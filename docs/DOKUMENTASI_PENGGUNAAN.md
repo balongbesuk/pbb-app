@@ -139,7 +139,35 @@ Portal depan adalah wajah layanan publik Anda. Admin bisa menyesuaikannya:
 
 ---
 
-### 8. Portal Mutasi & Cetak Dokumen SPOP (v7.1)
+---
+
+### 9. Manajemen Peta Wilayah (GIS) (v8.0)
+
+PBB Manager v8.0 kini dilengkapi dengan **GIS Command Center** untuk visualisasi wilayah kerja secara spasial di atas peta citra satelit.
+
+**A. Mengatur Titik Pusat Peta (Map Picker):**
+1. Buka menu **Pengaturan > Pengaturan Sistem**
+2. Klik tab **Peta**
+3. Anda akan melihat peta interaktif. Klik tombol **📍 Pilih Lokasi di Peta**
+4. Cari lokasi desa Anda, lalu **klik langsung pada peta** untuk menentukan titik koordinat Latitude & Longitude secara otomatis.
+5. Gunakan tombol **Simpan Koordinat** untuk menerapkan perubahan.
+
+**B. Upload Data Wilayah (GPX Pipeline):**
+1. Masih di tab **Peta**, cari bagian **Data Peta Wilayah**
+2. Klik tombol **Upload GPX**
+3. Pilih satu atau banyak file GPX hasil pemetaan (Contoh: `Dusun Krajan RT01.gpx`)
+4. **Sistem Ekstraksi Otomatis**: Sistem akan membaca nama file untuk menentukan RT/RW/Dusun secara cerdas.
+5. Klik **Mulai Unggah**. Data akan langsung terkonversi menjadi area wilayah (Polygon) di peta utama.
+
+**C. Visualisasi & Filter Peta:**
+1. Buka menu **Dashboard** atau menu khusus **Peta**
+2. Gunakan tombol **Ganti Layer** (kanan atas peta) untuk berpindah antara tampilan **Jalanan** atau **Satelit (World Imagery)**.
+3. Gunakan filter **Layer Wilayah**: Anda dapat menampilkan/menyembunyikan batas RT, RW, atau Dusun sesuai ketersediaan data.
+4. Klik pada area wilayah di peta untuk melihat metadata (Nama Dusun/RT/RW) secara instan.
+
+---
+
+### 10. Portal Mutasi & Cetak Dokumen SPOP (v7.1)
 
 Fitur *Self-Service* mempermudah warga untuk mengelola pengajuan perubahan data SPPT PBB (Mutasi, Balik Nama, Pemecahan) secara mandiri.
 1. **Portal Publik**: Warga bisa mengakses form pengajuan mutasi ini dari halaman pencarian publik (*Public Search*) dengan mengklik opsi mutasi.
@@ -149,7 +177,7 @@ Fitur *Self-Service* mempermudah warga untuk mengelola pengajuan perubahan data 
 
 ---
 
-### 9. Memulihkan Akun Admin (Reset Password Server)
+### 11. Memulihkan Akun Admin (Reset Password Server)
 
 Jika Anda lupa password akun utama `admin` dan tidak bisa masuk sama sekali, Anda dapat melakukan *reset* paksa langsung dari server dengan memodifikasi konfigurasi database. Langkah ini aman dan tidak akan menghapus data warga.
 
@@ -226,7 +254,7 @@ Untuk mendapatkan akses lebih, hubungi **Admin** untuk menaikkan peran menjadi *
 ## ❓ FAQ & Troubleshooting
 
 **Q: Saya lupa password, bagaimana cara reset?**  
-Hubungi Admin untuk melakukan reset password. Admin bisa mereset password dari menu **Pengguna > Edit** dengan menekan ikon kunci 🔑. Namun, jika Anda yang lupa adalah sang Admin sendiri, **silakan merujuk pada Panduan Admin poin ke-9 di atas (Memulihkan Akun Admin)**.
+Hubungi Admin untuk melakukan reset password. Admin bisa mereset password dari menu **Pengguna > Edit** dengan menekan ikon kunci 🔑. Namun, jika Anda yang lupa adalah sang Admin sendiri, **silakan merujuk pada Panduan Admin poin ke-11 di atas (Memulihkan Akun Admin)**.
 
 **Q: Apakah data saya akan hilang jika saya upload file Excel baru?**  
 **TIDAK.** Dengan fitur *Smart Sync* v2.0, sistem hanya akan memperbarui data yang ada di file Excel. Data lama yang sudah ada di sistem tapi tidak ada di file Excel baru akan tetap aman (tidak dihapus).
@@ -253,4 +281,4 @@ Tampilan v2.0 sudah dioptimalkan. Jika terasa lambat, coba bersihkan *cache* bro
 
 ---
 
-*Dokumentasi terakhir diperbarui: 30 Maret 2026 (v7.1 - Portal Mutasi & SPOP Print)*
+*Dokumentasi terakhir diperbarui: 2 April 2026 (v8.0 - The GIS Revolution)*
