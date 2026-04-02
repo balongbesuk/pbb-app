@@ -234,7 +234,7 @@ export function PetaSettingsTab() {
                                     </div>
                                     <div className="rounded-xl bg-amber-500/5 p-2 border border-amber-500/10">
                                         <p className="text-[9px] text-amber-700 dark:text-amber-400 font-bold leading-tight">
-                                           💡 TIPS: Gunakan Nama File yang Jelas jika data GPX tidak memiliki metadata "Name". Sistem akan otomatis mengambil identitas wilayah dari nama file.
+                                           💡 TIPS: Gunakan Nama File yang Jelas jika data GPX tidak memiliki metadata &quot;Name&quot;. Sistem akan otomatis mengambil identitas wilayah dari nama file.
                                         </p>
                                     </div>
                                 </div>

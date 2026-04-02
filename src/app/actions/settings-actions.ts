@@ -146,19 +146,19 @@ export async function updateVillageConfig(raw: any) {
     const data = VillageConfigSchema.parse(raw);
 
     const updateData: any = {};
-    if (data.namaDesa) updateData.namaDesa = data.namaDesa;
-    if (data.kecamatan) updateData.kecamatan = data.kecamatan;
-    if (data.kabupaten) updateData.kabupaten = data.kabupaten;
+    if (data.namaDesa !== undefined) updateData.namaDesa = data.namaDesa;
+    if (data.kecamatan !== undefined) updateData.kecamatan = data.kecamatan;
+    if (data.kabupaten !== undefined) updateData.kabupaten = data.kabupaten;
     if (data.alamatKantor !== undefined) updateData.alamatKantor = data.alamatKantor;
     if (data.email !== undefined) updateData.email = data.email;
     if (data.kodePos !== undefined) updateData.kodePos = data.kodePos;
     if (data.namaKades !== undefined) updateData.namaKades = data.namaKades;
 
-    if (data.tahunPajak) {
+    if (data.tahunPajak !== undefined) {
       updateData.tahunPajak = data.tahunPajak;
     }
 
-    if (data.jatuhTempo) {
+    if (data.jatuhTempo !== undefined) {
       updateData.jatuhTempo = data.jatuhTempo;
     }
 

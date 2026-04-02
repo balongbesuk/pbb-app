@@ -202,7 +202,7 @@ export function TaxBulkActions({
             <div className="bg-white/50 dark:bg-zinc-900/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 p-3">
               <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2 flex items-center justify-between">
                  <span>Daftar PBB Terpilih</span>
-                 <span className="text-zinc-500">Klik 'X' untuk hapus</span>
+                 <span className="text-zinc-500">Klik &apos;X&apos; untuk hapus</span>
               </p>
               <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto pr-1">
                  {Array.from(selectedDetails.entries()).map(([id, data]) => (

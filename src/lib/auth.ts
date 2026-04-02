@@ -2,6 +2,65 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+const LOGIN_RATE_LIMIT = {
+  limit: 5,
+  windowMs: 10 * 60 * 1000,
+};
+
+function getHeaderValue(
+  headers: Headers | Record<string, string | string[] | undefined> | undefined,
+  key: string
+): string | null {
+  if (!headers) return null;
+
+  if (typeof (headers as Headers).get === "function") {
+    return (headers as Headers).get(key);
+  }
+
+  const value = (headers as Record<string, string | string[] | undefined>)[key];
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function getRequestIp(req: { headers?: Headers | Record<string, string | string[] | undefined> }): string {
+  const forwarded = getHeaderValue(req.headers, "x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+
+  return getHeaderValue(req.headers, "x-real-ip") || "unknown";
+}
+
+function maskIp(ip: string): string {
+  if (!ip || ip === "unknown") return "unknown";
+
+  if (ip.includes(":")) {
+    const parts = ip.split(":").filter(Boolean);
+    if (parts.length <= 2) return ip;
+    return `${parts.slice(0, 2).join(":")}:*`;
+  }
+
+  const parts = ip.split(".");
+  if (parts.length !== 4) return ip;
+  return `${parts[0]}.${parts[1]}.*.*`;
+}
+
+async function createFailedLoginAuditLog(username: string, ip: string, reason: string) {
+  try {
+    await prisma.auditLog.create({
+      data: {
+        action: "LOGIN_FAILED",
+        entity: "Auth",
+        entityId: username,
+        details: `Login gagal untuk username "${username}" dari IP ${maskIp(ip)}. Alasan: ${reason}.`,
+      },
+    });
+  } catch (error) {
+    console.error("Gagal membuat audit log login gagal:", error);
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -11,17 +70,35 @@ export const authOptions: NextAuthOptions = {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.username || !credentials?.password) return null;
 
+        const username = credentials.username.trim();
+        const ip = getRequestIp(req);
+        const rateLimitKey = `login:${ip}:${username.toLowerCase()}`;
+        const loginRateLimit = checkRateLimit(rateLimitKey, LOGIN_RATE_LIMIT);
+
+        if (!loginRateLimit.allowed) {
+          await createFailedLoginAuditLog(username, ip, "RATE_LIMIT");
+          throw new Error(
+            `Terlalu banyak percobaan login. Coba lagi dalam ${loginRateLimit.retryAfter} detik.`
+          );
+        }
+
         const user = await prisma.user.findUnique({
-          where: { username: credentials.username },
+          where: { username },
         });
 
-        if (!user) return null;
+        if (!user) {
+          await createFailedLoginAuditLog(username, ip, "USER_NOT_FOUND");
+          return null;
+        }
 
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isPasswordValid) return null;
+        if (!isPasswordValid) {
+          await createFailedLoginAuditLog(username, ip, "INVALID_PASSWORD");
+          return null;
+        }
 
         return {
           id: user.id,

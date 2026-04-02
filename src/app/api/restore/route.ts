@@ -7,8 +7,15 @@ import fs from "fs";
 import AdmZip from "adm-zip";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { resolveSafeChildPath } from "@/lib/file-security";
 
 const execAsync = promisify(exec);
+const MAX_RESTORE_ZIP_SIZE = 200 * 1024 * 1024; // 200MB
+const MAX_RESTORE_ENTRIES = 5000;
+
+function isAllowedRestoreEntry(entryName: string): boolean {
+  return entryName === "dev.db" || entryName.startsWith("uploads/");
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,6 +30,15 @@ export async function POST(req: NextRequest) {
     if (!file) {
       return NextResponse.json({ error: "File tidak ditemukan" }, { status: 400 });
     }
+    if (file.size <= 0) {
+      return NextResponse.json({ error: "File restore kosong." }, { status: 400 });
+    }
+    if (file.size > MAX_RESTORE_ZIP_SIZE) {
+      return NextResponse.json(
+        { error: "Ukuran file restore terlalu besar. Maksimal 200MB." },
+        { status: 400 }
+      );
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer());
     let zip: AdmZip;
@@ -34,11 +50,30 @@ export async function POST(req: NextRequest) {
 
     // --- STEP 1: VALIDASI ISI ZIP ---
     const zipEntries = zip.getEntries();
-    const dbEntry = zipEntries.find((entry) => entry.entryName.endsWith(".db"));
-
-    if (!dbEntry) {
+    if (zipEntries.length === 0) {
+      return NextResponse.json({ error: "ZIP restore kosong." }, { status: 400 });
+    }
+    if (zipEntries.length > MAX_RESTORE_ENTRIES) {
       return NextResponse.json(
-        { error: "Tidak ada file database (.db) di dalam ZIP." },
+        { error: "ZIP restore berisi terlalu banyak file." },
+        { status: 400 }
+      );
+    }
+
+    const invalidEntry = zipEntries.find((entry) => !isAllowedRestoreEntry(entry.entryName));
+    if (invalidEntry) {
+      return NextResponse.json(
+        { error: `ZIP restore mengandung file tidak diizinkan: ${invalidEntry.entryName}` },
+        { status: 400 }
+      );
+    }
+
+    const dbEntries = zipEntries.filter((entry) => !entry.isDirectory && entry.entryName === "dev.db");
+    const dbEntry = dbEntries[0];
+
+    if (dbEntries.length !== 1 || !dbEntry) {
+      return NextResponse.json(
+        { error: "Backup harus berisi tepat satu file database bernama dev.db di root ZIP." },
         { status: 400 }
       );
     }
@@ -60,21 +95,25 @@ export async function POST(req: NextRequest) {
 
     // 1. Ekstrak data DB ke staging
     const dbBuffer = dbEntry.getData();
+    if (dbBuffer.length === 0) {
+      return NextResponse.json({ error: "File database pada backup kosong." }, { status: 400 });
+    }
     fs.writeFileSync(stagedDbPath, dbBuffer);
 
     // 2. Ekstrak folder uploads ke staging
     const uploadEntries = zipEntries.filter(entry => entry.entryName.startsWith("uploads/"));
     if (uploadEntries.length > 0) {
       if (!fs.existsSync(stagedUploadsDir)) fs.mkdirSync(stagedUploadsDir, { recursive: true });
-      uploadEntries.forEach(entry => {
-          if (!entry.isDirectory) {
-              const relPath = entry.entryName.replace(/^uploads\//, "");
-              const target = path.join(stagedUploadsDir, relPath);
-              const targetParent = path.dirname(target);
-              if (!fs.existsSync(targetParent)) fs.mkdirSync(targetParent, { recursive: true });
-              fs.writeFileSync(target, entry.getData());
-          }
-      });
+      for (const entry of uploadEntries) {
+        if (entry.isDirectory) continue;
+
+        const relPath = entry.entryName.replace(/^uploads\//, "");
+        const target = resolveSafeChildPath(stagedUploadsDir, relPath);
+        const targetParent = path.dirname(target);
+
+        if (!fs.existsSync(targetParent)) fs.mkdirSync(targetParent, { recursive: true });
+        fs.writeFileSync(target, entry.getData());
+      }
     }
 
     // --- STEP 3: BACKUP DATABASE SAAT INI ---
@@ -167,6 +206,8 @@ export async function POST(req: NextRequest) {
         return false;
     };
 
+    let schemaSyncWarning: string | null = null;
+
     try {
         console.log("[Restore] Swapping database file (Resilient Mode)...");
         // 1. Swap Database
@@ -209,10 +250,10 @@ export async function POST(req: NextRequest) {
         }
         
         // Success cleanup
-        if (dbMovedToOld && fs.existsSync(oldDbPath)) {
+        if (dbMovedToOld && dbStagedToLive && fs.existsSync(oldDbPath)) {
           try { fs.unlinkSync(oldDbPath); } catch (e) {}
         }
-        if (uploadsMovedToOld && fs.existsSync(oldUploadsPath)) {
+        if (uploadsMovedToOld && uploadsStagedToLive && fs.existsSync(oldUploadsPath)) {
           try { fs.rmSync(oldUploadsPath, { recursive: true, force: true }); } catch(e) {}
         }
         
@@ -242,13 +283,15 @@ export async function POST(req: NextRequest) {
       console.log("[Restore] Schema synced successfully.");
     } catch (syncError: any) {
       console.warn("[Restore] Sync failed or timeout, check manually.", syncError);
+      schemaSyncWarning =
+        " Restore selesai, tetapi sinkronisasi skema otomatis gagal. Periksa log server sebelum melanjutkan penggunaan.";
     }
 
     try { fs.rmSync(stagingDir, { recursive: true, force: true }); } catch (e) {}
 
     const response = NextResponse.json({
       success: true,
-      message: "Database dan aset berhasil dipulihkan. Sesi Anda akan direset untuk memuat data baru.",
+      message: `Database dan aset berhasil dipulihkan. Sesi Anda akan direset untuk memuat data baru.${schemaSyncWarning || ""}`,
     });
 
     response.cookies.delete("next-auth.session-token");
@@ -257,6 +300,11 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error: any) {
     console.error("Restore Error Global:", error);
+    try {
+      await prisma.$connect();
+    } catch (reconnectError) {
+      console.error("[Restore] Gagal reconnect Prisma setelah error:", reconnectError);
+    }
     return NextResponse.json(
       { error: "Gagal memulihkan: " + error.message + ". Silakan tutup semua aplikasi yang membuka database dan coba lagi." },
       { status: 500 }

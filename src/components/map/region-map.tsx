@@ -164,7 +164,7 @@ export function RegionMap({
 
     const color = s.percentage >= 90 ? '#10b981' : s.percentage >= 75 ? '#84cc16' : s.percentage >= 50 ? '#eab308' : '#ef4444';
 
-    let label = `
+    const label = `
       <div style="min-width: 180px; font-family: sans-serif;">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
           <div style="background: ${color}20; color: ${color}; width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-center; font-size: 14px;">📍</div>

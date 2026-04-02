@@ -13,7 +13,8 @@
     "lint:errors": "eslint src/ --quiet",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "audit:a11y": "node scripts/axe-audit.js"
+    "audit:a11y": "node scripts/axe-audit.js",
+    "verify:security": "node scripts/verify-security.js"
   },
   "browserslist": [
     "> 0.5%",
@@ -96,16 +97,15 @@
     "ts-node": "^10.9.2",
     "typescript": "^5"
   },
-  "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
-  },
   "overrides": {
     "tar": "7.5.13",
     "effect": "3.21.0",
-    "brace-expansion": "5.0.5",
     "path-to-regexp": "8.4.0",
     "xmldom": "npm:@xmldom/xmldom@^0.9.9",
     "minimist": "1.2.8",
-    "lodash": "4.18.1"
+    "lodash": "4.18.1",
+    "minimatch@3.1.5": {
+      "brace-expansion": "1.1.12"
+    }
   }
 }

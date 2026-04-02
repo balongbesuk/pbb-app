@@ -3,7 +3,6 @@
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { checkRateLimit } from "@/lib/rate-limit";
-import path from "path";
 import fs from "fs";
 
 /**
@@ -136,21 +135,25 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
     const bapendaUrl = config?.bapendaUrl || null;
     const isJombangBapenda = config?.isJombangBapenda ?? true;
 
-    const today = new Date();
-    
     // Scan arsip folder (Year-aware)
     const { getArchivePath } = require("@/lib/storage");
     const archiveDir = getArchivePath(tahunPajak.toString());
-    let archiveFiles: string[] = [];
+    let archiveIndex = new Map<string, string>();
     if (fs.existsSync(archiveDir)) {
-      archiveFiles = fs.readdirSync(archiveDir);
+      archiveIndex = new Map(
+        fs
+          .readdirSync(archiveDir)
+          .map((filename) => [filename.replace(/\D/g, ""), filename] as const)
+          .filter(([digits]) => Boolean(digits))
+      );
     }
 
       // Map data structure for public view
       const mapped = results.map(r => {
         // Cari file arsip (NOP)
         const cleanNop = r.nop.replace(/\D/g, "");
-        const matchedArchive = archiveFiles.find(f => f.replace(/\D/g, "").startsWith(cleanNop));
+        const matchedArchive =
+          Array.from(archiveIndex.entries()).find(([digits]) => digits.startsWith(cleanNop))?.[1] ?? null;
 
         // Pengaturan hak akses arsip digital
         let finalArsipUrl: string | null = null;
@@ -166,8 +169,6 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
               finalArsipUrl = `/arsip-pbb/${tahunPajak}/${matchedArchive}`;
            }
         }
-
-        console.log(`Pencarian: ${r.namaWp} -> Arsip: ${finalArsipUrl || 'Kosong'}`);
 
         return {
           id: r.id,

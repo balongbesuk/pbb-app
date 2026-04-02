@@ -28,8 +28,8 @@ const parseBapendaDate = (dateStr: string) => {
   try {
     const parts = dateStr.split("-");
     if (parts.length === 3) {
-      let day = parseInt(parts[0]);
-      let monthStr = parts[1].toUpperCase();
+      const day = parseInt(parts[0]);
+      const monthStr = parts[1].toUpperCase();
       let year = parts[2];
       
       // normalize year if 2 digits

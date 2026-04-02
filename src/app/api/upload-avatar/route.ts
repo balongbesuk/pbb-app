@@ -6,9 +6,16 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
 import { createAuditLog } from "@/app/actions/log-actions";
+import { assertValidImageUpload } from "@/lib/file-security";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+const EXTENSION_BY_TYPE: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,8 +49,12 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    assertValidImageUpload(buffer, file.type);
 
-    const ext = file.name.split(".").pop() || "jpg";
+    const ext = EXTENSION_BY_TYPE[file.type];
+    if (!ext) {
+      return NextResponse.json({ error: "Ekstensi file tidak valid." }, { status: 400 });
+    }
     const filename = `avatar-${userId}.${ext}`;
 
     const uploadDir = path.join(process.cwd(), "public", "uploads", "avatars");

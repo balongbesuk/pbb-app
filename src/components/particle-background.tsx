@@ -24,7 +24,7 @@ export const ParticleBackground = ({ isDark }: { isDark: boolean }) => {
 
     let rafId: number;
     let particles: Particle[] = [];
-    let mouse = { x: -1000, y: -1000, targetX: -1000, targetY: -1000 };
+    const mouse = { x: -1000, y: -1000, targetX: -1000, targetY: -1000 };
     
     // Smooth mouse interpolation
     const ease = 0.05;

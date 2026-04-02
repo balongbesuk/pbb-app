@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
+import { assertValidImageUpload } from "@/lib/file-security";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    assertValidImageUpload(buffer, file.type);
 
     const ext = EXTENSION_BY_TYPE[file.type] || "png";
     const filename = `logo-desa.${ext}`;

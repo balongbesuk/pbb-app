@@ -228,6 +228,8 @@ export default async function DashboardPage({
     totalLogs = dl.total;
   }
 
+  const logoVersion = villageConfig.updatedAt?.getTime() ?? 0;
+
   return (
     <div className="animate-in fade-in space-y-8 duration-700">
       {/* Header Section */}
@@ -237,7 +239,7 @@ export default async function DashboardPage({
           {villageConfig.logoUrl && (
             <div className="hidden h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm dark:bg-zinc-100 sm:flex items-center justify-center">
               <Image
-                src={`${villageConfig.logoUrl}?t=${villageConfig.updatedAt?.getTime() || Date.now()}`}
+                src={`${villageConfig.logoUrl}?t=${logoVersion}`}
                 alt="Logo Desa"
                 width={56}
                 height={56}

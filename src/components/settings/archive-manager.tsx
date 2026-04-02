@@ -514,7 +514,7 @@ export function ArchiveManager() {
                     <div className="bg-blue-500/5 border border-blue-500/10 p-4 rounded-2xl space-y-2">
                        <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">Aturan Penamaan</p>
                        <p className="text-[11px] text-blue-700/80 leading-relaxed italic">
-                          "Agar terdeteksi di pencarian publik, pastikan nama file adalah **NOMOR NOP** warga. Contoh: **351704001900100100.pdf**"
+                          &quot;Agar terdeteksi di pencarian publik, pastikan nama file adalah **NOMOR NOP** warga. Contoh: **351704001900100100.pdf**&quot;
                        </p>
                     </div>
 
