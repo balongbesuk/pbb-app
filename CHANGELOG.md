@@ -1,5 +1,25 @@
 # Changelog
 
+## v8.1 - 2026-04-02: Security & Stability Hardening
+
+### Keamanan & Proteksi Sistem
+- **Login Protection Layer**: Penambahan rate limiting login dan audit log untuk percobaan login gagal agar brute-force lebih sulit dilakukan dan lebih mudah dipantau.
+- **Secure Media Upload Validation**: Upload avatar dan logo kini memverifikasi signature file gambar secara biner, bukan hanya MIME type, serta memakai ekstensi file yang dikontrol server.
+- **Restore Backup Hardening**: Endpoint restore kini membatasi ukuran ZIP, memvalidasi struktur isi backup, menolak file liar di luar `dev.db` dan `uploads/`, serta memperketat sanitasi path ekstraksi.
+- **Safer Failure Recovery**: Proses restore kini lebih aman saat gagal di tengah jalan, termasuk reconnect Prisma otomatis dan warning eksplisit jika sinkronisasi skema pasca-restore tidak berhasil.
+
+### Stabilitas Aplikasi & Konsistensi Data
+- **Village Config Save Fix**: Field pengaturan desa yang dikosongkan kini benar-benar tersimpan sebagai string kosong, tidak lagi diam-diam diabaikan.
+- **Public Search Privacy Cleanup**: Logging sensitif pada pencarian publik dihapus dan lookup arsip dipertahankan tetap kompatibel dengan nama file arsip yang sudah ada.
+- **Dashboard & UI Cleanup**: Perbaikan purity render, `prefer-const`, escape karakter JSX, dan penyesuaian anotasi TypeScript untuk menjaga build serta lint tetap sehat.
+
+### Tooling & Verifikasi
+- **Security Verification Script**: Penambahan script `verify:security` untuk memeriksa lapisan hardening auth, upload file, dan restore backup secara cepat.
+- **ESLint Tooling Recovery**: Konflik dependency `minimatch` dan `brace-expansion` yang membuat lint gagal kini diperbaiki dan disinkronkan ke lockfile.
+- **Prisma Config Migration**: Konfigurasi Prisma dipindahkan dari `package.json#prisma` ke `prisma.config.ts` untuk menghilangkan warning deprecated dan menyiapkan kompatibilitas ke versi Prisma berikutnya.
+
+---
+
 ## v8.0 - 2026-04-02: The GIS Revolution 🛰️
 
 ### Fitur Utama: GIS Command Center v2.0
