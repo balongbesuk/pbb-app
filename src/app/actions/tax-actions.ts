@@ -196,8 +196,8 @@ export async function createManualTaxData(data: {
     const result = await prisma.taxData.create({
       data: {
         nop: cleanedNop,
-        namaWp: String(data.namaWp).trim().substring(0, 80),
-        alamatObjek: String(data.alamatObjek).trim().substring(0, 120),
+        namaWp: String(data.namaWp).trim().substring(0, 255),
+        alamatObjek: String(data.alamatObjek).trim().substring(0, 500),
         luasTanah: Number(data.luasTanah) || 0,
         luasBangunan: Number(data.luasBangunan) || 0,
         ketetapan: Number(data.ketetapan) || 0,
@@ -276,11 +276,19 @@ export async function fetchBapendaData(nop: string, tahun: number) {
       }
       else if (text.includes("letak obj") || text.includes("letak oby") || text.includes("alamat obj") || text.includes("alamat oby")) {
         let rawAlamat = $(el).next().next().text().trim();
-        // Potong teks jika ketemu pattern awalan RT/RW untuk membersihkan alamat Objek
-        const rtIndex = rawAlamat.search(/\bRT\b/i);
-        if (rtIndex > -1) {
-          rawAlamat = rawAlamat.substring(0, rtIndex).trim();
-          // Hilangkan koma nyangkut di akhir misal "JALAN ABC, RT 01"
+        /* 
+           Batasi alamat objek pajak sampai sebelum teks DESA atau KELURAHAN 
+           agar data tidak terlalu panjang namun tetap memuat info RT/RW.
+        */
+        const desaIndex = rawAlamat.search(/\bDESA\b/i);
+        const kelIndex = rawAlamat.search(/\bKEL\b/i);
+        const kelurahanIndex = rawAlamat.search(/\bKELURAHAN\b/i);
+
+        const indices = [desaIndex, kelIndex, kelurahanIndex].filter(idx => idx > -1);
+        if (indices.length > 0) {
+          const cutoff = Math.min(...indices);
+          rawAlamat = rawAlamat.substring(0, cutoff).trim();
+          // Hilangkan koma nyangkut di akhir
           if (rawAlamat.endsWith(",")) {
             rawAlamat = rawAlamat.slice(0, -1).trim();
           }

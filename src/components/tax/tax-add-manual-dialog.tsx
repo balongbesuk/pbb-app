@@ -139,7 +139,7 @@ export function TaxAddManualDialog({
                   placeholder="Contoh: 35.17.150.0... dsb"
                   value={nop}
                   onChange={(e) => setNop(e.target.value)}
-                  maxLength={25}
+                  maxLength={30}
                   required
                 />
                 <Button 
@@ -159,7 +159,7 @@ export function TaxAddManualDialog({
                 placeholder="Nama pemilik pajak"
                 value={namaWp}
                 onChange={(e) => setNamaWp(e.target.value)}
-                maxLength={25}
+                maxLength={100}
                 required
               />
             </div>
@@ -170,7 +170,7 @@ export function TaxAddManualDialog({
                 placeholder="Alamat lengkap properti/objek"
                 value={alamatObjek}
                 onChange={(e) => setAlamatObjek(e.target.value)}
-                maxLength={25}
+                maxLength={255}
                 required
               />
             </div>
@@ -182,7 +182,7 @@ export function TaxAddManualDialog({
                 min="0"
                 placeholder="0"
                 value={luasTanah}
-                onInput={(e) => (e.currentTarget.value = e.currentTarget.value.slice(0, 5))}
+                onInput={(e) => (e.currentTarget.value = e.currentTarget.value.slice(0, 10))}
                 onChange={(e) => setLuasTanah(e.target.value)}
               />
             </div>
@@ -193,7 +193,7 @@ export function TaxAddManualDialog({
                 min="0"
                 placeholder="0"
                 value={luasBangunan}
-                onInput={(e) => (e.currentTarget.value = e.currentTarget.value.slice(0, 5))}
+                onInput={(e) => (e.currentTarget.value = e.currentTarget.value.slice(0, 10))}
                 onChange={(e) => setLuasBangunan(e.target.value)}
               />
             </div>
@@ -204,7 +204,7 @@ export function TaxAddManualDialog({
                 min="0"
                 placeholder="Ketetapan/Pokok pajak"
                 value={ketetapan}
-                onInput={(e) => (e.currentTarget.value = e.currentTarget.value.slice(0, 6))}
+                onInput={(e) => (e.currentTarget.value = e.currentTarget.value.slice(0, 12))}
                 onChange={(e) => setKetetapan(e.target.value)}
                 required
               />
