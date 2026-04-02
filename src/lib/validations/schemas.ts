@@ -41,6 +41,9 @@ export const VillageConfigSchema = z.object({
   showNominalPajak: z.boolean().optional(),
   enableDigitalArchive: z.boolean().optional(),
   archiveOnlyLunas: z.boolean().optional(),
+  mapCenterLat: z.number().optional(),
+  mapCenterLng: z.number().optional(),
+  mapDefaultZoom: z.number().int().min(1).max(22).optional(),
 });
 
 export const PaymentStatusSchema = z.object({

@@ -85,8 +85,36 @@ export async function POST(req: NextRequest) {
     }
 
     // --- STEP 4: ATOMIC SWAP (RENAME & REPLACE) WITH ROLLBACK ---
-    console.log("[Restore] Performing atomic swap...");
-    await prisma.$disconnect();
+    console.log("[Restore] Preparing atomic swap (Strong Mode for Windows)...");
+    
+    // 1. Matikan mode WAL (Write-Ahead Logging) agar file -wal dan -shm bersih
+    try {
+      await prisma.$executeRawUnsafe('PRAGMA journal_mode = DELETE;');
+      console.log("[Restore] Database journal mode set to DELETE.");
+    } catch (e) {
+      console.warn("[Restore] Warning: Gagal menonaktifkan WAL mode:", e);
+    }
+
+    // 2. Matikan koneksi Prisma secara total
+    try {
+      await prisma.$disconnect();
+      console.log("[Restore] Prisma connection closed.");
+    } catch (e) {
+      console.warn("[Restore] Error during disconnect:", e);
+    }
+
+    // 3. FORCE KILL Query Engine (Windows Specific) untuk membebaskan lock
+    if (process.platform === "win32") {
+        try {
+            console.log("[Restore] Force killing query engine to release handles...");
+            await execAsync('taskkill /F /IM query-engine-windows.exe /T').catch(() => {});
+            // Beri jeda ekstra agar proses benar-benar mati
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (e) {}
+    }
+
+    // 4. Beri jeda 3 detik
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     const oldDbPath = `${dbPath}.old-${timestamp}`;
     const oldUploadsPath = `${uploadsPath}-old-${timestamp}`;
@@ -96,26 +124,91 @@ export async function POST(req: NextRequest) {
     let uploadsMovedToOld = false;
     let uploadsStagedToLive = false;
 
+    // Fungsi pembantu menggunakan CMD MOVE (Terkadang lebih sakti di Windows)
+    const moveTask = async (src: string, dest: string, retries = 20, initialDelay = 1000) => {
+        if (!fs.existsSync(src)) return false;
+        
+        for (let i = 0; i < retries; i++) {
+            try {
+                // Taktik 1: Pakai fs.renameSync (Standar)
+                fs.renameSync(src, dest);
+                return true;
+            } catch (err: any) {
+                if (err.code === 'EBUSY' || err.code === 'EPERM') {
+                    console.log(`[Restore] [Attempt ${i+1}/${retries}] File busy (${err.code}), trying OS move command...`);
+                    try {
+                        // Taktik 2: Pakai CMD MOVE (Seringkali lebih agresif)
+                        await execAsync(`cmd /c move /Y "${src}" "${dest}"`);
+                        return true;
+                    } catch (cmdErr) {
+                        // Taktik 3: Jika ini file (bukan folder) dan masih gagal, coba COPY + OVERWRITE (Fallback terakhir)
+                        if (i > retries / 2 && !fs.lstatSync(src).isDirectory()) {
+                            try {
+                                console.log(`[Restore] [Attempt ${i+1}/${retries}] Move still blocked, trying copy-overwrite...`);
+                                fs.copyFileSync(src, dest);
+                                return true;
+                            } catch (copyErr) {}
+                        }
+
+                        if (i < retries - 1) {
+                            const waitTime = initialDelay + (i * 200); 
+                            await new Promise(r => setTimeout(r, waitTime));
+                            continue;
+                        }
+                    }
+                }
+                if (i < retries - 1) {
+                   await new Promise(r => setTimeout(r, initialDelay));
+                   continue;
+                }
+                throw err;
+            }
+        }
+        return false;
+    };
+
     try {
+        console.log("[Restore] Swapping database file (Resilient Mode)...");
         // 1. Swap Database
         if (fs.existsSync(dbPath)) {
-            fs.renameSync(dbPath, oldDbPath);
-            dbMovedToOld = true;
+            try {
+                await moveTask(dbPath, oldDbPath);
+                dbMovedToOld = true;
+            } catch (e) {
+                console.warn("[Restore] Gagal memindahkan database lama ke backup, mencoba langsung timpa...");
+            }
+            
+            // Sidecars Cleanup
+            for (const suffix of ['-wal', '-shm', '-journal']) {
+                const sidecar = dbPath + suffix;
+                if (fs.existsSync(sidecar)) {
+                    try { fs.unlinkSync(sidecar); } catch (e) {}
+                }
+            }
         }
-        fs.renameSync(stagedDbPath, dbPath);
-        dbStagedToLive = true;
+        
+        // Pindahkan dari staging ke live
+        try {
+            await moveTask(stagedDbPath, dbPath);
+            dbStagedToLive = true;
+        } catch (e: any) {
+            console.log("[Restore] Swap-in gagal via MOVE, mencoba FORCE-COPY...");
+            fs.copyFileSync(stagedDbPath, dbPath);
+            dbStagedToLive = true;
+        }
 
+        console.log("[Restore] Swapping uploads folder...");
         // 2. Swap Uploads
         if (fs.existsSync(stagedUploadsDir)) {
           if (fs.existsSync(uploadsPath)) {
-              fs.renameSync(uploadsPath, oldUploadsPath);
+              await moveTask(uploadsPath, oldUploadsPath);
               uploadsMovedToOld = true;
           }
-          fs.renameSync(stagedUploadsDir, uploadsPath);
+          await moveTask(stagedUploadsDir, uploadsPath);
           uploadsStagedToLive = true;
         }
         
-        // --- SUCCESS: Cleanup old versions ---
+        // Success cleanup
         if (dbMovedToOld && fs.existsSync(oldDbPath)) {
           try { fs.unlinkSync(oldDbPath); } catch (e) {}
         }
@@ -124,59 +217,48 @@ export async function POST(req: NextRequest) {
         }
         
     } catch (swapError: any) {
-        console.error("[Restore] Swap failed! Attempting rollback...", swapError);
-        
-        // --- ROLLBACK LOGIC ---
+        console.error("[Restore] SWAP FAILED!", swapError);
+        // Rollback...
         try {
-            // Rollback Uploads if it was partially swapped
-            if (uploadsStagedToLive) {
-                // If staged was already moved to live, we might need to delete it if we want to restore old
-                // but let's just try to put old back if possible
-            }
             if (uploadsMovedToOld && fs.existsSync(oldUploadsPath)) {
                 if (fs.existsSync(uploadsPath)) fs.rmSync(uploadsPath, { recursive: true, force: true });
-                fs.renameSync(oldUploadsPath, uploadsPath);
+                await execAsync(`cmd /c move /Y "${oldUploadsPath}" "${uploadsPath}"`).catch(() => {});
             }
-
-            // Rollback Database
             if (dbMovedToOld && fs.existsSync(oldDbPath)) {
-                if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
-                fs.renameSync(oldDbPath, dbPath);
+                await execAsync(`cmd /c move /Y "${oldDbPath}" "${dbPath}"`).catch(() => {
+                    try { fs.copyFileSync(oldDbPath, dbPath); } catch(ecp) {}
+                });
             }
-        } catch (rollbackError: any) {
-            console.error("[Restore] CRITICAL: Rollback failed!", rollbackError);
-        }
-
-        throw new Error(`Gagal saat proses swap data: ${swapError.message}. Sistem telah mencoba melakukan rollback.`);
+        } catch (rErr) {}
+        throw new Error(`Gagal memulihkan database: ${swapError.message}. Pastikan tidak ada aplikasi (Prisma Studio, DB Browser, atau Terminal lain) yang sedang mengakses file 'prisma/dev.db'. Windows seringkali mengunci file ini jika aplikasi masih berjalan.`);
     }
 
     // --- POST-RESTORE: SYNC & RECONNECT ---
     try {
+      console.log("[Restore] Finalizing reconnection...");
       await prisma.$connect();
-      // Sinkronkan schema (menambah kolom yang kurang tanpa mengubah kredensial pengguna)
+      await new Promise(r => setTimeout(r, 1000));
       await execAsync("npx prisma db push --accept-data-loss");
-      console.log("[Restore] Database synchronization completed.");
+      console.log("[Restore] Schema synced successfully.");
     } catch (syncError: any) {
-      console.warn("[Restore] Sync failed, but files are restored.", syncError);
+      console.warn("[Restore] Sync failed or timeout, check manually.", syncError);
     }
 
-    // Cleanup Staging Folder
     try { fs.rmSync(stagingDir, { recursive: true, force: true }); } catch (e) {}
 
     const response = NextResponse.json({
       success: true,
-      message: "Database dan aset berhasil dipulihkan dengan verifikasi staging & backup otomatis.",
+      message: "Database dan aset berhasil dipulihkan. Sesi Anda akan direset untuk memuat data baru.",
     });
 
-    // Logout user after restore complete
     response.cookies.delete("next-auth.session-token");
     response.cookies.delete("__Secure-next-auth.session-token");
     
     return response;
   } catch (error: any) {
-    console.error("Restore Error:", error);
+    console.error("Restore Error Global:", error);
     return NextResponse.json(
-      { error: "Gagal memulihkan database: " + error.message },
+      { error: "Gagal memulihkan: " + error.message + ". Silakan tutup semua aplikasi yang membuka database dan coba lagi." },
       { status: 500 }
     );
   }

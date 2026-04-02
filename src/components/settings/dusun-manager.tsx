@@ -78,20 +78,18 @@ export function DusunManager() {
   // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-      <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <CardHeader className="border-b border-zinc-50 px-6 pt-6 pb-5 dark:border-zinc-800/60">
-          <CardTitle className="flex items-center gap-3 text-lg font-bold tracking-tight">
-            <div className="bg-primary/5 rounded-xl p-2">
-              <MapPin className="text-primary h-5 w-5" />
-            </div>
+      <Card className="glass border-none shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="text-primary h-5 w-5" />
             Referensi Dusun
           </CardTitle>
-          <CardDescription className="text-muted-foreground/70 mt-1 text-xs font-medium">
+          <CardDescription>
             Kelola daftar nama dusun untuk deteksi otomatis alamat saat upload Excel.
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-6 p-6">
+        <CardContent className="space-y-6">
           {/* ─── Add form ─────────────────────────────────────────────────── */}
           <form onSubmit={handleAdd} className="flex gap-2">
             <Input
@@ -99,12 +97,12 @@ export function DusunManager() {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               disabled={adding}
-              className="h-10 rounded-xl border-zinc-200 bg-zinc-50 text-sm dark:border-zinc-800 dark:bg-zinc-900"
+              className="bg-white/50 dark:bg-[#111827]/50"
             />
             <Button
               type="submit"
               disabled={adding || !newName.trim()}
-              className="h-10 gap-2 rounded-xl px-5 font-bold"
+              className="gap-2 font-bold"
             >
               {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Tambah
@@ -113,22 +111,19 @@ export function DusunManager() {
 
           {/* ─── List ─────────────────────────────────────────────────────── */}
           <div className="space-y-3">
-            <Label className="text-muted-foreground/50 px-1 text-xs font-black tracking-[0.2em] uppercase">
+            <Label className="text-muted-foreground text-xs font-black tracking-widest uppercase">
               Daftar Dusun Terdaftar
             </Label>
 
             {loading ? (
-              <div className="flex justify-center py-10">
+              <div className="flex justify-center p-8">
                 <Loader2 className="text-primary/20 h-8 w-8 animate-spin" />
               </div>
             ) : dusuns.length === 0 ? (
-              <div className="rounded-2xl border-2 border-dashed border-zinc-100 p-8 text-center dark:border-zinc-800">
-                <MapPin className="text-muted-foreground/20 mx-auto mb-2 h-8 w-8" />
+              <div className="rounded-2xl border-2 border-dashed border-primary/10 p-8 text-center bg-white/20 dark:bg-black/10">
+                <MapPin className="text-muted-foreground/30 mx-auto mb-2 h-8 w-8" />
                 <p className="text-muted-foreground text-sm font-medium italic">
                   Belum ada dusun terdaftar.
-                </p>
-                <p className="text-muted-foreground/50 mt-1 text-xs">
-                  Tambahkan dusun pertama menggunakan form di atas.
                 </p>
               </div>
             ) : (
@@ -136,10 +131,10 @@ export function DusunManager() {
                 {dusuns.map((d) => (
                   <div
                     key={d.id}
-                    className="group hover:border-primary/20 hover:bg-primary/[0.02] flex items-center justify-between rounded-2xl border border-zinc-100 bg-zinc-50 px-4 py-3 transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:bg-zinc-900"
+                    className="group hover:border-primary/20 hover:bg-white/40 flex items-center justify-between rounded-xl border border-primary/5 bg-white/20 px-4 py-3 transition-all duration-300 dark:bg-zinc-900/50 dark:hover:bg-zinc-900"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="bg-primary/5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl">
+                      <div className="bg-primary/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
                         <MapPin className="text-primary h-4 w-4" />
                       </div>
                       <span className="truncate text-sm font-bold tracking-tight">{d.name}</span>

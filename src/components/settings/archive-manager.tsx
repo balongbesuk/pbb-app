@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileStack, Upload, Trash2, Loader2, FileText, Search, Download, Zap, ChevronLeft, ChevronRight, Info, AlertCircle, FileUp, Files, HardDriveDownload, UploadCloud } from "lucide-react";
-import { getArchiveList, uploadArchives, deleteArchive, processSmartArchive } from "@/app/actions/settings-actions";
+import { getArchiveList, uploadArchives, deleteArchive, processSmartArchive } from "@/app/actions/archive-actions";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";

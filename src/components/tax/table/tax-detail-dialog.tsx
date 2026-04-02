@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/select";
 import { Edit2, Loader2, Save, User, CheckCircle, Clock, Ban, MapPin, X, ArrowRight, Handshake, ChevronRight, RotateCcw, ShieldAlert, FileX, FileText, RefreshCcw, Wallet, Info, CreditCard, Copy, Check } from "lucide-react";
 import { updateWpRegion } from "@/app/actions/tax-update-actions";
-import { checkArchiveByNop, getVillageConfig as fetchConfig } from "@/app/actions/settings-actions";
+import { getVillageConfig as fetchConfig } from "@/app/actions/settings-actions";
+import { checkArchiveByNop } from "@/app/actions/archive-actions";
 import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";

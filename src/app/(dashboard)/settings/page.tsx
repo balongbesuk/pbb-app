@@ -87,25 +87,25 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <BackupToolCard />
 
-              <Card className="overflow-hidden rounded-3xl border border-rose-100 bg-white shadow-sm dark:border-rose-900 dark:bg-zinc-950">
-                <CardHeader className="border-b border-rose-50 px-6 pt-6 pb-5 dark:border-rose-900/10">
-                  <CardTitle className="flex items-center gap-3 text-lg font-bold tracking-tight text-rose-600">
-                    <div className="rounded-xl bg-rose-500/5 p-2">
+              <Card className="glass border-none shadow-lg bg-rose-500/5 dark:bg-rose-500/10">
+                <CardHeader className="pb-5">
+                  <CardTitle className="flex items-center gap-3 text-lg font-bold tracking-tight text-rose-600 dark:text-rose-400">
+                    <div className="rounded-xl bg-rose-500/10 p-2">
                       <ShieldAlert className="h-5 w-5 text-rose-500" />
                     </div>
                     Zona Berbahaya
                   </CardTitle>
-                  <CardDescription className="text-xs font-medium text-rose-500/70">
+                  <CardDescription className="text-xs font-bold tracking-widest uppercase text-rose-500/70">
                     Tindakan destruktif yang tidak dapat diurungkan.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6 p-6">
+                <CardContent className="space-y-6">
                   <div className="space-y-3">
                     <p className="text-muted-foreground px-1 text-xs font-bold tracking-widest uppercase">
                       Integritas Data
                     </p>
-                    <div className="space-y-3 rounded-2xl border border-rose-100 bg-rose-500/5 p-4 dark:border-rose-900/50">
-                      <p className="px-1 text-xs leading-relaxed font-bold text-rose-700 dark:text-rose-400">
+                    <div className="space-y-3 rounded-2xl border border-rose-500/10 bg-rose-500/5 p-4 dark:border-rose-900/50">
+                      <p className="px-1 text-xs leading-relaxed font-bold text-rose-700/80 dark:text-rose-400/80">
                         Menghapus seluruh daftar Wajib Pajak, riwayat pembayaran, dan alokasi penarik.
                         Gunakan hanya jika diperlukan.
                       </p>

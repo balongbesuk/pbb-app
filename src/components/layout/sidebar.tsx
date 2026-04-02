@@ -31,6 +31,7 @@ const menuItems = [
     href: "/dashboard",
     allowedRoles: ["ADMIN", "PENARIK", "PENGGUNA"],
   },
+  { icon: MapPin, label: "Peta Wilayah", href: "/peta", allowedRoles: ["ADMIN"] },
   { icon: UploadCloud, label: "Upload PBB", href: "/upload-pbb", allowedRoles: ["ADMIN"] },
   {
     icon: Database,
@@ -46,11 +47,10 @@ const menuItems = [
     href: "/laporan",
     allowedRoles: ["ADMIN", "PENARIK", "PENGGUNA"],
   },
-  { icon: MapPin, label: "Peta Wilayah", href: "/peta", allowedRoles: ["ADMIN"] },
-  { icon: Activity, label: "Log Aktivitas", href: "/log-aktivitas", allowedRoles: ["ADMIN"] },
-  { icon: Settings, label: "Pengaturan", href: "/settings", allowedRoles: ["ADMIN"] },
   { icon: History, label: "Riwayat Penagihan", href: "/riwayat", allowedRoles: ["PENARIK"] },
+  { icon: Settings, label: "Pengaturan", href: "/settings", allowedRoles: ["ADMIN"] },
   { icon: Globe, label: "Portal Warga", href: "/", allowedRoles: ["ADMIN", "PENGGUNA"] },
+  { icon: Activity, label: "Log Aktivitas", href: "/log-aktivitas", allowedRoles: ["ADMIN"] },
 ];
 
 export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {

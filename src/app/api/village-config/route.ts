@@ -15,6 +15,10 @@ export async function GET() {
         email: true,
         kodePos: true,
         namaKades: true,
+        mapCenterLat: true,
+        mapCenterLng: true,
+        mapDefaultZoom: true,
+        tahunPajak: true,
       },
     });
 

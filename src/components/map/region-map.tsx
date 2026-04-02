@@ -42,6 +42,16 @@ const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLa
 const GeoJSON = dynamic(() => import("react-leaflet").then((mod) => mod.GeoJSON), { ssr: false });
 const Tooltip = dynamic(() => import("react-leaflet").then((mod) => mod.Tooltip), { ssr: false });
 
+// Komponen pembantu untuk sinkronisasi posisi peta saat prop berubah
+function MapWatcher({ center, zoom }: { center: [number, number], zoom: number }) {
+  const { useMap } = require("react-leaflet");
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  return null;
+}
+
 export function RegionMap({ 
   tahun = 2026, 
   center = [-7.5744, 112.235], 
@@ -224,6 +234,8 @@ export function RegionMap({
           ) : (
             <TileLayer attribution='&copy; OSM' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           )}
+
+          <MapWatcher center={center} zoom={zoom} />
           
           {showDesa && <GeoJSON key={`desa-${showDesa}`} data={{ type: "FeatureCollection", features: desaFeatures } as any} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
           {showDusun && <GeoJSON key={`dusun-${showDusun}`} data={{ type: "FeatureCollection", features: dusunFeatures } as any} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
