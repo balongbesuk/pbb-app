@@ -87,7 +87,7 @@ export function MapPickerDialog({
                     </div>
 
                     {open && (
-                        // @ts-expect-error Leaflet types may not align with React 19 in this wrapper
+                        // Leaflet runs through a client-only dynamic wrapper here.
                         <MapContainer 
                             center={[tempLoc.lat, tempLoc.lng]} 
                             zoom={15} 
@@ -105,9 +105,9 @@ export function MapPickerDialog({
                                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                 />
                             )}
-                            {/* @ts-expect-error Leaflet marker typing is incompatible in this setup */}
+                            {/* Marker stays client-side with the dynamic Leaflet wrapper. */}
                             <Marker position={[tempLoc.lat, tempLoc.lng]} />
-                            {/* @ts-expect-error Custom map event component bridges Leaflet event typing */}
+                            {/* Map click handling is wired through the runtime Leaflet hook. */}
                             <MapEvents setTempLoc={setTempLoc} />
                         </MapContainer>
                     )}
