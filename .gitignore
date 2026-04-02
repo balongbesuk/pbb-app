@@ -64,6 +64,8 @@ build.log
 !/public/uploads/.gitkeep
 /public/uploads/avatars/*
 !/public/uploads/avatars/.gitkeep
+/public/uploads/logos/*
+!/public/uploads/logos/.gitkeep
 /public/arsip-pbb/
 /public/pbb_process_log.txt
 /temp_extracted.txt
