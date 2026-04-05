@@ -181,20 +181,20 @@ export function RegionUnpaidDialog({
             isDark ? "bg-zinc-950 text-white" : "bg-white text-slate-950"
         )}>
           <DialogHeader className={cn(
-            "p-8 pb-4 transition-colors duration-300",
+            "p-5 sm:p-8 pb-4 transition-colors duration-300",
             isDark ? "bg-zinc-900/50" : "bg-slate-50"
           )}>
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                    <div className="p-2 bg-primary/10 rounded-xl">
                       <User className="w-5 h-5 text-primary" />
                    </div>
-                   <DialogTitle className="text-2xl font-black tracking-tight uppercase">
+                   <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight uppercase leading-tight">
                      {title}
                    </DialogTitle>
                 </div>
-                <DialogDescription className="text-sm font-medium text-muted-foreground">
+                <DialogDescription className="text-xs sm:text-sm font-medium text-muted-foreground">
                   {dbSearch ? (
                     <span>Menampilkan hasil pencarian untuk &quot;<span className="text-primary font-bold">{dbSearch}</span>&quot;</span>
                   ) : (
@@ -202,10 +202,10 @@ export function RegionUnpaidDialog({
                   )}
                 </DialogDescription>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right bg-rose-500/5 sm:bg-transparent p-3 sm:p-0 rounded-2xl sm:rounded-none border border-rose-500/10 sm:border-none w-full sm:w-auto">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Total Piutang</p>
                 <p className={cn(
-                    "text-2xl font-black tracking-tighter transition-colors",
+                    "text-xl sm:text-2xl font-black tracking-tighter transition-colors",
                     isDark ? "text-rose-400" : "text-rose-600"
                 )}>
                   {formatCurrency(totalPiutang)}
@@ -215,7 +215,7 @@ export function RegionUnpaidDialog({
           </DialogHeader>
 
           {/* Search bar */}
-          <div className="px-8 mt-4">
+          <div className="px-5 sm:px-8 mt-4">
                <div className="relative group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input 
@@ -244,7 +244,7 @@ export function RegionUnpaidDialog({
           </div>
 
           <div 
-            className="px-8 pb-8 overflow-y-auto max-h-[55vh] scroll-smooth mt-4"
+            className="px-5 sm:px-8 pb-8 overflow-y-auto max-h-[55vh] scroll-smooth mt-4"
             onScroll={handleScroll}
           >
             {loading && data.length === 0 ? (
