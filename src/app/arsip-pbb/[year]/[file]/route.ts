@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import path from "path";
 import fs from "fs";
+import { getArchivePath } from "@/lib/storage";
+import type { AppUser } from "@/types/app";
 
 const createErrorPage = (title: string, message: string, color: string = "rose") => {
   const isAmber = color === "amber";
@@ -63,7 +65,6 @@ export async function GET(
     }
     
     // 1. Dapatkan file path yang asli (di folder privat /storage)
-    const { getArchivePath } = require("@/lib/storage");
     const storagePath = getArchivePath(safeYear, safeFile);
 
     if (!fs.existsSync(storagePath)) {
@@ -75,7 +76,8 @@ export async function GET(
 
     // 2. Cek apakah yang akses adalah ADMIN
     const session = await getServerSession(authOptions);
-    const isAdmin = (session?.user as any)?.role === "ADMIN";
+    const currentUser = session?.user as AppUser | undefined;
+    const isAdmin = currentUser?.role === "ADMIN";
 
     if (isAdmin) {
       // Admin bebas buka semua file

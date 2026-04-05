@@ -1,22 +1,22 @@
-# 📖 Panduan Penggunaan PBB Manager
+# Panduan Penggunaan PBB Manager
 
 Selamat datang di **PBB Manager** — sistem digital untuk mempercepat pendataan dan penarikan Pajak Bumi dan Bangunan secara transparan dan terkoordinasi.
 
 ---
 
-## 👥 Pengenalan Peran Pengguna
+## Pengenalan Peran Pengguna
 
 Setiap pengguna beroperasi sesuai peran yang ditetapkan oleh Admin.
 
 | Peran | Lambang | Akses |
 |---|---|---|
-| **ADMIN** | 👑 | Penuh — kelola semua fitur sistem |
-| **PENARIK** | 📱 | Lapangan — tagih WP di wilayah sendiri |
-| **PENGGUNA** | 🛡️ | Hanya-baca — belum punya izin operasional |
+| **ADMIN** | [ADMIN] | Penuh — kelola semua fitur sistem |
+| **PENARIK** | [MOBILE] | Lapangan — tagih WP di wilayah sendiri |
+| **PENGGUNA** | [VIEWER] | Hanya-baca — belum punya izin operasional |
 
 ---
 
-## 👑 Panduan Admin
+## Panduan Admin
 
 ### 1. Login & Keamanan Akun
 
@@ -25,7 +25,7 @@ Setiap pengguna beroperasi sesuai peran yang ditetapkan oleh Admin.
 3. Sesi akan otomatis berakhir setelah **8 jam** tidak aktif
 4. **Branding & Logo**: Identitas portal warga diatur di menu **Pengaturan > Profil Instansi**. Logo dan nama yang diubah di sana akan otomatis muncul di halaman depan dan halaman login.
 
-> ⚠️ Sistem membatasi **10 percobaan login gagal** per 15 menit untuk mencegah akses tidak sah.
+> PENTING: Sistem membatasi **10 percobaan login gagal** per 15 menit untuk mencegah akses tidak sah.
 
 ---
 
@@ -62,7 +62,7 @@ Setiap awal tahun, lakukan langkah berikut sebelum Excel DHKP dibagikan:
 
 **Assign Per-WP & Smart Selection:**
 1. Buka menu **Data Pajak**
-2. **Assign Per Baris**: Temukan nama WP, klik ikon **Edit** (titik tiga atau pensil) dan pilih penarik yang tepat.
+2. **Assign Per Baris**: Temukan nama WP, klik ikon Edit (titik tiga atau pensil) dan pilih penarik yang tepat.
 3. **Smart Selection (Alokasi Masal)**:
    - Gunakan filter (Dusun/RT/RW/Cari Nama) untuk memunculkan kelompok data tertentu.
    - Klik ceklist pada judul tabel untuk memilih semua data di halaman tersebut.
@@ -78,9 +78,9 @@ Setiap awal tahun, lakukan langkah berikut sebelum Excel DHKP dibagikan:
 2. Klik **Tambah Akun** untuk membuat pengguna baru
    - Password awal: sesuai pengaturan server (`DEFAULT_USER_PASSWORD` di `.env`)
    - Informasikan password ini ke petugas untuk segera diganti
-3. Klik ikon ✏️ pada kartu pengguna untuk mengubah data atau peran
-4. Klik ikon 🔑 di dalam form edit untuk **Reset Password** ke password default server
-5. Klik ikon 🗑️ untuk menghapus akun (khusus non-Admin)
+3. Klik ikon Edit pada kartu pengguna untuk mengubah data atau peran
+4. Klik ikon Kunci di dalam form edit untuk **Reset Password** ke password default server
+5. Klik ikon Hapus untuk menghapus akun (khusus non-Admin)
 
 ---
 
@@ -121,7 +121,7 @@ Jika Anda baru saja mengimpor data PBB tahun baru dan datanya masih kosong (Tanp
 3. Pilih file Excel backup alokasi yang pernah Anda buat sebelumnya.
 4. Klik **Pulihkan Alokasi** — sistem akan memetakan ulang petugas berdasarkan NOP secara otomatis.
 
-**⚠️ Hapus Seluruh Data (Reset Tahun Pajak):**
+**Hapus Seluruh Data (Reset Tahun Pajak):**
 1. Klik **Hapus Seluruh Data** — hanya untuk pergantian tahun pajak
 2. Ketik **`HAPUS SEMUA DATA`** di kolom konfirmasi
 3. Klik **Ya, Bersihkan Database**
@@ -139,8 +139,6 @@ Portal depan adalah wajah layanan publik Anda. Admin bisa menyesuaikannya:
 
 ---
 
----
-
 ### 9. Manajemen Peta Wilayah (GIS) (v8.0)
 
 PBB Manager v8.0 kini dilengkapi dengan **GIS Command Center** untuk visualisasi wilayah kerja secara spasial di atas peta citra satelit.
@@ -148,7 +146,7 @@ PBB Manager v8.0 kini dilengkapi dengan **GIS Command Center** untuk visualisasi
 **A. Mengatur Titik Pusat Peta (Map Picker):**
 1. Buka menu **Pengaturan > Pengaturan Sistem**
 2. Klik tab **Peta**
-3. Anda akan melihat peta interaktif. Klik tombol **📍 Pilih Lokasi di Peta**
+3. Anda akan melihat peta interaktif. Klik tombol **Pilih Lokasi di Peta**
 4. Cari lokasi desa Anda, lalu **klik langsung pada peta** untuk menentukan titik koordinat Latitude & Longitude secara otomatis.
 5. Gunakan tombol **Simpan Koordinat** untuk menerapkan perubahan.
 
@@ -195,7 +193,7 @@ Jika Anda lupa password akun utama `admin` dan tidak bisa masuk sama sekali, And
 
 ---
 
-## 📱 Panduan Penarik Pajak
+## Panduan Penarik Pajak
 
 ### 1. Membuka Aplikasi di HP
 
@@ -222,7 +220,7 @@ Ini adalah tugas utama saat bertemu langsung dengan warga:
 
 Jika Wajib Pajak ternyata bukan di wilayah tanggung jawab Anda:
 
-1. Di tabel **Data Pajak**, klik ikon **⇄ Transfer** pada baris WP tersebut
+1. Di tabel **Data Pajak**, klik ikon Transfer pada baris WP tersebut
 2. Pilih jenis: **Serahkan** (kirim ke penarik lain) atau **Ambil Alih** (minta dari penarik lain)
 3. Pilih nama Penarik tujuan dan tulis pesan opsional
 4. **Proteksi Peran**: Pemindahan hanya dapat dilakukan antar petugas aktif (**PENARIK**). Admin tidak muncul di menu ini karena Admin mengelola penugasan langsung via alokasi masal.
@@ -232,13 +230,13 @@ Jika Wajib Pajak ternyata bukan di wilayah tanggung jawab Anda:
 
 ### 4. Melihat Notifikasi Transfer
 
-1. Klik ikon 🔔 di sudut kanan atas
+1. Klik ikon lonceng di sudut kanan atas
 2. Notifikasi transfer masuk akan tampil di sini
 3. Buka detail untuk **Setujui** atau **Tolak** permintaan
 
 ---
 
-## 🛡️ Panduan Pengguna (Akun Baru)
+## Panduan Pengguna (Akun Baru)
 
 Akun baru secara default mendapat peran **PENGGUNA** dengan akses hanya-baca.
 
@@ -251,10 +249,10 @@ Untuk mendapatkan akses lebih, hubungi **Admin** untuk menaikkan peran menjadi *
 
 ---
 
-## ❓ FAQ & Troubleshooting
+## FAQ & Troubleshooting
 
 **Q: Saya lupa password, bagaimana cara reset?**  
-Hubungi Admin untuk melakukan reset password. Admin bisa mereset password dari menu **Pengguna > Edit** dengan menekan ikon kunci 🔑. Namun, jika Anda yang lupa adalah sang Admin sendiri, **silakan merujuk pada Panduan Admin poin ke-11 di atas (Memulihkan Akun Admin)**.
+Hubungi Admin untuk melakukan reset password. Admin bisa mereset password dari menu **Pengguna > Edit** dengan menekan ikon kunci. Namun, jika Anda yang lupa adalah sang Admin sendiri, **silakan merujuk pada Panduan Admin poin ke-11 di atas (Memulihkan Akun Admin)**.
 
 **Q: Apakah data saya akan hilang jika saya upload file Excel baru?**  
 **TIDAK.** Dengan fitur *Smart Sync* v2.0, sistem hanya akan memperbarui data yang ada di file Excel. Data lama yang sudah ada di sistem tapi tidak ada di file Excel baru akan tetap aman (tidak dihapus).

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import type { AppUser } from "@/types/app";
 
 export async function GET() {
   try {
@@ -10,7 +11,8 @@ export async function GET() {
       return NextResponse.json({ avatarUrl: null }, { status: 401 });
     }
 
-    const userId = (session.user as any).id as string;
+    const currentUser = session.user as AppUser | undefined;
+    const userId = currentUser?.id;
     if (!userId) {
       return NextResponse.json({ avatarUrl: null });
     }
@@ -21,8 +23,8 @@ export async function GET() {
     });
 
     return NextResponse.json({ avatarUrl: user?.avatarUrl ?? null });
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
     return NextResponse.json({ avatarUrl: null });
   }
 }

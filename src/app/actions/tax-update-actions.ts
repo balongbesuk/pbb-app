@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { PaymentStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/lib/server-auth";
 import { createAuditLog } from "./log-actions";
@@ -12,6 +12,13 @@ const statusSchema = z.object({
   id: z.union([z.string(), z.number()]),
   paymentStatus: z.enum(["LUNAS", "BELUM_LUNAS", "TIDAK_TERBIT", "SUSPEND"]),
 });
+
+const paymentStatusValues: PaymentStatus[] = [
+  "LUNAS",
+  "BELUM_LUNAS",
+  "TIDAK_TERBIT",
+  "SUSPEND",
+];
 
 export async function updatePaymentStatus(
   id: string | number,
@@ -515,8 +522,12 @@ export async function syncBapendaByFilter(filters: {
       if (filters.penarik === "none") whereClause.penarikId = null;
       else whereClause.penarikId = filters.penarik;
     }
-    if (filters.paymentStatus && filters.paymentStatus !== "all") {
-      whereClause.paymentStatus = filters.paymentStatus as any;
+    if (
+      filters.paymentStatus &&
+      filters.paymentStatus !== "all" &&
+      paymentStatusValues.includes(filters.paymentStatus as PaymentStatus)
+    ) {
+      whereClause.paymentStatus = filters.paymentStatus as PaymentStatus;
     }
 
     if (andFilters.length > 0) whereClause.AND = andFilters;
@@ -532,7 +543,7 @@ export async function syncBapendaByFilter(filters: {
     // This is still a loop but on server, it can be optimized with better background jobs
     // For now, let's process in batches or just return IDs for client to handle but with better logic
     return { success: true, data: allData, count: allData.length };
-  } catch (error) {
+  } catch {
     return { success: false, message: "Gagal mengambil data filter" };
   }
 }

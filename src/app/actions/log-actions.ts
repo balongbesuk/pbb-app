@@ -7,6 +7,10 @@ import { formatZodError } from "@/lib/validations/schemas"; // Add this import
 import { requireAdmin } from "@/lib/server-auth";
 import { Prisma } from "@prisma/client";
 
+type SessionUserWithId = {
+  id?: string | null;
+};
+
 export async function createAuditLog(
   action: string,
   entity: string,
@@ -18,7 +22,8 @@ export async function createAuditLog(
     let userId = manualUserId;
     if (!userId) {
       const session = await getServerSession(authOptions);
-      userId = (session?.user as any)?.id || null;
+      const sessionUser = session?.user as SessionUserWithId | undefined;
+      userId = sessionUser?.id || null;
     }
 
     await prisma.auditLog.create({
@@ -37,20 +42,61 @@ export async function createAuditLog(
   }
 }
 
-export async function getAuditLogs(limit: number = 100, page: number = 1, searchQuery?: string) {
+export async function getAuditLogs(
+  limit: number = 100,
+  page: number = 1,
+  searchQuery?: string,
+  filterAction?: string,
+  filterUser?: string,
+  startDate?: string,
+  endDate?: string
+) {
   try {
     await requireAdmin();
 
-    const where: Prisma.AuditLogWhereInput = {}; // Use proper Prisma type
+    const where: Prisma.AuditLogWhereInput = {};
+    const andFilters: Prisma.AuditLogWhereInput[] = [];
+
     if (searchQuery) {
-      where.OR = [
-        { action: { contains: searchQuery } },
-        { entity: { contains: searchQuery } },
-        { entityId: { contains: searchQuery } },
-        { details: { contains: searchQuery } },
-        { user: { name: { contains: searchQuery } } },
-        { user: { username: { contains: searchQuery } } },
-      ];
+      andFilters.push({
+        OR: [
+          { action: { contains: searchQuery } },
+          { entity: { contains: searchQuery } },
+          { entityId: { contains: searchQuery } },
+          { details: { contains: searchQuery } },
+          { user: { name: { contains: searchQuery } } },
+          { user: { username: { contains: searchQuery } } },
+        ],
+      });
+    }
+
+    if (filterAction && filterAction !== "all") {
+      where.action = filterAction;
+    }
+
+    if (filterUser && filterUser !== "all") {
+      where.userId = filterUser;
+    }
+
+    const dateFilter: Prisma.DateTimeFilter = {};
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      dateFilter.gte = start;
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      dateFilter.lte = end;
+    }
+
+    if (Object.keys(dateFilter).length > 0) {
+      where.createdAt = dateFilter;
+    }
+
+    if (andFilters.length > 0) {
+      where.AND = andFilters;
     }
 
     const [logs, total] = await Promise.all([

@@ -5,6 +5,8 @@ import { MapPin } from "lucide-react";
 import { UserDialog, DeleteUserButton } from "@/components/pengguna/user-dialog";
 import { cn } from "@/lib/utils";
 import { ROLE_BADGE, type UserRoleKey } from "@/lib/role-config";
+import type { UserListItem } from "@/types/app";
+import Image from "next/image";
 
 export default async function DaftarPenggunaPage() {
   const users = await prisma.user.findMany({
@@ -31,7 +33,7 @@ export default async function DaftarPenggunaPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {users.map((user: any) => (
+        {users.map((user: UserListItem & { username: string; _count: { taxData: number } }) => (
           <Card
             key={user.id}
             className="hover:border-primary/20 group flex flex-col overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm transition-all duration-300 dark:border-zinc-900 dark:bg-zinc-950"
@@ -40,9 +42,11 @@ export default async function DaftarPenggunaPage() {
               <div className="flex items-start justify-between">
                 <div className="text-primary group-hover:bg-primary relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-100 bg-zinc-50 text-xl font-black transition-colors duration-500 group-hover:text-white dark:border-zinc-800 dark:bg-zinc-900">
                   {user.avatarUrl ? (
-                    <img
+                    <Image
                       src={user.avatarUrl}
-                      alt={user.name}
+                      alt={user.name ?? "Avatar pengguna"}
+                      fill
+                      sizes="56px"
                       className="h-full w-full object-cover"
                     />
                   ) : (

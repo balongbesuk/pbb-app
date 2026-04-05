@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import type { AppUser } from "@/types/app";
 
 const menuItems = [
   {
@@ -31,7 +32,7 @@ const menuItems = [
     href: "/dashboard",
     allowedRoles: ["ADMIN", "PENARIK", "PENGGUNA"],
   },
-  { icon: MapPin, label: "Peta Wilayah", href: "/peta", allowedRoles: ["ADMIN"] },
+  { icon: MapPin, label: "Peta Wilayah", href: "/peta", allowedRoles: ["ADMIN", "PENARIK", "PENGGUNA"] },
   { icon: UploadCloud, label: "Upload PBB", href: "/upload-pbb", allowedRoles: ["ADMIN"] },
   {
     icon: Database,
@@ -57,7 +58,8 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: session } = useSession();
-  const userRole = (session?.user as any)?.role || "PENGGUNA";
+  const currentUser = session?.user as AppUser | undefined;
+  const userRole = currentUser?.role || "PENGGUNA";
 
   const [villageConfig, setVillageConfig] = useState<{
     namaDesa: string;

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { restoreAssignments } from "@/app/actions/tax-actions";
 import { toast } from "sonner";
-import { Upload, Loader2, History, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Loader2, History, CheckCircle2, AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -52,7 +52,7 @@ export function RestoreAssignmentsButton({ tahun }: { tahun: number }) {
       } else {
         toast.error(`Gagal memulihkan: ${result.message}`);
       }
-    } catch (error) {
+    } catch {
       toast.error("Terjadi kesalahan sistem saat memulihkan data");
     } finally {
       setLoading(false);

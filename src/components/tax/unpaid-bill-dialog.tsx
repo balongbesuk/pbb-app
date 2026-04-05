@@ -11,6 +11,7 @@ interface UnpaidBillDialogProps {
   nop: string;
   namaWp: string;
   isDark?: boolean;
+  container?: HTMLElement | null;
 }
 
 export function UnpaidBillDialog({
@@ -19,6 +20,7 @@ export function UnpaidBillDialog({
   nop,
   namaWp,
   isDark = false,
+  container,
 }: UnpaidBillDialogProps) {
   const handlePayNow = () => {
     window.open(`https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=${nop}`, "_blank");
@@ -27,7 +29,7 @@ export function UnpaidBillDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(
+      <DialogContent container={container} className={cn(
         "rounded-3xl border-none p-5 sm:p-8 max-w-[95vw] sm:max-w-[420px] shadow-2xl",
         isDark ? "bg-[#0A192F] text-white" : "bg-white text-slate-900"
       )}>

@@ -80,7 +80,7 @@ function PublicThemeInner({
     <div
       ref={divRef}
       className={cn(
-        isDark ? "public-dark" : "public-light",
+        isDark ? "public-dark dark" : "public-light",
         "public-area min-h-screen relative overflow-hidden flex flex-col"
       )}
     >

@@ -14,9 +14,9 @@ import { Button } from "@/components/ui/button";
 import { User, LogOut, Menu } from "lucide-react";
 import { NotificationBell } from "./notification-bell";
 import { ModeToggle } from "@/components/mode-toggle";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import type { AppUser } from "@/types/app";
 
 export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const { data: session } = useSession();
@@ -48,6 +48,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   }
 
   const initials = session?.user?.name?.charAt(0)?.toUpperCase() || "A";
+  const currentUser = session?.user as AppUser | undefined;
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md md:px-6">
@@ -75,7 +76,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
           <div className="hidden text-right sm:block">
             <p className="text-sm font-semibold">{session?.user?.name || "Admin"}</p>
             <p className="text-muted-foreground text-xs capitalize">
-              {(session?.user as any)?.role?.toLowerCase() || "User"}
+              {currentUser?.role?.toLowerCase() || "User"}
             </p>
           </div>
 
@@ -123,7 +124,7 @@ export function Topbar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                         {session?.user?.name || "User"}
                       </p>
                       <p className="text-muted-foreground mt-1 text-[10px] tracking-widest uppercase">
-                        {(session?.user as any)?.role || "User"}
+                        {currentUser?.role || "User"}
                       </p>
                     </div>
                   </div>

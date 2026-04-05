@@ -2,12 +2,13 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, KeyRound, MapPin } from "lucide-react";
+import { KeyRound, MapPin } from "lucide-react";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { Badge } from "@/components/ui/badge";
 import { ProfileAvatarCard } from "@/components/settings/profile-avatar-card";
 import { EditableProfileRow } from "@/components/settings/editable-profile-row";
-import { Phone, Mail, User as UserIcon } from "lucide-react";
+import { User as UserIcon } from "lucide-react";
+import type { AppUser } from "@/types/app";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
@@ -16,8 +17,13 @@ export default async function ProfilePage() {
     return <div>Sesi tidak valid. Silakan login kembali.</div>;
   }
 
+  const currentUser = session.user as AppUser | undefined;
+  if (!currentUser?.id) {
+    return <div>Data sesi pengguna tidak lengkap.</div>;
+  }
+
   const user = await prisma.user.findUnique({
-    where: { id: (session.user as any).id as string },
+    where: { id: currentUser.id },
     select: {
       name: true,
       username: true,

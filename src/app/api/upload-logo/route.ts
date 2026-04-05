@@ -6,6 +6,7 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
 import { assertValidImageUpload } from "@/lib/file-security";
+import type { AppUser } from "@/types/app";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
@@ -23,8 +24,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const role = (session.user as any).role;
-    if (role !== "ADMIN") {
+    const currentUser = session.user as AppUser | undefined;
+    if (currentUser?.role !== "ADMIN") {
       return NextResponse.json({ error: "Hanya Admin yang dapat mengubah logo desa." }, { status: 403 });
     }
 
@@ -71,8 +72,9 @@ export async function POST(req: NextRequest) {
     revalidatePath("/", "layout");
 
     return NextResponse.json({ success: true, logoUrl });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Upload logo error:", error);
-    return NextResponse.json({ error: error.message || "Terjadi kesalahan server." }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan server.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

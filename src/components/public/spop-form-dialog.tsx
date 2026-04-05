@@ -5,17 +5,25 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { buildSpopFormDefaults, type SpopFormData, type SpopSourceTaxData } from "@/lib/spop-form";
+  buildSpopFormDefaults,
+  type SpopAtapType,
+  type SpopDindingType,
+  type SpopFormData,
+  type SpopJenisBangunanType,
+  type SpopJenisTanahType,
+  type SpopKondisiType,
+  type SpopKonstruksiType,
+  type SpopLangitLangitType,
+  type SpopLantaiType,
+  type SpopPekerjaanType,
+  type SpopSourceTaxData,
+  type SpopStatusType,
+  type SpopTransactionType,
+} from "@/lib/spop-form";
 import { buildSpopPrintHtml } from "@/lib/spop-print";
 import { getVillageConfig } from "@/app/actions/settings-actions";
 import { cn } from "@/lib/utils";
-import { Check, ChevronLeft, ChevronRight, Eye, Loader2, Printer, Monitor } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Eye, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 interface SpopFormDialogProps {
@@ -32,6 +40,141 @@ const steps = [
   { id: 4, label: "Preview" },
 ];
 
+type BuildingCategoryKey =
+  | "kondisi"
+  | "konstruksi"
+  | "atap"
+  | "dinding"
+  | "lantai"
+  | "langitLangit";
+
+type BuildingCategoryValueMap = {
+  kondisi: SpopKondisiType;
+  konstruksi: SpopKonstruksiType;
+  atap: SpopAtapType;
+  dinding: SpopDindingType;
+  lantai: SpopLantaiType;
+  langitLangit: SpopLangitLangitType;
+};
+
+const transactionOptions: Array<{ value: SpopTransactionType; label: string }> = [
+  { value: "PEMUTAKHIRAN", label: "Pemutakhiran" },
+  { value: "PEREKAMAN", label: "Perekaman" },
+  { value: "PENGHAPUSAN", label: "Penghapusan" },
+];
+
+const jenisTanahOptions: Array<{ value: SpopJenisTanahType; label: string }> = [
+  { value: "TANAH_BANGUNAN", label: "Tanah + Bangunan" },
+  { value: "KAVLING_SIAP_BANGUN", label: "Kavling Siap Bangun" },
+  { value: "TANAH_KOSONG", label: "Tanah Kosong" },
+  { value: "FASILITAS_UMUM", label: "Fasilitas Umum" },
+];
+
+const statusSubjekOptions: Array<{ value: SpopStatusType; label: string }> = [
+  { value: "PEMILIK", label: "Pemilik" },
+  { value: "PENYEWA", label: "Penyewa" },
+  { value: "PENGELOLA", label: "Pengelola" },
+  { value: "PEMAKAI", label: "Pemakai" },
+  { value: "SENGKETA", label: "Sengketa" },
+];
+
+const pekerjaanOptions: Array<{ value: SpopPekerjaanType; label: string }> = [
+  { value: "PNS", label: "PNS" },
+  { value: "TNI", label: "TNI / POLRI" },
+  { value: "PENSIUNAN", label: "Pensiunan" },
+  { value: "BADAN", label: "Badan" },
+  { value: "LAINNYA", label: "Lainnya" },
+];
+
+const jenisBangunanOptions: Array<{ value: SpopJenisBangunanType; label: string }> = [
+  { value: "PERUMAHAN", label: "Perumahan" },
+  { value: "PERKANTORAN", label: "Perkantoran" },
+  { value: "PABRIK", label: "Pabrik" },
+  { value: "TOKO", label: "Toko / Ruko" },
+  { value: "RUMAH_SAKIT", label: "RS / Klinik" },
+  { value: "OLAHRAGA", label: "Olahraga" },
+  { value: "HOTEL", label: "Hotel / Wisma" },
+  { value: "BENGKEL", label: "Bengkel / Gd." },
+  { value: "GEDUNG_PEMERINTAH", label: "Gedung Pem." },
+  { value: "LAINNYA", label: "Lain-lain" },
+  { value: "BANGUNAN_TIDAK_KENA_PAJAK", label: "Bng. Non Pajak" },
+  { value: "BANGUN_PARKIR", label: "Bangunan Parkir" },
+  { value: "APARTEMEN", label: "Apartemen" },
+  { value: "POMPA_BENSIN", label: "Pompa Bensin" },
+  { value: "TANGKI_MINYAK", label: "Tangki Minyak" },
+  { value: "GEDUNG_SEKOLAH", label: "Gedung Sekolah" },
+];
+
+const buildingCategories: Array<{
+  id: BuildingCategoryKey;
+  label: string;
+  options: Array<{ value: BuildingCategoryValueMap[BuildingCategoryKey]; label: string }>;
+}> = [
+  {
+    id: "kondisi",
+    label: "Kondisi Pada Umumnya",
+    options: [
+      { value: "SANGAT_BAIK", label: "Sangat Baik" },
+      { value: "BAIK", label: "Baik" },
+      { value: "SEDANG", label: "Sedang" },
+      { value: "JELEK", label: "Jelek" },
+    ],
+  },
+  {
+    id: "konstruksi",
+    label: "Konstruksi",
+    options: [
+      { value: "BAJA", label: "Baja" },
+      { value: "BETON", label: "Beton" },
+      { value: "BATU_BATA", label: "Batu Bata" },
+      { value: "KAYU", label: "Kayu" },
+    ],
+  },
+  {
+    id: "atap",
+    label: "Atap",
+    options: [
+      { value: "DECRABON", label: "Decrabor/Beton" },
+      { value: "GENTENG_BETON", label: "Gtg Beton" },
+      { value: "GENTENG_BIASA", label: "Gtg Biasa/Sirap" },
+      { value: "ASBES", label: "Asbes" },
+      { value: "SENG", label: "Seng" },
+    ],
+  },
+  {
+    id: "dinding",
+    label: "Dinding",
+    options: [
+      { value: "KACA", label: "Kaca/Alumunium" },
+      { value: "BETON", label: "Beton" },
+      { value: "BATA", label: "Bata/Conblok" },
+      { value: "KAYU", label: "Kayu" },
+      { value: "SENG", label: "Seng" },
+      { value: "TANPA_DINDING", label: "Tanpa Dinding" },
+    ],
+  },
+  {
+    id: "lantai",
+    label: "Lantai",
+    options: [
+      { value: "MARMER", label: "Marmer" },
+      { value: "KERAMIK", label: "Keramik" },
+      { value: "TERASO", label: "Teraso" },
+      { value: "UBIN", label: "Ubin PC/Papan" },
+      { value: "SEMEN", label: "Semen" },
+    ],
+  },
+  {
+    id: "langitLangit",
+    label: "Langit-langit",
+    options: [
+      { value: "AKUSTIK", label: "Akustik/Jati" },
+      { value: "TRIPLEK", label: "Triplek/Asbes/Bambu" },
+      { value: "TANPA_LANGIT", label: "Tidak Ada" },
+    ],
+  },
+];
+
 export function SpopFormDialog({
   open,
   onOpenChange,
@@ -40,9 +183,8 @@ export function SpopFormDialog({
 }: SpopFormDialogProps) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<SpopFormData | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string>("");
-  const [villageConfig, setVillageConfig] = useState<any>(null);
+  const [villageConfig, setVillageConfig] = useState<Awaited<ReturnType<typeof getVillageConfig>> | null>(null);
 
   useEffect(() => {
     getVillageConfig().then((cfg) => {
@@ -82,32 +224,27 @@ export function SpopFormDialog({
 
 
 
-  const panelCls = isDark ? "bg-white/5 border-white/10 text-white" : "bg-slate-50 border-slate-200 text-slate-900";
-  const inputCls = isDark
-    ? "bg-white/5 border-white/10 text-white placeholder:text-white/25"
-    : "bg-white border-slate-200 text-slate-900";
-
-  const selectedCls = isDark 
-    ? "bg-blue-600 text-white border-blue-500 shadow-xl shadow-blue-500/40 ring-1 ring-white/20"
-    : "bg-primary text-white border-primary shadow-lg shadow-primary/20";
-
   const setField = <K extends keyof SpopFormData>(key: K, value: SpopFormData[K]) => {
     clearPreview();
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
+  const setBuildingCategoryField = <K extends BuildingCategoryKey>(
+    key: K,
+    value: BuildingCategoryValueMap[K]
+  ) => {
+    setField(key, value as SpopFormData[K]);
+  };
+
   const handlePreview = async () => {
     if (!form) return;
-    setIsGenerating(true);
     try {
-      const html = buildSpopPrintHtml(form, villageConfig);
+      const html = buildSpopPrintHtml(form, villageConfig ?? undefined);
       setPreviewHtml(html);
       setStep(4);
       toast.success("Preview siap dilihat.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Gagal menyiapkan preview.");
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -115,7 +252,7 @@ export function SpopFormDialog({
 
   const handleHtmlPrint = () => {
     if (!form) return;
-    const html = buildSpopPrintHtml(form, villageConfig);
+    const html = buildSpopPrintHtml(form, villageConfig ?? undefined);
     const win = window.open("", "_blank");
     if (!win) {
       toast.error("Gagal membuka jendela cetak. Pastikan pop-up tidak diblokir.");
@@ -296,15 +433,11 @@ export function SpopFormDialog({
                 <div className="space-y-2 xl:col-span-12">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Jenis Transaksi</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[
-                      { value: "PEMUTAKHIRAN", label: "Pemutakhiran" },
-                      { value: "PEREKAMAN", label: "Perekaman" },
-                      { value: "PENGHAPUSAN", label: "Penghapusan" },
-                    ].map((t) => (
+                    {transactionOptions.map((t) => (
                       <button
                         key={t.value}
                         type="button"
-                        onClick={() => setField("transactionType", t.value as any)}
+                        onClick={() => setField("transactionType", t.value)}
                         className={cn(
                           "p-4 rounded-3xl border-2 transition-all active:scale-[0.98] font-black uppercase tracking-widest text-xs",
                           form.transactionType === t.value ? styles.buttonSelected : styles.buttonUnselected
@@ -396,16 +529,11 @@ export function SpopFormDialog({
                 <div className="space-y-3 xl:col-span-12">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Jenis Tanah</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                    {[
-                      { value: "TANAH_BANGUNAN", label: "Tanah + Bangunan" },
-                      { value: "KAVLING_SIAP_BANGUN", label: "Kavling Siap Bangun" },
-                      { value: "TANAH_KOSONG", label: "Tanah Kosong" },
-                      { value: "FASILITAS_UMUM", label: "Fasilitas Umum" },
-                    ].map((t) => (
+                    {jenisTanahOptions.map((t) => (
                       <button
                         key={t.value}
                         type="button"
-                        onClick={() => setField("jenisTanah", t.value as any)}
+                        onClick={() => setField("jenisTanah", t.value)}
                         className={cn(
                           "p-4 rounded-3xl border-2 transition-all active:scale-[0.98] font-black uppercase tracking-widest text-xs",
                           form.jenisTanah === t.value ? styles.buttonSelected : styles.buttonUnselected
@@ -441,17 +569,11 @@ export function SpopFormDialog({
               <div className="space-y-3 xl:col-span-12">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Status Subjek</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                  {[
-                    { value: "PEMILIK", label: "Pemilik" },
-                    { value: "PENYEWA", label: "Penyewa" },
-                    { value: "PENGELOLA", label: "Pengelola" },
-                    { value: "PEMAKAI", label: "Pemakai" },
-                    { value: "SENGKETA", label: "Sengketa" },
-                  ].map((t) => (
+                  {statusSubjekOptions.map((t) => (
                     <button
                       key={t.value}
                       type="button"
-                      onClick={() => setField("statusSubjek", t.value as any)}
+                      onClick={() => setField("statusSubjek", t.value)}
                       className={cn(
                         "p-4 rounded-3xl border-2 transition-all active:scale-[0.98] font-black uppercase tracking-widest text-xs",
                         form.statusSubjek === t.value ? styles.buttonSelected : styles.buttonUnselected
@@ -466,17 +588,11 @@ export function SpopFormDialog({
               <div className="space-y-3 xl:col-span-12">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Pekerjaan</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                  {[
-                    { value: "PNS", label: "PNS" },
-                    { value: "TNI", label: "TNI" },
-                    { value: "PENSIUNAN", label: "Pensiunan" },
-                    { value: "BADAN", label: "Badan" },
-                    { value: "LAINNYA", label: "Lainnya" },
-                  ].map((t) => (
+                  {pekerjaanOptions.map((t) => (
                     <button
                       key={t.value}
                       type="button"
-                      onClick={() => setField("pekerjaan", t.value as any)}
+                      onClick={() => setField("pekerjaan", t.value)}
                       className={cn(
                         "p-4 rounded-3xl border-2 transition-all active:scale-[0.98] font-black uppercase tracking-widest text-xs",
                         form.pekerjaan === t.value ? styles.buttonSelected : styles.buttonUnselected
@@ -627,28 +743,11 @@ export function SpopFormDialog({
               <div id="f-jenis-bng" className="space-y-3 xl:col-span-12">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Jenis Bangunan</Label>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                  {[
-                    { value: "PERUMAHAN", label: "Perumahan" },
-                    { value: "PERKANTORAN", label: "Perkantoran" },
-                    { value: "PABRIK", label: "Pabrik" },
-                    { value: "TOKO", label: "Toko / Ruko" },
-                    { value: "RUMAH_SAKIT", label: "RS / Klinik" },
-                    { value: "OLAHRAGA", label: "Olahraga" },
-                    { value: "HOTEL", label: "Hotel / Wisma" },
-                    { value: "BENGKEL", label: "Bengkel / Gd." },
-                    { value: "GEDUNG_PEMERINTAH", label: "Gedung Pem." },
-                    { value: "LAINNYA", label: "Lain-lain" },
-                    { value: "BANGUNAN_TIDAK_KENA_PAJAK", label: "Bng. Non Pajak" },
-                    { value: "BANGUN_PARKIR", label: "Bangunan Parkir" },
-                    { value: "APARTEMEN", label: "Apartemen" },
-                    { value: "POMPA_BENSIN", label: "Pompa Bensin" },
-                    { value: "TANGKI_MINYAK", label: "Tangki Minyak" },
-                    { value: "GEDUNG_SEKOLAH", label: "Gedung Sekolah" },
-                  ].map((t) => (
+                  {jenisBangunanOptions.map((t) => (
                     <button
                       key={t.value}
                       type="button"
-                      onClick={() => setField("jenisBangunan", t.value as any)}
+                      onClick={() => setField("jenisBangunan", t.value)}
                       className={cn(
                         "p-4 rounded-3xl border-2 transition-all active:scale-[0.98] font-black uppercase tracking-widest text-xs",
                         form.jenisBangunan === t.value ? styles.buttonSelected : styles.buttonUnselected
@@ -714,71 +813,7 @@ export function SpopFormDialog({
                 />
               </div>
 
-              {[
-                { 
-                  id: "kondisi", 
-                  label: "Kondisi Pada Umumnya", 
-                  options: [
-                    { value: "SANGAT_BAIK", label: "Sangat Baik" },
-                    { value: "BAIK", label: "Baik" },
-                    { value: "SEDANG", label: "Sedang" },
-                    { value: "JELEK", label: "Jelek" },
-                  ] 
-                },
-                { 
-                  id: "konstruksi", 
-                  label: "Konstruksi", 
-                  options: [
-                    { value: "BAJA", label: "Baja" },
-                    { value: "BETON", label: "Beton" },
-                    { value: "BATU_BATA", label: "Batu Bata" },
-                    { value: "KAYU", label: "Kayu" },
-                  ] 
-                },
-                { 
-                  id: "atap", 
-                  label: "Atap", 
-                  options: [
-                    { value: "DECRABON", label: "Decrabor/Beton" },
-                    { value: "GENTENG_BETON", label: "Gtg Beton" },
-                    { value: "GENTENG_BIASA", label: "Gtg Biasa/Sirap" },
-                    { value: "ASBES", label: "Asbes" },
-                    { value: "SENG", label: "Seng" },
-                  ] 
-                },
-                { 
-                  id: "dinding", 
-                  label: "Dinding", 
-                  options: [
-                    { value: "KACA", label: "Kaca/Alumunium" },
-                    { value: "BETON", label: "Beton" },
-                    { value: "BATA", label: "Bata/Conblok" },
-                    { value: "KAYU", label: "Kayu" },
-                    { value: "SENG", label: "Seng" },
-                    { value: "TANPA_DINDING", label: "Tanpa Dinding" },
-                  ] 
-                },
-                { 
-                  id: "lantai", 
-                  label: "Lantai", 
-                  options: [
-                    { value: "MARMER", label: "Marmer" },
-                    { value: "KERAMIK", label: "Keramik" },
-                    { value: "TERASO", label: "Teraso" },
-                    { value: "UBIN", label: "Ubin PC/Papan" },
-                    { value: "SEMEN", label: "Semen" },
-                  ] 
-                },
-                { 
-                  id: "langitLangit", 
-                  label: "Langit-langit", 
-                  options: [
-                    { value: "AKUSTIK", label: "Akustik/Jati" },
-                    { value: "TRIPLEK", label: "Triplek/Asbes/Bambu" },
-                    { value: "TANPA_LANGIT", label: "Tidak Ada" },
-                  ] 
-                },
-              ].map((category) => (
+              {buildingCategories.map((category) => (
                 <div key={category.id} id={`f-cat-${category.id}`} className="space-y-4 xl:col-span-12">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">{category.label}</Label>
                   <div className="flex flex-wrap gap-2">
@@ -786,10 +821,10 @@ export function SpopFormDialog({
                       <button
                         key={opt.value}
                         type="button"
-                        onClick={() => setField(category.id as any, opt.value)}
+                        onClick={() => setBuildingCategoryField(category.id, opt.value)}
                         className={cn(
                           "p-4 rounded-3xl border-2 transition-all active:scale-[0.98] font-black uppercase tracking-widest text-xs",
-                          (form as any)[category.id] === opt.value ? styles.buttonSelected : styles.buttonUnselected
+                          form[category.id] === opt.value ? styles.buttonSelected : styles.buttonUnselected
                         )}
                       >
                         {opt.label}

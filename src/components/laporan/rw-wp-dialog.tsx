@@ -26,7 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import type { AppUser } from "@/types/app";
+import type { AppUser, TaxDataItem } from "@/types/app";
 
 interface RwWpDialogProps {
   dusun: string | null;
@@ -39,7 +39,8 @@ interface RwWpDialogProps {
 export function RwWpDialog({ dusun, rw, tahun, count, currentUser }: RwWpDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<any[]>([]);
+  type RegionWpItem = Pick<TaxDataItem, "id" | "nop" | "namaWp" | "alamatObjek" | "dusun" | "rt" | "rw" | "ketetapan">;
+  const [data, setData] = useState<RegionWpItem[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // Form states for individual editing
@@ -87,7 +88,7 @@ export function RwWpDialog({ dusun, rw, tahun, count, currentUser }: RwWpDialogP
     setSelectedIds(newSet);
   };
 
-  const startEdit = (item: any) => {
+  const startEdit = (item: RegionWpItem) => {
     setEditingId(item.id);
     setEditDusun(item.dusun || "");
     setEditRt(item.rt || "");

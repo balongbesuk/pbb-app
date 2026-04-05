@@ -26,18 +26,23 @@ export async function generateMetadata(): Promise<Metadata> {
   const config = await getVillageConfig();
   const villageName = config?.namaDesa || "";
   
-  // Cache buster for icon based on updated time or current time
+  // Cache buster for icon based on updated time
   const iconUrl = config?.logoUrl 
-    ? `${config.logoUrl}?t=${config.updatedAt?.getTime() || Date.now()}` 
-    : "https://nextjs.org/favicon.ico"; // Fallback to a remote or local icon
+    ? `${config.logoUrl}?v=${config.updatedAt instanceof Date ? config.updatedAt.getTime() : Date.now()}` 
+    : "/icon.png";
   
   return {
     title: villageName 
       ? `PBB Manager | ${villageName}` 
       : "PBB Manager | Sistem Manajemen Penarikan Pajak",
-    description: `Aplikasi Manajemen Penarikan Pajak Bumi Bangunan (PBB) Desa ${villageName}`,
+    description: villageName 
+      ? `Aplikasi Manajemen Penarikan Pajak Bumi Bangunan (PBB) Desa ${villageName}`
+      : "Aplikasi Manajemen Penarikan Pajak Bumi Bangunan (PBB) Desa",
     icons: {
-      icon: iconUrl,
+      icon: [
+        { url: iconUrl },
+        { url: iconUrl, sizes: "32x32", type: "image/png" },
+      ],
       shortcut: iconUrl,
       apple: iconUrl,
     },

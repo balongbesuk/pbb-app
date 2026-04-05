@@ -17,20 +17,16 @@ interface PublicNavProps {
 
 export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNavProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const { theme } = usePublicThemeContext();
   const isDark = theme === "dark";
 
   useEffect(() => {
-    setMounted(true);
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const logoSrc = mounted && logoUrl ? logoUrl : (logoUrl || "");
 
   return (
     <nav
@@ -57,7 +53,6 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNav
               className="h-full w-full object-contain p-1"
               priority
             />
-
           ) : (
             <div
               className="w-full h-full rounded-2xl flex items-center justify-center text-white"
@@ -85,7 +80,6 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNav
           href="/login"
           className="public-cta-btn group flex items-center gap-2 text-white px-4 sm:px-6 py-2.5 sm:py-3 h-11 sm:h-12 rounded-full font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg"
         >
-
           <span className="hidden sm:inline">Masuk Admin</span>
           <span className="sm:hidden">Masuk</span>
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

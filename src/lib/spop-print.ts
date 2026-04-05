@@ -46,7 +46,6 @@ function page1(f: SpopFormData, config?: { kabupaten?: string; logoUrl?: string 
   const nop = digits(f.nop).slice(0, 18);
   const bersama = digits(f.nopBersama);
   const asal = digits(f.nopAsal);
-  const sppt = digits(f.noSpptLama);
   return `
   <section class="page">
     <div class="pno">- 1 -</div>
@@ -273,7 +272,6 @@ function page3(f: SpopFormData) {
 }
 
 function page4(f: SpopFormData) {
-  const [d, m, y] = splitDate(f.tanggalTandaTangan);
   return `
   <section class="page">
     <div class="pno">- 4 -</div>

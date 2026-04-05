@@ -2,10 +2,18 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { History, CheckCircle2, Calendar, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import type { AppUser } from "@/types/app";
+
+type AuditHistoryItem = {
+  id: string;
+  details: string | null;
+  createdAt: Date;
+  entityId: string | null;
+};
 
 export default async function RiwayatPekerjaanPage({
   searchParams,
@@ -13,7 +21,7 @@ export default async function RiwayatPekerjaanPage({
   searchParams: Promise<{ page?: string }>;
 }) {
   const session = await getServerSession(authOptions);
-  const currentUser = session?.user as any;
+  const currentUser = session?.user as AppUser | undefined;
 
   if (!currentUser || currentUser.role !== "PENARIK") {
     redirect("/dashboard");
@@ -71,7 +79,7 @@ export default async function RiwayatPekerjaanPage({
                 Belum ada riwayat penagihan yang tercatat.
               </div>
             ) : (
-              logs.map((log: any) => {
+              logs.map((log: AuditHistoryItem) => {
                 const isUnpaid = log.details?.includes("BELUM_LUNAS") || log.details?.includes("TIDAK_TERBIT");
                 return (
                   <div key={log.id} className="group flex gap-4 p-5 transition-all hover:bg-zinc-50/50 md:px-6 dark:hover:bg-zinc-900/30">

@@ -8,6 +8,7 @@ import { requireAdmin } from "@/lib/server-auth";
 import { formatZodError } from "@/lib/validations/schemas";
 import { createDatabaseBackup } from "@/lib/backup";
 import * as cheerio from "cheerio";
+import type { ExcelRow } from "@/lib/excel-processor";
 
 export async function previewTaxData(formData: FormData, tahun: number) {
   try {
@@ -32,7 +33,7 @@ export async function previewTaxData(formData: FormData, tahun: number) {
       }
     });
 
-    rows.forEach((r: any) => {
+    rows.forEach((r: ExcelRow) => {
       const val = parseFloat(String(r.ketetapan || 0).replace(/[^\d.-]/g, ''));
       if (!isNaN(val)) totalKetetapan += val;
     });
@@ -46,7 +47,7 @@ export async function previewTaxData(formData: FormData, tahun: number) {
       fileName: file.name
     };
   } catch (error) {
-    console.error("Preview Error: ", error);
+    console.error("Preview Error:", error);
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -80,7 +81,7 @@ export async function uploadTaxData(formData: FormData, tahun: number) {
 
     return { success: true, count: result };
   } catch (error) {
-    console.error("Action Error: ", error);
+    console.error("Action Error:", error);
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -96,9 +97,7 @@ export async function restoreAssignments(formData: FormData, tahun: number) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const isCsv = file.name.toLowerCase().endsWith(".csv");
-    console.info("Starting restore for year:", tahun, "isCsv:", isCsv);
     const count = await processBackupAssignments(buffer, Number(tahun), isCsv);
-    console.info("Restore finished. Updated:", count);
 
     await createAuditLog(
       "RESTORE_TAX",
@@ -114,7 +113,7 @@ export async function restoreAssignments(formData: FormData, tahun: number) {
 
     return { success: true, count };
   } catch (error) {
-    console.error("Restore Error Action: ", error);
+    console.error("Restore Error Action:", error);
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -159,7 +158,7 @@ export async function clearTaxData(tahun: number) {
 
     return { success: true };
   } catch (error) {
-    console.error("Clear Error Action: ", error);
+    console.error("Clear Error Action:", error);
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -183,7 +182,7 @@ export async function createManualTaxData(data: {
       throw new Error("Data tidak lengkap (NOP, Nama WP, Alamat Objek, dan Nominal Pajak wajib diisi)");
     }
 
-    const cleanedNop = String(data.nop).replace(/[^\w.-]/g, '');
+    const cleanedNop = String(data.nop).replace(/[^\w.-]/g, "");
 
     const exist = await prisma.taxData.findFirst({
       where: { nop: cleanedNop, tahun: data.tahun },
@@ -225,7 +224,7 @@ export async function createManualTaxData(data: {
     revalidatePath("/data-pajak");
     return { success: true, data: result };
   } catch (error) {
-    console.error("Create manual tax error: ", error);
+    console.error("Create manual tax error:", error);
     return { success: false, message: error instanceof Error ? error.message : "Terjadi kesalahan sistem" };
   }
 }
@@ -333,7 +332,91 @@ export async function fetchBapendaData(nop: string, tahun: number) {
         ketetapan: tagihan || 0
       }
     };
-  } catch (error: any) {
-    return { success: false, message: error.message || "Gagal sinkronisasi data Bapenda" };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Gagal sinkronisasi data Bapenda",
+    };
+  }
+}
+
+export async function deleteTaxData(id: number) {
+  try {
+    await requireAdmin();
+    const data = await prisma.taxData.findUnique({ where: { id } });
+    if (!data) throw new Error("Data tidak ditemukan");
+
+    // Clean relations
+    await prisma.transferRequest.deleteMany({ where: { taxId: id } });
+
+    await prisma.taxData.delete({ where: { id } });
+
+    await createAuditLog(
+      "DELETE_TAX",
+      "TaxData",
+      data.id.toString(),
+      `Menghapus data pajak NOP ${data.nop} (${data.namaWp})`
+    );
+
+    revalidatePath("/data-pajak");
+    return { success: true };
+  } catch (error) {
+    console.error("Delete Error Action:", error);
+    return { success: false, message: error instanceof Error ? error.message : "Gagal menghapus data" };
+  }
+}
+
+export async function updateTaxData(id: number, data: {
+  namaWp: string;
+  alamatObjek: string;
+  luasTanah: number;
+  luasBangunan: number;
+  ketetapan: number;
+  paymentStatus: "LUNAS" | "BELUM_LUNAS" | "SUSPEND" | "TIDAK_TERBIT";
+}) {
+  try {
+    await requireAdmin();
+    const existing = await prisma.taxData.findUnique({ where: { id } });
+    if (!existing) throw new Error("Data tidak ditemukan");
+
+    let pembayaran = 0;
+    let sisa = 0;
+    const now = new Date();
+
+    if (data.paymentStatus === "LUNAS") {
+      pembayaran = data.ketetapan;
+      sisa = 0;
+    } else {
+      pembayaran = 0;
+      sisa = data.ketetapan;
+    }
+
+    const result = await prisma.taxData.update({
+      where: { id },
+      data: {
+        namaWp: data.namaWp,
+        alamatObjek: data.alamatObjek,
+        luasTanah: Number(data.luasTanah) || 0,
+        luasBangunan: Number(data.luasBangunan) || 0,
+        ketetapan: Number(data.ketetapan) || 0,
+        paymentStatus: data.paymentStatus,
+        pembayaran,
+        sisaTagihan: sisa,
+        tanggalBayar: data.paymentStatus === "LUNAS" ? (existing.tanggalBayar || now) : null,
+      },
+    });
+
+    await createAuditLog(
+      "UPDATE_TAX",
+      "TaxData",
+      id.toString(),
+      `Update manual data pajak NOP ${existing.nop} (${data.namaWp}) oleh Admin`
+    );
+
+    revalidatePath("/data-pajak");
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Update Error Action:", error);
+    return { success: false, message: error instanceof Error ? error.message : "Gagal memperbarui data" };
   }
 }

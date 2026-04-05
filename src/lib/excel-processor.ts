@@ -1,6 +1,12 @@
 import * as XLSX from "xlsx";
 import { prisma } from "./prisma";
-import { Prisma } from "@prisma/client";
+import type {
+  PaymentStatus,
+  RegionOtomation,
+  TaxData,
+  TaxMapping,
+  VillageRegion,
+} from "@prisma/client";
 import { extractRTRW, detectDusun } from "./address-parser";
 
 export interface ExcelRow {
@@ -20,14 +26,31 @@ export interface ExcelRow {
   tempatBayar: string;
 }
 
-export async function parseExcel(buffer: Buffer | any, isCsv: boolean = false): Promise<ExcelRow[]> {
+type CellValue = string | number | boolean | Date | null | undefined;
+type ExcelSheetRow = CellValue[];
+type TaxProcessingPayload = ExcelRow & {
+  tahun: number;
+  rt: string | null;
+  rw: string | null;
+  dusun: string | null;
+  penarikId: string | null;
+  status: string;
+  paymentStatus: PaymentStatus;
+  updatedAt: Date;
+};
+
+type TaxCreatePayload = TaxProcessingPayload & {
+  createdAt: Date;
+};
+
+export async function parseExcel(buffer: Buffer, _isCsv: boolean = false): Promise<ExcelRow[]> {
   // Use XLSX (SheetJS) as it supports both .xlsx AND old .xls formats
-  const workbook = XLSX.read(buffer, { type: 'buffer', cellDates: true });
+  const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
   const firstSheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
   
   // Convert to array of arrays (index 0 is row 1)
-  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+  const rows = XLSX.utils.sheet_to_json<ExcelSheetRow>(worksheet, { header: 1 });
 
   const data: ExcelRow[] = [];
 
@@ -37,7 +60,7 @@ export async function parseExcel(buffer: Buffer | any, isCsv: boolean = false): 
     if (!row || row.length === 0) continue;
 
     // Helper functions to clean data (SheetJS format)
-    const getVal = (idx: number) => {
+    const getVal = (idx: number): CellValue => {
       const val = row[idx];
       return val === undefined || val === null ? "" : val;
     };
@@ -47,14 +70,14 @@ export async function parseExcel(buffer: Buffer | any, isCsv: boolean = false): 
       return String(val).trim();
     };
     
-    const getNum = (idx: number) => {
+    const getNum = (idx: number): number => {
       const val = getVal(idx);
       if (typeof val === "number") return val;
       const num = Number(val);
       return isNaN(num) ? 0 : num;
     };
     
-    const getDate = (idx: number) => {
+    const getDate = (idx: number): Date | null => {
       const val = getVal(idx);
       if (val instanceof Date) return val;
       if (typeof val === "number") {
@@ -104,28 +127,30 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
   ]);
 
   const dusunList = dusunRef.map((d: { name: string }) => d.name);
-  const mappingMap = new Map<string, any>(mappings.map((m: any) => [m.nop, m]));
-  const regionMap = new Map(regions.map((r: any) => [`${r.dusun}-${r.rt}-${r.rw}`, true]));
+  const mappingMap = new Map<string, TaxMapping>(mappings.map((mapping) => [mapping.nop, mapping]));
+  const regionMap = new Map(
+    regions.map((region: VillageRegion) => [`${region.dusun}-${region.rt}-${region.rw}`, true])
+  );
 
   const rwRuleMap = new Map(
-    otomations.filter((o: any) => o.type === "RW").map((ru: any) => [ru.code, ru.dusun])
+    otomations
+      .filter((automation: RegionOtomation) => automation.type === "RW")
+      .map((rule) => [rule.code, rule.dusun])
   );
   const rtRuleMap = new Map(
-    otomations.filter((o: any) => o.type === "RT").map((ru: any) => [ru.code, ru.dusun])
+    otomations
+      .filter((automation: RegionOtomation) => automation.type === "RT")
+      .map((rule) => [rule.code, rule.dusun])
   );
 
   // Map NOP -> Existing Record for quick lookup
-  const existingTaxMap = new Map(existingTaxes.map((t: any) => [t.nop, t]));
-
-  // Set existing NOPs for this year
-  const existingNopsSet = new Set(existingTaxes.map((t: any) => t.nop));
-  const newExcelNopsSet = new Set(rows.map((r: any) => r.nop));
+  const existingTaxMap = new Map(existingTaxes.map((tax: Pick<TaxData, "id" | "nop" | "paymentStatus">) => [tax.nop, tax]));
 
   // Reduced batch size for SQLite parameter limits on Windows
   // and ensured dates for createdAt/updatedAt
   const BATCH_SIZE = 100;
-  const toCreate: any[] = [];
-  const toUpdate: { id: number; data: any }[] = [];
+  const toCreate: TaxCreatePayload[] = [];
+  const toUpdate: { id: number; data: TaxProcessingPayload }[] = [];
   const now = new Date();
 
   for (const row of rows) {
@@ -169,7 +194,7 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
 
     // Determine Payment Status
     // Determine PaymentStatus based on real numbers
-    let paymentStatus = "BELUM_LUNAS";
+    let paymentStatus: PaymentStatus = "BELUM_LUNAS";
     if (row.ketetapan === 0) {
       paymentStatus = "TIDAK_TERBIT";
     } else if (row.pembayaran >= row.ketetapan && row.ketetapan > 0) {
@@ -178,7 +203,7 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
       paymentStatus = "LUNAS";
     }
 
-    const data = {
+    const data: TaxProcessingPayload = {
       ...row,
       tahun,
       rt,
@@ -205,12 +230,12 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
       const batch = toCreate.slice(i, i + BATCH_SIZE);
       try {
         await prisma.taxData.createMany({ data: batch });
-      } catch (e) {
+      } catch {
         // Fallback for unique constraint or other issues
         for (const item of batch) {
           try {
             await prisma.taxData.create({ data: item });
-          } catch (inner) {}
+          } catch {}
         }
       }
     }
@@ -225,7 +250,7 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
           where: { id: item.id },
           data: item.data,
         });
-      } catch (e) {
+      } catch {
         console.warn(`Failed to update NOP ${item.data.nop}`);
       }
     }
@@ -235,20 +260,20 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
 }
 
 export async function processBackupAssignments(
-  buffer: Buffer | any,
+  buffer: Buffer,
   tahun: number,
-  isCsv: boolean = false
+  _isCsv: boolean = false
 ) {
-  const workbook = XLSX.read(buffer, { type: 'buffer' });
+  const workbook = XLSX.read(buffer, { type: "buffer" });
   const firstSheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
-  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+  const rows = XLSX.utils.sheet_to_json<ExcelSheetRow>(worksheet, { header: 1 });
 
   const assignments: { username: string; nop: string; dusun: string; rt: string; rw: string }[] =
     [];
   let currentUsername = "";
 
-  const getColVal = (row: any[], colIdx: number) => {
+  const getColVal = (row: ExcelSheetRow, colIdx: number): string => {
     const v = row[colIdx];
     return v === undefined || v === null ? "" : String(v).trim();
   };
@@ -321,15 +346,11 @@ export async function processBackupAssignments(
     }
   }
 
-  console.info(`Processing ${grouped.size} users with total assignments: ${assignments.length}`);
-
   // Fetch all existing NOPs for this year to do a flexible matching
   const existingTaxData = await prisma.taxData.findMany({
     where: { tahun },
     select: { id: true, nop: true },
   });
-
-  console.info(`DB has ${existingTaxData.length} tax records for year ${tahun}`);
 
   // Map of cleaned NOP -> Database ID
   const cleanToId = new Map(existingTaxData.map((t) => [t.nop.replace(/[^0-9]/g, ""), t.id]));
@@ -366,7 +387,6 @@ export async function processBackupAssignments(
         data: { penarikId: userId },
       });
       updatedCount += updateResult.count;
-      console.info(`Updated ${updateResult.count} records for user ${userId}`);
     }
   }
 
@@ -384,7 +404,6 @@ export async function processBackupAssignments(
           data: uniqueMappings,
         }),
       ]);
-          console.info(`Synced ${uniqueMappings.length} mappings to TaxMapping table`);
     } catch (txError) {
       console.error("Mapping sync failed, falling back to individual upserts:", txError);
       // Fallback to individual upserts if createMany fails for some reason
@@ -397,7 +416,5 @@ export async function processBackupAssignments(
       }
     }
   }
-
-  console.info(`Successfully finished restore. Total updated TaxData: ${updatedCount}`);
   return updatedCount;
 }

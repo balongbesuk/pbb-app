@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { PaymentStatus, Prisma } from "@prisma/client";
 import { TaxDataTable } from "@/components/tax/tax-data-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServerSession } from "next-auth";
@@ -25,6 +25,12 @@ export default async function DataPajakPage({
     paymentStatus?: string;
   }>;
 }) {
+  const paymentStatusValues: PaymentStatus[] = [
+    "LUNAS",
+    "BELUM_LUNAS",
+    "SUSPEND",
+    "TIDAK_TERBIT",
+  ];
   const session = await getServerSession(authOptions);
   const params = await searchParams;
   const query = params.q || "";
@@ -42,8 +48,8 @@ export default async function DataPajakPage({
     tahun,
   };
 
-  if (paymentStatus !== "all") {
-    whereClause.paymentStatus = paymentStatus as any;
+  if (paymentStatus !== "all" && paymentStatusValues.includes(paymentStatus as PaymentStatus)) {
+    whereClause.paymentStatus = paymentStatus as PaymentStatus;
   }
 
   const andFilters: Prisma.TaxDataWhereInput[] = [];

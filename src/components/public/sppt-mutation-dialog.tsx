@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Printer, FileText, User, ChevronRight, ChevronLeft, Check, History, Eye, Loader2, AlertCircle, ShieldAlert } from "lucide-react";
+import { Plus, Trash2, Printer, FileText, ChevronRight, ChevronLeft, Check, History, Eye, Loader2, AlertCircle, ShieldAlert } from "lucide-react";
 import { cn, formatDateNoTime } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -37,9 +37,6 @@ const sanitizeText = (value: string, maxLength = MAX_TEXT_LENGTH) =>
     .trimStart()
     .slice(0, maxLength);
 
-const sanitizeUpperText = (value: string, maxLength = MAX_TEXT_LENGTH) =>
-  sanitizeText(value, maxLength).toUpperCase();
-
 const sanitizeNopInput = (value: string) =>
   value.replace(/[^0-9.-]/g, "").slice(0, 24);
 
@@ -52,6 +49,10 @@ const sanitizeNomorSurat = (value: string) =>
     .replace(/\s+/g, " ")
     .trimStart()
     .slice(0, 80);
+
+type MutationReason = "JUAL_BELI" | "HIBAH" | "WARIS";
+
+const mutationReasons: MutationReason[] = ["JUAL_BELI", "HIBAH", "WARIS"];
 
 const letterDocumentStyles = `
   @page {
@@ -167,7 +168,7 @@ export function SpptMutationDialog({
   regencyName = "JOMBANG",
 }: SpptMutationDialogProps) {
   const [step, setStep] = useState(1);
-  const [dasar, setDasar] = useState<"JUAL_BELI" | "HIBAH" | "WARIS">("JUAL_BELI");
+  const [dasar, setDasar] = useState<MutationReason>("JUAL_BELI");
   const [pemohon, setPemohon] = useState("");
   const [newDataList, setNewDataList] = useState<SpptData[]>([{ ...oldData }]);
   const [luasSebenarnya, setLuasSebenarnya] = useState<string>("");
@@ -186,8 +187,6 @@ export function SpptMutationDialog({
   
   const [showAreaWarning, setShowAreaWarning] = useState(false);
   
-  const printRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (open) {
       setStep(1);
@@ -530,8 +529,8 @@ export function SpptMutationDialog({
                <div className="space-y-4">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60">Dasar Pengajuan Perubahan</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {["JUAL_BELI", "HIBAH", "WARIS"].map((id) => (
-                      <button key={id} onClick={() => setDasar(id as any)} className={cn("p-4 rounded-3xl border-2 transition-all active:scale-[0.98] font-black uppercase tracking-widest text-xs", dasar === id ? styles.buttonSelected : styles.buttonUnselected)}>
+                    {mutationReasons.map((id) => (
+                      <button key={id} onClick={() => setDasar(id)} className={cn("p-4 rounded-3xl border-2 transition-all active:scale-[0.98] font-black uppercase tracking-widest text-xs", dasar === id ? styles.buttonSelected : styles.buttonUnselected)}>
                         {id.replace("_", " ")}
                       </button>
                     ))}
@@ -644,7 +643,7 @@ export function SpptMutationDialog({
         <div className={cn("border-t px-4 py-5 sm:px-10 sm:py-6", isDark ? "border-white/10 bg-[#0D1F3D]" : "border-slate-100 bg-white")}>
           <div className="flex items-center gap-3">
             {step > 1 && (
-              <Button variant="outline" onClick={() => setStep((prev) => prev - 1)} className={cn("h-14 flex-1 sm:flex-initial sm:min-w-40 px-3 font-black uppercase tracking-widest text-xs sm:text-[10px] transition-all active:scale-95 rounded-2xl", isDark ? "border-white/10 bg-white/5 text-white/60 hover:text-white" : "border-slate-200 bg-white text-slate-500")}>
+              <Button variant="outline" onClick={() => setStep((prev) => prev - 1)} className={cn("h-14 flex-1 sm:flex-initial sm:min-w-40 px-3 font-black uppercase tracking-widest text-xs sm:text-[10px] transition-all active:scale-95 rounded-2xl", isDark ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50")}>
                 <ChevronLeft className="mr-1 sm:mr-2 h-4 w-4" /> 
                 <span className="hidden sm:inline">Kembali ke Data {step === 2 ? "Identitas" : "Objek Baru"}</span>
                 <span className="sm:hidden">Kembali</span>
@@ -652,7 +651,7 @@ export function SpptMutationDialog({
             )}
             <div className={cn("flex flex-1 items-center gap-3 sm:justify-end", step === 1 ? "justify-center" : "")}>
               {step < 3 ? (
-                <Button onClick={validateAndProceed} className={cn("h-14 w-full sm:w-auto sm:min-w-56 px-4 font-black uppercase tracking-widest text-xs sm:text-[10px] shadow-lg transition-all active:scale-[0.98] rounded-2xl", isDark ? "bg-blue-600/20 border-2 border-blue-500 text-blue-400 shadow-blue-500/20" : "bg-primary text-white shadow-primary/20")}>
+                <Button onClick={validateAndProceed} className={cn("h-14 w-full sm:w-auto sm:min-w-56 px-4 font-black uppercase tracking-widest text-xs sm:text-[10px] shadow-lg transition-all active:scale-[0.98] rounded-2xl", isDark ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20" : "bg-primary hover:bg-primary/90 text-white shadow-primary/20")}>
                   {step === 2 ? (
                     <>
                       <Eye className="mr-1 sm:mr-2 h-4 w-4" /> 

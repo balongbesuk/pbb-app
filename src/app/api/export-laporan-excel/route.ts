@@ -4,7 +4,6 @@ import ExcelJS from "exceljs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import path from "path";
-import { readFile } from "fs/promises";
 
 export async function GET(req: NextRequest) {
   try {
@@ -169,20 +168,15 @@ export async function GET(req: NextRequest) {
           "public",
           String(villageConfig.logoUrl).replace(/^\//, "")
         );
-        const logoBuffer = await readFile(logoPath);
         const ext = (String(villageConfig.logoUrl).split(".").pop() || "png").toLowerCase();
         const imageType: "png" | "jpeg" | "gif" = ext === "jpg" || ext === "jpeg" ? "jpeg" : ext === "gif" ? "gif" : "png";
 
         const imageId = workbook.addImage({
-          buffer: logoBuffer as any,
+          filename: logoPath,
           extension: imageType,
         });
 
-        sheet.addImage(imageId, {
-          tl: { col: 0, row: 0 } as any,
-          br: { col: 1, row: 4 } as any,
-          editAs: "oneCell",
-        });
+        sheet.addImage(imageId, "A1:B4");
       } catch (imgErr) {
         console.warn("Could not insert logo into Excel:", imgErr);
       }

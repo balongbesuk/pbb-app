@@ -1,10 +1,10 @@
-# 📖 Wiki Sistem PBB Manager v8.0
+# Wiki Sistem PBB Manager v8.0
 
 Selamat datang di Wiki Teknis untuk proyek **PBB Manager**. Dokumen ini berfungsi sebagai pusat informasi mengenai arsitektur, keamanan, GIS, dan pemeliharaan sistem.
 
 ---
 
-## 🏗️ Arsitektur & Teknologi
+## Arsitektur & Teknologi
 
 Sistem ini dibangun dengan stack modern yang dioptimalkan untuk performa dan keamanan pada lingkungan server dengan sumber daya terbatas (seperti VPS ARM64).
 
@@ -17,7 +17,7 @@ Sistem ini dibangun dengan stack modern yang dioptimalkan untuk performa dan kea
 
 ---
 
-## 🔒 Hardening & Transparansi Keamanan (Update v8.0)
+## Hardening & Transparansi Keamanan (Update v8.0)
 
 Kami terus melakukan audit keamanan untuk memastikan data warga tetap terlindungi. Berikut adalah langkah-langkah *hardening* terbaru di v8.0:
 
@@ -32,7 +32,7 @@ Kami terus melakukan audit keamanan untuk memastikan data warga tetap terlindung
 
 ---
 
-## 📂 Indeks Dokumentasi Lengkap
+## Indeks Dokumentasi Lengkap
 
 Gunakan panduan berikut untuk kebutuhan operasional Anda:
 
@@ -45,7 +45,7 @@ Gunakan panduan berikut untuk kebutuhan operasional Anda:
 
 ---
 
-## 🛠️ Alur Kerja Teknis (Workflows)
+## Alur Kerja Teknis (Workflows)
 
 ### GIS Pipeline (v8.0)
 Sistem GIS menggunakan alur modern untuk manajemen spasial:
@@ -61,7 +61,7 @@ Sistem mutasi menggunakan alur 3-langkah (Steper):
 
 ---
 
-## 📡 Kontak & Pemeliharaan
+## Kontak & Pemeliharaan
 Pastikan untuk selalu menjalankan `npm audit` secara berkala dan melakukan `git pull` untuk mendapatkan pembaruan keamanan terbaru.
 
 *Terakhir diperbarui: 2 April 2026*

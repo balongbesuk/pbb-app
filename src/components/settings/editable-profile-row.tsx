@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { updateUserProfile } from "@/app/actions/profile-actions";
 import { useRouter } from "next/navigation";
 
+type EditableProfileData = {
+  name: string;
+  email: string;
+  phoneNumber: string;
+};
+
 const ICONS = {
   user: User,
   mail: Mail,
@@ -66,14 +72,14 @@ export function EditableProfileRow({
     setLoading(true);
     try {
       // Menyiapkan data lengkap untuk update (Prisma butuh data lengkap di action kita tadi)
-      const updateData = {
+      const updateData: EditableProfileData = {
         name: userData.name || "",
         email: userData.email || "",
         phoneNumber: userData.phoneNumber || "",
-        [fieldName]: currentValue,
       };
+      updateData[fieldName] = currentValue;
 
-      const result = await updateUserProfile(updateData as any);
+      const result = await updateUserProfile(updateData);
       if (result.success) {
         toast.success(`${label} berhasil diperbarui`);
         setIsEditing(false);
@@ -81,7 +87,7 @@ export function EditableProfileRow({
       } else {
         toast.error(result.message || "Gagal memperbarui");
       }
-    } catch (error) {
+    } catch {
       toast.error("Kesalahan sistem");
     } finally {
       setLoading(false);

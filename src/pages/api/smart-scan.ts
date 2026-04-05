@@ -7,9 +7,11 @@ import fs from "fs";
 import Busboy from "busboy";
 import { PrismaClient } from "@prisma/client";
 import { assertSafeSessionId } from "@/lib/file-security";
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+import pdfParse, {
+  type PdfPageData,
+  type PdfTextContentItem,
+} from "pdf-parse/lib/pdf-parse.js";
+import { getArchivePath } from "@/lib/storage";
 
 const prisma = new PrismaClient();
 
@@ -62,10 +64,10 @@ async function extractPerPageTexts(fileBuffer: Buffer, totalPages: number): Prom
   let currentPage = 0;
 
   await pdfParse(fileBuffer, {
-    pagerender: async function (pageData: any) {
+    pagerender: async (pageData: PdfPageData) => {
       try {
         const tc = await pageData.getTextContent();
-        const text = tc.items.map((item: any) => item.str || "").join(" ");
+        const text = tc.items.map((item: PdfTextContentItem) => item.str || "").join(" ");
         pageTexts[currentPage] = text;
       } catch { /* skip */ }
       currentPage++;
@@ -82,7 +84,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== "POST") return res.status(405).end();
 
   const session = await getServerSession(req, res, authOptions);
-  if (!session || (session.user as any)?.role !== "ADMIN") {
+  const userRole = session?.user && "role" in session.user ? session.user.role : undefined;
+  if (!session || userRole !== "ADMIN") {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -105,8 +108,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let safeSessionId: string;
     try {
       safeSessionId = assertSafeSessionId(sessionId);
-    } catch (e: any) {
-      send({ type: "done", success: false, message: e.message || "Session upload tidak valid." });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Session upload tidak valid.";
+      send({ type: "done", success: false, message });
       return res.end();
     }
 
@@ -137,9 +141,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     send({ type: "status", message: "Memuat daftar NOP dari database..." });
     const dbNopRows = await prisma.taxData.findMany({ where: { tahun: year }, select: { nop: true } });
-    const validNopSet = new Set(dbNopRows.map(r => r.nop.replace(/\D/g, "")));
+    const validNopSet = new Set(dbNopRows.map((row) => row.nop.replace(/\D/g, "")));
 
-    const { getArchivePath } = require("@/lib/storage");
     const archiveDir = getArchivePath(year.toString());
     if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
     const existingFiles = new Set(fs.readdirSync(archiveDir));
@@ -157,7 +160,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     send({ type: "status", message: `Memeriksa hasil & Menyimpan (${nopMap.size} file mentah)...` });
 
-    let detected = 0, duplicates = 0, invalidDb = 0, skipped = 0;
+    let detected = 0, duplicates = 0, invalidDb = 0;
     const pagesWithNop = Array.from(nopMap.entries()).sort(([a], [b]) => a - b);
     
     // Batch raksasa pun aman tanpa WASM memori, tapi dibatasi 20 agar stabil (pdf-lib murni)
@@ -185,7 +188,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             detected++;
           } catch (err) {
             fs.appendFileSync(logPath, `PAGE ${i + 1}: ERROR -> ${err}\n`);
-            skipped++;
           }
         })
       );
@@ -209,10 +211,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     fs.appendFileSync(logPath, `DONE: ${lines}\n`);
     send({ type: "done", success: true, message: `Pindai Selesai (Cepat Sekali)! ${lines}` });
 
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Server Error";
     console.error("[smart-scan]", error);
     fs.appendFileSync(logPath, `FATAL: ${error}\n`);
-    send({ type: "done", success: false, message: error.message || "Server Error" });
+    send({ type: "done", success: false, message });
   } finally {
     await prisma.$disconnect();
     res.end();

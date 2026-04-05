@@ -4,11 +4,13 @@ import { authOptions } from "@/lib/auth";
 import path from "path";
 import fs from "fs";
 import AdmZip from "adm-zip";
+import type { AppUser } from "@/types/app";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "ADMIN") {
+    const user = session?.user as AppUser | undefined;
+    if (!session || user?.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -40,8 +42,8 @@ export async function GET(req: NextRequest) {
         "Content-Disposition": `attachment; filename="${zipName}"`,
       },
     });
-  } catch (error: any) {
-    console.error("Backup Error: ", error);
+  } catch (error) {
+    console.error("Backup Error:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

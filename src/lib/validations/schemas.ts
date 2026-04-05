@@ -41,6 +41,8 @@ export const VillageConfigSchema = z.object({
   showNominalPajak: z.boolean().optional(),
   enableDigitalArchive: z.boolean().optional(),
   archiveOnlyLunas: z.boolean().optional(),
+  enablePublicGis: z.boolean().optional(),
+  showUnpaidDetailsGis: z.boolean().optional(),
   mapCenterLat: z.number().optional(),
   mapCenterLng: z.number().optional(),
   mapDefaultZoom: z.number().int().min(1).max(22).optional(),
@@ -57,23 +59,31 @@ export function formatZodError(error: unknown): string {
   }
 
   // Handle errors that looks like ZodError but lost instance (e.g. through IPC/actions)
-  const err = error as any;
-  if (err?.name === "ZodError" && Array.isArray(err?.issues || err?.errors)) {
-    const issues = err.issues || err.errors;
-    return issues.map((e: any) => e.message).join(", ");
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "ZodError"
+  ) {
+    const serialized = error as { issues?: Array<{ message?: string }>; errors?: Array<{ message?: string }>; message?: string };
+    const issues = serialized.issues || serialized.errors;
+    if (Array.isArray(issues)) {
+      return issues.map((issue) => issue.message || "Terjadi kesalahan validasi").join(", ");
+    }
   }
 
   // Fallback: If Zod serialized the error message as a JSON array string
-  if (typeof err?.message === "string" && err.message.startsWith("[")) {
+  const message = error instanceof Error ? error.message : typeof error === "string" ? error : "";
+  if (typeof message === "string" && message.startsWith("[")) {
     try {
-      const parsed = JSON.parse(err.message);
-      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].message) {
-        return parsed.map((e: any) => e.message).join(", ");
+      const parsed = JSON.parse(message) as Array<{ message?: string }>;
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.message) {
+        return parsed.map((entry) => entry.message || "Terjadi kesalahan validasi").join(", ");
       }
-    } catch (e) {
+    } catch {
       // ignore JSON parse error
     }
   }
 
-  return err?.message || "Terjadi kesalahan sistem";
+  return message || "Terjadi kesalahan sistem";
 }

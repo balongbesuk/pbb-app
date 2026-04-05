@@ -5,6 +5,7 @@ import Busboy from "busboy";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { assertSafeSessionId } from "@/lib/file-security";
+import type { AppUser } from "@/types/app";
 
 export const config = {
   api: {
@@ -46,7 +47,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const session = await getServerSession(req, res, authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const currentUser = session?.user as AppUser | undefined;
+    if (!currentUser || currentUser.role !== "ADMIN") {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 
@@ -70,8 +72,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     fs.writeFileSync(chunkPath, chunkBuffer);
 
     return res.json({ success: true, chunkIndex: safeChunkIndex });
-  } catch (err: any) {
-    console.error("[upload-chunk]", err);
-    return res.status(500).json({ success: false, error: err.message });
+  } catch (error) {
+    console.error("[upload-chunk]", error);
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan sistem";
+    return res.status(500).json({ success: false, error: message });
   }
 }

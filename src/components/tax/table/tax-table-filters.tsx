@@ -31,6 +31,8 @@ interface TaxTableFiltersProps {
   onRegionStatusChange: (val: string) => void;
   filterPaymentStatus: string;
   onPaymentStatusChange: (val: string) => void;
+  filterArchiveStatus: string;
+  onArchiveStatusChange: (val: string) => void;
   availableFilters: AvailableFilters;
   onPrint: () => void;
   showPrint: boolean;
@@ -54,6 +56,8 @@ export function TaxTableFilters({
   onRegionStatusChange,
   filterPaymentStatus,
   onPaymentStatusChange,
+  filterArchiveStatus,
+  onArchiveStatusChange,
   availableFilters,
   onPrint,
   showPrint,
@@ -118,15 +122,6 @@ export function TaxTableFilters({
     filterRegionStatus !== "all" && filterRegionStatus,
     filterPaymentStatus !== "all" && filterPaymentStatus,
   ].filter(Boolean).length;
-
-  const clearAllFilters = () => {
-    onDusunChange("all");
-    onRwChange("all");
-    onRtChange("all");
-    onPenarikChange("all");
-    onRegionStatusChange("all");
-    onPaymentStatusChange("all");
-  };
 
   const paymentStatusLabel = filterPaymentStatus === "all" ? "Semua Status"
     : filterPaymentStatus === "LUNAS" ? "✅ Lunas"
@@ -203,7 +198,6 @@ export function TaxTableFilters({
               {filterPenarik === currentUser.id ? "Tugas Saya ✓" : "Tugas Saya"}
             </button>
           )}
-
           <button
             onClick={() => filterPaymentStatus === "BELUM_LUNAS" ? onPaymentStatusChange("all") : onPaymentStatusChange("BELUM_LUNAS")}
             className={cn(
@@ -215,6 +209,19 @@ export function TaxTableFilters({
           >
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
             {filterPaymentStatus === "BELUM_LUNAS" ? "Blm Lunas ✓" : "Blm Lunas"}
+          </button>
+
+          <button
+            onClick={() => filterArchiveStatus === "missing" ? onArchiveStatusChange("all") : onArchiveStatusChange("missing")}
+            className={cn(
+              "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all",
+              filterArchiveStatus === "missing"
+                ? "bg-red-600 text-white border-red-600 shadow-lg shadow-red-500/20"
+                : "bg-red-500/5 dark:bg-red-950/20 border-red-500/30 text-red-600 dark:text-red-500 hover:bg-red-500/10"
+            )}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-current" />
+            {filterArchiveStatus === "missing" ? "Tanpa Arsip ✓" : "Tanpa Arsip"}
           </button>
         </div>
 
@@ -511,6 +518,17 @@ export function TaxTableFilters({
               )}>
               <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
               {filterPaymentStatus === "BELUM_LUNAS" ? "Menampilkan Belum Lunas" : "Tampilkan Belum Lunas"}
+            </Button>
+            <Button
+              onClick={() => filterArchiveStatus === "missing" ? onArchiveStatusChange("all") : onArchiveStatusChange("missing")}
+              variant={filterArchiveStatus === "missing" ? "default" : "outline"} size="sm"
+              className={cn(
+                "h-9 w-full sm:w-auto gap-2 rounded-xl text-[10px] font-bold tracking-widest uppercase shadow-sm transition-colors",
+                filterArchiveStatus === "missing" ? "bg-red-600 text-white shadow-red-500/20"
+                  : "border-border bg-red-500/5 text-red-600 dark:text-red-500 hover:bg-red-500/10"
+              )}>
+              <div className="h-2 w-2 rounded-full bg-red-500" />
+              {filterArchiveStatus === "missing" ? "Menampilkan Belum Ada Arsip" : "Tampilkan Belum Ada Arsip"}
             </Button>
           </div>
         </div>

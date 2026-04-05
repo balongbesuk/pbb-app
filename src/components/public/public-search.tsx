@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { searchPublicTaxData } from "@/app/actions/public-actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, MapPin, User, CheckCircle2, XCircle, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle, Calendar, CreditCard, HelpCircle, History, Download, Eye, RefreshCcw, Copy, Check, FileText, Printer } from "lucide-react";
+import { Loader2, Search, MapPin, User, CheckCircle2, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle, History, Download, Eye, RefreshCcw, Copy, Check, FileText } from "lucide-react";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
 import { formatCurrency, formatDate, formatDateNoTime, formatJatuhTempo, cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -38,6 +37,14 @@ interface PublicSearchResultItem {
   } | null;
 }
 
+type PublicSearchResponse = Awaited<ReturnType<typeof searchPublicTaxData>> & {
+  jatuhTempo?: string;
+  bapendaUrl?: string | null;
+  isJombangBapenda?: boolean;
+  enableBapendaSync?: boolean;
+  rateLimited?: boolean;
+};
+
 export function PublicSearch({ 
   tahunPajak, 
   showNominalPajak = false 
@@ -63,6 +70,13 @@ export function PublicSearch({
   const [mutationItem, setMutationItem] = useState<PublicSearchResultItem | null>(null);
   const [spopItem, setSpopItem] = useState<PublicSearchResultItem | null>(null);
   const [copiedNop, setCopiedNop] = useState<string | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
   const isDark = theme === "dark";
 
   const togglePdf = (nop: string) => {
@@ -73,32 +87,139 @@ export function PublicSearch({
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!query.trim()) return;
+    
     setLoading(true);
     setHasSearched(true);
     setMessage("");
     setIsRateLimited(false);
-    const res = await searchPublicTaxData(query, tahunPajak);
+    setPage(1); // Reset to page 1 for new search
+    
+    const res = await searchPublicTaxData(query, tahunPajak, 1);
     if (res.success) {
-      setResults(res.data || []);
-      if ((res as any).jatuhTempo) {
-        setJatuhTempo((res as any).jatuhTempo);
+      const data = res.data || [];
+      setResults(data);
+      setHasMore(!!res.hasMore);
+
+      // Simpan ke riwayat jika ada hasil
+      if (data.length > 0) {
+        setRecentSearches(prev => {
+          const filtered = prev.filter(s => s.toLowerCase() !== query.toLowerCase());
+          const next = [query, ...filtered].slice(0, 3);
+          localStorage.setItem("pbb_recent_searches", JSON.stringify(next));
+          return next;
+        });
       }
-      if ((res as any).bapendaUrl) {
-        setBapendaUrl((res as any).bapendaUrl);
-        setIsJombangBapenda(!!(res as any).isJombangBapenda);
-        setEnableBapendaSync(!!(res as any).enableBapendaSync);
+
+      const successRes = res as PublicSearchResponse;
+      if (successRes.jatuhTempo) {
+        setJatuhTempo(successRes.jatuhTempo);
+      }
+      if (successRes.bapendaUrl) {
+        setBapendaUrl(successRes.bapendaUrl);
+        setIsJombangBapenda(!!successRes.isJombangBapenda);
+        setEnableBapendaSync(!!successRes.enableBapendaSync);
       } else {
         setBapendaUrl(null);
       }
     } else {
+      const errorRes = res as PublicSearchResponse;
       setResults([]);
+      setHasMore(false);
       setMessage(res.message || "Terjadi kesalahan sistem.");
-      if ((res as any).rateLimited) {
+      if (errorRes.rateLimited) {
         setIsRateLimited(true);
       }
     }
     setLoading(false);
   };
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+    
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    
+    const res = await searchPublicTaxData(query, tahunPajak, nextPage);
+    if (res.success) {
+      setResults(prev => [...prev, ...(res.data || [])]);
+      setPage(nextPage);
+      setHasMore(!!res.hasMore);
+    }
+    setIsLoadingMore(false);
+  }, [page, hasMore, isLoadingMore, query, tahunPajak]);
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("pbb_recent_searches");
+    if (saved) {
+      try {
+        setRecentSearches(JSON.parse(saved));
+      } catch (e) {
+        console.error("Gagal memuat riwayat pencarian:", e);
+      }
+    }
+  }, []);
+
+  const handleRecentClick = (s: string) => {
+    setQuery(s);
+    // Trigger search immediately after state update (using same logic as submit)
+    setTimeout(() => {
+        // Search using the string 's' directly to avoid stale 'query' state check
+        handleSearchWithTerm(s);
+    }, 10);
+  };
+
+  const handleSearchWithTerm = async (term: string) => {
+    if (!term.trim()) return;
+    setLoading(true);
+    setHasSearched(true);
+    setMessage("");
+    setIsRateLimited(false);
+    setPage(1);
+    
+    const res = await searchPublicTaxData(term, tahunPajak, 1);
+    if (res.success) {
+      const data = res.data || [];
+      setResults(data);
+      setHasMore(!!res.hasMore);
+      // Update posisinya di riwayat
+      setRecentSearches(prev => {
+        const filtered = prev.filter(s => s.toLowerCase() !== term.toLowerCase());
+        const next = [term, ...filtered].slice(0, 3);
+        localStorage.setItem("pbb_recent_searches", JSON.stringify(next));
+        return next;
+      });
+      const successRes = res as PublicSearchResponse;
+      if (successRes.jatuhTempo) setJatuhTempo(successRes.jatuhTempo);
+      if (successRes.bapendaUrl) {
+         setBapendaUrl(successRes.bapendaUrl);
+         setIsJombangBapenda(!!successRes.isJombangBapenda);
+         setEnableBapendaSync(!!successRes.enableBapendaSync);
+      }
+    } else {
+      setResults([]);
+      setHasMore(false);
+      setMessage(res.message || "Terjadi kesalahan sistem.");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [loadMore, hasMore, isLoadingMore]);
 
   const handleCheckBapenda = async (nop: string) => {
     const lastCheck = cooldowns[nop] || 0;
@@ -135,8 +256,9 @@ export function PublicSearch({
           setShowPayRedirect({ nop: item.nop, namaWp: item.namaWp });
         }
       }
-    } catch (e: any) {
-      toast.error(e.message || "Gagal menghubungi Bapenda.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal menghubungi Bapenda.";
+      toast.error(message);
     } finally {
       setIsCheckingAuto(prev => ({ ...prev, [nop]: false }));
     }
@@ -177,9 +299,6 @@ export function PublicSearch({
   const mutedLabelCls = isDark ? "text-blue-200/50" : "text-zinc-500";
   const addressCls = isDark ? "text-blue-100/90" : "text-zinc-900";
   const cardFooterCls = isDark ? "bg-[#050B14]/40 border-white/5" : "bg-zinc-50 border-zinc-100";
-  const waaBtnCls = isDark
-    ? "border-emerald-800/30 hover:bg-emerald-950/30 text-emerald-400 bg-emerald-950/10"
-    : "border-emerald-200 hover:bg-emerald-50 text-emerald-700";
   const msgBgCls = isDark ? "bg-orange-950/40 border-orange-500/30 text-orange-400" : "bg-orange-50 border-orange-200 text-orange-800";
   const badgeCls = "shadow-sm border-none font-black tracking-widest uppercase text-[10px] px-3 py-1 rounded-full";
 
@@ -233,6 +352,27 @@ export function PublicSearch({
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Cari Data"}
             </Button>
           </form>
+
+          {/* Recent Searches */}
+          {recentSearches.length > 0 && !hasSearched && (
+            <div className="mt-4 flex flex-wrap items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
+               <span className={cn("text-[10px] font-black uppercase tracking-wider opacity-40", isDark ? "text-white" : "text-slate-900")}>Riwayat:</span>
+               {recentSearches.map((s, idx) => (
+                 <button
+                    key={idx}
+                    onClick={() => handleRecentClick(s)}
+                    className={cn(
+                        "px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all active:scale-95",
+                        isDark 
+                            ? "bg-white/5 border-white/10 text-blue-200 hover:bg-white/10" 
+                            : "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200"
+                    )}
+                 >
+                    {s}
+                 </button>
+               ))}
+            </div>
+          )}
 
           <div className={`mt-5 flex items-start gap-3 rounded-2xl border p-4 text-[11px] sm:text-xs ${disclaimerCls}`}>
             <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
@@ -546,6 +686,29 @@ export function PublicSearch({
                 </Card>
 
               ))}
+            </div>
+
+            {/* Infinite Scroll Trigger */}
+            <div ref={observerTarget} className="py-8 flex justify-center">
+              {isLoadingMore ? (
+                <div className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-black uppercase tracking-widest animate-pulse",
+                  isDark ? "bg-blue-600/10 border-blue-500/20 text-blue-400" : "bg-slate-50 border-slate-200 text-slate-500"
+                )}>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Memuat data lainnya...
+                </div>
+              ) : hasMore ? (
+                <div className="opacity-0 h-4" />
+              ) : results.length > 0 ? (
+                <div className={cn(
+                  "flex items-center gap-2 px-6 py-2 rounded-full border-t border-dashed text-[10px] font-black uppercase tracking-widest opacity-40",
+                  isDark ? "border-white/10 text-white" : "border-slate-200 text-slate-500"
+                )}>
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                  Semua data telah ditampilkan
+                </div>
+              ) : null}
             </div>
         </div>
       )}

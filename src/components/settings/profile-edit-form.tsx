@@ -61,7 +61,7 @@ export function ProfileEditForm({ initialData }: ProfileEditFormProps) {
       } else {
         toast.error(result.message || "Gagal memperbarui profil");
       }
-    } catch (error) {
+    } catch {
       toast.error("Terjadi kesalahan sistem");
     } finally {
       setLoading(false);

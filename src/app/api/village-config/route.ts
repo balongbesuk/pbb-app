@@ -19,6 +19,7 @@ export async function GET() {
         mapCenterLng: true,
         mapDefaultZoom: true,
         tahunPajak: true,
+        showUnpaidDetailsGis: true,
       },
     });
 

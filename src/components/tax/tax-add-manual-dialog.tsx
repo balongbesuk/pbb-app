@@ -9,6 +9,7 @@ import { Plus, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { createManualTaxData, fetchBapendaData } from "@/app/actions/tax-actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { PaymentStatus } from "@prisma/client";
 
 export function TaxAddManualDialog({
   dusunList = [],
@@ -19,6 +20,7 @@ export function TaxAddManualDialog({
   rwList?: string[];
   rtList?: string[];
 }) {
+  const paymentStatusOptions: PaymentStatus[] = ["BELUM_LUNAS", "LUNAS", "SUSPEND", "TIDAK_TERBIT"];
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +32,7 @@ export function TaxAddManualDialog({
   const [luasBangunan, setLuasBangunan] = useState("");
   const [ketetapan, setKetetapan] = useState("");
   const [tahun, setTahun] = useState(new Date().getFullYear().toString());
-  const [paymentStatus, setPaymentStatus] = useState<string>("BELUM_LUNAS");
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("BELUM_LUNAS");
   const [dusun, setDusun] = useState<string>("");
   const [rw, setRw] = useState<string>("");
   const [rt, setRt] = useState<string>("");
@@ -76,7 +78,7 @@ export function TaxAddManualDialog({
       } else {
         toast.error(res.message || "Gagal sinkron data Bapenda.");
       }
-    } catch (err: any) {
+    } catch {
       toast.error("Terjadi kesalahan sistem saat menghubungi Bapenda.");
     } finally {
       setCheckingBapenda(false);
@@ -100,7 +102,7 @@ export function TaxAddManualDialog({
         luasBangunan: Number(luasBangunan) || 0,
         ketetapan: Number(ketetapan) || 0,
         tahun: Number(tahun) || new Date().getFullYear(),
-        paymentStatus: paymentStatus as any,
+        paymentStatus,
         dusun: dusun || undefined,
         rw: rw || undefined,
         rt: rt || undefined
@@ -112,8 +114,9 @@ export function TaxAddManualDialog({
       } else {
         toast.error(res.message || "Gagal menyimpan data pajak.");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Terjadi kesalahan.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Terjadi kesalahan.";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -222,7 +225,14 @@ export function TaxAddManualDialog({
             </div>
             <div className="space-y-2">
               <Label>Status Awal <span className="text-red-500">*</span></Label>
-              <Select value={paymentStatus} onValueChange={(val) => setPaymentStatus(val || "BELUM_LUNAS")}>
+              <Select
+                value={paymentStatus}
+                onValueChange={(val) => {
+                  if (paymentStatusOptions.includes(val as PaymentStatus)) {
+                    setPaymentStatus(val as PaymentStatus);
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih Status" />
                 </SelectTrigger>

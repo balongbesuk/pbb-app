@@ -1,9 +1,7 @@
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
-  Database,
-  CreditCard,
   CheckCircle2,
   AlertCircle,
   TrendingUp,
@@ -35,6 +33,35 @@ import { formatCurrency, toTitleCase, cn } from "@/lib/utils";
 import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+
+type SessionUser = {
+  id?: string;
+  role?: string;
+  name?: string | null;
+};
+
+type DailyLogItem = {
+  id: string;
+  details: string | null;
+  createdAt: Date;
+  entityId: string | null;
+};
+
+type PhysicalStatsCardProps = {
+  title: string;
+  value: string;
+  description: string;
+  icon: ReactNode;
+};
+
+type StatsHeroCardProps = {
+  title: string;
+  value: string;
+  icon: ReactNode;
+  description: string;
+  percent?: number;
+  color: "indigo" | "emerald" | "rose" | "blue";
+};
 
 async function getPenarikPersonalStats(userId: string, tahun: number) {
   const [all, lunas, sengketa, tdkTerbit] = await Promise.all([
@@ -146,9 +173,6 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
 
   const totalNominalValue = totalNominal._sum.ketetapan || 0;
   const sudahDibayarValue = sudahDibayar._sum.pembayaran || 0;
-  const belumDibayarValue = belumDibayar._sum.ketetapan || 0;
-  const sudahDibayarCount = sudahDibayar._count || 0;
-  const belumDibayarCount = belumDibayar._count || 0;
   const sengketaCount = sengketa;
   const persentase = totalNominalValue > 0 ? (sudahDibayarValue / totalNominalValue) * 100 : 0;
 
@@ -208,7 +232,7 @@ export default async function DashboardPage({
   const params = await searchParams;
   const currentYear = parseInt(params.tahun || new Date().getFullYear().toString());
   const session = await getServerSession(authOptions);
-  const currentUser = session?.user as any;
+  const currentUser = session?.user as SessionUser | undefined;
 
   const [stats, villageConfig] = await Promise.all([
     getDashboardStats(currentYear),
@@ -216,7 +240,7 @@ export default async function DashboardPage({
   ]);
 
   let personalStats = null;
-  let dailyLogs: any[] = [];
+  let dailyLogs: DailyLogItem[] = [];
   let totalLogs = 0;
   if (currentUser?.role === "PENARIK" && currentUser?.id) {
     const [ps, dl] = await Promise.all([
@@ -340,7 +364,7 @@ export default async function DashboardPage({
           <div className="space-y-4">
             {dailyLogs?.length > 0 ? (
               <>
-                {dailyLogs.map((log: any) => {
+                {dailyLogs.map((log) => {
                   const isUnpaid = log.details?.includes("BELUM_LUNAS") || log.details?.includes("TIDAK_TERBIT");
                   return (
                   <div key={log.id} className="flex items-start gap-3 text-sm">
@@ -387,7 +411,6 @@ export default async function DashboardPage({
           value={formatCurrency(stats.totalNominal)}
           icon={<Wallet className="h-5 w-5" />}
           description="Target anggaran desa"
-          trend="+4.5%"
           color="indigo"
         />
         <StatsHeroCard
@@ -579,7 +602,7 @@ export default async function DashboardPage({
   );
 }
 
-function PhysicalStatsCard({ title, value, description, icon }: any) {
+function PhysicalStatsCard({ title, value, description, icon }: PhysicalStatsCardProps) {
   return (
     <Card className="hover:border-primary/20 overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300">
       <CardContent className="flex items-center gap-4 p-5">
@@ -600,8 +623,8 @@ function PhysicalStatsCard({ title, value, description, icon }: any) {
   );
 }
 
-function StatsHeroCard({ title, value, icon, description, percent, color }: any) {
-  const colors: any = {
+function StatsHeroCard({ title, value, icon, description, percent, color }: StatsHeroCardProps) {
+  const colors: Record<StatsHeroCardProps["color"], string> = {
     indigo: "bg-indigo-500/5 text-indigo-600 border-indigo-100 dark:border-indigo-900/40",
     emerald: "bg-emerald-500/5 text-emerald-600 border-emerald-100 dark:border-emerald-900/40",
     rose: "bg-rose-500/5 text-rose-600 border-rose-100 dark:border-rose-900/40",

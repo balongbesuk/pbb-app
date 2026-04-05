@@ -1,25 +1,27 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import path from "path";
 import fs from "fs";
 import archiver from "archiver";
 
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { getArchivePath } from "@/lib/storage";
 
 export const config = {
   api: { responseLimit: false },
 };
 
+type SessionUserWithRole = { role?: string | null };
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
   const session = await getServerSession(req, res, authOptions);
-  if (!session || (session.user as any)?.role !== "ADMIN") {
+  const sessionUser = session?.user as SessionUserWithRole | undefined;
+  if (!session || sessionUser?.role !== "ADMIN") {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
-    const { getArchivePath } = require("@/lib/storage");
     const BASE_ARCHIVE_DIR = getArchivePath();
     if (!fs.existsSync(BASE_ARCHIVE_DIR)) {
       return res.status(404).json({ error: "Folder arsip tidak ditemukan." });
@@ -50,10 +52,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     await archive.finalize();
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("[backup-archive]", error);
     if (!res.headersSent) {
-      res.status(500).json({ error: error.message || "Gagal membuat backup." });
+      const message = error instanceof Error ? error.message : "Gagal membuat backup.";
+      res.status(500).json({ error: message });
     }
   }
 }

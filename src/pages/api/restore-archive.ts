@@ -6,12 +6,17 @@ import fs from "fs";
 import Busboy from "busboy";
 import AdmZip from "adm-zip";
 import { assertSafeSessionId, resolveSafeChildPath } from "@/lib/file-security";
+import { getStorageRoot } from "@/lib/storage";
 
 export const config = {
   api: {
     bodyParser: false,
     responseLimit: false,
   },
+};
+
+type SessionUserWithRole = {
+  role?: string | null;
 };
 
 function parseMeta(req: NextApiRequest): Promise<Record<string, string>> {
@@ -36,7 +41,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const session = await getServerSession(req, res, authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const sessionUser = session?.user as SessionUserWithRole | undefined;
+    if (!session || sessionUser?.role !== "ADMIN") {
       send({ type: "done", success: false, message: "Unauthorized" });
       return res.end();
     }
@@ -78,7 +84,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const entries = zip.getEntries();
     const totalEntries = entries.length;
 
-    const { getStorageRoot } = require("@/lib/storage");
     const storageDir = getStorageRoot();
 
     let restored = 0;
@@ -117,9 +122,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       message: `Restore selesai! ${restored} file dipulihkan, ${skipped} dilompati.`,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("[restore-archive]", error);
-    send({ type: "done", success: false, message: error.message || "Gagal restore." });
+    const message = error instanceof Error ? error.message : "Gagal restore.";
+    send({ type: "done", success: false, message });
   } finally {
     res.end();
   }

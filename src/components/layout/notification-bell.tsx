@@ -7,7 +7,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
@@ -22,10 +21,27 @@ import {
 } from "@/app/actions/transfer-actions";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
+interface NotificationItem {
+  id: string;
+  title: string;
+  message: string | null;
+  type: string;
+  isRead: boolean;
+  createdAt: Date | string;
+}
+
+interface PendingRequestItem {
+  id: string;
+  type: string;
+  sender: { name: string | null };
+  taxData: { nop: string; namaWp: string };
+}
 
 export function NotificationBell() {
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequestItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -161,11 +177,26 @@ export function NotificationBell() {
                   <div className="mb-1.5 flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="truncate text-xs font-bold text-gray-900 dark:text-gray-100">
+                        {req.taxData.nop}
+                      </p>
+                      <p className="truncate text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">
                         {req.taxData.namaWp}
                       </p>
-                      <p className="text-muted-foreground text-[10px]">Oleh: {req.sender.name}</p>
+                      <div className="mt-1 flex flex-col gap-0.5">
+                        <p className="text-muted-foreground text-[9px] font-medium opacity-70 italic">
+                          {req.type === "GIVE" ? "Ingin menyerahkan NOP ini kepada Anda" : "Meminta hak kelola NOP ini dari Anda"}
+                        </p>
+                        <p className="text-[10px] font-bold text-gray-700 dark:text-gray-300">
+                          Oleh: <span className="text-primary">{req.sender.name}</span>
+                        </p>
+                      </div>
                     </div>
-                    <Badge className="h-4 bg-sky-500 text-[8px]">Transfer</Badge>
+                    <Badge className={cn(
+                      "h-4 text-[8px] px-1.5 font-black uppercase tracking-widest border-none shrink-0",
+                      req.type === "GIVE" ? "bg-sky-500" : "bg-purple-500"
+                    )}>
+                      {req.type === "GIVE" ? "Penyerahan" : "Permintaan"}
+                    </Badge>
                   </div>
                   <div className="flex gap-2">
                     <Button

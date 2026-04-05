@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, DatabaseZap, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +21,6 @@ export function RestoreDatabaseButton() {
   const [confirmText, setConfirmText] = useState("");
   const [selectedBackupFile, setSelectedBackupFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -67,8 +65,9 @@ export function RestoreDatabaseButton() {
       } else {
         throw new Error(result.error || "Gagal memulihkan database");
       }
-    } catch (error: any) {
-      toast.error(error.message, { id: toastId });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal memulihkan database";
+      toast.error(message, { id: toastId });
     } finally {
       setIsUploading(false);
       setSelectedBackupFile(null);

@@ -6,7 +6,6 @@ import {
   UserCircle,
   Activity,
   Box,
-  Search,
   Calendar,
   ShieldCheck,
   ArrowRightLeft,
@@ -15,15 +14,14 @@ import {
   LogIn,
   History,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { LogSearch } from "@/components/log/log-search";
+import { LogFilters } from "@/components/log/log-filters";
 import { LogTablePagination } from "@/components/log/log-table-pagination";
 import { cn } from "@/lib/utils";
-
+import { prisma } from "@/lib/prisma";
 function getActionLabel(action: string, details?: string | null) {
-  const acts: Record<string, { label: string; color: string; icon: any; classes: string }> = {
+  const acts: Record<string, { label: string; color: string; icon: React.ReactNode; classes: string }> = {
     UPLOAD_TAX: {
       label: "Upload Data",
       color: "sky",
@@ -176,47 +174,84 @@ function getEntityLabel(entity: string) {
 export default async function AuditLogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ 
+    q?: string; 
+    page?: string;
+    action?: string;
+    user?: string;
+    start?: string;
+    end?: string;
+  }>;
 }) {
   const params = await searchParams;
   const query = params.q || "";
   const page = parseInt(params.page || "1");
+  const filterAction = params.action || "all";
+  const filterUser = params.user || "all";
+  const startDate = params.start || "";
+  const endDate = params.end || "";
   const limit = 50;
 
-  const { logs, total } = await getAuditLogs(limit, page, query);
+  const { logs, total } = await getAuditLogs(
+    limit, 
+    page, 
+    query, 
+    filterAction, 
+    filterUser, 
+    startDate, 
+    endDate
+  );
+  
   const totalPages = Math.ceil(total / limit);
+
+  const users = await prisma.user.findMany({
+    select: { id: true, name: true }
+  });
+
+  const actions = [
+    { value: "UPLOAD_TAX", label: "Upload Data" },
+    { value: "CLEAR_TAX", label: "Kosongkan Data" },
+    { value: "UPDATE_PAYMENT", label: "Update Status PBB" },
+    { value: "ASSIGN_TAX", label: "Tugaskan PBB" },
+    { value: "UPDATE_REGION", label: "Ubah Wilayah" },
+    { value: "RESTORE_TAX", label: "Restore Data" },
+    { value: "TRANSFER_REQUEST", label: "Mutasi WP" },
+    { value: "LOGIN", label: "Login Sistem" },
+    { value: "CREATE_USER", label: "Tambah User" },
+    { value: "UPDATE_USER", label: "Ubah User" },
+    { value: "DELETE_USER", label: "Hapus User" },
+    { value: "UPDATE_PROFILE", label: "Update Profil" },
+  ];
+
+  const hasFilters = query || filterAction !== "all" || filterUser !== "all" || startDate || endDate;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-4">
         <div>
           <h1 className="flex items-center gap-2 text-3xl font-bold">
             <Activity className="text-primary h-8 w-8" />
-            Log Aktivitas (Audit Trail)
+            Audit Trail
           </h1>
           <p className="text-muted-foreground mt-1">
             Rekam jejak seluruh aktivitas penting dan modifikasi data dalam sistem
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative w-full sm:w-64">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <LogSearch defaultValue={query} />
-          </div>
-        </div>
+        
+        <LogFilters users={users} actions={actions} />
       </div>
 
       <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
         <CardHeader className="border-b border-zinc-50 px-6 pt-6 pb-5 dark:border-zinc-900/50">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Riwayat Sistem</CardTitle>
+              <CardTitle>Riwayat Aktivitas</CardTitle>
               <CardDescription>
-                {query ? `Hasil pencarian untuk "${query}"` : "Menampilkan aktivitas terbaru"}
+                {hasFilters ? `Menampilkan hasil filter aktif` : "Menampilkan aktivitas terbaru sistem"}
               </CardDescription>
             </div>
-            <div className="bg-primary/10 text-primary rounded-full px-2 py-1 text-xs font-medium">
-              Total: {total.toLocaleString()}
+            <div className="bg-primary/10 text-primary rounded-full px-4 py-1 text-xs font-black uppercase tracking-tight">
+              {total.toLocaleString()} Records
             </div>
           </div>
         </CardHeader>
@@ -227,7 +262,7 @@ export default async function AuditLogPage({
                 Belum ada riwayat aktivitas tercatat.
               </div>
             ) : (
-              logs.map((log: any) => {
+              logs.map((log) => {
                 const badgeInfo = getActionLabel(log.action, log.details);
                 return (
                   <div
@@ -280,7 +315,7 @@ export default async function AuditLogPage({
                           <>
                             Berhasil memperbarui profil akun{" "}
                             <span className="text-primary font-black">
-                              {log.user && log.entityId === log.user.id ? "sendiri" : `(ID: ${log.entityId})`}
+                              {log.entityId ? `(ID: ${log.entityId})` : "sendiri"}
                             </span>
                           </>
                         ) : log.entity === "User" || log.entity === "USER" ? (

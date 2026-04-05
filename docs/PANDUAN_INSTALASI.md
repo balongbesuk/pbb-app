@@ -1,10 +1,10 @@
-# 🚀 Panduan Instalasi Lengkap (Untuk Pemula)
+# Panduan Instalasi Lengkap (Untuk Pemula)
 
 Panduan ini dibuat khusus untuk Anda yang baru pertama kali menjalankan aplikasi berbasis web (Next.js & Prisma). Silakan ikuti langkah demi langkah dengan teliti.
 
 ---
 
-## 🛠️ Langkah 1: Persiapan Alat (*Tools*)
+## Langkah 1: Persiapan Alat (*Tools*)
 
 Sebelum mengunduh aplikasi, Anda perlu menginstal dua alat utama di komputer Anda:
 
@@ -34,7 +34,7 @@ Sangat direkomendasikan untuk membuka dan mengedit file proyek.
 
 ---
 
-## 📥 Langkah 2: Mengunduh Aplikasi
+## Langkah 2: Mengunduh Aplikasi
 
 1. Buka folder di komputer Anda di mana Anda ingin menyimpan proyek ini (misal: di `D:\Projek`).
 2. Klik kanan di dalam folder tersebut, pilih **"Open Git Bash here"** atau buka Command Prompt di folder tersebut.
@@ -49,7 +49,7 @@ Sangat direkomendasikan untuk membuka dan mengedit file proyek.
 
 ---
 
-## ⚙️ Langkah 3: Instalasi & Setup Otomatis
+## Langkah 3: Instalasi & Setup Otomatis
 
 Sekarang bagian terbaiknya! Anda tidak perlu lagi melakukan konfigurasi manual yang rumit. Cukup jalankan satu perintah:
 
@@ -75,7 +75,7 @@ Sekarang bagian terbaiknya! Anda tidak perlu lagi melakukan konfigurasi manual y
 
 ---
 
-## 🏃 Langkah 4: Menjalankan Aplikasi
+## Langkah 4: Menjalankan Aplikasi
 
 Sekarang semuanya sudah siap! Jalankan aplikasi dengan perintah:
 ```bash
@@ -92,7 +92,7 @@ Jika berhasil, akan muncul tulisan:
 
 ---
 
-## 🚀 Langkah 5: Running Production (Mode Stabil)
+## Langkah 5: Running Production (Mode Stabil)
 
 Jika Anda ingin menjalankan aplikasi secara resmi (untuk penggunaan harian yang lebih cepat dan stabil), gunakan perintah ini:
 
@@ -110,14 +110,14 @@ Sekarang aplikasi berjalan dalam mode **Production** yang jauh lebih ringan dan 
 
 ---
 
-## 🔑 Data Login Default
+## Data Login Default
 Gunakan akun ini untuk masuk pertama kali:
 - **Username:** `admin`
 - **Password:** (Sesuai yang Anda isi di `ADMIN_PASSWORD` pada file `.env`)
 
 ---
 
-## 🛡️ Langkah 6: Verifikasi Keamanan (Smoke Test)
+## Langkah 6: Verifikasi Keamanan (Smoke Test)
 
 Untuk memastikan aplikasi terinstal dengan benar dan semua celah keamanan tertutup rapat, Anda bisa menjalankan perintah audit otomatis:
 
@@ -129,7 +129,7 @@ Jika semuanya muncul **"PASSED" (Hijau)**, berarti aplikasi Anda sudah aman dan 
 
 ---
 
-## 💡 Troubleshooting (Masalah Umum)
+## Troubleshooting (Masalah Umum)
 
 *   **Error "Port 3000 is already in use":** Berarti ada aplikasi lain yang pakai angka 3000. Tutup aplikasi tersebut atau restart komputer.
 *   **Perintah tidak dikenal:** Pastikan Anda sudah instal Node.js dan restart Command Prompt.
@@ -137,7 +137,7 @@ Jika semuanya muncul **"PASSED" (Hijau)**, berarti aplikasi Anda sudah aman dan 
 
 ---
 
-## 🐧 Panduan Khusus: Instalasi di Armbian / VPS (RAM ≤ 2GB)
+## Panduan Khusus: Instalasi di Armbian / VPS (RAM ≤ 2GB)
 
 Jika Anda ingin menjalankan aplikasi ini di perangkat ARM (seperti HG68p, Orange Pi, dll) atau VPS dengan RAM terbatas (≤ 2GB), ikuti langkah tambahan berikut:
 
@@ -186,7 +186,7 @@ NODE_OPTIONS="--max-old-space-size=1536" npm run build
 npm run start
 ```
 
-### 💡 Alternatif: Build di PC, Deploy ke Armbian
+### Alternatif: Build di PC, Deploy ke Armbian
 Jika build tetap gagal karena keterbatasan RAM, Anda bisa build di PC Windows lalu transfer hasilnya:
 
 1.  Di PC: Jalankan `npm run build`

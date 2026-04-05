@@ -47,7 +47,7 @@ const parseBapendaDate = (dateStr: string) => {
       
       return new Date(parseInt(year), month, day);
     }
-  } catch (e) {
+  } catch {
     return new Date();
   }
   return new Date();
@@ -248,7 +248,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
        message: `Tagihan ${tahun} masih BELUM lunas di server pusat.` 
     });
 
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message || "Terdapat kesalahan koneksi ke server pusat." });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Terdapat kesalahan koneksi ke server pusat.";
+
+    return res.status(500).json({ error: message });
   }
 }

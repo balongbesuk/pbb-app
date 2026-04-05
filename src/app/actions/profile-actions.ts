@@ -4,9 +4,9 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-
 import { createAuditLog } from "./log-actions";
 import { formatZodError } from "@/lib/validations/schemas";
+import type { AppUser } from "@/types/app";
 
 // Validasi server-side untuk profil
 function validateProfileData(data: { name: string; phoneNumber: string; email: string }) {
@@ -34,7 +34,8 @@ export async function updateUserProfile(data: { name: string; phoneNumber: strin
       throw new Error("Sesi tidak valid");
     }
 
-    const userId = (session.user as any).id as string;
+    const currentUser = session.user as AppUser | undefined;
+    const userId = currentUser?.id;
     if (!userId) {
       throw new Error("ID Pengguna tidak valid");
     }
@@ -71,7 +72,8 @@ export async function changeOwnPassword(oldPass: string, newPass: string) {
       throw new Error("Sesi tidak valid");
     }
 
-    const userId = (session.user as any).id as string;
+    const currentUser = session.user as AppUser | undefined;
+    const userId = currentUser?.id;
 
     if (!userId) {
       throw new Error("ID Pengguna tidak valid");

@@ -10,10 +10,11 @@ import { TaxConfigForm } from "@/components/settings/tax-config-form";
 import { BackupToolCard } from "@/components/settings/backup-tool-card";
 import { LogoUploadForm } from "@/components/settings/logo-upload-form";
 import { PetaSettingsTab } from "@/components/settings/peta-settings-tab";
+import { ArchiveSettingsTab } from "@/components/settings/archive-settings-tab";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-type Tab = "app" | "peta";
+type Tab = "app" | "peta" | "arsip";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("app");
@@ -55,6 +56,17 @@ export default function SettingsPage() {
             )}
           >
             🗺️ Peta
+          </button>
+          <button
+            onClick={() => setActiveTab("arsip")}
+            className={cn(
+              "flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-colors",
+              activeTab === "arsip"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            📂 Arsip
           </button>
         </nav>
       </div>
@@ -122,6 +134,11 @@ export default function SettingsPage() {
         {/* Tab: Peta */}
         {activeTab === "peta" && (
           <PetaSettingsTab />
+        )}
+
+        {/* Tab: Arsip Digital */}
+        {activeTab === "arsip" && (
+          <ArchiveSettingsTab />
         )}
       </div>
     </div>

@@ -3,11 +3,13 @@ import { prisma } from "@/lib/prisma";
 import ExcelJS from "exceljs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import type { AppUser } from "@/types/app";
 
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "ADMIN") {
+    const currentUser = session?.user as AppUser | undefined;
+    if (!currentUser || currentUser.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 

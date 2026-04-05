@@ -1,9 +1,7 @@
 import { getVillageConfig } from "@/app/actions/settings-actions";
 import { toTitleCase } from "@/lib/utils";
-import { PublicSearch } from "@/components/public/public-search";
-import Link from "next/link";
-import Image from "next/image";
-import { Building2, Github, MapPin } from "lucide-react";
+import { PublicTabs } from "@/components/public/public-tabs";
+import { Github, MapPin } from "lucide-react";
 import { PublicThemeWrapper } from "@/components/public/public-theme-wrapper";
 import { PublicNav } from "@/components/public/public-nav";
 import "./public.css";
@@ -51,9 +49,10 @@ export default async function IndexPage() {
         </div>
 
         <div className="w-full animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200 fill-mode-both">
-          <PublicSearch 
+          <PublicTabs 
             tahunPajak={tahunPajak} 
-            showNominalPajak={config?.showNominalPajak || false} 
+            showNominalPajak={config?.showNominalPajak || false}
+            enablePublicGis={config?.enablePublicGis ?? true}
           />
         </div>
       </main>

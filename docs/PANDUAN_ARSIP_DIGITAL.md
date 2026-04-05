@@ -1,10 +1,10 @@
-# 📂 Panduan Arsip Digital PBB & Smart Scan
+# Panduan Arsip Digital PBB & Smart Scan
 
 Modul **Arsip Digital PBB** dibuat untuk mempermudah digitalisasi E-SPPT atau dokumen PDF pendukung pajak warga. Dilengkapi dengan teknologi pemilahan cerdas (*Smart Scan*) dan kompresi massal berbasis *WebAssembly* (WASM) yang membuat pemrosesan ribuan file ringan bagi server.
 
 ---
 
-## 🚀 1. Fitur Utama
+## 1. Fitur Utama
 
 1. **Upload & Pemilahan Cepat (Smart Scan):**
    Mampu menerima file PDF berukuran "gajah" (bundel yang berisi ratusan atau ribuan halaman) dan secara instan dipecah menjadi file-file PDF terpisah. Sistem otomatis membaca pola nomor seri (NOP) di dalam setiap lembar dan menggunakan nomor tersebut sebagai nama file tujuan (Misal: `351704001900100100.pdf`).
@@ -20,7 +20,7 @@ Modul **Arsip Digital PBB** dibuat untuk mempermudah digitalisasi E-SPPT atau do
 
 ---
 
-## 📖 2. Cara Penggunaan Pemilahan Cepat (Smart Scan)
+## 2. Cara Penggunaan Pemilahan Cepat (Smart Scan)
 
 Skenario: Anda mendapat 1 file PDF E-SPPT kolektif dari Bapenda berisi 1.500 halaman.
 
@@ -33,7 +33,7 @@ Skenario: Anda mendapat 1 file PDF E-SPPT kolektif dari Bapenda berisi 1.500 hal
 
 ---
 
-## ⚡ 3. Cara Mengecilkan Ukuran Arsip (Kompresi Massal)
+## 3. Cara Mengecilkan Ukuran Arsip (Kompresi Massal)
 
 PDF hasil *Smart Scan* mewarisi gaya pemformatan dari Bapenda, membuat ukurannya sering di kisaran `2 - 3 MB` *per lembar*. Hal ini akan menguras Disk server jika dibiarkan.
 
@@ -47,7 +47,7 @@ PDF hasil *Smart Scan* mewarisi gaya pemformatan dari Bapenda, membuat ukurannya
 
 ---
 
-## 🛠️ 4. Aturan Manual Upload
+## 4. Aturan Manual Upload
 
 Jika ada PBB milik 1 warga yang terlewat atau PDF lamanya rusak, Anda bisa menggantinya:
 1. Klik tombol Putih **Manual Upload**.
@@ -56,7 +56,7 @@ Jika ada PBB milik 1 warga yang terlewat atau PDF lamanya rusak, Anda bisa mengg
 
 ---
 
-## 📦 5. Backup & Restore Arsip
+## 5. Backup & Restore Arsip
 
 Karena arsip E-SPPT adalah aset dokumen elektronik penting, rawatlah secara berkala.
 - **Backup:** Di **Alat Pemeliharaan Server**, klik *Backup Arsip*. Tunggu beberapa detik dan browser akan meminta Anda menyimpan file `backup-arsip-pbb-YYYY.zip`. Simpan secara *offline* di *Flashdisk* / laptop.

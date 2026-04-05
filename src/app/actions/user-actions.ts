@@ -3,11 +3,15 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import type { Prisma } from "@prisma/client";
 import { createAuditLog } from "./log-actions";
 import { UserSchema, formatZodError } from "@/lib/validations/schemas";
 import { requireAdmin } from "@/lib/server-auth";
 
-export async function createUser(raw: any) {
+type UserInput = Parameters<typeof UserSchema.parse>[0];
+type UserUpdateInput = Partial<UserInput>;
+
+export async function createUser(raw: UserInput) {
   try {
     await requireAdmin();
     const data = UserSchema.parse(raw);
@@ -43,11 +47,11 @@ export async function createUser(raw: any) {
   }
 }
 
-export async function updateUser(id: string, raw: any) {
+export async function updateUser(id: string, raw: UserUpdateInput) {
   try {
     await requireAdmin();
     const data = UserSchema.partial().parse(raw);
-    const updateData: any = {
+    const updateData: Prisma.UserUpdateInput = {
       name: data.name,
       email: data.email || null,
       username: data.username,

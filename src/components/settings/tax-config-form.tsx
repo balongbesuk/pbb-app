@@ -1,6 +1,6 @@
 "use client";
 
-import { Save, DatabaseZap, Loader2, Eye, EyeOff } from "lucide-react";
+import { Save, DatabaseZap, Loader2, Eye, EyeOff, Map, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,8 @@ export function TaxConfigForm() {
   const [showNominal, setShowNominal] = useState(false);
   const [enableArchive, setEnableArchive] = useState(false);
   const [archiveOnlyLunas, setArchiveOnlyLunas] = useState(false);
-  const [rawConfig, setRawConfig] = useState<any>(null);
+  const [enablePublicGis, setEnablePublicGis] = useState(true);
+  const [showUnpaidGis, setShowUnpaidGis] = useState(false);
 
   const DEFAULT_JOMBANG_URL = "https://bapenda.jombangkab.go.id/cek-bayar/ceknopbayar-jmb.kab?module=pbb";
 
@@ -36,7 +37,8 @@ export function TaxConfigForm() {
       setShowNominal(!!data.showNominalPajak);
       setEnableArchive(data.enableDigitalArchive ?? false);
       setArchiveOnlyLunas(data.archiveOnlyLunas ?? false);
-      setRawConfig(data);
+      setEnablePublicGis(data.enablePublicGis ?? true);
+      setShowUnpaidGis(data.showUnpaidDetailsGis ?? false);
       setLoading(false);
     }
     load();
@@ -59,6 +61,8 @@ export function TaxConfigForm() {
       showNominalPajak: !!showNominal,
       enableDigitalArchive: !!enableArchive,
       archiveOnlyLunas: !!archiveOnlyLunas,
+      enablePublicGis: !!enablePublicGis,
+      showUnpaidDetailsGis: !!showUnpaidGis,
     });
     if (res.success) {
       toast.success("Konfigurasi sistem diperbarui");
@@ -208,6 +212,42 @@ export function TaxConfigForm() {
                 disabled={!enableArchive}
                 checked={!!archiveOnlyLunas}
                 onCheckedChange={(checked) => setArchiveOnlyLunas(!!checked)}
+                className="size-5 rounded-lg border-2"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-primary/5 border-primary/10 flex items-center justify-between rounded-2xl border p-4">
+              <div className="space-y-1">
+                <Label className="flex items-center gap-2 text-sm font-bold">
+                  <Map className={`h-4 w-4 ${enablePublicGis ? 'text-emerald-500' : 'text-muted-foreground'}`} />
+                  Tampilkan GIS di Halaman Publik
+                </Label>
+                <p className="text-muted-foreground text-[10px]">
+                  Jika aktif, tab Peta GIS Desa akan muncul di halaman website publik.
+                </p>
+              </div>
+              <Checkbox
+                checked={!!enablePublicGis}
+                onCheckedChange={(checked) => setEnablePublicGis(!!checked)}
+                className="size-5 rounded-lg border-2"
+              />
+            </div>
+
+            <div className="bg-primary/5 border-primary/10 flex items-center justify-between rounded-2xl border p-4">
+              <div className="space-y-1">
+                <Label className="flex items-center gap-2 text-sm font-bold">
+                  <Users className={`h-4 w-4 ${showUnpaidGis ? 'text-blue-500' : 'text-muted-foreground'}`} />
+                  Tampilkan Detail WP Belum Bayar di GIS Publik
+                </Label>
+                <p className="text-muted-foreground text-[10px]">
+                  Jika aktif, warga dapat melihat list wajib pajak yang belum bayar melalui peta GIS di portal publik.
+                </p>
+              </div>
+              <Checkbox
+                checked={!!showUnpaidGis}
+                onCheckedChange={(checked) => setShowUnpaidGis(!!checked)}
                 className="size-5 rounded-lg border-2"
               />
             </div>

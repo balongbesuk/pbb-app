@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import path from "path";
 import fs from "fs";
 import { assertSafeFilename, resolveSafeChildPath } from "@/lib/file-security";
+import { getArchivePath } from "@/lib/storage";
+import type { AppUser } from "@/types/app";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as any;
-    if (!session || session.user?.role !== "ADMIN") {
+    const session = await getServerSession(authOptions);
+    const user = session?.user as AppUser | undefined;
+    if (!session || user?.role !== "ADMIN") {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
@@ -18,8 +20,7 @@ export async function POST(req: NextRequest) {
     const files = formData.getAll("files") as File[];
     const yearRaw = formData.get("year");
     const year = yearRaw ? parseInt(yearRaw.toString()) : new Date().getFullYear();
-    
-    const { getArchivePath } = require("@/lib/storage");
+
     const archiveDir = getArchivePath(year.toString());
 
     if (!fs.existsSync(archiveDir)) {

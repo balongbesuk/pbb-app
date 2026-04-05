@@ -8,6 +8,13 @@
 - **Restore Backup Hardening**: Endpoint restore kini membatasi ukuran ZIP, memvalidasi struktur isi backup, menolak file liar di luar `dev.db` dan `uploads/`, serta memperketat sanitasi path ekstraksi.
 - **Safer Failure Recovery**: Proses restore kini lebih aman saat gagal di tengah jalan, termasuk reconnect Prisma otomatis dan warning eksplisit jika sinkronisasi skema pasca-restore tidak berhasil.
 
+### GIS & Public Portal Enhancements
+- **Search Unpaid Taxpayers**: Fitur pencarian wajib pajak belum lunas di peta GIS dengan dukungan trigger minimal 3 karakter dan optimasi *debounce*.
+- **Recent Searches (Riwayat)**: Implementasi penyimpanan 3 riwayat pencarian terakhir di perangkat warga untuk akses cepat data SPPT.
+- **Fullscreen Dialog Resilience**: Perbaikan visibilitas dialog detail wilayah saat mode peta layar penuh dengan sistem *portal* dinamis ke kontainer peta.
+- **Public UI Refinement**: Perbaikan kontras warna tab navigasi di mode terang (*light mode*) dan pembaruan favicon aplikasi dengan logo resmi desa.
+- **Theme Isolation**: Isolasi tema publik agar tidak terpengaruh oleh status *dark mode* pada dashboard admin, menjamin tampilan konsisten bagi warga.
+
 ### Stabilitas Aplikasi & Konsistensi Data
 - **Village Config Save Fix**: Field pengaturan desa yang dikosongkan kini benar-benar tersimpan sebagai string kosong, tidak lagi diam-diam diabaikan.
 - **Public Search Privacy Cleanup**: Logging sensitif pada pencarian publik dihapus dan lookup arsip dipertahankan tetap kompatibel dengan nama file arsip yang sudah ada.
@@ -20,7 +27,7 @@
 
 ---
 
-## v8.0 - 2026-04-02: The GIS Revolution 🛰️
+## v8.0 - 2026-04-02: The GIS Revolution
 
 ### Fitur Utama: GIS Command Center v2.0
 - **Peta Interaktif Admin**: Implementasi dashboard manajemen peta desa berbasis GeoJSON dan GPX yang canggih.

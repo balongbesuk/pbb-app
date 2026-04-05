@@ -43,6 +43,13 @@ interface PreviewData {
   fileName: string;
 }
 
+interface RequirementCheckResult {
+  success: boolean;
+  dusunCount: number;
+  otomationCount: number;
+  taxCount: number;
+}
+
 
 export default function UploadPBBPage() {
   const router = useRouter();
@@ -71,11 +78,11 @@ export default function UploadPBBPage() {
         toast.success(`Data PBB tahun ${tahun} berhasil dibersihkan!`);
         setResetConfirmText("");
       } else {
-        toast.error(`Gagal mereset data: ${(res as any).message || "Unknown error"}`);
+        toast.error(`Gagal mereset data: ${res.message || "Unknown error"}`);
       }
-    } catch (e: any) {
+    } catch (error) {
       toast.error("Terjadi kesalahan sistem saat mereset data");
-      console.error(e);
+      console.error(error);
     } finally {
       setIsClearing(false);
     }
@@ -94,7 +101,7 @@ export default function UploadPBBPage() {
     }
 
     // Periksa persyaratan referensi data dlu
-    const reqRes = await checkImportRequirements(tahun) as any;
+    const reqRes = (await checkImportRequirements(tahun)) as RequirementCheckResult;
     if (reqRes.success) {
       if (reqRes.dusunCount === 0 || reqRes.otomationCount === 0) {
         setRequirements({
@@ -134,7 +141,7 @@ export default function UploadPBBPage() {
       } else {
         toast.error(`Gagal preview: ${result.message}`);
       }
-    } catch (e) {
+    } catch {
       toast.error("Kesalahan sistem saat preview data");
     } finally {
       setIsPreviewLoading(false);
@@ -177,7 +184,7 @@ export default function UploadPBBPage() {
         setProgress(0);
         toast.error(`Gagal mengimpor: ${result.message}`);
       }
-    } catch (error) {
+    } catch {
       clearInterval(progressInterval);
       setProgress(0);
       toast.error("Terjadi kesalahan sistem saat upload file");

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
-import { Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 import { updatePaymentStatus, bulkUpdatePaymentStatus, syncBapendaByFilter } from "@/app/actions/tax-update-actions";
 import { 
@@ -13,10 +13,9 @@ import { sendTransferRequest } from "@/app/actions/transfer-actions";
 import { toast } from "sonner";
 import { BulkRegionDialog } from "./table/bulk-region-dialog";
 
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { motion, AnimatePresence } from "framer-motion";
 
 // Sub-components
 import { TaxTableRow } from "./table/tax-table-row";
@@ -36,6 +35,12 @@ import { useTaxSelection } from "@/hooks/use-tax-selection";
 
 import type { TaxDataItem, AppUser, PenarikInfo, AvailableFilters } from "@/types/app";
 import type { PaymentStatus } from "@prisma/client";
+
+type BapendaSyncCandidate = {
+  id: number;
+  nop?: string;
+  tahun?: number;
+};
 
 export function TaxDataTable({
   initialData,
@@ -63,6 +68,8 @@ export function TaxDataTable({
     penarik, setPenarik,
     regionStatus, setRegionStatus,
     paymentStatus, setPaymentStatus,
+    archiveStatus, setArchiveStatus,
+    sortBy, sortOrder, setSort,
   } = useTaxFilters();
 
   // Derive the initial filter state from URL params to detect if we're on the default view
@@ -73,7 +80,7 @@ export function TaxDataTable({
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ["tax-data", { q, page, tahun, dusun, rw, rt, penarik, regionStatus, paymentStatus }],
+    queryKey: ["tax-data", { q, page, tahun, dusun, rw, rt, penarik, regionStatus, paymentStatus, archiveStatus, sortBy, sortOrder }],
     queryFn: async () => {
       const params = new URLSearchParams({
         q: q || "",
@@ -85,6 +92,9 @@ export function TaxDataTable({
         penarik: penarik || "all",
         regionStatus: regionStatus || "all",
         paymentStatus: paymentStatus || "all",
+        archiveStatus: archiveStatus || "all",
+        sortBy: sortBy || "nop",
+        sortOrder: sortOrder || "asc",
       });
       const res = await fetch(`/api/tax?${params.toString()}`);
       if (!res.ok) throw new Error("Gagal mengambil data");
@@ -209,7 +219,7 @@ export function TaxDataTable({
     setIsAssigning(true);
     const toastId = toast.loading(`Menyiapkan sinkronisasi massal...`);
     try {
-      let ids: any[] = [];
+      let ids: BapendaSyncCandidate[] = [];
       if (isAllFilteredSelected) {
         toast.loading(`Mengambil data filter...`, { id: toastId });
         const res = await syncBapendaByFilter({
@@ -218,8 +228,8 @@ export function TaxDataTable({
         if (!res.success) throw new Error(res.message);
         ids = res.data || [];
       } else {
-        ids = Array.from(selectedIds).map(id => {
-          const item = displayData.find((d: any) => d.id === id);
+        ids = Array.from(selectedIds).map((id) => {
+          const item = displayData.find((dataItem: TaxDataItem) => dataItem.id === id);
           return { id, nop: item?.nop, tahun: item?.tahun };
         });
       }
@@ -251,7 +261,7 @@ export function TaxDataTable({
           const data = await res.json();
           if (data.isPaid) successCount++;
           else failCount++;
-        } catch (e) { failCount++; }
+        } catch { failCount++; }
         
         await new Promise(r => setTimeout(r, 400));
       }
@@ -259,8 +269,9 @@ export function TaxDataTable({
       toast.success(`Selesai: ${successCount} Lunas, ${failCount} Tetap.`, { id: toastId });
       queryClient.invalidateQueries({ queryKey: ["tax-data"] });
       resetSelection();
-    } catch (error: any) {
-      toast.error(error.message || "Gagal sinkronisasi", { id: toastId });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal sinkronisasi";
+      toast.error(message, { id: toastId });
     } finally { setIsAssigning(false); }
   };
 
@@ -282,6 +293,8 @@ export function TaxDataTable({
         onRegionStatusChange={setRegionStatus}
         filterPaymentStatus={paymentStatus || "all"}
         onPaymentStatusChange={setPaymentStatus}
+        filterArchiveStatus={archiveStatus || "all"}
+        onArchiveStatusChange={setArchiveStatus}
         availableFilters={availableFilters}
         onPrint={handlePrint}
         showPrint={currentUser?.role !== "PENGGUNA"}
@@ -318,11 +331,49 @@ export function TaxDataTable({
             {/* Desktop Table Header */}
             <div className="hidden md:flex sticky top-0 z-30 bg-muted/80 backdrop-blur-md border-b border-border/80 w-full items-center h-12 px-4 text-foreground font-black uppercase tracking-tight text-[11px]">
               {currentUser?.role !== "PENGGUNA" && <div className={TAX_TABLE_WIDTHS.checkbox} />}
-              <div className={TAX_TABLE_WIDTHS.nop}>NOP</div>
-              <div className={TAX_TABLE_WIDTHS.wpInfo + " px-4"}>Nama Wajib Pajak</div>
+              
+              <div 
+                className={cn(TAX_TABLE_WIDTHS.nop, "flex items-center gap-1 cursor-pointer hover:text-primary transition-colors")}
+                onClick={() => setSort("nop")}
+              >
+                NOP
+                {sortBy === "nop" ? (
+                  sortOrder === "asc" ? <ArrowUp className="w-3 h-3 text-primary" /> : <ArrowDown className="w-3 h-3 text-primary" />
+                ) : <ArrowUpDown className="w-3 h-3 opacity-20" />}
+              </div>
+
+              <div 
+                className={cn(TAX_TABLE_WIDTHS.wpInfo, "px-4 flex items-center gap-1 cursor-pointer hover:text-primary transition-colors")}
+                onClick={() => setSort("nama")}
+              >
+                Nama Wajib Pajak
+                {sortBy === "nama" ? (
+                  sortOrder === "asc" ? <ArrowUp className="w-3 h-3 text-primary" /> : <ArrowDown className="w-3 h-3 text-primary" />
+                ) : <ArrowUpDown className="w-3 h-3 opacity-20" />}
+              </div>
+
               <div className={TAX_TABLE_WIDTHS.wilayah + " px-4"}>Wilayah</div>
-              <div className={TAX_TABLE_WIDTHS.tagihan + " px-4 text-right"}>Tagihan</div>
-              <div className={TAX_TABLE_WIDTHS.status + " px-4"}>Status</div>
+
+              <div 
+                className={cn(TAX_TABLE_WIDTHS.tagihan, "px-4 flex items-center justify-end gap-1 cursor-pointer hover:text-primary transition-colors text-right")}
+                onClick={() => setSort("tagihan")}
+              >
+                Tagihan
+                {sortBy === "tagihan" ? (
+                  sortOrder === "asc" ? <ArrowUp className="w-3 h-3 text-primary" /> : <ArrowDown className="w-3 h-3 text-primary" />
+                ) : <ArrowUpDown className="w-3 h-3 opacity-20" />}
+              </div>
+
+              <div 
+                className={cn(TAX_TABLE_WIDTHS.status, "px-4 flex items-center gap-1 cursor-pointer hover:text-primary transition-colors")}
+                onClick={() => setSort("status")}
+              >
+                Status
+                {sortBy === "status" ? (
+                  sortOrder === "asc" ? <ArrowUp className="w-3 h-3 text-primary" /> : <ArrowDown className="w-3 h-3 text-primary" />
+                ) : <ArrowUpDown className="w-3 h-3 opacity-20" />}
+              </div>
+
               <div className={TAX_TABLE_WIDTHS.penarik + " px-4 text-center"}>Penarik</div>
             </div>
 

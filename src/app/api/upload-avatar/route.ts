@@ -7,6 +7,7 @@ import path from "path";
 import { revalidatePath } from "next/cache";
 import { createAuditLog } from "@/app/actions/log-actions";
 import { assertValidImageUpload } from "@/lib/file-security";
+import type { AppUser } from "@/types/app";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
@@ -24,7 +25,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id as string;
+    const currentUser = session.user as AppUser | undefined;
+    const userId = currentUser?.id;
     if (!userId) {
       return NextResponse.json({ error: "ID pengguna tidak valid." }, { status: 400 });
     }
@@ -84,8 +86,9 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ success: true, avatarUrl });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Upload avatar error:", error);
-    return NextResponse.json({ error: error.message || "Terjadi kesalahan server." }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Terjadi kesalahan server.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

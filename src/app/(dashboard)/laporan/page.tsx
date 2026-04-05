@@ -10,14 +10,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, Download, FileText, Printer, Target, TrendingUp, Users } from "lucide-react";
-import { RwWpDialog } from "@/components/laporan/rw-wp-dialog";
+import { AlertCircle, FileText, Target, TrendingUp, Users } from "lucide-react";
 import { PenarikWpDialog } from "@/components/laporan/penarik-wp-dialog";
 import { LaporanActionButtons } from "@/components/laporan/laporan-action-buttons";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import type { AppUser } from "@/types/app";
+
+type PenarikAggregate = {
+  penarikId: string | null;
+  _count: { nop: number };
+  _sum: { ketetapan: number; pembayaran: number; sisaTagihan: number };
+  lunasCount: number;
+  belumLunasCount: number;
+  sengketaCount: number;
+  tdkTerbitCount: number;
+};
+
+type CombinedPenarikStat = PenarikAggregate & {
+  penarikName: string;
+  penarikDusun: string;
+};
 
 export default async function LaporanPage({
   searchParams,
@@ -25,7 +39,7 @@ export default async function LaporanPage({
   searchParams: Promise<{ tahun?: string }>;
 }) {
   const session = await getServerSession(authOptions);
-  const currentUser = session?.user as any;
+  const currentUser = session?.user as AppUser | undefined;
   const params = await searchParams;
   const currentYear = parseInt(params.tahun || new Date().getFullYear().toString());
 
@@ -37,7 +51,7 @@ export default async function LaporanPage({
     _sum: { ketetapan: true, pembayaran: true, sisaTagihan: true },
   });
 
-  const penarikMapReduce = new Map<string, any>();
+  const penarikMapReduce = new Map<string, PenarikAggregate>();
 
   penarikStatsRaw.forEach((stat) => {
     const pId = stat.penarikId || "unassigned";
@@ -54,6 +68,9 @@ export default async function LaporanPage({
     }
 
     const curr = penarikMapReduce.get(pId);
+    if (!curr) {
+      return;
+    }
     
     // Pengecualian penjumlahan untuk status SENGKETA (SUSPEND) dan TIDAK_TERBIT
     if (stat.paymentStatus !== "SUSPEND" && stat.paymentStatus !== "TIDAK_TERBIT") {
@@ -85,7 +102,7 @@ export default async function LaporanPage({
     penarikUsers.map((u: { id: string; name: string | null; dusun: string | null }) => [u.id, u])
   );
 
-  const combinedStats = penarikStatsFlat.map((stat: any) => ({
+  const combinedStats: CombinedPenarikStat[] = penarikStatsFlat.map((stat) => ({
     ...stat,
     penarikName: stat.penarikId
       ? penarikMap.get(stat.penarikId as string)?.name || "Penarik Tidak Ditemukan"
@@ -94,33 +111,33 @@ export default async function LaporanPage({
   }));
 
   // Calculate overall totals
-  const totalWp = penarikStatsFlat.reduce((acc: number, curr: any) => acc + curr._count.nop, 0);
+  const totalWp = penarikStatsFlat.reduce((acc: number, curr) => acc + curr._count.nop, 0);
   const totalWpLunas = penarikStatsFlat.reduce(
-    (acc: number, curr: any) => acc + curr.lunasCount,
+    (acc: number, curr) => acc + curr.lunasCount,
     0
   );
   const totalWpBelumLunas = penarikStatsFlat.reduce(
-    (acc: number, curr: any) => acc + curr.belumLunasCount,
+    (acc: number, curr) => acc + curr.belumLunasCount,
     0
   );
   const totalWpSengketa = penarikStatsFlat.reduce(
-    (acc: number, curr: any) => acc + (curr.sengketaCount || 0),
+    (acc: number, curr) => acc + (curr.sengketaCount || 0),
     0
   );
   const totalWpTdkTerbit = penarikStatsFlat.reduce(
-    (acc: number, curr: any) => acc + (curr.tdkTerbitCount || 0),
+    (acc: number, curr) => acc + (curr.tdkTerbitCount || 0),
     0
   );
   const totalTarget = penarikStatsFlat.reduce(
-    (acc: number, curr: any) => acc + (curr._sum.ketetapan || 0),
+    (acc: number, curr) => acc + (curr._sum.ketetapan || 0),
     0
   );
   const totalRealisasi = penarikStatsFlat.reduce(
-    (acc: number, curr: any) => acc + (curr._sum.pembayaran || 0),
+    (acc: number, curr) => acc + (curr._sum.pembayaran || 0),
     0
   );
   const totalSisa = penarikStatsFlat.reduce(
-    (acc: number, curr: any) => acc + (curr._sum.sisaTagihan || 0),
+    (acc: number, curr) => acc + (curr._sum.sisaTagihan || 0),
     0
   );
 
@@ -249,8 +266,8 @@ export default async function LaporanPage({
               </TableHeader>
               <TableBody>
                 {combinedStats
-                  .sort((a: any, b: any) => a.penarikName.localeCompare(b.penarikName))
-                  .map((stat: any, index: number) => {
+                  .sort((a: CombinedPenarikStat, b: CombinedPenarikStat) => a.penarikName.localeCompare(b.penarikName))
+                  .map((stat: CombinedPenarikStat, index: number) => {
                     const target = stat._sum.ketetapan || 0;
                     const realisasi = stat._sum.pembayaran || 0;
                     const sisa = stat._sum.sisaTagihan || 0;

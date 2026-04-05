@@ -1,7 +1,7 @@
 "use client";
 
 import { RegionMap } from "@/components/map/region-map";
-import { MapPin, Layers, Satellite } from "lucide-react";
+import { MapPin, Layers } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function PetaPage() {
@@ -10,6 +10,7 @@ export default function PetaPage() {
     center: [number, number];
     zoom: number;
   }>({ center: [-7.5744, 112.235], zoom: 15 });
+  const [showUnpaidGis, setShowUnpaidGis] = useState(false);
 
   useEffect(() => {
     fetch("/api/village-config")
@@ -24,6 +25,7 @@ export default function PetaPage() {
         if (d.tahunPajak) {
           setTahun(d.tahunPajak);
         }
+        setShowUnpaidGis(!!d.showUnpaidDetailsGis);
       })
       .catch(() => {});
   }, []);
@@ -56,6 +58,7 @@ export default function PetaPage() {
           tahun={tahun}
           center={mapConfig.center}
           zoom={mapConfig.zoom}
+          showUnpaidDetailsGis={showUnpaidGis}
         />
       </div>
     </div>

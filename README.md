@@ -1,6 +1,6 @@
 <img width="2536" height="923" alt="PBB Manager Dashboard" src="https://github.com/user-attachments/assets/d540a662-121b-41d0-8882-5cb8455aa37b" />
 
-# 🛰️ PBB Manager — The GIS Revolution `v8.0`
+# PBB Manager — The GIS Revolution `v8.0`
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
@@ -12,32 +12,32 @@
 
 ---
 
-## ✨ Fitur Unggulan v8.0
+## Fitur Unggulan v8.0
 
 | Fitur | Deskripsi |
 |---|---|
-| **🛰️ GIS Command Center v2.0** | **BARU (v8.0):** Dashboard peta interaktif berbasis GeoJSON/GPX untuk manajemen wilayah RT/RW/Dusun secara visual dengan layer citra satelit. |
-| **📍 Interactive Map Picker** | **BARU (v8.0):** Penentuan titik koordinat pusat wilayah langsung dari peta tanpa input manual Latitude/Longitude (Point-and-Click). |
-| **🏗️ Bulk GPX Pipeline** | **BARU (v8.0):** Unggah massal file GPX dengan ekstraksi metadata otomatis (RT/RW) dan konversi cerdas dari `LineString` ke `Polygon`. |
-| **🛡️ GIS Security & Guard** | **BARU (v8.0):** Proteksi API manajemen peta (Role ADMIN) dan sistem sanitasi otomatis pada tooltip peta untuk mencegah serangan Stored XSS. |
-| **🏢 Portal Mutasi (Self-Service)** | Memungkinkan warga mengajukan perubahan data (Hibah, Waris, Jual Beli) dan mencetak draf dokumen resmi secara mandiri. |
-| **🚀 Arsip Digital (Smart Scan)** | Algoritma ekstraksi otomatis yang memecah ribuan lembar E-SPPT menjadi file personal berdasarkan NOP secara instan. |
-| **🔄 Smart Sync (Excel)** | Integrasi DHKP cerdas yang memungkinkan pembaruan data ribuan wajib pajak tanpa risiko duplikasi. |
-| **📊 Dashboard Eksekutif** | Visualisasi statistik realisasi harian, performa petugas per dusun, dan tren pembayaran secara *real-time*. |
+| **GIS Command Center v2.0** | **BARU (v8.0):** Dashboard peta interaktif berbasis GeoJSON/GPX untuk manajemen wilayah RT/RW/Dusun secara visual dengan layer citra satelit. |
+| **Interactive Map Picker** | **BARU (v8.0):** Penentuan titik koordinat pusat wilayah langsung dari peta tanpa input manual Latitude/Longitude (Point-and-Click). |
+| **Bulk GPX Pipeline** | **BARU (v8.0):** Unggah massal file GPX dengan ekstraksi metadata otomatis (RT/RW) dan konversi cerdas dari `LineString` ke `Polygon`. |
+| **GIS Security & Guard** | **BARU (v8.0):** Proteksi API manajemen peta (Role ADMIN) dan sistem sanitasi otomatis pada tooltip peta untuk mencegah serangan Stored XSS. |
+| **Portal Mutasi (Self-Service)** | Memungkinkan warga mengajukan perubahan data (Hibah, Waris, Jual Beli) dan mencetak draf dokumen resmi secara mandiri. |
+| **Arsip Digital (Smart Scan)** | Algoritma ekstraksi otomatis yang memecah ribuan lembar E-SPPT menjadi file personal berdasarkan NOP secara instan. |
+| **Smart Sync (Excel)** | Integrasi DHKP cerdas yang memungkinkan pembaruan data ribuan wajib pajak tanpa risiko duplikasi. |
+| **Dashboard Eksekutif** | Visualisasi statistik realisasi harian, performa petugas per dusun, dan tren pembayaran secara *real-time*. |
 
 ---
 
-## 👥 Hirarki Akses
+## Hirarki Akses
 
 Sistem keamanan berlapis untuk menjaga integritas data desa:
 
-*   **👑 ADMIN (Kepala Desa / Admin IT)**: Memegang kendali penuh atas konfigurasi instansi, GIS, sinkronisasi data pusat, pengelolaan arsip digital, dan manajemen akun pengguna.
-*   **📱 PENARIK (Kepala Dusun / Petugas)**: Antarmuka yang dioptimalkan untuk perangkat mobile. Fokus pada pembaruan status bayar di lapangan dan manajemen rotasi wajib pajak.
-*   **🛡️ PENGGUNA (Viewer)**: Akses terbatas hanya untuk melihat data dan laporan tanpa izin modifikasi (Read-Only).
+*   **ADMIN (Kepala Desa / Admin IT)**: Memegang kendali penuh atas konfigurasi instansi, GIS, sinkronisasi data pusat, pengelolaan arsip digital, dan manajemen akun pengguna.
+*   **PENARIK (Kepala Dusun / Petugas)**: Antarmuka yang dioptimalkan untuk perangkat mobile. Fokus pada pembaruan status bayar di lapangan dan manajemen rotasi wajib pajak.
+*   **PENGGUNA (Viewer)**: Akses terbatas hanya untuk melihat data dan laporan tanpa izin modifikasi (Read-Only).
 
 ---
 
-## 🛠️ Dokumentasi & Panduan
+## Dokumentasi & Panduan
 
 Kami telah menyusun panduan lengkap agar Anda dapat mengoperasikan sistem ini dengan mudah:
 
@@ -48,7 +48,7 @@ Kami telah menyusun panduan lengkap agar Anda dapat mengoperasikan sistem ini de
 
 ---
 
-## 🚀 Instalasi Cepat (Automated Setup)
+## Instalasi Cepat (Automated Setup)
 
 Instalasi sekarang sepenuhnya otomatis. Cukup pastikan Anda memiliki **Node.js (v20+)** dan **Git**.
 
@@ -78,7 +78,7 @@ Instalasi sekarang sepenuhnya otomatis. Cukup pastikan Anda memiliki **Node.js (
 
 ---
 
-## 🔄 Pembaruan (Update)
+## Pembaruan (Update)
 
 Untuk memperbarui aplikasi ke versi terbaru tanpa kehilangan data:
 
@@ -92,13 +92,36 @@ npm run start
 
 ---
 
-## 📡 Tech Stack
+## Tech Stack
 
 *   **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS
 *   **GIS Engine**: Leaflet.js with Mapbox/Esri Satellites
 *   **Backend**: Next.js Server Actions, Prisma ORM
 *   **Database**: SQLite (Local) / PostgreSQL (Optional)
 *   **Storage**: Local Streaming File System
+
+---
+
+## Project Structure
+
+```text
+.
+├── .github/              # Konfigurasi GitHub Workflows & Actions
+├── docs/                 # Dokumentasi Teknis & Panduan Pengguna
+├── prisma/               # Skema Database (Prisma ORM) & Inisialisasi Data (Seed)
+├── public/               # Aset Statis (Logo, Gambar, Ikon)
+├── scripts/              # Skrip Utilitas (Audit Keamanan & Penyiapan Sistem)
+└── src/
+    ├── app/              # Next.js App Router (Layout & Halaman Utama)
+    │   ├── api/          # Endpoint API Internal (Smart Scan, Kompresi, Streaming)
+    │   ├── (auth)/       # Alur Otentikasi & Login
+    │   └── (dashboard)/  # Halaman Dashboard, GIS, dan Laporan
+    ├── components/       # Komponen UI (Atomic Design) & Manajemen GIS
+    ├── hooks/            # Custom React Hooks untuk State Global
+    ├── lib/              # Pustaka & Utilitas Utama (Prisma Client, Sanitasi, PDF)
+    ├── pages/            # Next.js Pages Router (Khusus API Route Tertentu)
+    └── types/            # Definisi Tipe Data Global (TypeScript)
+```
 
 ---
 

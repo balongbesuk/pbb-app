@@ -7,6 +7,23 @@ import { authOptions } from "@/lib/auth";
 import { createAuditLog } from "./log-actions";
 import { TransferRequestSchema, formatZodError } from "@/lib/validations/schemas";
 
+type SessionUserWithRole = {
+  id: string;
+  role: string;
+  name?: string | null;
+};
+
+async function requirePenarikSession(): Promise<SessionUserWithRole> {
+  const session = await getServerSession(authOptions);
+  const user = session?.user as SessionUserWithRole | undefined;
+
+  if (!user || user.role !== "PENARIK") {
+    throw new Error("Hanya petugas lapangan (PENARIK) yang dapat melakukan tindakan ini.");
+  }
+
+  return user;
+}
+
 /**
  * Send a request to another penarik to take over or request a tax data
  */
@@ -18,11 +35,8 @@ export async function sendTransferRequest(
 ) {
   try {
     TransferRequestSchema.parse({ taxId, receiverId, type, message });
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "PENARIK") {
-      throw new Error("Hanya petugas lapangan (PENARIK) yang dapat melakukan pemindahan data.");
-    }
-    const senderId = (session.user as any).id;
+    const sessionUser = await requirePenarikSession();
+    const senderId = sessionUser.id;
 
     const receiverUser = await prisma.user.findUnique({
       where: { id: receiverId },
@@ -72,7 +86,7 @@ export async function sendTransferRequest(
     }
 
     // 3. Create request
-    const request = await prisma.transferRequest.create({
+    await prisma.transferRequest.create({
       data: {
         taxId,
         senderId,
@@ -102,11 +116,8 @@ export async function sendTransferRequest(
  */
 export async function handleTransferResponse(requestId: string, status: "ACCEPTED" | "REJECTED") {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "PENARIK") {
-      throw new Error("Hanya petugas lapangan (PENARIK) yang dapat memproses permintaan ini.");
-    }
-    const userId = (session.user as any).id;
+    const sessionUser = await requirePenarikSession();
+    const userId = sessionUser.id;
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Ambil data request terbaru di dalam transaction
@@ -155,7 +166,7 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
           data: {
             userId: request.senderId,
             title: "Permintaan Disetujui",
-            message: `${session.user?.name} telah menyetujui ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`,
+            message: `${sessionUser.name} telah menyetujui ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`,
             type: "ACCEPTED",
           },
         });
@@ -170,7 +181,7 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
           data: {
             userId: request.senderId,
             title: "Permintaan Ditolak",
-            message: `${session.user?.name} menolak ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`,
+            message: `${sessionUser.name} menolak ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`,
             type: "REJECTED",
           },
         });
@@ -202,24 +213,25 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
 export async function getNotifications() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return [];
+    const user = session?.user as SessionUserWithRole | undefined;
+    if (!user) return [];
 
     // Hapus notifikasi yang lebih dari 7 hari (cleanup otomatis)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     await prisma.notification.deleteMany({
       where: {
-        userId: (session.user as any).id,
+        userId: user.id,
         createdAt: { lt: sevenDaysAgo },
       },
     });
 
     return await prisma.notification.findMany({
-      where: { userId: (session.user as any).id },
+      where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: 20,
     });
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -230,18 +242,19 @@ export async function getNotifications() {
 export async function markNotificationAsRead(id: string) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return { success: false };
+    const user = session?.user as SessionUserWithRole | undefined;
+    if (!user) return { success: false };
 
     // Gunakan updateMany untuk memfilter owner secara aman tanpa error not found, dsb. (Celah IDOR ditutup)
     await prisma.notification.updateMany({
       where: { 
         id, 
-        userId: (session.user as any).id 
+        userId: user.id 
       },
       data: { isRead: true },
     });
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false };
   }
 }
@@ -249,14 +262,15 @@ export async function markNotificationAsRead(id: string) {
 export async function markAllNotificationsRead() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return { success: false };
+    const user = session?.user as SessionUserWithRole | undefined;
+    if (!user) return { success: false };
 
     await prisma.notification.updateMany({
-      where: { userId: (session.user as any).id, isRead: false },
+      where: { userId: user.id, isRead: false },
       data: { isRead: true },
     });
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false };
   }
 }
@@ -264,13 +278,14 @@ export async function markAllNotificationsRead() {
 export async function deleteAllNotifications() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return { success: false };
+    const user = session?.user as SessionUserWithRole | undefined;
+    if (!user) return { success: false };
 
     await prisma.notification.deleteMany({
-      where: { userId: (session.user as any).id },
+      where: { userId: user.id },
     });
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false };
   }
 }
@@ -281,11 +296,12 @@ export async function deleteAllNotifications() {
 export async function getPendingRequests() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return [];
+    const user = session?.user as SessionUserWithRole | undefined;
+    if (!user) return [];
 
     return await prisma.transferRequest.findMany({
       where: {
-        receiverId: (session.user as any).id,
+        receiverId: user.id,
         status: "PENDING",
       },
       include: {
@@ -294,7 +310,7 @@ export async function getPendingRequests() {
       },
       orderBy: { createdAt: "desc" },
     });
-  } catch (error) {
+  } catch {
     return [];
   }
 }

@@ -7,11 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, UserPlus, CheckSquare, ChevronRight, ChevronLeft } from "lucide-react";
+import { Loader2, UserPlus, CheckSquare, ChevronRight } from "lucide-react";
 import { getWpByPenarik } from "@/app/actions/tax-update-actions";
 import { assignPenarikBulk } from "@/app/actions/tax-assign-actions";
 import {

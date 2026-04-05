@@ -1,15 +1,26 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { PaymentStatus, Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { getArchiveList } from "@/app/actions/archive-actions";
+import type { AppUser } from "@/types/app";
+
+const INTERNAL_ROLES: AppUser["role"][] = ["ADMIN", "PENARIK"];
+const PAYMENT_STATUS_VALUES: PaymentStatus[] = [
+  "LUNAS",
+  "BELUM_LUNAS",
+  "SUSPEND",
+  "TIDAK_TERBIT",
+];
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
+  const currentUser = session?.user as AppUser | undefined;
   
   // Perketat akses: Hanya ADMIN dan PENARIK yang bisa lihat daftar tabel pajak (Internal Data)
   // PENGGUNA (Warga) hanya boleh pakai Pencarian Publik (public-actions)
-  if (!session?.user || !["ADMIN", "PENARIK"].includes((session.user as any).role)) {
+  if (!currentUser || !INTERNAL_ROLES.includes(currentUser.role)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -23,14 +34,17 @@ export async function GET(req: NextRequest) {
   const filterPenarik = searchParams.get("penarik") || "";
   const regionStatus = searchParams.get("regionStatus") || "all";
   const paymentStatus = searchParams.get("paymentStatus") || "all";
-   const pageSize = 50;
+  const archiveStatus = searchParams.get("archiveStatus") || "all";
+  const sortBy = searchParams.get("sortBy") || "nop";
+  const sortOrder = searchParams.get("sortOrder") || "asc";
+  const pageSize = 50;
  
   const whereClause: Prisma.TaxDataWhereInput = {
     tahun,
   };
 
-  if (paymentStatus !== "all") {
-    whereClause.paymentStatus = paymentStatus as any;
+  if (paymentStatus !== "all" && PAYMENT_STATUS_VALUES.includes(paymentStatus as PaymentStatus)) {
+    whereClause.paymentStatus = paymentStatus as PaymentStatus;
   }
 
   const andFilters: Prisma.TaxDataWhereInput[] = [];
@@ -107,6 +121,28 @@ export async function GET(req: NextRequest) {
       whereClause.penarikId = filterPenarik;
     }
   }
+  
+  if (archiveStatus === "missing") {
+    // Get all files currently in the archive directory for this year
+    const archiveFiles = await getArchiveList(tahun);
+    const archiveNopDigits = new Set(archiveFiles.map(f => f.name.replace(/\D/g, "")));
+    
+    // To efficiently filter, we get all NOPs for the year and filter them in memory
+    // (Acceptable for village-scale data: ~3k-10k records)
+    const allTaxes = await prisma.taxData.findMany({
+      where: { tahun },
+      select: { id: true, nop: true }
+    });
+    
+    const missingArchiveIds = allTaxes
+      .filter(t => {
+        const cleanNop = t.nop.replace(/\D/g, "");
+        return !archiveNopDigits.has(cleanNop);
+      })
+      .map(t => t.id);
+      
+    andFilters.push({ id: { in: missingArchiveIds } });
+  }
 
   if (andFilters.length > 0) {
     whereClause.AND = andFilters;
@@ -127,7 +163,9 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: { nop: "asc" },
+      orderBy: { 
+        [sortBy === "tagihan" ? "sisaTagihan" : sortBy === "nama" ? "namaWp" : sortBy === "status" ? "paymentStatus" : "nop"]: sortOrder 
+      },
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),

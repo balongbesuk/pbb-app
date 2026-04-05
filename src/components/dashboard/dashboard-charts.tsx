@@ -15,7 +15,7 @@ import {
   Line,
   Legend,
 } from "recharts";
-import type { RWBarChartItem, StatusPieChartItem } from "@/types/app";
+import type { StatusPieChartItem } from "@/types/app";
 
 interface RwGroupStat {
   rw: string;

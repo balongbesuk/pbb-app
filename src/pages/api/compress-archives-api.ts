@@ -5,11 +5,18 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { getArchivePath } from "@/lib/storage";
 
+type SessionUserWithRole = { role?: string | null };
+type CompressionStreamMessage =
+  | { type: "info"; message: string }
+  | { type: "progress"; current: number; total: number; percent: number; file: string }
+  | { type: "done"; success: boolean; message: string };
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
 
   const session = await getServerSession(req, res, authOptions);
-  if (!session || (session.user as any)?.role !== "ADMIN") {
+  const sessionUser = session?.user as SessionUserWithRole | undefined;
+  if (!session || sessionUser?.role !== "ADMIN") {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -19,7 +26,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   res.setHeader("Content-Type", "application/x-ndjson");
   res.setHeader("Transfer-Encoding", "chunked");
   res.setHeader("Cache-Control", "no-cache");
-  const send = (obj: object) => res.write(JSON.stringify(obj) + "\n");
+  const send = (obj: CompressionStreamMessage) => res.write(JSON.stringify(obj) + "\n");
+
+  send({ type: "info", message: "Menyiapkan mesin kompresi WASM..." });
 
   const baseDir = getArchivePath(year.toString());
   
@@ -37,16 +46,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Load WASM securely once
   const originalFetch = global.fetch;
-  (global as any).fetch = undefined;
-  let gs: any;
+  const globalScope = globalThis as Record<string, unknown>;
+  globalScope.fetch = undefined;
+  let gs: {
+    FS: {
+      writeFile: (path: string, data: Buffer) => void;
+      readFile: (path: string) => Uint8Array;
+      unlink: (path: string) => void;
+    };
+    callMain: (args: string[]) => void;
+  };
   try {
-    const GhostscriptModule = require("@jspawn/ghostscript-wasm");
-    const Ghostscript = GhostscriptModule.default || GhostscriptModule;
+    const GhostscriptModule = await import("@jspawn/ghostscript-wasm");
+    const Ghostscript = GhostscriptModule.default;
     gs = await Ghostscript({
       locateFile: (fname: string) => path.join(process.cwd(), "node_modules", "@jspawn", "ghostscript-wasm", fname)
     });
-  } catch (err) {
-    global.fetch = originalFetch;
+  } catch {
+    globalScope.fetch = originalFetch;
     send({ type: "done", success: false, message: "Gagal memuat sistem kompresi Ghostscript." });
     return res.end();
   }
@@ -62,7 +79,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     for (let i = 0; i < files.length; i++) {
         if (isCanceled) {
-            send({ type: "done", success: false, message: `Dibatalkan. Mengompres ${totalCompressed} file sebelum berhenti.` });
             break;
         }
 
@@ -101,7 +117,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 // Bersihkan memori virtual
                 try { gs.FS.unlink("input.pdf"); } catch {}
                 try { gs.FS.unlink("output.pdf"); } catch {}
-            } catch (err) {
+            } catch {
                 // error ngompres skip saja
             }
         }
@@ -112,7 +128,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
            type: "progress", 
            current: i + 1, 
            total: files.length,
-           percent: pct
+           percent: pct,
+           file: fname
         });
         
         // Wajib yield event loop agar tidak memutus koneksi
@@ -126,10 +143,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       message: `Kompresi Selesai! Mengompres ${totalCompressed} file dan menghemat penyimpanan sebesar ${savedMB} MB.` 
     });
 
-  } catch (error: any) {
-    send({ type: "done", success: false, message: error.message || "Server Error" });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Server Error";
+    send({ type: "done", success: false, message });
   } finally {
-    global.fetch = originalFetch;
+    globalScope.fetch = originalFetch;
     res.end();
   }
 }

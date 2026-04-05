@@ -41,7 +41,7 @@ export async function createDatabaseBackup(): Promise<string | null> {
       });
     }
 
-    console.log(`Database backup created at ${backupPath}`);
+    console.warn(`Database backup created at ${backupPath}`);
     return backupPath;
   } catch (error) {
     console.error("Failed to create database backup:", error);

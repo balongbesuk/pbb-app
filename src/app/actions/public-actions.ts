@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { checkRateLimit } from "@/lib/rate-limit";
 import fs from "fs";
+import { getArchivePath } from "@/lib/storage";
 
 /**
  * Konfigurasi Rate Limit untuk pencarian publik.
@@ -14,6 +15,19 @@ import fs from "fs";
 const PUBLIC_SEARCH_RATE_LIMIT = {
   limit: 15,
   windowMs: 60 * 1000, // 1 menit
+};
+
+type PublicVillageConfig = {
+  jatuhTempo: string | null;
+  bapendaUrl: string | null;
+  isJombangBapenda: boolean | null;
+  enableBapendaSync: boolean | null;
+  enableDigitalArchive: boolean | null;
+  archiveOnlyLunas: boolean | null;
+  alamatKantor: string | null;
+  email: string | null;
+  kodePos: string | null;
+  namaKades: string | null;
 };
 
 /**
@@ -31,7 +45,7 @@ async function getClientIp(): Promise<string> {
   return headersList.get("x-real-ip") || "unknown";
 }
 
-export async function searchPublicTaxData(query: string, tahunPajak: number) {
+export async function searchPublicTaxData(query: string, tahunPajak: number, page: number = 1, pageSize: number = 10) {
   try {
     // ─── Rate Limiting ──────────────────────────────────────────────
     const headersList = await headers();
@@ -101,6 +115,8 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
     // Filter duplikat dan string kosong
     const finalVariations = Array.from(new Set(variations.filter(v => v.length >= 3)));
 
+    const skip = (page - 1) * pageSize;
+
     // Cari berdasarkan NOP (exact/partial) atau Nama WP (partial)
     const results = await prisma.taxData.findMany({
       where: {
@@ -123,20 +139,37 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
         }
       },
       orderBy: { nop: "asc" },
-      take: 10, // batasi max 10 hasil agar tidak berat/spam
+      skip,
+      take: pageSize + 1, // Ambil ekstra 1 untuk cek hasMore
     });
 
-    if (results.length === 0) {
+    const hasMore = results.length > pageSize;
+    const finalResults = hasMore ? results.slice(0, pageSize) : results;
+
+    if (finalResults.length === 0 && page === 1) {
       return { success: false, message: "Data tidak ditemukan." };
     }
 
-    const config = await prisma.villageConfig.findFirst({ where: { id: 1 } }) as any;
+    const config = await prisma.villageConfig.findFirst({
+      where: { id: 1 },
+      select: {
+        jatuhTempo: true,
+        bapendaUrl: true,
+        isJombangBapenda: true,
+        enableBapendaSync: true,
+        enableDigitalArchive: true,
+        archiveOnlyLunas: true,
+        alamatKantor: true,
+        email: true,
+        kodePos: true,
+        namaKades: true,
+      },
+    }) as PublicVillageConfig | null;
     const jatuhTempoStr = config?.jatuhTempo || "31 Agustus";
     const bapendaUrl = config?.bapendaUrl || null;
     const isJombangBapenda = config?.isJombangBapenda ?? true;
 
     // Scan arsip folder (Year-aware)
-    const { getArchivePath } = require("@/lib/storage");
     const archiveDir = getArchivePath(tahunPajak.toString());
     let archiveIndex = new Map<string, string>();
     if (fs.existsSync(archiveDir)) {
@@ -149,7 +182,7 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
     }
 
       // Map data structure for public view
-      const mapped = results.map(r => {
+      const mapped = finalResults.map(r => {
         // Cari file arsip (NOP)
         const cleanNop = r.nop.replace(/\D/g, "");
         const matchedArchive =
@@ -197,6 +230,7 @@ export async function searchPublicTaxData(query: string, tahunPajak: number) {
     return { 
       success: true, 
       data: mapped, 
+      hasMore,
       jatuhTempo: jatuhTempoStr,
       bapendaUrl,
       isJombangBapenda,

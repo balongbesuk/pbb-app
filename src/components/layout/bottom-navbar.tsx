@@ -12,11 +12,13 @@ import {
   History,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import type { AppUser } from "@/types/app";
 
 export function BottomNavbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const userRole = (session?.user as any)?.role || "PENGGUNA";
+  const currentUser = session?.user as AppUser | undefined;
+  const userRole = currentUser?.role || "PENGGUNA";
 
   const navItems = [
     {

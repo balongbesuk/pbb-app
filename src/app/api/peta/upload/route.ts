@@ -5,16 +5,35 @@ import fs from "fs";
 import path from "path";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { DOMParser } from "@xmldom/xmldom";
+import * as togeojson from "togeojson";
+import type { AppUser } from "@/types/app";
+import type { Feature, FeatureCollection, GeoJsonProperties, Geometry, LineString, Polygon } from "geojson";
+
+type RegionType = "RT" | "RW" | "DUSUN" | "DESA" | "LAINNYA";
+
+type MapFeatureProperties = GeoJsonProperties & {
+  name?: string;
+  regionType?: RegionType;
+  rt?: string;
+  rw?: string;
+  dusun?: string;
+};
+
+type MapFeature = Feature<Geometry, MapFeatureProperties>;
+type MapFeatureCollection = FeatureCollection<Geometry, MapFeatureProperties>;
+
+function isAdmin(user?: AppUser): boolean {
+  return user?.role === "ADMIN";
+}
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "ADMIN") {
+    const user = session?.user as AppUser | undefined;
+    if (!session || !isAdmin(user)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const togeojson = require("togeojson");
-    const { DOMParser } = require("@xmldom/xmldom");
 
     const formData = await req.formData();
     const files = formData.getAll("file") as File[];
@@ -37,21 +56,21 @@ export async function POST(req: Request) {
     }
 
     // Baca data LAMA yang sudah ada
-    let existingFeatures: any[] = [];
+    let existingFeatures: MapFeature[] = [];
     const filePath = path.join(process.cwd(), "public", "maps", "village.json");
     if (fs.existsSync(filePath)) {
         try {
-            const oldData = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+            const oldData = JSON.parse(fs.readFileSync(filePath, "utf-8")) as MapFeatureCollection;
             existingFeatures = oldData.features || [];
-        } catch (e) {
-            console.error("Gagal baca data lama:", e);
+        } catch (error) {
+            console.error("Gagal baca data lama:", error);
         }
     }
 
-    const combinedMap = new Map();
-    existingFeatures.forEach(f => {
-        const nameKey = f.properties.name || "UNNAMED";
-        combinedMap.set(nameKey, f);
+    const combinedMap = new Map<string, MapFeature>();
+    existingFeatures.forEach((feature) => {
+        const nameKey = feature.properties?.name || "UNNAMED";
+        combinedMap.set(nameKey, feature);
     });
 
     // PROSES SEMUA FILE YAG DIUNGGAH
@@ -61,15 +80,15 @@ export async function POST(req: Request) {
         const buffer = Buffer.from(bytes);
         const gpxString = buffer.toString();
         const gpxDoc = new DOMParser().parseFromString(gpxString, "text/xml");
-        const converted = togeojson.gpx(gpxDoc);
+        const converted = togeojson.gpx(gpxDoc) as MapFeatureCollection;
 
-        converted.features.forEach((f: any) => {
-            let name = (f.properties.name || "").trim();
+        converted.features.forEach((feature) => {
+            let name = (feature.properties?.name || "").trim();
             if (!name) {
                 name = filename.replace(/\.gpx$/i, "").replace(/_/g, " ").toUpperCase();
             }
 
-            let regionType = "LAINNYA";
+            let regionType: RegionType = "LAINNYA";
             let rt = "", rw = "", dusun = "";
             const rtMatch = name.match(/RT\s*(\d+)/i);
             const rwMatch = name.match(/RW\s*(\d+)/i);
@@ -91,23 +110,23 @@ export async function POST(req: Request) {
                 regionType = "DESA";
             }
 
-            let geometry = f.geometry;
+            let geometry = feature.geometry;
             if (geometry.type === "LineString") {
-                const coords = [...geometry.coordinates];
+                const coords = [...(geometry as LineString).coordinates];
                 if (coords.length > 2) {
                     const first = coords[0];
                     const last = coords[coords.length - 1];
                     if (first[0] !== last[0] || first[1] !== last[1]) {
-                        coords.push([first[0], last[1]]);
+                        coords.push([first[0], first[1]]);
                     }
-                    geometry = { type: "Polygon", coordinates: [coords] };
+                    geometry = { type: "Polygon", coordinates: [coords] } as Polygon;
                 }
             }
 
-            const processedFeature = {
-                ...f,
+            const processedFeature: MapFeature = {
+                ...feature,
                 geometry,
-                properties: { ...f.properties, name, regionType, rt, rw, dusun }
+                properties: { ...feature.properties, name, regionType, rt, rw, dusun }
             };
             
             combinedMap.set(name, processedFeature);
@@ -115,16 +134,17 @@ export async function POST(req: Request) {
     }
 
     const finalFeatures = Array.from(combinedMap.values());
-    const finalGeoJSON = { type: "FeatureCollection", features: finalFeatures };
+    const finalGeoJSON: MapFeatureCollection = { type: "FeatureCollection", features: finalFeatures };
     
     if (!fs.existsSync(path.dirname(filePath))) fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, JSON.stringify(finalGeoJSON, null, 2));
     revalidatePath("/peta");
 
     return NextResponse.json({ success: true, message: `${files.length} file berhasil diproses ke peta!` });
-  } catch (error: any) {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Gagal proses";
     console.error("Gagal proses:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -134,12 +154,13 @@ export async function POST(req: Request) {
 export async function DELETE() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== "ADMIN") {
+    const user = session?.user as AppUser | undefined;
+    if (!session || !isAdmin(user)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const filePath = path.join(process.cwd(), "public", "maps", "village.json");
-    const emptyGeoJSON = {
+    const emptyGeoJSON: MapFeatureCollection = {
       type: "FeatureCollection",
       features: [],
     };

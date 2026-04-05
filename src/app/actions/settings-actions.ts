@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/server-auth";
 import { VillageConfigSchema, formatZodError } from "@/lib/validations/schemas";
+import { Prisma } from "@prisma/client";
+
+type VillageConfigInput = Parameters<typeof VillageConfigSchema.parse>[0];
 
 export async function deleteAllTaxData() {
   try {
@@ -70,8 +73,8 @@ export async function deleteAllTaxData() {
           }
         }
       }
-    } catch (e) {
-      console.error("Failed to delete physical upload files:", e);
+    } catch (error) {
+      console.error("Failed to delete physical upload files:", error);
     }
 
     revalidatePath("/data-pajak");
@@ -113,10 +116,12 @@ export const getVillageConfig = cache(async () => {
         showNominalPajak: false,
         enableDigitalArchive: true,
         archiveOnlyLunas: true,
+        enablePublicGis: true,
+        showUnpaidDetailsGis: false,
       },
     });
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
     return { 
       id: 1, 
       namaDesa: "", 
@@ -135,17 +140,19 @@ export const getVillageConfig = cache(async () => {
       showNominalPajak: false, 
       enableDigitalArchive: true,
       archiveOnlyLunas: true,
+      enablePublicGis: true,
+      showUnpaidDetailsGis: false,
       updatedAt: new Date() 
     };
   }
 });
 
-export async function updateVillageConfig(raw: any) {
+export async function updateVillageConfig(raw: VillageConfigInput) {
   try {
     await requireAdmin();
     const data = VillageConfigSchema.parse(raw);
 
-    const updateData: any = {};
+    const updateData: Prisma.VillageConfigUpdateInput = {};
     if (data.namaDesa !== undefined) updateData.namaDesa = data.namaDesa;
     if (data.kecamatan !== undefined) updateData.kecamatan = data.kecamatan;
     if (data.kabupaten !== undefined) updateData.kabupaten = data.kabupaten;
@@ -184,6 +191,14 @@ export async function updateVillageConfig(raw: any) {
 
     if (data.archiveOnlyLunas !== undefined) {
       updateData.archiveOnlyLunas = data.archiveOnlyLunas;
+    }
+
+    if (data.enablePublicGis !== undefined) {
+      updateData.enablePublicGis = data.enablePublicGis;
+    }
+
+    if (data.showUnpaidDetailsGis !== undefined) {
+      updateData.showUnpaidDetailsGis = data.showUnpaidDetailsGis;
     }
     
     if (data.mapCenterLat !== undefined) {
@@ -230,8 +245,9 @@ export async function addDusun(name: string) {
     revalidatePath("/settings");
     return { success: true };
   } catch (error) {
-    const err = error as any;
-    if (err?.code === "P2002") return { success: false, message: "Nama dusun sudah ada" };
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { success: false, message: "Nama dusun sudah ada" };
+    }
     return { success: false, message: formatZodError(error) };
   }
 }
@@ -257,8 +273,8 @@ export async function getRegionOtomations(): Promise<
       orderBy: [{ type: "asc" }, { code: "asc" }],
     });
     return rows;
-  } catch (e) {
-    console.error("Region Otomation Query Error:", e);
+  } catch (error) {
+    console.error("Region Otomation Query Error:", error);
     return [];
   }
 }

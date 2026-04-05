@@ -2,25 +2,78 @@
 import fs from "fs";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
-const pdf = require("pdf-parse/lib/pdf-parse.js");
-const { getArchivePath } = require("@/lib/storage");
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
+import { getArchivePath } from "@/lib/storage";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/server-auth";
 import { assertSafeFilename, resolveSafeChildPath } from "@/lib/file-security";
+import { prisma } from "@/lib/prisma";
 
 // Comprehensive Browser Polyfills for Server-side PDF Parsing (needed for pdf-lib/pdf-parse)
 const noopClass = class {};
-if (typeof (global as any).DOMMatrix === "undefined") (global as any).DOMMatrix = noopClass;
-if (typeof (global as any).DOMPoint === "undefined") (global as any).DOMPoint = noopClass;
-if (typeof (global as any).DOMRect === "undefined") (global as any).DOMRect = noopClass;
-if (typeof (global as any).HTMLElement === "undefined") (global as any).HTMLElement = noopClass;
-if (typeof (global as any).HTMLCanvasElement === "undefined") (global as any).HTMLCanvasElement = noopClass;
-if (typeof (global as any).Navigator === "undefined") (global as any).Navigator = noopClass;
-if (typeof (global as any).Image === "undefined") (global as any).Image = noopClass;
-if (typeof (global as any).ReadableStream === "undefined") (global as any).ReadableStream = noopClass;
+const polyfillTarget = globalThis as Record<string, unknown>;
+for (const key of [
+  "DOMMatrix",
+  "DOMPoint",
+  "DOMRect",
+  "HTMLElement",
+  "HTMLCanvasElement",
+  "Navigator",
+  "Image",
+  "ReadableStream",
+]) {
+  if (typeof polyfillTarget[key] === "undefined") {
+    polyfillTarget[key] = noopClass;
+  }
+}
+
+type PdfParseResult = { text?: string };
+type PdfParseFn = (dataBuffer: Buffer) => Promise<PdfParseResult>;
+const parsePdf = pdfParse as PdfParseFn;
 
 function getArchiveDir(year: number) {
   return getArchivePath(year.toString());
+}
+
+/** Get archive connection statistics */
+export async function getArchiveStats(year: number) {
+  try {
+    await requireAdmin();
+    const archiveDir = getArchiveDir(year);
+    if (!fs.existsSync(archiveDir)) return { connected: 0, disconnected: 0, total: 0 };
+    
+    const files = fs.readdirSync(archiveDir).filter(f => !f.startsWith("."));
+    
+    // Ambil semua NOP di database untuk tahun tersebut
+    const allTaxes = await prisma.taxData.findMany({
+      where: { tahun: year },
+      select: { nop: true }
+    });
+    
+    const dbNops = new Set(allTaxes.map(t => t.nop.replace(/\D/g, "")));
+    
+    let connected = 0;
+    let disconnected = 0;
+    
+    files.forEach(f => {
+      const cleanFileName = f.replace(/\D/g, "");
+      // Jika NOP pada nama file ada di database
+      if (dbNops.has(cleanFileName)) {
+        connected++;
+      } else {
+        disconnected++;
+      }
+    });
+    
+    return { 
+      connected, 
+      disconnected, 
+      total: files.length 
+    };
+  } catch (error) {
+    console.error(error);
+    return { connected: 0, disconnected: 0, total: 0 };
+  }
 }
 
 /** Smart Action to Split Large PDF by NOP */
@@ -74,10 +127,10 @@ export async function processSmartArchive(formData: FormData) {
           // Extract text
           let rawText = "";
           try {
-            const data = await pdf(Buffer.from(subPdfBytes));
+            const data = await parsePdf(Buffer.from(subPdfBytes));
             rawText = data.text || "";
-          } catch (e) {
-            fs.appendFileSync(logPath, `PAGE ${i+1}: Extraction library error -> ${e}\n`);
+          } catch (error) {
+            fs.appendFileSync(logPath, `PAGE ${i + 1}: Extraction library error -> ${String(error)}\n`);
           }
 
           const cleanText = rawText.replace(/\D/g, "");
@@ -105,7 +158,7 @@ export async function processSmartArchive(formData: FormData) {
             skippedCount++;
           }
         } catch (pageError) {
-          fs.appendFileSync(logPath, `PAGE ${i+1}: FATAL ERROR -> ${pageError}\n`);
+          fs.appendFileSync(logPath, `PAGE ${i + 1}: FATAL ERROR -> ${String(pageError)}\n`);
           skippedCount++;
         }
     }
@@ -204,5 +257,27 @@ export async function deleteArchive(filename: string, year: number) {
   } catch (error) {
     console.error(error);
     return { success: false, message: "Gagal menghapus file arsip" };
+  }
+}
+export async function clearAllArchives(year: number) {
+  try {
+    await requireAdmin();
+    const archiveDir = getArchiveDir(year);
+    if (fs.existsSync(archiveDir)) {
+      const files = fs.readdirSync(archiveDir);
+      for (const file of files) {
+        if (file.startsWith(".")) continue;
+        const filePath = path.join(archiveDir, file);
+        if (fs.statSync(filePath).isFile()) {
+           fs.unlinkSync(filePath);
+        }
+      }
+    }
+    revalidatePath("/kelola-arsip");
+    revalidatePath("/settings");
+    return { success: true, message: "Seluruh arsip berhasil dikosongkan." };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Gagal mengosongkan arsip." };
   }
 }
