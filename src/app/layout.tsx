@@ -56,7 +56,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <body className={`${outfit.className} ${outfit.variable}`}>
+      <body className={`${outfit.className} ${outfit.variable}`} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

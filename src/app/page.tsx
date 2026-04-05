@@ -6,12 +6,8 @@ import { PublicThemeWrapper } from "@/components/public/public-theme-wrapper";
 import { PublicNav } from "@/components/public/public-nav";
 import "./public.css";
 
-
 // Enable caching with revalidation every 30 seconds to support BFCache
 export const revalidate = 30;
-
-
-
 
 export default async function IndexPage() {
   const config = await getVillageConfig();
@@ -22,14 +18,13 @@ export default async function IndexPage() {
   const kabupaten = config?.kabupaten ? toTitleCase(config.kabupaten) : "";
 
   return (
-    // PublicThemeWrapper itself IS the background — it has inline style with backgroundImage
-    // No separate wrapper div needed
     <PublicThemeWrapper className="relative flex flex-col items-center pt-32 pb-12 px-6 sm:px-10 font-sans">
       <PublicNav 
         namaDesa={namaDesa}
         kecamatan={kecamatan}
         kabupaten={kabupaten}
         logoUrl={config?.logoUrl || null}
+        updatedAt={config?.updatedAt}
       />
 
       <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center gap-12 mt-12 sm:mt-20">

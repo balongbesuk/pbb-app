@@ -35,7 +35,8 @@ function LoginForm() {
     kecamatan: string;
     kabupaten: string;
     logoUrl: string | null;
-  }>({ namaDesa: "", kecamatan: "", kabupaten: "", logoUrl: null });
+    updatedAt: string | null;
+  }>({ namaDesa: "", kecamatan: "", kabupaten: "", logoUrl: null, updatedAt: null });
   const router = useRouter();
   const { theme } = usePublicThemeContext();
   const isDark = theme === "dark";
@@ -160,7 +161,7 @@ function LoginForm() {
         <div className="flex items-center gap-3">
           <div className={`flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl shadow-md ring-1 ${ringColor} bg-white`}>
             {village.logoUrl ? (
-              <Image src={village.logoUrl} alt="Logo Desa" width={48} height={48} className="h-full w-full object-contain p-1" />
+              <Image src={village.updatedAt ? `${village.logoUrl}?v=${new Date(village.updatedAt).getTime()}` : (village.logoUrl || "")} alt="Logo Desa" width={48} height={48} className="h-full w-full object-contain p-1" unoptimized />
             ) : (
 
               <Building2 className="text-primary h-6 w-6" />
@@ -183,7 +184,7 @@ function LoginForm() {
           {/* Large decorative logo */}
           <div className={`inline-flex h-28 w-28 items-center justify-center overflow-hidden rounded-3xl border shadow-md ${logoCardBorder}`}>
             {village.logoUrl ? (
-              <Image src={village.logoUrl} alt="Logo Desa" width={112} height={112} className="h-full w-full object-contain p-3" />
+              <Image src={village.updatedAt ? `${village.logoUrl}?v=${new Date(village.updatedAt).getTime()}` : (village.logoUrl || "")} alt="Logo Desa" width={112} height={112} className="h-full w-full object-contain p-3" unoptimized />
             ) : (
 
               <Building2 className="text-primary h-14 w-14" />
@@ -248,7 +249,7 @@ function LoginForm() {
             <div className="mb-6 flex items-center gap-3 lg:hidden">
               <div className={`flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white shadow ring-1 ${ringColor}`}>
                 {village.logoUrl ? (
-                  <Image src={village.logoUrl} alt="Logo Desa" width={36} height={36} className="h-full w-full object-contain p-0.5" />
+                  <Image src={village.updatedAt ? `${village.logoUrl}?v=${new Date(village.updatedAt).getTime()}` : (village.logoUrl || "")} alt="Logo Desa" width={36} height={36} className="h-full w-full object-contain p-0.5" unoptimized />
                 ) : (
 
                   <Building2 className="text-primary h-5 w-5" />

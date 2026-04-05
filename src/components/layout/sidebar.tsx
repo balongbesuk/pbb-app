@@ -64,7 +64,8 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
   const [villageConfig, setVillageConfig] = useState<{
     namaDesa: string;
     logoUrl: string | null;
-  }>({ namaDesa: "PBB Manager", logoUrl: null });
+    updatedAt: string | null;
+  }>({ namaDesa: "PBB Manager", logoUrl: null, updatedAt: null });
 
   useEffect(() => {
     fetch("/api/village-config")
@@ -73,6 +74,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
         setVillageConfig({
           namaDesa: d.namaDesa || "PBB Manager",
           logoUrl: d.logoUrl || null,
+          updatedAt: d.updatedAt || null,
         });
       })
       .catch(() => {});
@@ -103,13 +105,13 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
             <div className="bg-primary/5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
               {villageConfig.logoUrl ? (
                 <Image
-                  src={villageConfig.logoUrl}
+                  src={villageConfig.updatedAt ? `${villageConfig.logoUrl}?v=${new Date(villageConfig.updatedAt).getTime()}` : (villageConfig.logoUrl || "")}
                   alt="Logo Desa"
                   width={40}
                   height={40}
                   className="h-full w-full object-contain p-0.5"
+                  unoptimized
                 />
-
               ) : (
                 <Building2 className="text-primary h-6 w-6" />
               )}

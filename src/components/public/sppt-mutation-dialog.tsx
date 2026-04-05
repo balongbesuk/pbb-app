@@ -182,6 +182,8 @@ export function SpptMutationDialog({
   const [vAddress, setVAddress] = useState("");
   const [vEmail, setVEmail] = useState("");
   const [vZip, setVZip] = useState("");
+  const [vLogo, setVLogo] = useState<string | null>(null);
+  const [vUpdatedAt, setVUpdatedAt] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   
@@ -203,6 +205,8 @@ export function SpptMutationDialog({
           if (data.alamatKantor) setVAddress(data.alamatKantor);
           if (data.email) setVEmail(data.email);
           if (data.kodePos) setVZip(data.kodePos);
+          if (data.logoUrl) setVLogo(data.logoUrl);
+          if (data.updatedAt) setVUpdatedAt(data.updatedAt);
         })
         .catch(err => console.error("Gagal load config desa:", err));
     }
@@ -250,7 +254,8 @@ export function SpptMutationDialog({
   const generatePreviewHtml = () => {
     setIsGenerating(true);
     const dateStr = formatDateNoTime(new Date().toISOString());
-    const logoSrc = `/uploads/logo-desa.png`;
+    const cacheBuster = vUpdatedAt ? `?v=${new Date(vUpdatedAt).getTime()}` : "";
+    const logoSrc = vLogo ? `${vLogo}${cacheBuster}` : "/uploads/logo-desa.png";
     const year = new Date().getFullYear();
 
     const html = `
@@ -468,7 +473,8 @@ export function SpptMutationDialog({
   const handlePrint = () => {
     const win = window.open("", "_blank");
     if (!win) return;
-    const logoSrc = `${window.location.origin}/uploads/logo-desa.png`;
+    const cacheBuster = vUpdatedAt ? `?v=${new Date(vUpdatedAt).getTime()}` : "";
+    const logoSrc = vLogo ? `${window.location.origin}${vLogo}${cacheBuster}` : `${window.location.origin}/uploads/logo-desa.png`;
     win.document.write(`
       <html>
         <head>

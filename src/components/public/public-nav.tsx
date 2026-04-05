@@ -13,9 +13,10 @@ interface PublicNavProps {
   kecamatan: string;
   kabupaten: string;
   logoUrl: string | null;
+  updatedAt?: string | Date | null;
 }
 
-export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNavProps) {
+export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl, updatedAt }: PublicNavProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const { theme } = usePublicThemeContext();
   const isDark = theme === "dark";
@@ -27,6 +28,9 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNav
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const cacheBuster = updatedAt ? `?v=${new Date(updatedAt).getTime()}` : "";
+  const finalLogoUrl = logoUrl ? `${logoUrl}${cacheBuster}` : null;
 
   return (
     <nav
@@ -44,14 +48,15 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl }: PublicNav
     >
       <div className="flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-white/20">
-          {logoUrl ? (
+          {finalLogoUrl ? (
             <Image
-              src={logoUrl}
+              src={finalLogoUrl}
               alt={namaDesa ? `Logo Desa ${namaDesa}` : "Logo PBB Manager"}
               width={44}
               height={44}
               className="h-full w-full object-contain p-1"
               priority
+              unoptimized
             />
           ) : (
             <div
