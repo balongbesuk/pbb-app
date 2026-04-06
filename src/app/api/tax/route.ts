@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { getArchiveList } from "@/app/actions/archive-actions";
 import type { AppUser } from "@/types/app";
+import { getNopVariations } from "@/lib/utils";
 
 const INTERNAL_ROLES: AppUser["role"][] = ["ADMIN", "PENARIK"];
 const PAYMENT_STATUS_VALUES: PaymentStatus[] = [
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
   const sortBy = searchParams.get("sortBy") || "nop";
   const sortOrder = searchParams.get("sortOrder") || "asc";
   const pageSize = 50;
- 
+  
   const whereClause: Prisma.TaxDataWhereInput = {
     tahun,
   };
@@ -51,51 +52,10 @@ export async function GET(req: NextRequest) {
 
   if (query) {
     const searchQuery = query.trim();
-    const pureNumbers = searchQuery.replace(/\D/g, "");
-    
-    // Generasi variasi format NOP untuk pencarian yang lebih tangguh
-    const variations: string[] = [searchQuery];
-    if (pureNumbers.length > 0) variations.push(pureNumbers); // Cari angka mentah
-
-    if (pureNumbers.length >= 2) {
-      let v1 = ""; // Standard: XX.XX.XXX.XXX.XXX-XXXX.X
-      let v2 = ""; // All Dots: XX.XX.XXX.XXX.XXX.XXXX.X
-      
-      v1 += pureNumbers.substring(0, 2);
-      v2 += pureNumbers.substring(0, 2);
-      
-      if (pureNumbers.length > 2) {
-        v1 += "." + pureNumbers.substring(2, 4);
-        v2 += "." + pureNumbers.substring(2, 4);
-      }
-      if (pureNumbers.length > 4) {
-        v1 += "." + pureNumbers.substring(4, 7);
-        v2 += "." + pureNumbers.substring(4, 7);
-      }
-      if (pureNumbers.length > 7) {
-        v1 += "." + pureNumbers.substring(7, 10);
-        v2 += "." + pureNumbers.substring(7, 10);
-      }
-      if (pureNumbers.length > 10) {
-        v1 += "." + pureNumbers.substring(10, 13);
-        v2 += "." + pureNumbers.substring(10, 13);
-      }
-      if (pureNumbers.length > 13) {
-        v1 += "-" + pureNumbers.substring(13, 17);
-        v2 += "." + pureNumbers.substring(13, 17);
-      }
-      if (pureNumbers.length > 17) {
-        v1 += "." + pureNumbers.substring(17, 18);
-        v2 += "." + pureNumbers.substring(17, 18);
-      }
-      variations.push(v1, v2);
-    }
-
-    // Filter duplikat dan string kosong
-    const finalVariations = Array.from(new Set(variations.filter(v => v.length >= 3)));
+    const variations = getNopVariations(searchQuery);
 
     const orConditions: Prisma.TaxDataWhereInput[] = [
-      ...finalVariations.map(v => ({ nop: { contains: v } })),
+      ...variations.map(v => ({ nop: { contains: v } })),
       { namaWp: { contains: searchQuery } },
       { namaWp: { contains: searchQuery.toUpperCase() } },
       { alamatObjek: { contains: searchQuery } },

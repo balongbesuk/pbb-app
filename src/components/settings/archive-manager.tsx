@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileStack, Trash2, Loader2, FileText, Search, AlertTriangle, CheckCircle2, Files } from "lucide-react";
+import { FileStack, Trash2, Loader2, FileText, Search, AlertTriangle, CheckCircle2, Files, Printer, FileDown, X } from "lucide-react";
 import { getArchiveList, deleteArchive, getArchiveStats } from "@/app/actions/archive-actions";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -27,6 +27,7 @@ export function ArchiveManager() {
   const [viewingFile, setViewingFile] = useState<{ name: string; year: number } | null>(null);
   const [archiveStats, setArchiveStats] = useState({ connected: 0, disconnected: 0, total: 0 });
   const [loadingStats, setLoadingStats] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     async function init() {
@@ -84,6 +85,23 @@ export function ArchiveManager() {
   const handleViewFile = (filename: string) => {
     setViewingFile({ name: filename, year: selectedYear });
     setIsViewerOpen(true);
+  };
+
+  const handlePrint = () => {
+    if (iframeRef.current) {
+        iframeRef.current.contentWindow?.focus();
+        iframeRef.current.contentWindow?.print();
+    }
+  };
+
+  const handleDownload = () => {
+    if (!viewingFile) return;
+    const link = document.createElement("a");
+    link.href = `/arsip-pbb/${viewingFile.year}/${viewingFile.name}`;
+    link.download = viewingFile.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const filteredFiles = files.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -315,7 +333,10 @@ export function ArchiveManager() {
       </Dialog>
 
       <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
-        <DialogContent className="max-w-[95vw] lg:max-w-7xl h-[92vh] p-0 overflow-hidden border-none rounded-3xl shadow-2xl bg-white dark:bg-zinc-950 flex flex-col">
+        <DialogContent 
+           className="max-w-[95vw] lg:max-w-7xl h-[92vh] p-0 overflow-hidden border-none rounded-3xl shadow-2xl bg-white dark:bg-zinc-950 flex flex-col"
+           showCloseButton={false}
+        >
           <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-white/10 bg-zinc-50/80 dark:bg-zinc-900/50 backdrop-blur-md">
             <div className="flex items-center gap-3">
                <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
@@ -330,11 +351,34 @@ export function ArchiveManager() {
                   </p>
                </div>
             </div>
+            <div className="flex items-center gap-2">
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handlePrint}
+                    className="h-8 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 bg-zinc-50 dark:bg-zinc-900"
+                >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Cetak</span>
+                </Button>
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleDownload}
+                    className="h-8 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                >
+                    <FileDown className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Download</span>
+                </Button>
+                <div className="w-px h-4 bg-zinc-100 dark:bg-zinc-800 mx-1" />
+                <Button variant="ghost" size="icon" onClick={() => setIsViewerOpen(false)} className="h-8 w-8 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"><X className="h-4 w-4" /></Button>
+            </div>
           </div>
           
           <div className="flex-1 bg-zinc-100 dark:bg-zinc-900 relative">
              {viewingFile && (
                <iframe 
+                 ref={iframeRef}
                  src={`/arsip-pbb/${viewingFile.year}/${viewingFile.name}#toolbar=0`} 
                  className="w-full h-full border-none"
                  title={viewingFile.name}

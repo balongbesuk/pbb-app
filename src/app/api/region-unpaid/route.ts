@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getNopVariations } from "@/lib/utils";
 
 export async function GET(req: Request) {
   try {
@@ -28,9 +29,10 @@ export async function GET(req: Request) {
     }
 
     if (search) {
+      const variations = getNopVariations(search);
       where.OR = [
+        ...variations.map((v) => ({ nop: { contains: v } })),
         { namaWp: { contains: search } },
-        { nop: { contains: search } },
       ];
     }
 

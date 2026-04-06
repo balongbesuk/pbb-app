@@ -9,6 +9,8 @@ import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
+import { useTheme } from "next-themes";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 interface RegionUnpaidDialogProps {
@@ -68,8 +70,24 @@ export function RegionUnpaidDialog({
   const [dbSearch, setDbSearch] = useState("");
 
   // Theme support
+  const pathname = usePathname();
+  const { resolvedTheme } = useTheme();
   const publicContext = usePublicThemeContext();
-  const isDark = publicContext ? publicContext.theme === "dark" : false;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Determine if we are in the public portal area or dashboard
+  // Pages like '/' and '/login' are considered public and use their own context
+  const isPublicPortal = pathname === "/" || pathname === "/login";
+  
+  // Final isDark decision
+  const isDark = isPublicPortal 
+    ? publicContext.theme === "dark" 
+    : resolvedTheme === "dark";
+
 
   const fetchData = useCallback(async (p: number, isInitial: boolean = false) => {
     if (isInitial) {
@@ -173,6 +191,9 @@ export function RegionUnpaidDialog({
     }
   };
 
+  // Prevent flash or hydration mismatch
+  if (!mounted) return null;
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -221,7 +242,8 @@ export function RegionUnpaidDialog({
                     <Input 
                         placeholder="Cari Nama atau NOP (Min. 3 karakter)..."
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => setSearch(e.target.value.replace(/[^a-zA-Z0-9\s./-]/g, ""))}
+                        maxLength={30}
                         className={cn(
                             "pl-10 pr-10 h-12 rounded-2xl focus-visible:ring-primary/20 border transition-all",
                             isDark 

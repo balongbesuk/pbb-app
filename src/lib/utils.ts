@@ -98,3 +98,47 @@ export function getPaymentStatusLabel(status: string | null) {
 }
 
 
+/** Generate NOP variations for robust searching (with dots, dashes, etc) */
+export function getNopVariations(searchQuery: string): string[] {
+  const query = searchQuery.trim();
+  const pureNumbers = query.replace(/\D/g, "");
+  const variations: string[] = [query];
+  
+  if (pureNumbers.length > 0) variations.push(pureNumbers);
+
+  if (pureNumbers.length >= 2) {
+    let v1 = ""; // Standard: XX.XX.XXX.XXX.XXX-XXXX.X
+    let v2 = ""; // All Dots: XX.XX.XXX.XXX.XXX.XXXX.X
+    
+    v1 += pureNumbers.substring(0, 2);
+    v2 += pureNumbers.substring(0, 2);
+    
+    if (pureNumbers.length > 2) {
+      v1 += "." + pureNumbers.substring(2, 4);
+      v2 += "." + pureNumbers.substring(2, 4);
+    }
+    if (pureNumbers.length > 4) {
+      v1 += "." + pureNumbers.substring(4, 7);
+      v2 += "." + pureNumbers.substring(4, 7);
+    }
+    if (pureNumbers.length > 7) {
+      v1 += "." + pureNumbers.substring(7, 10);
+      v2 += "." + pureNumbers.substring(7, 10);
+    }
+    if (pureNumbers.length > 10) {
+      v1 += "." + pureNumbers.substring(10, 13);
+      v2 += "." + pureNumbers.substring(10, 13);
+    }
+    if (pureNumbers.length > 13) {
+      v1 += "-" + pureNumbers.substring(13, 17);
+      v2 += "." + pureNumbers.substring(13, 17);
+    }
+    if (pureNumbers.length > 17) {
+      v1 += "." + pureNumbers.substring(17, 18);
+      v2 += "." + pureNumbers.substring(17, 18);
+    }
+    variations.push(v1, v2);
+  }
+
+  return Array.from(new Set(variations.filter(v => v.length >= 3)));
+}

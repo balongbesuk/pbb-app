@@ -5,6 +5,7 @@ import ExcelJS from "exceljs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import type { AppUser } from "@/types/app";
+import { getNopVariations } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
   try {

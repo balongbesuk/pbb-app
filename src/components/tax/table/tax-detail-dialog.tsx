@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit2, Loader2, Save, User, CheckCircle, MapPin, X, RotateCcw, ShieldAlert, FileX, FileText, RefreshCcw, Copy, Check, Trash2, AlertTriangle } from "lucide-react";
+import { Edit2, Loader2, Save, User, CheckCircle, MapPin, X, RotateCcw, ShieldAlert, FileX, FileText, RefreshCcw, Copy, Check, Trash2, AlertTriangle, Printer, FileDown } from "lucide-react";
 import { updateWpRegion } from "@/app/actions/tax-update-actions";
 import { getVillageConfig as fetchConfig } from "@/app/actions/settings-actions";
 import { checkArchiveByNop } from "@/app/actions/archive-actions";
@@ -20,6 +20,7 @@ import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
 import { formatCurrency, normalizeNum, cn, getPaymentStatusColor, getPaymentStatusLabel } from "@/lib/utils";
 import type { TaxDataItem, AppUser, AvailableFilters } from "@/types/app";
 import type { PaymentStatus } from "@prisma/client";
@@ -49,6 +50,7 @@ export function TaxDetailDialog({
   onAssignPenarik,
 }: TaxDetailDialogProps) {
   const queryClient = useQueryClient();
+  const { resolvedTheme } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [editDusun, setEditDusun] = useState("");
   const [editRt, setEditRt] = useState("");
@@ -76,6 +78,7 @@ export function TaxDetailDialog({
   const [editPaymentStatus, setEditPaymentStatus] = useState<PaymentStatus>("BELUM_LUNAS");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     if (item) {
@@ -226,6 +229,23 @@ export function TaxDetailDialog({
     } finally {
       setIsCheckingBapenda(false);
     }
+  };
+  
+  const handlePrint = () => {
+    if (iframeRef.current) {
+        iframeRef.current.contentWindow?.focus();
+        iframeRef.current.contentWindow?.print();
+    }
+  };
+
+  const handleDownload = () => {
+    if (!item || !archiveFile) return;
+    const link = document.createElement("a");
+    link.href = `/arsip-pbb/${item.tahun}/${archiveFile}`;
+    link.download = `E-SPPT-${item.nop}-${item.tahun}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleCopyNop = (nop: string) => {
@@ -503,7 +523,7 @@ export function TaxDetailDialog({
         </DialogContent>
       </Dialog>
 
-      <UnpaidBillDialog open={showPayRedirect} onOpenChange={setShowPayRedirect} nop={item?.nop || ""} namaWp={item?.namaWp || ""} isDark={false} />
+      <UnpaidBillDialog open={showPayRedirect} onOpenChange={setShowPayRedirect} nop={item?.nop || ""} namaWp={item?.namaWp || ""} isDark={resolvedTheme === "dark"} />
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-md rounded-3xl p-8 bg-white dark:bg-zinc-950 text-center">
@@ -515,7 +535,10 @@ export function TaxDetailDialog({
       </Dialog>
 
       <Dialog open={showPdfViewer} onOpenChange={setShowPdfViewer}>
-        <DialogContent className="sm:max-w-[90vw] w-[95vw] h-[95vh] p-0 overflow-hidden border-none rounded-3xl bg-white dark:bg-zinc-950 flex flex-col z-[60]">
+        <DialogContent 
+          className="sm:max-w-[90vw] w-[95vw] h-[95vh] p-0 overflow-hidden border-none rounded-3xl bg-white dark:bg-zinc-950 flex flex-col"
+          showCloseButton={false}
+        >
           <DialogHeader className="p-4 border-b dark:border-zinc-800 flex flex-row items-center justify-between space-y-0">
             <div className="flex items-center gap-3">
               <div className="bg-blue-500/10 p-2 rounded-xl"><FileText className="h-5 w-5 text-blue-600" /></div>
@@ -524,10 +547,36 @@ export function TaxDetailDialog({
                 <DialogDescription className="text-[10px] font-bold uppercase">{item.nop} - {item.tahun}</DialogDescription>
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setShowPdfViewer(false)} className="rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"><X className="h-4 w-4" /></Button>
+            <div className="flex items-center gap-2">
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handlePrint}
+                    className="h-8 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 bg-zinc-50 dark:bg-zinc-900"
+                >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Cetak</span>
+                </Button>
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleDownload}
+                    className="h-8 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                >
+                    <FileDown className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Download</span>
+                </Button>
+                <div className="w-px h-4 bg-zinc-100 dark:bg-zinc-800 mx-1" />
+                <Button variant="ghost" size="icon" onClick={() => setShowPdfViewer(false)} className="h-8 w-8 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"><X className="h-4 w-4" /></Button>
+            </div>
           </DialogHeader>
           <div className="flex-1 w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
-            <iframe src={`/arsip-pbb/${item.tahun}/${archiveFile}#toolbar=0`} className="w-full h-full border-none" title="PDF Viewer" />
+            <iframe 
+                ref={iframeRef}
+                src={`/arsip-pbb/${item.tahun}/${archiveFile}#toolbar=0`} 
+                className="w-full h-full border-none" 
+                title="PDF Viewer" 
+            />
           </div>
         </DialogContent>
       </Dialog>
