@@ -33,6 +33,11 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { uploadArchives, clearAllArchives } from "@/app/actions/archive-actions";
 
+type StreamMessage =
+  | { type: "info"; message: string }
+  | { type: "progress"; percent: number; current?: number; total?: number; phase?: string; file?: string; nopLast?: string }
+  | { type: "done"; success: boolean; message?: string; error?: string };
+
 export function ArchiveSettingsTab() {
   const router = useRouter();
   const [scanning, setScanning] = useState(false);
@@ -63,6 +68,33 @@ export function ArchiveSettingsTab() {
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const [restoreStatus, setRestoreStatus] = useState<string>("idle");
   const [restoreProgress, setRestoreProgress] = useState(0);
+  
+  const readStreamMessages = async (
+    stream: ReadableStream<Uint8Array>,
+    onMessage: (message: StreamMessage) => void,
+  ) => {
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          onMessage(JSON.parse(line) as StreamMessage);
+        } catch {
+          // Abaikan chunk JSON parsial.
+        }
+      }
+    }
+  };
 
   // Ambil tahun pajak saat ini
   useEffect(() => {
@@ -105,32 +137,16 @@ export function ArchiveSettingsTab() {
         return;
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-        
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          try {
-            const msg = JSON.parse(line);
-            if (msg.type === "progress") {
-               setScanningProgress(msg.percent);
-               setScanningStatus(`Halaman ${msg.current}/${msg.total} (NOP: ${msg.nopLast})`);
-            } else if (msg.type === "done") {
-               if (msg.success) toast.success(msg.message);
-               else toast.error(msg.message);
-               router.refresh();
-            }
-          } catch {}
+      await readStreamMessages(res.body, (msg) => {
+        if (msg.type === "progress") {
+          setScanningProgress(msg.percent);
+          setScanningStatus(`Halaman ${msg.current}/${msg.total} (NOP: ${msg.nopLast})`);
+        } else if (msg.type === "done") {
+          if (msg.success) toast.success(msg.message);
+          else toast.error(msg.message);
+          router.refresh();
         }
-      }
+      });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       const message = error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
@@ -142,9 +158,12 @@ export function ArchiveSettingsTab() {
     }
   };
 
+  const [uploadCount, setUploadCount] = useState(0);
+
   const handleManualUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    setUploadCount(files.length);
     setUploading(true);
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) formData.append("files", files[i]);
@@ -161,6 +180,7 @@ export function ArchiveSettingsTab() {
       toast.error("Terjadi kesalahan sistem.");
     } finally {
       setUploading(false);
+      setUploadCount(0);
     }
   };
 
@@ -185,39 +205,25 @@ export function ArchiveSettingsTab() {
          return;
        }
 
-       const reader = res.body.getReader();
-       const decoder = new TextDecoder();
-       let buffer = "";
-       while (true) {
-         const { done, value } = await reader.read();
-         if (done) break;
-         buffer += decoder.decode(value, { stream: true });
-         const lines = buffer.split("\n");
-         buffer = lines.pop() ?? "";
-         for (const line of lines) {
-           if (!line.trim()) continue;
-           try {
-             const msg = JSON.parse(line);
-             if (msg.type === "info") {
-               setCompressStatus(msg.message);
-             } else if (msg.type === "progress") {
-               setCompressProgress(msg.percent);
-               setCompressStatus(`Mengompres ${msg.current}/${msg.total}: ${msg.file}`);
-             } else if (msg.type === "done") {
-               if (msg.success) {
-                 setCompressProgress(100);
-                 setCompressStatus("Kompresi Selesai!");
-                 toast.success(msg.message);
-                 setTimeout(() => setCompressDialogOpen(false), 1500);
-               } else {
-                 setCompressStatus("Error: " + msg.message);
-                 toast.error(msg.message);
-               }
-               router.refresh();
-             }
-           } catch {}
+       await readStreamMessages(res.body, (msg) => {
+         if (msg.type === "info") {
+           setCompressStatus(msg.message);
+         } else if (msg.type === "progress") {
+           setCompressProgress(msg.percent);
+           setCompressStatus(`Mengompres ${msg.current}/${msg.total}: ${msg.file}`);
+         } else if (msg.type === "done") {
+           if (msg.success) {
+             setCompressProgress(100);
+             setCompressStatus("Kompresi Selesai!");
+             toast.success(msg.message);
+             setTimeout(() => setCompressDialogOpen(false), 1500);
+           } else {
+             setCompressStatus("Error: " + msg.message);
+             toast.error(msg.message);
+           }
+           router.refresh();
          }
-       }
+       });
     } catch (error) {
        if (error instanceof DOMException && error.name === "AbortError") {
          return;
@@ -274,8 +280,8 @@ export function ArchiveSettingsTab() {
   const executeRestore = async () => {
     if (!restoreFile) return;
     setIsRestoring(true);
-    setRestoreStatus("Mengunggah file backup...");
-    setRestoreProgress(20);
+    setRestoreStatus("Menghubungkan ke server...");
+    setRestoreProgress(5);
 
     abortControllerRef.current = new AbortController();
 
@@ -283,41 +289,47 @@ export function ArchiveSettingsTab() {
     formData.append("file", restoreFile);
     formData.append("year", selectedYear.toString());
 
-    let pInterval: any = null;
     try {
-       setRestoreStatus("Server sedang membersihkan folder lama & mengekstrak file...");
-       setRestoreProgress(50);
-       
-       pInterval = setInterval(() => {
-          setRestoreProgress(prev => (prev < 92 ? prev + 1 : prev));
-       }, 2000);
-       
        const res = await fetch("/api/archive/restore", { 
          method: "POST", 
          body: formData,
          signal: abortControllerRef.current.signal
        });
-       const data = await res.json();
-       
-       if (res.ok) {
-         setRestoreProgress(100);
-         setRestoreStatus("Selesai! Arsip berhasil dipulihkan.");
-         toast.success(data.message || "Arsip berhasil dipulihkan!");
-         setTimeout(() => {
-            setRestoreDialogOpen(false);
-            router.refresh();
-         }, 1500);
-       } else {
-         setRestoreStatus("Error: " + (data.error || "Gagal restore arsip."));
-         toast.error(data.error || "Gagal restore arsip.");
+
+       if (!res.ok || !res.body) {
+         throw new Error("Gagal memulai proses restore.");
        }
+
+       await readStreamMessages(res.body, (msg) => {
+         if (msg.type === "info") {
+           setRestoreStatus(msg.message);
+         } else if (msg.type === "progress") {
+           setRestoreProgress(msg.percent);
+           if (msg.current && msg.total) {
+             const phase = msg.phase === "extracting" ? "Ekstrak" : "Menyusun";
+             setRestoreStatus(`${phase}: ${msg.current} / ${msg.total} file...`);
+           }
+         } else if (msg.type === "done") {
+           if (msg.success) {
+             setRestoreProgress(100);
+             setRestoreStatus("Selesai! Arsip berhasil dipulihkan.");
+             toast.success(msg.message || "Arsip berhasil dipulihkan!");
+             setTimeout(() => {
+               setRestoreDialogOpen(false);
+               router.refresh();
+             }, 1500);
+           } else {
+             setRestoreStatus("Error: " + (msg.error || "Gagal restore arsip."));
+             toast.error(msg.error || "Gagal restore arsip.");
+           }
+         }
+       });
     } catch (error) {
        if (error instanceof DOMException && error.name === "AbortError") return;
        setRestoreStatus("Gagal: Terjadi kesalahan sistem.");
        const message = error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
        toast.error("Terjadi kesalahan sistem: " + message);
     } finally {
-       if (pInterval) clearInterval(pInterval);
        setIsRestoring(false);
     }
   };
@@ -436,7 +448,7 @@ export function ArchiveSettingsTab() {
                 {uploading ? (
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                    <p className="text-xs font-bold animate-pulse text-blue-600">Mengunggah file...</p>
+                    <p className="text-xs font-bold animate-pulse text-blue-600">Mengunggah {uploadCount} file...</p>
                   </div>
                 ) : (
                   <>
