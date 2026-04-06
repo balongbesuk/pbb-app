@@ -12,11 +12,11 @@ export function getStorageRoot(): string {
   if (envStorage) {
     return path.isAbsolute(envStorage)
       ? envStorage
-      : path.join(process.cwd(), envStorage);
+      : path.join(/* turbopackIgnore: true */ process.cwd(), envStorage);
   }
 
   // Default fallback ke folder storage di dalam project root
-  return path.join(process.cwd(), "storage");
+  return path.join(/* turbopackIgnore: true */ process.cwd(), "storage");
 }
 
 export function getArchivePath(year?: string, filename?: string): string {

@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 
+// Masih aktif dipakai internal app dari fitur cek status Bapenda publik dan dashboard.
 const PUBLIC_BAPENDA_RATE_LIMIT = {
   limit: 10,
   windowMs: 60 * 1000,

@@ -192,7 +192,7 @@ export function ArchiveSettingsTab() {
     abortControllerRef.current = new AbortController();
     
     try {
-       const res = await fetch("/api/compress-archives-api", { 
+       const res = await fetch("/api/archive/compress", { 
          method: "POST",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({ year: selectedYear }),
