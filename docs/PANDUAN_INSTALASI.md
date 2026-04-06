@@ -122,10 +122,15 @@ Gunakan akun ini untuk masuk pertama kali:
 Untuk memastikan aplikasi terinstal dengan benar dan semua celah keamanan tertutup rapat, Anda bisa menjalankan perintah audit otomatis:
 
 ```bash
-npx tsx scripts/smoke-test.ts
+npm run verify:security
+npm run smoke:archive
 ```
 
 Jika semuanya muncul **"PASSED" (Hijau)**, berarti aplikasi Anda sudah aman dan siap digunakan secara resmi.
+
+Catatan:
+- `npm run verify:security` memeriksa lapisan hardening keamanan aplikasi.
+- `npm run smoke:archive` memeriksa helper dan alur arsip terbaru yang memakai App Router.
 
 ---
 

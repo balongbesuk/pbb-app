@@ -1,3 +1,7 @@
+// DEPRECATED:
+// Script ini masih memakai jalur lama `public/arsip-pbb`.
+// Gunakan endpoint `/api/archive/compress` atau service `src/lib/archive-compression.ts`.
+
 const fs = require('fs');
 const path = require('path');
 const GhostscriptModule = require('@jspawn/ghostscript-wasm');

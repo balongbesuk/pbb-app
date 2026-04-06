@@ -2,6 +2,10 @@ import fs from "fs";
 import path from "path";
 
 /**
+ * DEPRECATED:
+ * Script ini dibuat untuk arsitektur lama saat alur arsip masih tersebar di Pages Router.
+ * Gunakan `npm run smoke:archive` untuk smoke test arsip terbaru.
+ *
  * Security & Integrity Smoke Test for PBB Manager v6.0
  * 📋 Melakukan pengecekan otomatis pada endpoint sensitif untuk:
  * 1. Proteksi Autentikasi & Role
