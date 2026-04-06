@@ -15,7 +15,7 @@ export async function GET(_req: NextRequest) {
     }
 
     const zip = new AdmZip();
-    const dbPath = path.join(process.cwd(), "prisma", "dev.db");
+    const dbPath = path.join(process.cwd(), "dev.db");
     const uploadsPath = path.join(process.cwd(), "public", "uploads");
 
     if (!fs.existsSync(dbPath)) {

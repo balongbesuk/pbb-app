@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     if (!fs.existsSync(stagingDir)) fs.mkdirSync(stagingDir, { recursive: true });
     if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
 
-    const dbPath = path.join(process.cwd(), "prisma", "dev.db");
+    const dbPath = path.join(process.cwd(), "dev.db");
     const uploadsPath = path.join(process.cwd(), "public", "uploads");
 
     // --- STEP 2: EKSTRAK KE STAGING DIRECTORY ---
