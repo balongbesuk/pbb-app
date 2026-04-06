@@ -3,8 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { checkRateLimit } from "@/lib/rate-limit";
-import fs from "fs";
-import { getArchivePath } from "@/lib/storage";
+import { buildArchiveIndex, getArchiveDir } from "@/lib/archive-utils";
 import { getNopVariations } from "@/lib/utils";
 
 /**
@@ -130,16 +129,8 @@ export async function searchPublicTaxData(query: string, tahunPajak: number, pag
     const isJombangBapenda = config?.isJombangBapenda ?? true;
 
     // Scan arsip folder (Year-aware)
-    const archiveDir = getArchivePath(tahunPajak.toString());
-    let archiveIndex = new Map<string, string>();
-    if (fs.existsSync(archiveDir)) {
-      archiveIndex = new Map(
-        fs
-          .readdirSync(archiveDir)
-          .map((filename) => [filename.replace(/\D/g, ""), filename] as const)
-          .filter(([digits]) => Boolean(digits))
-      );
-    }
+    const archiveDir = getArchiveDir(tahunPajak);
+    const archiveIndex = buildArchiveIndex(archiveDir);
 
       // Map data structure for public view
       const mapped = finalResults.map(r => {

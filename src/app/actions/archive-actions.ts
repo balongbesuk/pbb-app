@@ -3,11 +3,15 @@ import fs from "fs";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
-import { getArchivePath } from "@/lib/storage";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/server-auth";
 import { assertSafeFilename, resolveSafeChildPath } from "@/lib/file-security";
 import { prisma } from "@/lib/prisma";
+import {
+  ensureArchiveDir,
+  extractNopFromText,
+  getArchiveDir as resolveArchiveDir,
+} from "@/lib/archive-utils";
 
 // Comprehensive Browser Polyfills for Server-side PDF Parsing (needed for pdf-lib/pdf-parse)
 const noopClass = class {};
@@ -32,7 +36,7 @@ type PdfParseFn = (dataBuffer: Buffer) => Promise<PdfParseResult>;
 const parsePdf = pdfParse as PdfParseFn;
 
 function getArchiveDir(year: number) {
-  return getArchivePath(year.toString());
+  return resolveArchiveDir(year);
 }
 
 /** Get archive connection statistics */
@@ -110,9 +114,7 @@ export async function processSmartArchive(formData: FormData) {
 
     fs.appendFileSync(logPath, `Total Pages: ${totalPages}\n`);
 
-    if (!fs.existsSync(archiveDir)) {
-      fs.mkdirSync(archiveDir, { recursive: true });
-    }
+    ensureArchiveDir(year);
 
     let detectedCount = 0;
     let skippedCount = 0;
@@ -133,20 +135,9 @@ export async function processSmartArchive(formData: FormData) {
             fs.appendFileSync(logPath, `PAGE ${i + 1}: Extraction library error -> ${String(error)}\n`);
           }
 
-          const cleanText = rawText.replace(/\D/g, "");
-          
           fs.appendFileSync(logPath, `PAGE ${i+1}: Extracted text length ${rawText.length}\n`);
 
-          // Cari NOP
-          let nop = "";
-          const matches = cleanText.match(/3517\d{14}/g);
-          
-          if (matches && matches[0]) {
-            nop = matches[0];
-          } else {
-            const any18 = cleanText.match(/\d{18}/g);
-            if (any18 && any18[0]) nop = any18[0];
-          }
+          const nop = extractNopFromText(rawText);
 
           if (nop) {
             const filename = `${nop}.pdf`;
@@ -218,9 +209,7 @@ export async function uploadArchives(formData: FormData) {
     const year = yearRaw ? parseInt(yearRaw.toString()) : new Date().getFullYear();
     const archiveDir = getArchiveDir(year);
     
-    if (!fs.existsSync(archiveDir)) {
-      fs.mkdirSync(archiveDir, { recursive: true });
-    }
+    ensureArchiveDir(year);
 
     let successCount = 0;
     for (const file of files) {

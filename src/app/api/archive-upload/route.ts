@@ -3,8 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import fs from "fs";
 import { assertSafeFilename, resolveSafeChildPath } from "@/lib/file-security";
-import { getArchivePath } from "@/lib/storage";
 import type { AppUser } from "@/types/app";
+import { ensureArchiveDir } from "@/lib/archive-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -21,11 +21,7 @@ export async function POST(req: NextRequest) {
     const yearRaw = formData.get("year");
     const year = yearRaw ? parseInt(yearRaw.toString()) : new Date().getFullYear();
 
-    const archiveDir = getArchivePath(year.toString());
-
-    if (!fs.existsSync(archiveDir)) {
-      fs.mkdirSync(archiveDir, { recursive: true });
-    }
+    const archiveDir = ensureArchiveDir(year);
 
     let count = 0;
     for (const file of files) {

@@ -1,21 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import fs from "fs";
 import AdmZip from "adm-zip";
-import { getArchivePath } from "@/lib/storage";
-
-type SessionUserWithRole = {
-  role?: string | null;
-};
+import { requireAdmin } from "@/lib/server-auth";
+import { getArchiveDir } from "@/lib/archive-utils";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    const sessionUser = session?.user as SessionUserWithRole | undefined;
-    if (!session || sessionUser?.role !== "ADMIN") {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    await requireAdmin();
 
     const { searchParams } = new URL(req.url);
     const year = searchParams.get("year");
@@ -24,7 +15,7 @@ export async function GET(req: NextRequest) {
       return new NextResponse("Year parameter is required", { status: 400 });
     }
 
-    const archiveDir = getArchivePath(year);
+    const archiveDir = getArchiveDir(year);
 
     if (!fs.existsSync(archiveDir)) {
       return new NextResponse("No archive data found for this year", { status: 404 });

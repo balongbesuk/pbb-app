@@ -3,8 +3,8 @@ import fs from "fs";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
-import { getArchivePath } from "@/lib/storage";
 import { requireAdmin } from "@/lib/server-auth";
+import { ensureArchiveDir, extractNopFromText } from "@/lib/archive-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File;
     const yearRaw = formData.get("year");
     const year = yearRaw ? parseInt(yearRaw.toString()) : new Date().getFullYear();
-    const archiveDir = getArchivePath(year.toString());
+    const archiveDir = ensureArchiveDir(year);
 
     if (!file || file.size === 0) {
       return NextResponse.json({ error: "File tidak ditemukan" }, { status: 400 });
@@ -40,10 +40,6 @@ export async function POST(req: NextRequest) {
           const mainPdfDoc = await PDFDocument.load(Buffer.from(arrayBuffer));
           const totalPages = mainPdfDoc.getPageCount();
           
-          if (!fs.existsSync(archiveDir)) {
-            fs.mkdirSync(archiveDir, { recursive: true });
-          }
-
           let detectedCount = 0;
           let skippedCount = 0;
 
@@ -64,14 +60,7 @@ export async function POST(req: NextRequest) {
                 rawText = data.text || "";
               } catch {}
 
-              const cleanText = rawText.replace(/\D/g, "");
-              let nop = "";
-              const matches = cleanText.match(/3517\d{14}/g);
-              if (matches && matches[0]) nop = matches[0];
-              else {
-                const any18 = cleanText.match(/\d{18}/g);
-                if (any18 && any18[0]) nop = any18[0];
-              }
+              const nop = extractNopFromText(rawText);
 
               if (nop) {
                 const filename = `${nop}.pdf`;
