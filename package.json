@@ -14,7 +14,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "audit:a11y": "node scripts/axe-audit.js",
-    "verify:security": "node scripts/verify-security.js"
+    "verify:security": "node scripts/verify-security.js",
+    "smoke:archive": "node .\\scripts\\smoke-archive-services.js"
   },
   "browserslist": [
     "> 0.5%",
