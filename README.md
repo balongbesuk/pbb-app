@@ -104,23 +104,44 @@ npm run start
 
 ## Project Structure
 
+Struktur direktori proyek dirancang terstruktur dengan memisahkan wilayah *client-side*, *server-side*, komponen *user interface*, serta *core business logic*.
+
 ```text
 .
 ├── .github/              # Konfigurasi GitHub Workflows & Actions
-├── docs/                 # Dokumentasi Teknis & Panduan Pengguna
-├── prisma/               # Skema Database (Prisma ORM) & Inisialisasi Data (Seed)
-├── public/               # Aset Statis (Logo, Gambar, Ikon)
-├── scripts/              # Skrip Utilitas (Audit Keamanan & Penyiapan Sistem)
+├── backups/              # Direktori penyimpanan otomatis file backup database (.bak)
+├── docs/                 # Dokumentasi Teknis (WIKI) & Panduan Pengguna
+├── map-data/             # Berkas pemetaan spasial lokal (GeoJSON) untuk GIS Command Center
+├── prisma/               # Skema Database (Prisma ORM) & Inisialisasi Data Default (Seed)
+├── public/               # Aset Statis (Logo instansi, Gambar, Marker Ikon GIS)
+├── scripts/              # Skrip Utilitas (Audit Keamanan, Setup Awal, Seed Database)
+├── storage/              # Repositori lokal output ekstraksi E-SPPT (Arsip Digital)
+├── tmp/                  # Folder tembolok logis (Chunk upload & Pemrosesan sinkronisasi)
 └── src/
-    ├── app/              # Next.js App Router (Layout & Halaman Utama)
-    │   ├── api/          # Endpoint API Internal (Smart Scan, Kompresi, Streaming)
-    │   ├── (auth)/       # Alur Otentikasi & Login
-    │   └── (dashboard)/  # Halaman Dashboard, GIS, dan Laporan
-    ├── components/       # Komponen UI (Atomic Design) & Manajemen GIS
-    ├── hooks/            # Custom React Hooks untuk State Global
-    ├── lib/              # Pustaka & Utilitas Utama (Prisma Client, Sanitasi, PDF)
-    ├── pages/            # Next.js Pages Router (Khusus API Route Tertentu)
-    └── types/            # Definisi Tipe Data Global (TypeScript)
+    ├── app/              # Next.js App Router (Routing, Layout, Server Actions)
+    │   ├── (dashboard)/  # Grup routing berpelindung akses untuk antarmuka administratif
+    │   ├── actions/      # Next.js Server Actions (Mutasi DB secara langsung & aman)
+    │   ├── api/          # Endpoint REST API (Backup, Parse PDF, Map GeoJSON Stream)
+    │   ├── arsip-pbb/    # Portal layanan mandiri warga & pencarian publik
+    │   ├── login/        # Halaman dan routing otentikasi lapis otorisasi
+    │   └── globals.css   # Deklarasi Tailwind dasar & Token CSS Global
+    ├── components/       # Komponen UI Berbasis Fungsionalitas & Atomic Modular 
+    │   ├── dashboard/    # Komponen grafis eksekutif (Statistik, Grafik performa)
+    │   ├── map/          # Integrasi komponen LeafletGIS (Layer, Marker Picker)
+    │   ├── tax/          # Komponen pengelolaan administrasi Pajak, sinkronisasi DHKP
+    │   ├── public/       # Portal eksternal berbasis geospasial
+    │   └── ui/           # Komponen UI primitif modular (Shadcn/UI & Radix UI)
+    ├── constants/        # Daftar value konstan aplikasi dan enumerasi global
+    ├── hooks/            # Custom React Hooks (Manajemen Fetch State, Navigasi form)
+    ├── lib/              # Pustaka Penggerak Utama & Business Logic (Backend Engine)
+    │   ├── archive-utils.ts # Algoritma pemecah & penamaan file PDF (Smart Scan)
+    │   ├── bapenda-sync.ts  # Mesin perbandingan rekonsiliasi Excel DHKP (Smart Sync)
+    │   ├── excel-processor.ts # Pengurai dan importir format *spreadsheet*
+    │   ├── file-security.ts # Middleware proteksi XSS & file payload berbahaya
+    │   ├── spop-print.ts    # Generator iReport Draf SPOP secara *Serverless*
+    │   └── validations/     # Zod Type Validations (Pelindung Form Validation)
+    ├── pages/            # Next.js Legacy Pages (Untuk route API khusus/fallback)
+    └── types/            # Definisi Interface Ekspor Data (TypeScript Global)
 ```
 
 ---
