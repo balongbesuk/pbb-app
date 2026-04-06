@@ -283,9 +283,14 @@ export function ArchiveSettingsTab() {
     formData.append("file", restoreFile);
     formData.append("year", selectedYear.toString());
 
+    let pInterval: any = null;
     try {
        setRestoreStatus("Server sedang membersihkan folder lama & mengekstrak file...");
        setRestoreProgress(50);
+       
+       pInterval = setInterval(() => {
+          setRestoreProgress(prev => (prev < 92 ? prev + 1 : prev));
+       }, 2000);
        
        const res = await fetch("/api/archive/restore", { 
          method: "POST", 
@@ -312,6 +317,7 @@ export function ArchiveSettingsTab() {
        const message = error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
        toast.error("Terjadi kesalahan sistem: " + message);
     } finally {
+       if (pInterval) clearInterval(pInterval);
        setIsRestoring(false);
     }
   };
@@ -565,14 +571,42 @@ export function ArchiveSettingsTab() {
              </div>
 
              {isRestoring ? (
-               <div className="space-y-3 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="flex justify-between items-end mb-1">
-                      <span className="text-[10px] font-bold text-violet-600 uppercase tracking-widest animate-pulse">
-                        {restoreStatus}
-                      </span>
-                      <span className="text-xs font-black">{restoreProgress}%</span>
+               <div className="space-y-6 py-2 animate-in fade-in zoom-in-95 duration-500">
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-violet-400/20 rounded-full animate-ping" />
+                        <div className="relative bg-violet-100 dark:bg-violet-900/40 p-5 rounded-full border-4 border-white dark:border-zinc-950 shadow-xl">
+                            <RotateCcw className="w-10 h-10 text-violet-600 animate-spin-slow" />
+                        </div>
+                    </div>
                   </div>
-                  <Progress value={restoreProgress} className="h-2 w-full" />
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-end mb-1">
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] font-black text-violet-600 uppercase tracking-widest animate-pulse">
+                                {restoreStatus}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground font-medium italic">
+                                {restoreProgress < 50 ? "Sedang mengirim data ke server..." : 
+                                 restoreProgress < 90 ? "Server sedang merestore fisik file..." : 
+                                 "Hampir selesai, sedang sinkronisasi..."}
+                            </span>
+                        </div>
+                        <span className="text-xl font-black text-violet-600">{restoreProgress}%</span>
+                    </div>
+                    <Progress value={restoreProgress} className="h-3 w-full bg-violet-100 dark:bg-violet-950/40" />
+                    
+                    <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xl flex items-start gap-3 shadow-sm transition-all duration-500">
+                        <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 animate-bounce" />
+                        <div>
+                            <p className="text-[10px] font-black uppercase text-amber-600 tracking-wider mb-1">Penting: Proses Kritis</p>
+                            <p className="text-[11px] leading-relaxed text-amber-800/80 dark:text-amber-400/80 font-medium">
+                                <b>DILARANG MENUTUP TAB</b> atau me-refresh halaman! Memutus koneksi sekarang dapat menyebabkan data arsip menjadi korup atau hilang separuh.
+                            </p>
+                        </div>
+                    </div>
+                  </div>
                </div>
              ) : (
                 <Alert className="bg-rose-50 border-rose-100 text-rose-800 py-3">
