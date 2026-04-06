@@ -1,5 +1,25 @@
 # Changelog
 
+## v8.2 - 2026-04-06: Experience & Archive Polish
+
+### Pencarian & Akurasi Data
+- **Smart NOP Search Engine**: Optimasi mesin pencari NOP yang kini otomatis mengenali variasi format (angka polos, titik, maupun strip) di seluruh platform Admin dan Portal Publik.
+- **Sanitized Search Input**: Pembatasan input pencarian maksimal 30 karakter dan pembersihan otomatis karakter spesial untuk menjaga integritas query database.
+- **Debounce Optimization**: Peningkatan responsivitas pencarian pada popup peta dengan sistem *debounce* yang lebih halus.
+
+### Manajemen Arsip Digital v2.1
+- **Advanced PDF Viewer**: Penambahan fitur **Cetak (Print)** dan **Download** langsung dari jendela pratinjau arsip digital, baik di Detail Pajak maupun Kelola Arsip.
+- **Real-time Restoration Progress**: Pembaruan fitur *Restore Backup* yang kini menampilkan jumlah file yang sedang diekstrak dan disusun secara riil (streaming), bukan sekadar persentase simulasi.
+- **Upload Feedback**: Penambahan indikator jumlah file yang sedang diproses saat melakukan *Manual Upload* massal.
+*   **Z-Index Correction**: Perbaikan bug visual di mana viewer PDF tampil di belakang dialog detail pada dashboard admin.
+
+### UI/UX & Stabilitas Dashboard
+- **Theme-Aware Popups**: Perbaikan logika tema pada popup "WP Belum Bayar" di peta admin agar secara dinamis mengikuti mode *Light* atau *Dark* yang dipilih.
+- **Rules of Hooks Fix**: Resolusi error teknis React pada komponen dialog wilayah untuk mencegah potensi *crash* saat navigasi cepat di peta.
+- **Redundant UI Cleanup**: Penghapusan tombol tutup ganda pada viewer PDF untuk tampilan yang lebih bersih dan minimalis.
+
+---
+
 ## v8.1 - 2026-04-02: Security & Stability Hardening
 
 ### Keamanan & Proteksi Sistem
