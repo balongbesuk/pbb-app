@@ -20,6 +20,11 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "500mb",
     },
   },
+  serverExternalPackages: [
+    "@prisma/client",
+    "@prisma/adapter-better-sqlite3",
+    "better-sqlite3",
+  ],
 };
 
 export default nextConfig;
