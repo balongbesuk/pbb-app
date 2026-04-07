@@ -1,6 +1,8 @@
 import * as cheerio from "cheerio";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
+import axios from "axios";
+import https from "https";
 
 const PUBLIC_BAPENDA_RATE_LIMIT = {
   limit: 10,
@@ -137,22 +139,33 @@ export async function syncBapendaStatus({
     };
   }
 
-  const htmlRes = await fetch(buildJombangBapendaUrl(cleanNop), {
-    method: "GET",
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36",
-      Accept: "text/html",
-    },
-  });
+  let htmlText = "";
+  try {
+    const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+    const response = await axios.get(buildJombangBapendaUrl(cleanNop), {
+      httpsAgent,
+      timeout: 15000,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "text/html",
+      },
+      validateStatus: () => true,
+    });
 
-  if (!htmlRes.ok) {
+    if (response.status !== 200) {
+      return {
+        status: 502,
+        body: { error: "Gagal terhubung ke server Bapenda (Status HTTP tidak OK)." },
+      };
+    }
+    
+    htmlText = response.data;
+  } catch (error) {
     return {
       status: 502,
-      body: { error: "Gagal terhubung ke server Bapenda." },
+      body: { error: "Server Bapenda sedang tidak dapat diakses atau offline." },
     };
   }
-
-  const htmlText = await htmlRes.text();
   const $ = cheerio.load(htmlText);
 
   let isLunas = false;

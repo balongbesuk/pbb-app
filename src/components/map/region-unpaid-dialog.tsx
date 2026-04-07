@@ -64,6 +64,7 @@ export function RegionUnpaidDialog({
   // State untuk Cek Bapenda
   const [checkingBapendaId, setCheckingBapendaId] = useState<string | null>(null);
   const [unpaidBillItem, setUnpaidBillItem] = useState<{ nop: string, namaWp: string } | null>(null);
+  const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
   
   // State untuk pencarian
   const [search, setSearch] = useState("");
@@ -163,7 +164,18 @@ export function RegionUnpaidDialog({
   };
 
   const handleCheckBapenda = async (wp: UnpaidTaxItem) => {
+    const lastCheck = cooldowns[wp.nop] || 0;
+    const now = Date.now();
+    const COOLDOWN_MS = 15000;
+
+    if (now - lastCheck < COOLDOWN_MS) {
+      const remainingSeconds = Math.ceil((COOLDOWN_MS - (now - lastCheck)) / 1000);
+      toast.warning(`Mohon tunggu ${remainingSeconds} detik lagi sebelum mengecek NOP ini kembali.`);
+      return;
+    }
+
     setCheckingBapendaId(wp.id);
+    setCooldowns(prev => ({ ...prev, [wp.nop]: now }));
     try {
       toast.info(`Mengecek status pembayaran ${wp.namaWp}...`);
       const res = await fetch("/api/check-bapenda", {
@@ -173,6 +185,10 @@ export function RegionUnpaidDialog({
       });
       
       const resData = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(resData.error || "Gagal terhubung ke server Bapenda");
+      }
       
       if (resData.isPaid) {
         toast.success(`${wp.namaWp} sudah lunas di Bapenda!`);
@@ -184,7 +200,8 @@ export function RegionUnpaidDialog({
         setUnpaidBillItem({ nop: wp.nop, namaWp: wp.namaWp });
       }
     } catch (err) {
-      toast.error("Gagal terhubung ke server Bapenda");
+      const message = err instanceof Error ? err.message : "Gagal terhubung ke server Bapenda";
+      toast.error(message);
       console.error(err);
     } finally {
       setCheckingBapendaId(null);
