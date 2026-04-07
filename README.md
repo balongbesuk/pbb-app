@@ -1,14 +1,14 @@
 <img width="2536" height="923" alt="PBB Manager Dashboard" src="https://github.com/user-attachments/assets/d540a662-121b-41d0-8882-5cb8455aa37b" />
 
-# PBB Manager — The GIS Revolution `v8.0`
+# PBB Manager — Experience & Archive Polish `v8.2`
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
 [![Prisma](https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma)](https://prisma.io)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css)](https://tailwindcss.com)
-[![Version](https://img.shields.io/badge/Version-8.0-blue)](https://github.com/balongbesuk/pbb-app/tags)
+[![Version](https://img.shields.io/badge/Version-8.2-blue)](https://github.com/balongbesuk/pbb-app/tags)
 
-**PBB Manager v8.0 (The GIS Revolution)** menghadirkan lompatan teknologi dengan komando GIS penuh. Platform ini kini terintegrasi dengan pemetaan wilayah digital yang interaktif, memungkinkan visualisasi data pajak langsung dari peta satelit. Dirancang untuk mentransformasi tata kelola PBB desa secara total—mulai dari pendataan spasial, transparansi penagihan, hingga layanan mandiri digital yang aman.
+**PBB Manager v8.2 (Experience & Archive Polish)** menghadirkan penyempurnaan pada stabilitas sistem, performa pencarian, dan manajemen arsip digital. Dilengkapi dengan infrastruktur GIS yang matang, sistem sinkronisasi Bapenda yang tangguh, serta fitur *Experience Polish* yang menjamin kenyamanan operasional tingkat tinggi bagi admin desa dan pelayanan publik yang lebih instan bagi warga. Dirancang untuk mentransformasi tata kelola PBB desa secara total—mulai dari pendataan spasial, transparansi penagihan, hingga layanan mandiri digital yang aman.
 
 ---
 
@@ -16,10 +16,10 @@
 
 | Fitur | Deskripsi |
 |---|---|
-| **GIS Command Center v2.0** | **BARU (v8.0):** Dashboard peta interaktif berbasis GeoJSON/GPX untuk manajemen wilayah RT/RW/Dusun secara visual dengan layer citra satelit. |
-| **Interactive Map Picker** | **BARU (v8.0):** Penentuan titik koordinat pusat wilayah langsung dari peta tanpa input manual Latitude/Longitude (Point-and-Click). |
-| **Bulk GPX Pipeline** | **BARU (v8.0):** Unggah massal file GPX dengan ekstraksi metadata otomatis (RT/RW) dan konversi cerdas dari `LineString` ke `Polygon`. |
-| **GIS Security & Guard** | **BARU (v8.0):** Proteksi API manajemen peta (Role ADMIN) dan sistem sanitasi otomatis pada tooltip peta untuk mencegah serangan Stored XSS. |
+| **Bapenda Sync Resilience** | **BARU (v8.2):** Penanganan error sinkronisasi Bapenda yang tangguh dan penyisipan parameter NOP otomatis ke portal portal pajak daerah. |
+| **Dynamic Logo Refresh** | **BARU (v8.2):** Mekanisme *cache-busting* logo desa otomatis untuk pembaruan tampilan instansi secara *real-time*. |
+| **Smart NOP Search** | **BARU (v8.2):** Mesin pencari NOP yang mengenali berbagai format input dan fitur riwayat pencarian warga (Recent Searches). |
+| **GIS Command Center v2.0** | Dashboard peta interaktif berbasis GeoJSON/GPX untuk manajemen wilayah RT/RW/Dusun secara visual dengan layer citra satelit. |
 | **Portal Mutasi (Self-Service)** | Memungkinkan warga mengajukan perubahan data (Hibah, Waris, Jual Beli) dan mencetak draf dokumen resmi secara mandiri. |
 | **Arsip Digital (Smart Scan)** | Algoritma ekstraksi otomatis yang memecah ribuan lembar E-SPPT menjadi file personal berdasarkan NOP secara instan. |
 | **Smart Sync (Excel)** | Integrasi DHKP cerdas yang memungkinkan pembaruan data ribuan wajib pajak tanpa risiko duplikasi. |

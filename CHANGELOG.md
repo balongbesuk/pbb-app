@@ -5,6 +5,7 @@
 ### Pencarian & Akurasi Data
 - **Smart NOP Search Engine**: Optimasi mesin pencari NOP yang kini otomatis mengenali variasi format (angka polos, titik, maupun strip) di seluruh platform Admin dan Portal Publik.
 - **Sanitized Search Input**: Pembatasan input pencarian maksimal 30 karakter dan pembersihan otomatis karakter spesial untuk menjaga integritas query database.
+- **Riwayat Pencarian (Recent Searches)**: Implementasi penyimpanan 3 riwayat pencarian terakhir di perangkat warga untuk akses cepat data SPPT (Local Storage).
 - **Debounce Optimization**: Peningkatan responsivitas pencarian pada popup peta dengan sistem *debounce* yang lebih halus.
 
 ### Manajemen Arsip Digital v2.1
@@ -14,9 +15,17 @@
 *   **Z-Index Correction**: Perbaikan bug visual di mana viewer PDF tampil di belakang dialog detail pada dashboard admin.
 
 ### UI/UX & Stabilitas Dashboard
+- **Dynamic Logo Auto-Refresh**: Mekanisme *cache-busting* logo desa berbasis timestamp `updatedAt` untuk memastikan perubahan logo langsung terlihat di sidebar dan login tanpa perlu clear cache manual.
+- **Interactive Component Reliability**: Perbaikan bug pada komponen dropdown (Select) di dashboard pajak yang sebelumnya macet, kini kembali responsif untuk pengalokasian wilayah dan status.
+- **Mobile GIS Detail Optimization**: Peningkatan tata letak popup informasi wajib pajak pada peta untuk kenyamanan akses melalui perangkat mobile.
 - **Theme-Aware Popups**: Perbaikan logika tema pada popup "WP Belum Bayar" di peta admin agar secara dinamis mengikuti mode *Light* atau *Dark* yang dipilih.
 - **Rules of Hooks Fix**: Resolusi error teknis React pada komponen dialog wilayah untuk mencegah potensi *crash* saat navigasi cepat di peta.
 - **Redundant UI Cleanup**: Penghapusan tombol tutup ganda pada viewer PDF untuk tampilan yang lebih bersih dan minimalis.
+- **Next.js Infrastructure Hardening**: Optimasi konfigurasi `serverExternalPackages` untuk Prisma dan SQLite guna menjamin stabilitas query pada lingkungan produksi.
+
+### Konektivitas & Integrasi Eksternal
+- **Bapenda Sync Resilience**: Penanganan error "fetch failed" pada sinkronisasi status Bapenda agar aplikasi tidak crash saat API eksternal sulit dijangkau, lengkap dengan indikator *cooldown*.
+- **Portal Link Injection**: Sistem cerdas yang otomatis menyisipkan parameter NOP ke tautan cek Bapenda untuk verifikasi data yang lebih instan bagi warga.
 
 ---
 
