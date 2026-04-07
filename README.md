@@ -1,14 +1,14 @@
 <img width="2536" height="923" alt="PBB Manager Dashboard" src="https://github.com/user-attachments/assets/d540a662-121b-41d0-8882-5cb8455aa37b" />
 
-# PBB Manager — Experience & Archive Polish `v8.2`
+# PBB Manager — Experience & Archive Polish `v8.2.1`
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
 [![Prisma](https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma)](https://prisma.io)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css)](https://tailwindcss.com)
-[![Version](https://img.shields.io/badge/Version-8.2-blue)](https://github.com/balongbesuk/pbb-app/tags)
+[![Version](https://img.shields.io/badge/Version-8.2.1-blue)](https://github.com/balongbesuk/pbb-app/tags)
 
-**PBB Manager v8.2 (Experience & Archive Polish)** menghadirkan penyempurnaan pada stabilitas sistem, performa pencarian, dan manajemen arsip digital. Dilengkapi dengan infrastruktur GIS yang matang, sistem sinkronisasi Bapenda yang tangguh, serta fitur *Experience Polish* yang menjamin kenyamanan operasional tingkat tinggi bagi admin desa dan pelayanan publik yang lebih instan bagi warga. Dirancang untuk mentransformasi tata kelola PBB desa secara total—mulai dari pendataan spasial, transparansi penagihan, hingga layanan mandiri digital yang aman.
+**PBB Manager v8.2.1 (Experience & Archive Polish)** menghadirkan penyempurnaan pada stabilitas sistem, performa pencarian, dan manajemen arsip digital. Dilengkapi dengan infrastruktur GIS yang matang, sistem sinkronisasi Bapenda yang tangguh, serta fitur *Experience Polish* (Export Word & Area Validation) yang menjamin kenyamanan operasional tingkat tinggi bagi admin desa dan pelayanan publik yang lebih instan bagi warga. Dirancang untuk mentransformasi tata kelola PBB desa secara total—mulai dari pendataan spasial, transparansi penagihan, hingga layanan mandiri digital yang aman.
 
 ---
 
@@ -20,7 +20,9 @@
 | **Dynamic Logo Refresh** | **BARU (v8.2):** Mekanisme *cache-busting* logo desa otomatis untuk pembaruan tampilan instansi secara *real-time*. |
 | **Smart NOP Search** | **BARU (v8.2):** Mesin pencari NOP yang mengenali berbagai format input dan fitur riwayat pencarian warga (Recent Searches). |
 | **GIS Command Center v2.0** | Dashboard peta interaktif berbasis GeoJSON/GPX untuk manajemen wilayah RT/RW/Dusun secara visual dengan layer citra satelit. |
-| **Portal Mutasi (Self-Service)** | Memungkinkan warga mengajukan perubahan data (Hibah, Waris, Jual Beli) dan mencetak draf dokumen resmi secara mandiri. |
+| **Portal Mutasi (Self-Service)** | Memungkinkan warga mengajukan perubahan data (Hibah, Waris, Jual Beli) dan mencetak draf dokumen resmi. **BARU (v8.2.1):** Fitur ekspor ke Microsoft Word (.docx). |
+| **Area Guard Validation** | **BARU (v8.2.1):** Validasi ketat pada form mutasi untuk mencegah input luas bangunan yang melebihi luas tanah. |
+| **Mobile-First Action Bar** | **BARU (v8.2.1):** Layout tombol dialog yang adaptif dan efisien untuk navigasi di perangkat smartphone. |
 | **Arsip Digital (Smart Scan)** | Algoritma ekstraksi otomatis yang memecah ribuan lembar E-SPPT menjadi file personal berdasarkan NOP secara instan. |
 | **Smart Sync (Excel)** | Integrasi DHKP cerdas yang memungkinkan pembaruan data ribuan wajib pajak tanpa risiko duplikasi. |
 | **Dashboard Eksekutif** | Visualisasi statistik realisasi harian, performa petugas per dusun, dan tren pembayaran secara *real-time*. |

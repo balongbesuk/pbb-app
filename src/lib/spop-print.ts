@@ -120,7 +120,7 @@ function page2(f: SpopFormData) {
     <div class="pno">- 2 -</div>
     ${bar("E", "DATA BANGUNAN")}
     <div class="blk">
-      <div class="row no-border-b" style="display: flex; align-items: center;">${label("25", "JUMLAH BANGUNAN")}<div class="body" style="padding-left: 0;">${cells(digits(f.jumlahBangunan), 3, "", "right")}</div></div>
+      <div class="row no-border-b" style="display: flex; align-items: center;">${label("25", "JUMLAH BANGUNAN")}<div class="body" style="padding-left: 0;">${cells("", 3, "", "right")}</div></div>
     </div>
     ${bar("F", "PERNYATAAN SUBJEK PAJAK")}
     <div class="blk">

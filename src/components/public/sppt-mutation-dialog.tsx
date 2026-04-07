@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Printer, FileText, ChevronRight, ChevronLeft, Check, History, Eye, Loader2, AlertCircle, ShieldAlert } from "lucide-react";
 import { cn, formatDateNoTime } from "@/lib/utils";
 import { toast } from "sonner";
+import { generateMutationDocx } from "@/lib/mutation-docx-gen";
 
 interface SpptData {
   nop: string;
@@ -186,6 +187,7 @@ export function SpptMutationDialog({
   const [vUpdatedAt, setVUpdatedAt] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloadingWord, setIsDownloadingWord] = useState(false);
   
   const [showAreaWarning, setShowAreaWarning] = useState(false);
   
@@ -449,6 +451,7 @@ export function SpptMutationDialog({
         if (!item.namaWp.trim()) return toast.error(`Nama WP Objek #${i+1} wajib diisi`), focusField(`f-mut-nama-${i}`);
         if (!item.alamat.trim()) return toast.error(`Alamat Objek #${i+1} wajib diisi`), focusField(`f-mut-alamat-${i}`);
         if (item.luasTanah <= 0) return toast.error(`Luas tanah Objek #${i+1} harus lebih dari 0`), focusField(`f-mut-luas-t-${i}`);
+        if (item.luasBangunan > item.luasTanah) return toast.error(`Luas bangunan Objek #${i+1} tidak boleh melebihi luas tanah`), focusField(`f-mut-luas-b-${i}`);
       }
       
       if (!luasSebenarnya.trim()) return toast.error("Luas sebenarnya wajib diisi"), focusField("f-mut-luas-seb");
@@ -487,6 +490,36 @@ export function SpptMutationDialog({
       </html>
     `);
     win.document.close();
+  };
+
+  const handleDownloadWord = async () => {
+    setIsDownloadingWord(true);
+    try {
+      await generateMutationDocx({
+        dasar,
+        pemohon,
+        nikPemohon,
+        nomorSurat,
+        namaKades,
+        oldData,
+        newDataList,
+        luasSebenarnya,
+        sisa,
+        villageName: vName,
+        districtName: dName,
+        regencyName: rName,
+        villageAddress: vAddress,
+        villageEmail: vEmail,
+        villageZip: vZip,
+        villageLogo: vLogo
+      });
+      toast.success("File Word berhasil diunduh.");
+    } catch (error) {
+      console.error("Gagal generate Word:", error);
+      toast.error("Gagal mengunduh file Word.");
+    } finally {
+      setIsDownloadingWord(false);
+    }
   };
 
   return (
@@ -590,8 +623,17 @@ export function SpptMutationDialog({
                       <div className="space-y-1"><Label className="text-[10px] font-black uppercase opacity-40 px-1">NOP Baru</Label><Input id={`f-mut-nop-${index}`} value={item.nop} onChange={(e) => handleUpdateNewData(index, "nop", sanitizeNopInput(e.target.value))} className={cn("h-11 rounded-xl font-mono text-sm", styles.input)} /></div>
                       <div className="space-y-1"><Label className="text-[10px] font-black uppercase opacity-40 px-1">Nama Wajib Pajak</Label><Input id={`f-mut-nama-${index}`} value={item.namaWp} onChange={(e) => handleUpdateNewData(index, "namaWp", sanitizeText(e.target.value.toUpperCase(), 30))} className={cn("h-11 rounded-xl font-black text-sm uppercase", styles.input)} /></div>
                       <div className="sm:col-span-2 space-y-1"><Label className="text-[10px] font-black uppercase opacity-40 px-1">Alamat</Label><Input id={`f-mut-alamat-${index}`} value={item.alamat} onChange={(e) => handleUpdateNewData(index, "alamat", sanitizeText(e.target.value.toUpperCase(), 100))} className={cn("h-11 rounded-xl font-bold text-xs uppercase", styles.input)} /></div>
-                      <div className="space-y-1"><Label className="text-[10px] font-black uppercase opacity-40 px-1">Luas Tanah</Label><Input type="number" value={item.luasTanah} onChange={(e) => handleUpdateNewData(index, "luasTanah", Number(e.target.value))} className={cn("h-11 rounded-xl font-black text-primary", styles.input)} /></div>
-                      <div className="space-y-1"><Label className="text-[10px] font-black uppercase opacity-40 px-1">Luas Bangunan</Label><Input type="number" value={item.luasBangunan} onChange={(e) => handleUpdateNewData(index, "luasBangunan", Number(e.target.value))} className={cn("h-11 rounded-xl font-black text-emerald-500", styles.input)} /></div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-black uppercase opacity-40 px-1">Luas Tanah</Label>
+                        <Input id={`f-mut-luas-t-${index}`} type="number" value={item.luasTanah} onChange={(e) => handleUpdateNewData(index, "luasTanah", Number(e.target.value))} className={cn("h-11 rounded-xl font-black text-primary", styles.input)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-black uppercase opacity-40 px-1">Luas Bangunan</Label>
+                        <Input id={`f-mut-luas-b-${index}`} type="number" value={item.luasBangunan} onChange={(e) => handleUpdateNewData(index, "luasBangunan", Number(e.target.value))} className={cn("h-11 rounded-xl font-black text-emerald-500", item.luasBangunan > item.luasTanah && "border-rose-500 bg-rose-500/5", styles.input)} />
+                        {item.luasBangunan > item.luasTanah && (
+                          <p className="text-[9px] font-bold text-rose-500 px-1 animate-pulse italic mt-1">⚠️ Melebihi luas tanah!</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -649,10 +691,16 @@ export function SpptMutationDialog({
         <div className={cn("border-t px-4 py-5 sm:px-10 sm:py-6", isDark ? "border-white/10 bg-[#0D1F3D]" : "border-slate-100 bg-white")}>
           <div className="flex items-center gap-3">
             {step > 1 && (
-              <Button variant="outline" onClick={() => setStep((prev) => prev - 1)} className={cn("h-14 flex-1 sm:flex-initial sm:min-w-40 px-3 font-black uppercase tracking-widest text-xs sm:text-[10px] transition-all active:scale-95 rounded-2xl", isDark ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50")}>
-                <ChevronLeft className="mr-1 sm:mr-2 h-4 w-4" /> 
+              <Button 
+                variant="outline" 
+                onClick={() => setStep((prev) => prev - 1)} 
+                className={cn(
+                  "h-14 w-14 sm:w-auto sm:min-w-40 px-0 sm:px-3 font-black uppercase tracking-widest text-xs sm:text-[10px] transition-all active:scale-95 rounded-2xl flex-shrink-0", 
+                  isDark ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
+                )}
+              >
+                <ChevronLeft className="h-5 w-5 sm:mr-2" /> 
                 <span className="hidden sm:inline">Kembali ke Data {step === 2 ? "Identitas" : "Objek Baru"}</span>
-                <span className="sm:hidden">Kembali</span>
               </Button>
             )}
             <div className={cn("flex flex-1 items-center gap-3 sm:justify-end", step === 1 ? "justify-center" : "")}>
@@ -673,11 +721,29 @@ export function SpptMutationDialog({
                   )}
                 </Button>
               ) : (
-                <Button onClick={handlePrint} className="h-14 w-full sm:w-auto sm:min-w-80 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest shadow-2xl shadow-emerald-500/40 active:scale-[0.98] transition-all rounded-2xl">
-                  <Printer className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" /> 
-                  <span className="hidden sm:inline">Cetak Berkas Mutasi (2 Halaman)</span>
-                  <span className="sm:hidden">Cetak Berkas</span>
-                </Button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button 
+                    variant="outline"
+                    disabled={isDownloadingWord}
+                    onClick={handleDownloadWord} 
+                    className={cn(
+                      "h-14 flex-1 sm:flex-initial sm:min-w-44 px-3 sm:px-6 font-black uppercase tracking-widest text-[9px] sm:text-[10px] rounded-2xl border-2 transition-all active:scale-95",
+                      isDark ? "border-blue-500/30 text-blue-400 hover:bg-blue-500/10" : "border-blue-200 text-blue-600 hover:bg-blue-50"
+                    )}
+                  >
+                    {isDownloadingWord ? <Loader2 className="w-4 h-4 animate-spin sm:mr-2" /> : <FileText className="sm:mr-2 h-5 w-5" />}
+                    <span className="hidden sm:inline">Unduh File Word</span>
+                    <span className="sm:hidden font-bold uppercase">Word</span>
+                  </Button>
+                  
+                  <Button 
+                    onClick={handlePrint} 
+                    className="h-14 flex-[1.5] sm:flex-initial sm:min-w-64 px-4 sm:px-8 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] sm:text-[11px] shadow-2xl shadow-emerald-500/40 active:scale-[0.98] transition-all rounded-2xl"
+                  >
+                    <Printer className="mr-1.5 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6" /> 
+                    <span>Cetak <span className="hidden sm:inline">Berkas</span></span>
+                  </Button>
+                </div>
               )}
             </div>
           </div>
