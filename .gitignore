@@ -46,6 +46,8 @@ next-env.d.ts
 # Database (Local SQLite)
 /prisma/*.db
 /prisma/*.db-journal
+dev.db
+dev.db.bak
 
 # Temporary/Cache
 .eslintcache
@@ -55,9 +57,9 @@ next-env.d.ts
 # Templates (Always keep)
 !/public/template-pbb.xlsx
 
-
 # App build logs
 build.log
+build_log.txt
 
 # User Uploads
 /public/uploads/*
@@ -70,7 +72,6 @@ build.log
 /public/pbb_process_log.txt
 /temp_extracted.txt
 test_qr.js
-/storage/
 /storage/
 /backups/
 map-data/
