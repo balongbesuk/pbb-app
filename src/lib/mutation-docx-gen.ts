@@ -29,6 +29,7 @@ interface MutationData {
   dasar: string;
   pemohon: string;
   nikPemohon: string;
+  telpPemohon: string;
   nomorSurat: string;
   namaKades: string;
   oldData: SpptData;
@@ -49,6 +50,7 @@ export async function generateMutationDocx(data: MutationData) {
     dasar,
     pemohon,
     nikPemohon,
+    telpPemohon,
     nomorSurat,
     namaKades,
     oldData,
@@ -255,52 +257,55 @@ export async function generateMutationDocx(data: MutationData) {
         children: [new TextRun({ text: `Nomor : ${nomorSurat || ".... / .... / .... / ...."}`, size: 24, font: "Times New Roman" })]
     }),
     ...emptyLine(2),
-    new Paragraph({
-        alignment: AlignmentType.BOTH,
-        children: [
-            new TextRun({ text: `      Yang bertanda tangan di bawah ini, kami Kepala Desa ${villageName}, Kecamatan ${districtName}, Kabupaten ${regencyName}, menerangkan dengan sebenarnya bahwa:`, size: 24, font: "Times New Roman" })
-        ]
-    }),
-    new Paragraph({ spacing: { before: 200 }, children: [
-        new TextRun({ text: "      Nama", size: 24, font: "Times New Roman" }),
-        new TextRun({ text: `             : ${pemohon || ".........."}`, bold: true, size: 24, font: "Times New Roman" })
-    ]}),
-    new Paragraph({ children: [
-        new TextRun({ text: "      NIK", size: 24, font: "Times New Roman" }),
-        new TextRun({ text: `               : ${nikPemohon || ".........."}`, size: 24, font: "Times New Roman" })
-    ]}),
-    ...emptyLine(1),
-    new Paragraph({ children: [new TextRun({ text: "Mengajukan Perubahan SPPT PBB (Pemecahan) sebagai berikut:", size: 24, font: "Times New Roman" })] }),
-    new Paragraph({ spacing: { before: 200 }, children: [new TextRun({ text: "Lama:", bold: true, size: 24, font: "Times New Roman" })] }),
+    new Paragraph({ children: [new TextRun({ text: "Yang bertanda tangan di bawah ini:", size: 24, font: "Times New Roman" })] }),
     new Table({
-        width: { size: 90, type: WidthType.PERCENTAGE },
-        indent: { size: 400, type: WidthType.DXA },
+        width: { size: 100, type: WidthType.PERCENTAGE },
         borders: { insideHorizontal: { style: BorderStyle.NONE }, insideVertical: { style: BorderStyle.NONE }, top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
         rows: [
-            new TableRow({ children: [noBorderCell("1. NOP SPPT", 35), noBorderCell(":", 5), noBorderCell(oldData.nop, 60, true)] }),
-            new TableRow({ children: [noBorderCell("   Nama Wajib Pajak", 35), noBorderCell(":", 5), noBorderCell(oldData.namaWp, 60, true)] }),
-            new TableRow({ children: [noBorderCell("   Alamat", 35), noBorderCell(":", 5), noBorderCell(oldData.alamat, 60)] }),
-            new TableRow({ children: [noBorderCell("   Luas Tanah", 35), noBorderCell(":", 5), noBorderCell(`${oldData.luasTanah} m²`, 60, true)] }),
-            new TableRow({ children: [noBorderCell("   Luas Bangunan", 35), noBorderCell(":", 5), noBorderCell(`${oldData.luasBangunan} m²`, 60, true)] }),
+            new TableRow({ children: [noBorderCell("Nama", 25), noBorderCell(":", 5), noBorderCell(namaKades || "(diisi Nama Kepala Desa)", 70)] }),
+            new TableRow({ children: [noBorderCell("Jabatan", 25), noBorderCell(":", 5), noBorderCell(`Kepala Desa / Lurah ${villageName}`, 70)] }),
         ]
     }),
-    new Paragraph({ spacing: { before: 200 }, children: [new TextRun({ text: "Baru:", bold: true, size: 24, font: "Times New Roman" })] }),
-    ...newDataList.map((item, idx) => new Table({
-        width: { size: 90, type: WidthType.PERCENTAGE },
-        indent: { size: 400, type: WidthType.DXA },
+    ...emptyLine(1),
+    new Paragraph({ children: [new TextRun({ text: "Menerangkan dengan sebenarnya bahwa:", size: 24, font: "Times New Roman" })] }),
+    new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
         borders: { insideHorizontal: { style: BorderStyle.NONE }, insideVertical: { style: BorderStyle.NONE }, top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
         rows: [
-            new TableRow({ children: [noBorderCell(`${idx + 1}. NOP SPPT`, 35), noBorderCell(":", 5), noBorderCell(item.nop || "-", 60, true)] }),
-            new TableRow({ children: [noBorderCell("   Nama Wajib Pajak", 35), noBorderCell(":", 5), noBorderCell(item.namaWp || "................", 60, true)] }),
-            new TableRow({ children: [noBorderCell("   Alamat", 35), noBorderCell(":", 5), noBorderCell(item.alamat || "................", 60)] }),
-            new TableRow({ children: [noBorderCell("   Luas Tanah", 35), noBorderCell(":", 5), noBorderCell(`${item.luasTanah || "...."} m²`, 60, true)] }),
-            new TableRow({ children: [noBorderCell("   Luas Bangunan", 35), noBorderCell(":", 5), noBorderCell(`${item.luasBangunan || "...."} m²`, 60, true)] }),
+            new TableRow({ children: [noBorderCell("Nama", 25), noBorderCell(":", 5), noBorderCell(pemohon || "(Nama pemohon yang mengajukan perubahan)", 70, true)] }),
+            new TableRow({ children: [noBorderCell("NIK", 25), noBorderCell(":", 5), noBorderCell(nikPemohon || "..............................", 70)] }),
+            new TableRow({ children: [noBorderCell("Telp", 25), noBorderCell(":", 5), noBorderCell(telpPemohon || "(Nomor Telp aktif)", 70)] }),
         ]
-    })),
-    ...emptyLine(2),
+    }),
+    ...emptyLine(1),
+    new Paragraph({ children: [new TextRun({ text: "Mengajukan perubahan SPPT PBB (Mutasi/Pembetulan) sebagai berikut:", size: 24, font: "Times New Roman" })] }),
+    new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: { insideHorizontal: { style: BorderStyle.NONE }, insideVertical: { style: BorderStyle.NONE }, top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+        rows: [
+            new TableRow({ children: [noBorderCell("NOP", 25), noBorderCell(":", 5), noBorderCell(`${oldData.nop} (diketik NOP lengkap)`, 70)] }),
+            new TableRow({ children: [noBorderCell("Luas Tanah", 25), noBorderCell(":", 5), noBorderCell(`${oldData.luasTanah} M² (diisi sesuai dengan SPPT PBB)`, 70)] }),
+            new TableRow({ children: [noBorderCell("Luas Bangunan", 25), noBorderCell(":", 5), noBorderCell(`${oldData.luasBangunan} M² (diisi sesuai dengan SPPT PBB)`, 70)] }),
+        ]
+    }),
+    ...emptyLine(1),
+    new Paragraph({ children: [new TextRun({ text: "Dimutasi / diubah menjadi :", size: 24, font: "Times New Roman" })] }),
+    ...newDataList.map((item, idx) => [
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: { insideHorizontal: { style: BorderStyle.NONE }, insideVertical: { style: BorderStyle.NONE }, top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+        rows: [
+            new TableRow({ children: [noBorderCell("Nama", 25), noBorderCell(":", 5), noBorderCell(item.namaWp || ".......................", 70, true)] }),
+            new TableRow({ children: [noBorderCell("Alamat Objek", 25), noBorderCell(":", 5), noBorderCell(item.alamat || "(diisi jika ada perubahan)", 70)] }),
+            new TableRow({ children: [noBorderCell("Luas Tanah", 25), noBorderCell(":", 5), noBorderCell(`${item.luasTanah || "............"} M² (disesuaikan dg bukti kepemilikan/luas sebenarnya)`, 70)] }),
+            new TableRow({ children: [noBorderCell("Luas Bangunan", 25), noBorderCell(":", 5), noBorderCell(`${item.luasBangunan || "............"} M² (disesuaikan dg luas sebenarnya)`, 70)] }),
+        ]
+      }),
+      emptyLine(1)[0]
+    ]).flat(),
     new Paragraph({
         alignment: AlignmentType.BOTH,
-        children: [new TextRun({ text: "      Demikian Surat Keterangan ini kami buat dengan sebenarnya untuk dapat dipergunakan sebagai dasar penetapan PBB bagi yang bersangkutan sesuai keadaan saat ini.", size: 24, font: "Times New Roman" })]
+        children: [new TextRun({ text: "Demikian surat keterangan ini dibuat untuk dipergunakan sebagaimana mestinya.", size: 24, font: "Times New Roman" })]
     }),
     ...emptyLine(3),
     new Paragraph({

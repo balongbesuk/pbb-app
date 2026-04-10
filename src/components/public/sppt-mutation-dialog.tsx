@@ -175,6 +175,7 @@ export function SpptMutationDialog({
   const [luasSebenarnya, setLuasSebenarnya] = useState<string>("");
   const [sisa, setSisa] = useState<string>("HABIS");
   const [nikPemohon, setNikPemohon] = useState("");
+  const [telpPemohon, setTelpPemohon] = useState("");
   const [nomorSurat, setNomorSurat] = useState("");
   const [namaKades, setNamaKades] = useState("");
   const [vName, setVName] = useState(villageName);
@@ -365,47 +366,54 @@ export function SpptMutationDialog({
             <p>Nomor : ${nomorSurat || ".... / .... / .... / ...."}</p>
           </div>
 
-          <p class="letter-indent">
-            Yang bertanda tangan di bawah ini, kami Kepala Desa ${vName}, Kecamatan ${dName}, Kabupaten ${rName}, menerangkan dengan sebenarnya bahwa:
-          </p>
-
-          <div class="letter-info-grid">
-            <div class="letter-info-row"><span class="letter-info-key">Nama</span><span>: <span class="font-bold uppercase">${pemohon || ".........."}</span></span></div>
-            <div class="letter-info-row"><span class="letter-info-key">NIK</span><span>: ${nikPemohon || ".........."}</span></div>
-          </div>
-
-          <p class="letter-block-gap">Mengajukan Perubahan SPPT PBB (Pemecahan) sebagai berikut:</p>
-          
-          <p class="letter-section-title">Lama:</p>
+          <p>Yang bertanda tangan di bawah ini:</p>
           <div class="letter-table-wrap">
             <table class="letter-table">
               <tbody>
-                <tr><td>1. NOP SPPT</td><td>:</td><td class="font-mono">${oldData.nop}</td></tr>
-                <tr><td>Nama Wajib Pajak</td><td>:</td><td class="uppercase font-bold">${oldData.namaWp}</td></tr>
-                <tr><td>Alamat</td><td>:</td><td class="uppercase">${oldData.alamat}</td></tr>
-                <tr><td>Luas Tanah</td><td>:</td><td class="font-bold">${oldData.luasTanah} m²</td></tr>
-                <tr><td>Luas Bangunan</td><td>:</td><td class="font-bold">${oldData.luasBangunan} m²</td></tr>
+                <tr><td>Nama</td><td>:</td><td>${namaKades || "(diisi Nama Kepala Desa)"}</td></tr>
+                <tr><td>Jabatan</td><td>:</td><td>Kepala Desa / Lurah ${vName}</td></tr>
               </tbody>
             </table>
           </div>
 
-          <p class="letter-section-title">Baru:</p>
+          <p class="letter-block-gap">Menerangkan dengan sebenarnya bahwa:</p>
+          <div class="letter-table-wrap">
+            <table class="letter-table">
+              <tbody>
+                <tr><td>Nama</td><td>:</td><td class="font-bold uppercase">${pemohon || "(Nama pemohon yang mengajukan perubahan)"}</td></tr>
+                <tr><td>NIK</td><td>:</td><td>${nikPemohon || ".............................."}</td></tr>
+                <tr><td>Telp</td><td>:</td><td>${telpPemohon || "(Nomor Telp aktif)"}</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="letter-block-gap">Mengajukan perubahan SPPT PBB (Mutasi/Pembetulan) sebagai berikut:</p>
+          <div class="letter-table-wrap">
+            <table class="letter-table">
+              <tbody>
+                <tr><td>NOP</td><td>:</td><td class="font-mono">${oldData.nop}</td></tr>
+                <tr><td>Luas Tanah</td><td>:</td><td><span class="font-bold">${oldData.luasTanah}</span> M²</td></tr>
+                <tr><td>Luas Bangunan</td><td>:</td><td><span class="font-bold">${oldData.luasBangunan}</span> M²</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="letter-block-gap">Dimutasi / diubah menjadi :</p>
           ${newDataList.map((item, idx) => `
             <div class="letter-table-wrap ${idx > 0 ? "letter-block-gap" : ""}">
               <table class="letter-table">
                 <tbody>
-                  <tr><td>${idx + 1}. NOP SPPT</td><td>:</td><td class="font-mono">${item.nop || "-"}</td></tr>
-                  <tr><td>Nama Wajib Pajak</td><td>:</td><td class="uppercase font-bold">${item.namaWp || "................"}</td></tr>
-                  <tr><td>Alamat</td><td>:</td><td class="uppercase">${item.alamat || "................"}</td></tr>
-                  <tr><td>Luas Tanah</td><td>:</td><td class="font-bold">${item.luasTanah ?? "...."} m²</td></tr>
-                  <tr><td>Luas Bangunan</td><td>:</td><td class="font-bold">${item.luasBangunan ?? "...."} m²</td></tr>
+                  <tr><td>Nama</td><td>:</td><td class="uppercase font-bold">${item.namaWp || "......................."}</td></tr>
+                  <tr><td>Alamat Objek</td><td>:</td><td class="uppercase">${item.alamat || "(diisi jika ada perubahan)"}</td></tr>
+                  <tr><td>Luas Tanah</td><td>:</td><td><span class="font-bold">${item.luasTanah ?? "............"}</span> M²</td></tr>
+                  <tr><td>Luas Bangunan</td><td>:</td><td><span class="font-bold">${item.luasBangunan ?? "............"}</span> M²</td></tr>
                 </tbody>
               </table>
             </div>
           `).join("")}
 
           <p class="letter-big-gap">
-            Demikian Surat Keterangan ini kami buat dengan sebenarnya untuk dapat dipergunakan sebagai dasar penetapan PBB bagi yang bersangkutan sesuai keadaan saat ini.
+            Demikian surat keterangan ini dibuat untuk dipergunakan sebagaimana mestinya.
           </p>
 
           <div class="letter-signature">
@@ -499,6 +507,7 @@ export function SpptMutationDialog({
         dasar,
         pemohon,
         nikPemohon,
+        telpPemohon,
         nomorSurat,
         namaKades,
         oldData,
@@ -605,6 +614,7 @@ export function SpptMutationDialog({
                       <div className="space-y-2"><Label className="text-[11px] font-black uppercase opacity-60 px-1">Nama Pemohon</Label><Input id="f-mut-pemohon" className={cn("h-12 rounded-2xl font-black uppercase", styles.input)} value={pemohon} onChange={(e) => setPemohon(sanitizeText(e.target.value.toUpperCase(), 30))} /></div>
                       <div className="space-y-2"><Label className="text-[11px] font-black uppercase opacity-60 px-1">NIK Pemohon</Label><Input id="f-mut-nik" className={cn("h-12 rounded-2xl font-mono tracking-widest", styles.input)} value={nikPemohon} onChange={(e) => setNikPemohon(sanitizeNumberString(e.target.value, 16))} /></div>
                       <div className="space-y-2"><Label className="text-[11px] font-black uppercase opacity-60 px-1">Nama Kepala Desa</Label><Input id="f-mut-kades" className={cn("h-12 rounded-2xl font-black", styles.input)} value={namaKades} onChange={(e) => setNamaKades(sanitizeText(e.target.value, 40))} /></div>
+                      <div className="space-y-2"><Label className="text-[11px] font-black uppercase opacity-60 px-1">No. Telp Pemohon</Label><Input id="f-mut-telp" className={cn("h-12 rounded-2xl font-mono tracking-widest", styles.input)} value={telpPemohon} onChange={(e) => setTelpPemohon(sanitizeNumberString(e.target.value, 15))} /></div>
                     </div>
                   </div>
                </div>
