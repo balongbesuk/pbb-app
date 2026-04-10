@@ -1,138 +1,226 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, TouchableWithoutFeedback } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 export default function DashboardScreen({ route, navigation }: any) {
-  const { serverUrl, stats, villageName } = route.params;
-  const [isDark, setIsDark] = useState(true);
+  const { villageName, serverUrl, stats = {}, villageLogo } = route.params || {};
+  const [menuVisible, setMenuVisible] = useState(false);
 
-  const toggleColorScheme = () => {
-    setIsDark(!isDark);
+  const totalSppt = stats.totalSppt || 0;
+  const lunasSppt = stats.lunasSppt || 0;
+
+  // Dynamic Logo Logic
+  const getLogoSource = () => {
+    if (villageLogo) {
+      if (villageLogo.startsWith('http')) {
+        return { uri: villageLogo };
+      }
+      return { uri: `${serverUrl.replace(/\/$/, '')}${villageLogo.startsWith('/') ? '' : '/'}${villageLogo}` };
+    }
+    return { uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Lambang_Kabupaten_Jombang.png/430px-Lambang_Kabupaten_Jombang.png' };
   };
 
   return (
-    <View className={`flex-1 ${isDark ? 'bg-[#09090b]' : 'bg-slate-100'}`}>
-       {/* Background Glows (Supported in tailwind web mostly) */}
-       <View className={`absolute -top-10 -left-10 w-96 h-96 ${isDark ? 'bg-blue-900/20' : 'bg-blue-200/50'} rounded-full`}></View>
-       
-       <ScrollView className="flex-1 px-6 pt-16 pb-12" showsVerticalScrollIndicator={false}>
-          {/* Header */}
-          <View className="flex-row items-center justify-between mb-8">
-             <View className="flex-1">
-                <View className={`px-3 py-1.5 rounded-full self-start mb-2 border ${isDark ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-100 border-blue-200'}`}>
-                  <Text className={`font-bold text-[9px] uppercase tracking-widest ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{villageName || 'Pemda System'}</Text>
-                </View>
-                <Text className={`text-3xl font-black tracking-tighter ${isDark ? 'text-white' : 'text-slate-900'}`}>PBB Digital</Text>
+    <View className="flex-1 bg-slate-50">
+       <ScrollView 
+         showsVerticalScrollIndicator={false}
+         contentContainerStyle={{ paddingBottom: 100 }}
+       >
+         {/* Premium Header */}
+         <View className="px-6 pt-14 pb-8 bg-white/80 rounded-b-[40px] shadow-sm border-b border-slate-100">
+           <View className="flex-row justify-between items-center">
+             <View className="flex-row items-center">
+               <View className="w-14 h-14 bg-white rounded-2xl shadow-sm items-center justify-center p-2 border border-slate-100">
+                 <Image 
+                   source={getLogoSource()}
+                   className="w-full h-full"
+                   resizeMode="contain"
+                 />
+               </View>
+               <View className="ml-4">
+                 <Text style={{ fontSize: 26, fontWeight: '900', color: '#0f172a', letterSpacing: -1 }}>PBB Mobile</Text>
+                 <Text style={{ fontSize: 10, fontWeight: '800', color: '#64748b', letterSpacing: 3, textTransform: 'uppercase' }}>{villageName || 'Balongbesuk'}</Text>
+               </View>
              </View>
              
-             <View className="flex-row">
-               <TouchableOpacity 
-                  className={`w-12 h-12 rounded-full items-center justify-center border mr-2 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`} 
-                  onPress={toggleColorScheme}
-               >
-                  <Text className="text-xl">{isDark ? '☀️' : '🌙'}</Text>
-               </TouchableOpacity>
+             <TouchableOpacity 
+               onPress={() => setMenuVisible(true)}
+               className="w-12 h-12 bg-white rounded-full items-center justify-center shadow-sm border border-slate-100"
+             >
+               <Text className="text-xl">⚙️</Text>
+             </TouchableOpacity>
+           </View>
 
-               <TouchableOpacity 
-                  className={`w-12 h-12 rounded-full items-center justify-center border ${isDark ? 'bg-white/5 border-white/10' : 'bg-blue-600 border-blue-700 shadow-sm'}`} 
-                  onPress={() => navigation.navigate('Login', { serverUrl })}
-               >
-                  <Text className="text-xl">{isDark ? '👮' : '🛡️'}</Text>
-               </TouchableOpacity>
-             </View>
-          </View>
+           {/* Informational Banner Card - Premium Visual */}
+           <View className="mt-8 overflow-hidden rounded-[32px] bg-emerald-900 shadow-xl shadow-emerald-900/20">
+              <View className="flex-row items-center p-6 relative">
+                 {/* Decorative background gradients */}
+                 <View className="absolute -right-20 -bottom-20 w-64 h-64 bg-emerald-800/20 rounded-full" />
+                 
+                 <View className="flex-1 pr-4 z-10">
+                    <Text className="text-white text-2xl font-black leading-tight tracking-tight">Cek Tagihan PBB{"\n"}Lebih Mudah</Text>
+                    <Text className="text-emerald-100/60 mt-2 font-bold text-[11px] leading-relaxed">Cari data berdasarkan NOP{"\n"}atau nama wajib pajak</Text>
+                 </View>
 
-          {/* Main Stats Card - Highly Styled */}
-          <View className="mb-8">
-            <View className="bg-blue-600 rounded-[32px] p-6 shadow-2xl relative overflow-hidden">
-              <View className="absolute -right-10 -top-10 w-40 h-40 bg-white/20 rounded-full"></View>
-              <View className="absolute -bottom-8 -left-8 w-40 h-40 bg-indigo-500/50 rounded-full"></View>
-
-              <Text className="text-blue-100 text-[10px] font-black uppercase tracking-widest mb-1 z-10">Total SPOP Terdaftar</Text>
-              <View className="flex-row items-baseline mb-4 z-10">
-                <Text className="text-white text-5xl font-black tracking-tighter">{stats.totalSppt.toLocaleString('id-ID')}</Text>
-                <Text className="text-blue-200 font-bold ml-2 text-sm">Berkas</Text>
+                 <View className="w-32 h-32 z-10">
+                    <Image 
+                       source={{ uri: 'file:///C:/Users/MSI MODern 14/.gemini/antigravity/brain/621bc9c6-85ca-47dc-9762-106e7f713578/pbb_house_banner_illustration_1775836881840.png' }}
+                       className="w-full h-full"
+                       resizeMode="contain"
+                    />
+                 </View>
               </View>
-              
-              <View className="bg-black/20 self-start px-4 py-2.5 rounded-2xl z-10 flex-row items-center border border-white/10">
-                <View className="w-2 h-2 bg-emerald-400 rounded-full mr-2 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></View>
-                <Text className="text-white text-[11px] font-bold tracking-wide">{stats.lunasSppt.toLocaleString('id-ID')} Pajak Telah Lunas</Text>
-              </View>
-            </View>
-          </View>
+           </View>
+         </View>
 
-          <Text className={`font-black text-[10px] uppercase tracking-widest ml-1 mb-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Layanan Utama</Text>
+         {/* Menu Section */}
+         <View className="px-6 mt-8">
+           <Text className="text-slate-400 font-black text-[10px] uppercase tracking-[2px] mb-5 ml-1">Layanan Utama</Text>
+           
+           <View className="flex-row flex-wrap justify-between">
+              {/* Card 1 */}
+              <TouchableOpacity 
+                className="w-[48%] bg-white p-6 rounded-[28px] shadow-sm mb-4 border border-slate-100/50"
+                onPress={() => navigation.navigate('PaymentCheck', { serverUrl })}
+              >
+                <View className="w-12 h-12 bg-orange-50 rounded-2xl items-center justify-center mb-4">
+                  <Text className="text-2xl">💳</Text>
+                </View>
+                <Text className="font-black text-slate-800 text-base leading-5">Cek{"\n"}Tagihan</Text>
+                <Text className="text-[9px] text-slate-400 font-bold mt-1">Cari NOP & status</Text>
+              </TouchableOpacity>
 
-          {/* Asymmetrical Grid */}
-          <View className="flex-row justify-between mb-4">
-            {/* Card 1: Cek Tagihan - Tall Card */}
-            <TouchableOpacity 
-              className={`w-[48%] rounded-3xl p-5 border items-start justify-between min-h-[170px] ${isDark ? 'bg-[#18181b] border-white/5' : 'bg-white border-slate-100 shadow-sm'}`}
-              onPress={() => navigation.navigate('PaymentCheck', { serverUrl, isDark })}
-            >
-              <View className={`w-14 h-14 rounded-2xl items-center justify-center mb-4 border ${isDark ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-emerald-50 border-emerald-100'}`}>
-                <Text className="text-2xl">💳</Text>
-              </View>
-              <View>
-                <Text className={`font-black text-lg mb-1 leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Cek{'\n'}Tagihan</Text>
-                <Text className={`text-[10px] font-medium leading-relaxed ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Cari NOP & status</Text>
-              </View>
-            </TouchableOpacity>
+              {/* Card 2 */}
+              <TouchableOpacity 
+                className="w-[48%] bg-white p-6 rounded-[28px] shadow-sm mb-4 border border-slate-100/50"
+                onPress={() => navigation.navigate('Mutation', { serverUrl })}
+              >
+                <View className="w-12 h-12 bg-emerald-50 rounded-2xl items-center justify-center mb-4">
+                  <Text className="text-2xl">🔄</Text>
+                </View>
+                <Text className="font-black text-slate-800 text-base leading-5">Mutasi{"\n"}Pajak</Text>
+                <Text className="text-[9px] text-slate-400 font-bold mt-1">Permohonan ubah data</Text>
+              </TouchableOpacity>
 
-            {/* Card 2: Mutasi PBB - Tall Card */}
-            <TouchableOpacity 
-              className={`w-[48%] rounded-3xl p-5 border items-start justify-between min-h-[170px] ${isDark ? 'bg-[#18181b] border-white/5' : 'bg-white border-slate-100 shadow-sm'}`}
-              onPress={() => navigation.navigate('Mutation', { serverUrl, isDark })}
-            >
-              <View className={`w-14 h-14 rounded-2xl items-center justify-center mb-4 border ${isDark ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-indigo-50 border-indigo-100'}`}>
-                <Text className="text-2xl">🔄</Text>
-              </View>
-              <View>
-                <Text className={`font-black text-lg mb-1 leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Mutasi{'\n'}Pajak</Text>
-                <Text className={`text-[10px] font-medium leading-relaxed ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Pengajuan ubah data</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
+              {/* Card 3 - Full Width */}
+              <TouchableOpacity className="w-full bg-white p-5 rounded-[28px] flex-row items-center shadow-sm mb-4 border border-slate-100/50">
+                 <View className="w-14 h-14 bg-amber-50 rounded-2xl items-center justify-center mr-4">
+                    <Text className="text-2xl">📑</Text>
+                 </View>
+                 <View className="flex-1">
+                    <Text className="font-black text-slate-800 text-base">Pencarian Data SPOP</Text>
+                    <Text className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Arsip Digital</Text>
+                 </View>
+                 <View className="w-9 h-9 bg-slate-50 rounded-full items-center justify-center">
+                    <Text className="text-slate-300 font-bold">→</Text>
+                 </View>
+              </TouchableOpacity>
 
-          {/* Full Width List Cards */}
-          <TouchableOpacity className={`w-full p-4 rounded-3xl border flex-row items-center mb-4 ${isDark ? 'bg-[#18181b] border-white/5' : 'bg-white border-slate-100 shadow-sm'}`}>
-            <View className={`w-12 h-12 rounded-2xl items-center justify-center mr-4 border ${isDark ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-100'}`}>
-              <Text className="text-xl">📑</Text>
-            </View>
-            <View className="flex-1">
-              <Text className={`font-black text-sm mb-0.5 ${isDark ? 'text-white' : 'text-slate-800'}`}>Pencarian Data SPOP</Text>
-              <Text className={`text-[10px] font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Arsip digital wajib pajak</Text>
-            </View>
-            <View className={`w-8 h-8 rounded-full items-center justify-center ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
-              <Text className="text-slate-400 font-bold text-xs">→</Text>
-            </View>
-          </TouchableOpacity>
-
-          {/* Admin Login Button - Differentiated */}
-          <TouchableOpacity 
-            className={`w-full p-4 rounded-3xl border flex-row items-center mb-10 ${isDark ? 'bg-blue-600/10 border-blue-500/30' : 'bg-slate-900 border-slate-800 shadow-md'}`}
-            onPress={() => navigation.navigate('Login', { serverUrl, isDark })}
-          >
-            <View className={`w-12 h-12 rounded-2xl items-center justify-center mr-4 border ${isDark ? 'bg-blue-500/20 border-blue-500/30' : 'bg-slate-800 border-slate-700'}`}>
-              <Text className="text-xl">🛡️</Text>
-            </View>
-            <View className="flex-1">
-              <Text className={`font-black text-sm mb-0.5 ${isDark ? 'text-blue-400' : 'text-white'}`}>Akses Petugas / Admin</Text>
-              <Text className={`text-[10px] font-medium ${isDark ? 'text-blue-500/70' : 'text-slate-400'}`}>Login untuk pemungut pajak</Text>
-            </View>
-            <View className={`w-8 h-8 rounded-full items-center justify-center ${isDark ? 'bg-blue-500/20' : 'bg-white/10'}`}>
-              <Text className={`font-bold text-xs ${isDark ? 'text-blue-400' : 'text-white'}`}>→</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            className="py-4 items-center mb-8"
-            onPress={() => navigation.replace('Onboarding')}
-          >
-            <Text className="text-slate-600 font-bold uppercase tracking-widest text-[10px]">Putuskan Koneksi Server</Text>
-          </TouchableOpacity>
+              {/* Card 4 - Extra Access */}
+              <TouchableOpacity 
+                className="w-full bg-blue-50/50 p-5 rounded-[28px] flex-row items-center border border-blue-100/50"
+                onPress={() => navigation.navigate('Login', { serverUrl })}
+              >
+                 <View className="w-14 h-14 bg-white rounded-2xl items-center justify-center mr-4 shadow-sm">
+                    <Text className="text-2xl">🛡️</Text>
+                 </View>
+                 <View className="flex-1">
+                    <Text className="font-black text-blue-900 text-base">Akses Petugas</Text>
+                    <Text className="text-[9px] text-blue-600 font-bold uppercase tracking-wider">Khusus Operator</Text>
+                 </View>
+                 <View className="w-9 h-9 bg-white rounded-full items-center justify-center shadow-sm">
+                    <Text className="text-blue-400 font-bold">→</Text>
+                 </View>
+              </TouchableOpacity>
+           </View>
+         </View>
        </ScrollView>
-       <StatusBar style="light" />
+
+       {/* Settings Overlay - Absolute positioned within app frame */}
+       {menuVisible && (
+         <TouchableWithoutFeedback onPress={() => setMenuVisible(false)}>
+           <View style={{
+             position: 'absolute',
+             top: 0, left: 0, right: 0, bottom: 0,
+             backgroundColor: 'rgba(0,0,0,0.5)',
+             justifyContent: 'center',
+             alignItems: 'center',
+             padding: 24,
+             zIndex: 999,
+           }}>
+             <TouchableWithoutFeedback>
+               <View style={{
+                 backgroundColor: 'white',
+                 borderRadius: 32,
+                 padding: 24,
+                 width: '100%',
+                 shadowColor: '#000',
+                 shadowOffset: { width: 0, height: 8 },
+                 shadowOpacity: 0.15,
+                 shadowRadius: 24,
+                 elevation: 20,
+               }}>
+                 {/* Header */}
+                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyBetween: 'space-between', marginBottom: 20 }}>
+                   <View style={{ flex: 1 }}>
+                     <Text style={{ fontSize: 20, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 }}>Pengaturan</Text>
+                     <Text style={{ fontSize: 9, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 2 }}>Akses & Koneksi Portal</Text>
+                   </View>
+                   <TouchableOpacity
+                     onPress={() => setMenuVisible(false)}
+                     style={{ width: 36, height: 36, backgroundColor: '#f1f5f9', borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}
+                   >
+                     <Text style={{ color: '#64748b', fontWeight: '700' }}>✕</Text>
+                   </TouchableOpacity>
+                 </View>
+
+                 {/* Divider */}
+                 <View style={{ height: 1, backgroundColor: '#f1f5f9', marginBottom: 16 }} />
+
+                 <ScrollView showsVerticalScrollIndicator={false}>
+                    {/* Akses Petugas */}
+                    <TouchableOpacity
+                      style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: '#eff6ff', borderRadius: 16, borderWidth: 1, borderColor: '#bfdbfe', marginBottom: 10 }}
+                      onPress={() => {
+                        setMenuVisible(false);
+                        navigation.navigate('Login', { serverUrl });
+                      }}
+                    >
+                      <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#dbeafe', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                        <Text style={{ fontSize: 18 }}>🛡️</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontWeight: '900', color: '#1e293b', fontSize: 14 }}>Akses Petugas</Text>
+                        <Text style={{ fontSize: 9, color: '#3b82f6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 }}>Operator Panel</Text>
+                      </View>
+                      <Text style={{ color: '#93c5fd', fontWeight: '700', fontSize: 18 }}>›</Text>
+                    </TouchableOpacity>
+
+                    {/* Ganti Koneksi */}
+                    <TouchableOpacity
+                      style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: '#f8fafc', borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0' }}
+                      onPress={() => {
+                        setMenuVisible(false);
+                        navigation.replace('Onboarding');
+                      }}
+                    >
+                      <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                        <Text style={{ fontSize: 18 }}>🔗</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontWeight: '900', color: '#1e293b', fontSize: 14 }}>Ganti Koneksi</Text>
+                        <Text style={{ fontSize: 9, color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 }}>Server URL</Text>
+                      </View>
+                      <Text style={{ color: '#cbd5e1', fontWeight: '700', fontSize: 18 }}>›</Text>
+                    </TouchableOpacity>
+                 </ScrollView>
+               </View>
+             </TouchableWithoutFeedback>
+           </View>
+         </TouchableWithoutFeedback>
+       )}
+
+       <StatusBar style="dark" />
     </View>
   );
 }
