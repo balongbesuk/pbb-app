@@ -210,9 +210,11 @@ export default function OnboardingScreen({ navigation }: any) {
                     resizeMode="contain"
                   />
                 ) : (
-                  <View className="items-center justify-center">
-                    <Text className="text-white/20 text-[10px] font-black uppercase tracking-widest">No Logo</Text>
-                  </View>
+                  <Image 
+                    source={require('../../assets/icon.png')} 
+                    style={{ width: 60, height: 60, opacity: 0.6 }}
+                    resizeMode="contain"
+                  />
                 )}
               </View>
 

@@ -17,7 +17,7 @@ export default function DashboardScreen({ route, navigation }: any) {
       }
       return { uri: `${serverUrl.replace(/\/$/, '')}${villageLogo.startsWith('/') ? '' : '/'}${villageLogo}` };
     }
-    return { uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Lambang_Kabupaten_Jombang.png/430px-Lambang_Kabupaten_Jombang.png' };
+    return require('../../assets/icon.png');
   };
 
   return (
