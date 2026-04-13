@@ -461,12 +461,12 @@ export function PublicSearch({
 
                     <Badge className={cn(badgeCls, 
                       item.status === "LUNAS" 
-                        ? "bg-emerald-500 text-white shadow-emerald-500/20" 
+                        ? "bg-emerald-500 text-white shadow-emerald-500/20 hover:bg-emerald-600" 
                         : item.status === "TIDAK_TERBIT"
-                        ? "bg-zinc-500 text-white shadow-zinc-500/20"
+                        ? "bg-zinc-500 text-white shadow-zinc-500/20 hover:bg-zinc-600"
                         : item.status === "SUSPEND"
-                        ? "bg-rose-500 text-white shadow-rose-500/20"
-                        : "bg-amber-500 text-white shadow-amber-500/20"
+                        ? "bg-rose-500 text-white shadow-rose-500/20 hover:bg-rose-600"
+                        : "bg-amber-500 text-white shadow-amber-500/20 hover:bg-amber-600"
                     )}>
                       {item.status === "LUNAS" ? "Lunas" 
                        : item.status === "TIDAK_TERBIT" ? "Tidak Terbit"
