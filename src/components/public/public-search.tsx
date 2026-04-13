@@ -6,7 +6,17 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, MapPin, User, CheckCircle2, Phone, Info, Wallet, ShieldAlert, Ruler, AlertCircle, History, Download, Eye, RefreshCcw, Copy, Check, FileText } from "lucide-react";
+import { 
+  Loader2, Search, MapPin, User, CheckCircle2, Phone, Info, Wallet, 
+  ShieldAlert, Ruler, AlertCircle, History, Download, Eye, RefreshCcw, 
+  Copy, Check, FileText, Menu, ChevronDown, Printer 
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
 import { formatCurrency, formatDate, formatDateNoTime, formatJatuhTempo, cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -424,20 +434,46 @@ export function PublicSearch({
                     </div>
                     <h3 className={`text-lg sm:text-xl font-black ${nameCls} leading-tight`}>{item.namaWp}</h3>
                   </div>
-                  <Badge className={`${badgeCls} ${
-                    item.status === "LUNAS" 
-                      ? "bg-emerald-500 text-white shadow-emerald-500/20" 
-                      : item.status === "TIDAK_TERBIT"
-                      ? "bg-zinc-500 text-white shadow-zinc-500/20"
-                      : item.status === "SUSPEND"
-                      ? "bg-rose-500 text-white shadow-rose-500/20"
-                      : "bg-amber-500 text-white shadow-amber-500/20"
-                  }`}>
-                    {item.status === "LUNAS" ? "Lunas" 
-                     : item.status === "TIDAK_TERBIT" ? "Tidak Terbit"
-                     : item.status === "SUSPEND" ? "Sengketa"
-                     : "Blm Lunas"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                      
+                      {bapendaUrl && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          nativeButton={false}
+                          render={
+                            <a 
+                              href={getBapendaUrl(item.nop)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Search className="w-5 h-5" />
+                            </a>
+                          }
+                          className={cn(
+                            "h-10 w-10 rounded-2xl transition-all active:scale-95",
+                            isDark ? "hover:bg-white/10 text-white/50 hover:text-white" : "hover:bg-black/5 text-black/30 hover:text-black"
+                          )}
+                          title="Cek Bapenda"
+                        />
+                      )}
+
+
+                    <Badge className={cn(badgeCls, 
+                      item.status === "LUNAS" 
+                        ? "bg-emerald-500 text-white shadow-emerald-500/20" 
+                        : item.status === "TIDAK_TERBIT"
+                        ? "bg-zinc-500 text-white shadow-zinc-500/20"
+                        : item.status === "SUSPEND"
+                        ? "bg-rose-500 text-white shadow-rose-500/20"
+                        : "bg-amber-500 text-white shadow-amber-500/20"
+                    )}>
+                      {item.status === "LUNAS" ? "Lunas" 
+                       : item.status === "TIDAK_TERBIT" ? "Tidak Terbit"
+                       : item.status === "SUSPEND" ? "Sengketa"
+                       : "Blm Lunas"}
+                    </Badge>
+                  </div>
                 </CardHeader>
                 <CardContent className={`p-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-sm ${bodyTextCls}`}>
                   <div className="space-y-1">
@@ -499,180 +535,137 @@ export function PublicSearch({
                       )}
                     </p>
                   </div>
-                  </CardContent>
-                  
+
                   {(item.status === "BELUM_LUNAS" || item.status === "TIDAK_TERBIT" || item.status === "SUSPEND") && (
-                    <CardFooter className={`p-4 sm:p-5 border-t flex flex-col gap-4 ${cardFooterCls}`}>
-                      {/* Sub-Group 1: Info & Bapenda Actions */}
-                      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 w-full">
-                        {/* Info Badge */}
-                        <div className="w-full lg:w-fit flex items-center justify-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-tight text-amber-600 dark:text-amber-400 bg-amber-500/10 px-4 py-2.5 rounded-2xl border border-amber-500/20 shrink-0">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          <span>Jatuh Tempo: {formatJatuhTempo(jatuhTempo)} {tahunPajak}</span>
-                        </div>
-
-                        {/* Bapenda Grouped Actions */}
-                        <div className="flex items-center gap-2 w-full lg:w-auto justify-center">
-                          {bapendaUrl && (
-                            <>
-                              {enableBapendaSync && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className={cn(
-                                    "flex-1 lg:flex-none h-9 text-[9px] font-black uppercase tracking-widest gap-2 rounded-2xl transition-all shadow-sm",
-                                    isDark 
-                                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]" 
-                                      : "border-emerald-500/30 text-emerald-600 hover:bg-emerald-50"
-                                  )}
-                                  onClick={() => handleCheckBapenda(item.nop)}
-                                  disabled={isCheckingAuto[item.nop]}
-                                >
-                                  {isCheckingAuto[item.nop] ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCcw className="w-3 h-3" />}
-                                  Update Lunas
-                                </Button>
-                              )}
-                              <a 
-                                href={getBapendaUrl(item.nop)} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className={cn(
-                                  buttonVariants({ variant: "outline", size: "sm" }),
-                                  "flex-1 lg:flex-none h-9 text-[9px] font-black uppercase tracking-widest gap-2 rounded-2xl transition-all shadow-sm px-4",
-                                  isDark 
-                                    ? "border-blue-500/40 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 shadow-[0_0_15px_-3px_rgba(59,130,246,0.2)]" 
-                                    : "border-zinc-500/30 text-zinc-600 hover:bg-zinc-50"
-                                )}
-                              >
-                                <Search className="w-3 h-3" />
-                                <span>CEK BAPENDA</span>
-                              </a>
-                            </>
-                          )}
-                        </div>
+                    <div className="space-y-1">
+                      <div className={`flex items-center gap-1.5 mb-0.5 ${mutedLabelCls}`}>
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-amber-500/80">jatuh tempo</span>
                       </div>
-
-                      {/* Sub-Group 2: Primary Form Actions */}
-                      <div className="grid grid-cols-2 lg:flex lg:flex-row items-center gap-3 w-full border-t border-dashed border-border/60 pt-4 lg:pt-0 lg:border-t-0">
+                      <p className={`text-[11px] font-bold ${addressCls}`}>
+                         {formatJatuhTempo(jatuhTempo)} {tahunPajak}
+                      </p>
+                    </div>
+                  )}
+                  </CardContent>
+                  {(item.status === "BELUM_LUNAS" || item.status === "TIDAK_TERBIT" || item.status === "SUSPEND") && (
+                    <CardFooter className={`p-4 sm:p-5 border-t flex items-center justify-between gap-3 ${cardFooterCls}`}>
+                      {enableBapendaSync && (
                         <Button
-                          variant="outline"
+                          variant="default"
+                          onClick={() => handleCheckBapenda(item.nop)}
+                          disabled={isCheckingAuto[item.nop]}
                           className={cn(
-                            "h-11 lg:h-10 text-[10px] font-black uppercase tracking-widest gap-2 rounded-2xl transition-all shadow-sm flex-1",
-                            isDark
-                              ? "border-amber-500/40 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 shadow-[0_0_15px_-5px_rgba(245,158,11,0.2)]"
-                              : "border-amber-500/30 bg-amber-500/5 text-amber-700 hover:bg-amber-50"
+                            "flex-1 h-11 text-xs font-black uppercase tracking-widest gap-2.5 rounded-2xl transition-all shadow-lg active:scale-95",
+                            isDark ? "bg-amber-600 hover:bg-amber-700 shadow-amber-900/20" : "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"
                           )}
-                          onClick={() => setMutationItem(item)}
                         >
-                          <FileText className="w-3.5 h-3.5 opacity-80" />
-                          Ajukan Perubahan
+                          {isCheckingAuto[item.nop] ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wallet className="w-5 h-5" />}
+                          Bayar Online
                         </Button>
+                      )}
 
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "h-11 lg:h-10 text-[10px] font-black uppercase tracking-widest gap-2 rounded-2xl transition-all shadow-sm flex-1",
-                            isDark
-                              ? "border-sky-500/40 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 shadow-[0_0_15px_-5px_rgba(14,165,233,0.2)]"
-                              : "border-sky-500/30 bg-sky-500/5 text-sky-700 hover:bg-sky-50"
-                          )}
-                          onClick={() => setSpopItem(item)}
-                        >
-                          <FileText className="w-3.5 h-3.5 opacity-80" />
-                          Isi SPOP / LSPOP
-                        </Button>
-
+                      {/* Action Icons */}
+                      <div className="flex items-center gap-2.5 shrink-0">
                         {item.petugas && item.petugas.kontak !== "Tidak ada nomor" && (
                           <Button
                             variant="outline"
+                            size="icon"
                             className={cn(
-                              "col-span-2 lg:flex-none h-11 lg:h-10 text-[10px] font-black uppercase tracking-widest gap-2 rounded-2xl transition-all shadow-sm px-6",
+                              "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
                               isDark
-                                ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 hover:text-white shadow-[0_0_15px_-5px_rgba(59,130,246,0.2)]"
+                                ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
                                 : "border-primary/40 text-primary hover:bg-primary/5"
                             )}
                             onClick={() => window.open(`https://wa.me/${item.petugas?.kontak.replace(/\D/g, "")}?text=Halo%20pak%20petugas%20PBB%20saya%20ingin%20cek%20pembayaran%20PBB%20saya%20dengan%20NOP%20${item.nop}`, "_blank")}
+                            title="Hubungi Penarik"
                           >
-                            <Phone className="w-3.5 h-3.5" />
-                            Hubungi Penarik
+                            <Phone className="w-5.25 h-5.25" />
                           </Button>
                         )}
-                      </div>
-                    </CardFooter>
-                  )}
 
-                  {item.status === "LUNAS" && (
-                    <CardFooter className={`p-4 sm:p-5 border-t flex flex-col sm:flex-row items-center gap-3 ${cardFooterCls}`}>
-                      <div className="w-full flex-1 flex items-center justify-center gap-2 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 py-3 rounded-2xl border border-emerald-500/20">
-                        <CheckCircle2 className="w-4 h-4" />
-                        Pajak Anda Telah Lunas
-                      </div>
-
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full sm:w-auto h-11 sm:h-12 rounded-2xl font-black uppercase tracking-[0.1em] text-[10px] sm:text-[11px] gap-2.5 transition-all active:scale-95 shadow-sm px-6",
-                          isDark
-                            ? "border-amber-500/20 bg-amber-500/5 text-amber-500 hover:bg-amber-500/10"
-                            : "border-amber-500/20 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20"
-                        )}
-                        onClick={() => setMutationItem(item)}
-                      >
-                        <FileText className="w-4 h-4 opacity-70" />
-                        Ajukan Perubahan
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full sm:w-auto h-11 sm:h-12 rounded-2xl font-black uppercase tracking-[0.1em] text-[10px] sm:text-[11px] gap-2.5 transition-all active:scale-95 shadow-sm px-6",
-                          isDark
-                            ? "border-sky-500/20 bg-sky-500/5 text-sky-400 hover:bg-sky-500/10"
-                            : "border-sky-500/20 bg-sky-500/10 text-sky-700 hover:bg-sky-500/20"
-                        )}
-                        onClick={() => setSpopItem(item)}
-                      >
-                        <FileText className="w-4 h-4 opacity-70" />
-                        Isi SPOP / LSPOP
-                      </Button>
-                    </CardFooter>
-                  )}
-
-                  {item.arsipUrl && (
-                    <div className={`p-4 sm:p-5 border-t flex flex-col sm:flex-row items-center gap-4 ${isDark ? 'bg-blue-950/10' : 'bg-blue-50/30'}`}>
-                      <span className="flex-1 text-[11px] font-bold text-blue-600/60 dark:text-blue-400/60 uppercase tracking-widest text-center sm:text-left">Arsip Digital Tersedia</span>
-                      <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => togglePdf(item.nop)}
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setMutationItem(item)}
                           className={cn(
-                            "w-full sm:w-auto h-11 sm:h-10 text-[10px] font-black uppercase tracking-widest gap-2 rounded-2xl transition-all active:scale-95",
-                            isDark
-                              ? "border-blue-500/30 text-blue-400 hover:bg-blue-500/20 hover:text-blue-300"
-                              : "border-blue-500/30 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                            "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
+                            isDark ? "border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20" : "border-amber-500/30 text-amber-600 hover:bg-amber-50"
                           )}
+                          title="Ajukan Perubahan"
                         >
-                          <Eye className="w-4 h-4" />
-                          {openPdfMap[item.nop] ? "Tutup E-SPPT" : "Lihat E-SPPT"}
+                          <FileText className="w-5.25 h-5.25" />
                         </Button>
-                        <a 
-                          href={item.arsipUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
+
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setSpopItem(item)}
                           className={cn(
-                            buttonVariants({ variant: "outline" }),
-                            "w-full sm:w-auto h-11 sm:h-10 text-[10px] font-black uppercase tracking-widest gap-2 rounded-2xl transition-all active:scale-95",
-                            isDark
-                              ? "border-primary/20 text-primary hover:bg-primary/20 hover:text-white"
-                              : "border-primary/20 text-primary hover:bg-primary/5"
+                            "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
+                            isDark ? "border-sky-500/30 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20" : "border-sky-500/30 text-sky-600 hover:bg-sky-50"
                           )}
+                          title="Isi SPOP / LSPOP"
                         >
-                          <Download className="w-4 h-4" />
-                          Unduh PDF
-                        </a>
+                          <FileText className="w-5.25 h-5.25" />
+                        </Button>
                       </div>
-                    </div>
+                    </CardFooter>
                   )}
+                  {item.status === "LUNAS" && (
+                    <CardFooter className={`p-4 sm:p-5 border-t flex items-center justify-between gap-3 ${cardFooterCls}`}>
+                      <div className="flex-1 min-w-0 h-11 flex items-center justify-center gap-2 px-4 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 whitespace-nowrap">
+                        <CheckCircle2 className="w-5 h-5 shrink-0" />
+                        <span className="truncate">Lunas</span>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        {item.arsipUrl && (
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={() => togglePdf(item.nop)}
+                            className={cn(
+                              "h-11 w-11 rounded-2xl transition-all active:scale-95 shadow-sm",
+                              isDark
+                                ? "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
+                                : "border-blue-500/30 text-blue-600 hover:bg-blue-50"
+                            )}
+                            title={openPdfMap[item.nop] ? "Tutup E-SPPT" : "Lihat E-SPPT"}
+                          >
+                            <Eye className="w-5.25 h-5.25" />
+                          </Button>
+                        )}
+
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setMutationItem(item)}
+                          className={cn(
+                            "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
+                            isDark ? "border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20" : "border-amber-500/30 text-amber-600 hover:bg-amber-50"
+                          )}
+                          title="Ajukan Perubahan"
+                        >
+                          <FileText className="w-5.25 h-5.25" />
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setSpopItem(item)}
+                          className={cn(
+                            "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
+                            isDark ? "border-sky-500/30 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20" : "border-sky-500/30 text-sky-600 hover:bg-sky-50"
+                          )}
+                          title="Isi SPOP / LSPOP"
+                        >
+                          <FileText className="w-5.25 h-5.25" />
+                        </Button>
+                      </div>
+                    </CardFooter>
+                  )}
+
 
                   {openPdfMap[item.nop] && item.arsipUrl && (
                     <div className="border-t bg-black/5 dark:bg-black/20 p-2 sm:p-4 animate-in slide-in-from-top-2 duration-300">
@@ -681,6 +674,34 @@ export function PublicSearch({
                         className="w-full h-[60vh] sm:h-[500px] rounded-xl border-dashed border-2 border-primary/20 bg-white" 
                         title={`E-SPPT NOP ${item.nop}`}
                       />
+                      <div className="flex flex-wrap items-center justify-end gap-3 mt-4">
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "h-12 text-xs font-black uppercase tracking-widest gap-2.5 rounded-2xl transition-all shadow-sm active:scale-95 px-6",
+                            isDark 
+                              ? "border-white/10 bg-white/5 text-white hover:bg-white/10" 
+                              : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+                          )}
+                          onClick={() => window.open(item.arsipUrl || "", "_blank")}
+                        >
+                          <Printer className="w-5 h-5" />
+                          Cetak SPPT
+                        </Button>
+                        <Button
+                          variant="default"
+                          nativeButton={false}
+                          className={cn(
+                            "h-12 text-xs font-black uppercase tracking-widest gap-2.5 rounded-2xl transition-all shadow-lg shadow-primary/20 px-8 active:scale-95",
+                          )}
+                          render={
+                            <a href={item.arsipUrl || ""} target="_blank" rel="noopener noreferrer">
+                              <Download className="w-5 h-5" />
+                              Unduh PDF
+                            </a>
+                          }
+                        />
+                      </div>
                     </div>
                   )}
                 </Card>
