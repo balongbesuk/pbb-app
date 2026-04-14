@@ -30,6 +30,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('screen');
 
 export default function OnboardingScreen({ navigation }: any) {
   const [serverUrl, setServerUrl] = useState('localhost:3000');
+  const [isHttps, setIsHttps] = useState(false);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -41,12 +42,12 @@ export default function OnboardingScreen({ navigation }: any) {
   // Effect to try and fetch logo from the entered URL live
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (serverUrl.length > 5) {
+      if (serverUrl.length > 3) {
         fetchPreviewLogo();
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [serverUrl]);
+  }, [serverUrl, isHttps]);
 
   useEffect(() => {
     if (syncing) {
@@ -62,7 +63,10 @@ export default function OnboardingScreen({ navigation }: any) {
   }, [syncing]);
 
   const fetchPreviewLogo = async () => {
-    const fullUrl = serverUrl.startsWith('http') ? serverUrl : `http://${serverUrl}`;
+    const protocol = isHttps ? 'https://' : 'http://';
+    const cleanUrl = serverUrl.replace('http://', '').replace('https://', '');
+    const fullUrl = `${protocol}${cleanUrl}`;
+    
     try {
       const response = await fetch(`${fullUrl}/api/mobile/connect`);
       const data = await response.json();
@@ -81,7 +85,10 @@ export default function OnboardingScreen({ navigation }: any) {
   const handleConnect = async () => {
     setLoading(true);
     setErrorMsg('');
-    const fullUrl = serverUrl.startsWith('http') ? serverUrl : `http://${serverUrl}`;
+
+    const protocol = isHttps ? 'https://' : 'http://';
+    const cleanUrl = serverUrl.replace('http://', '').replace('https://', '');
+    const fullUrl = `${protocol}${cleanUrl}`;
     
     try {
       const response = await fetch(`${fullUrl}/api/mobile/connect`, {
@@ -234,9 +241,11 @@ export default function OnboardingScreen({ navigation }: any) {
                 </View>
 
                 <View>
-                  <Text className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-2 ml-1">Portal URL / IP Address</Text>
+                  <Text className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-2 ml-1">Portal URL / IP Address (Tap protokol utk ganti)</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', borderRadius: 20, borderWidth: 1, borderColor: '#334155', marginBottom: 8 }}>
-                    <Text style={{ paddingLeft: 16, color: '#10b981', fontWeight: 'bold', fontSize: 11 }}>HTTP://</Text>
+                    <TouchableOpacity onPress={() => setIsHttps(!isHttps)} style={{ paddingLeft: 16 }}>
+                      <Text style={{ color: isHttps ? '#10b981' : '#fbbf24', fontWeight: 'bold', fontSize: 11 }}>{isHttps ? 'HTTPS://' : 'HTTP://'}</Text>
+                    </TouchableOpacity>
                     <TextInput
                       style={{ flex: 1, color: 'white', paddingHorizontal: 10, paddingVertical: 12, fontWeight: '900', fontSize: 13 }}
                       placeholder="localhost:3000"
