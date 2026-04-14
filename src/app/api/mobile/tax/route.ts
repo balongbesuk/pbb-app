@@ -12,7 +12,7 @@ export async function GET(request: Request) {
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
 
-    const rawQuery = nop.trim();
+    const rawQuery = (nop || '').trim();
     if (!rawQuery) {
       return NextResponse.json({ success: false, error: 'Kata kunci pencarian wajib diisi' }, { status: 400, headers });
     }
