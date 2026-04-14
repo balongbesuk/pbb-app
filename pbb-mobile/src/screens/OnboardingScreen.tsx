@@ -121,14 +121,18 @@ export default function OnboardingScreen({ navigation }: any) {
   const finishSync = async (data: any) => {
     const villageName = data.village?.namaDesa || 'Balongbesuk';
     const villageLogo = data.village?.logoUrl || null;
+
+    const protocol = isHttps ? 'https://' : 'http://';
+    const cleanUrl = serverUrl.replace('http://', '').replace('https://', '');
+    const fullUrl = `${protocol}${cleanUrl}`;
     
-    await AsyncStorage.setItem('serverUrl', serverUrl);
+    await AsyncStorage.setItem('serverUrl', fullUrl);
     await AsyncStorage.setItem('villageName', villageName);
     if (villageLogo) await AsyncStorage.setItem('villageLogo', villageLogo);
 
     navigation.replace('Dashboard', { 
       villageName: villageName,
-      serverUrl: serverUrl,
+      serverUrl: fullUrl,
       stats: data.stats,
       villageLogo: villageLogo
     });
