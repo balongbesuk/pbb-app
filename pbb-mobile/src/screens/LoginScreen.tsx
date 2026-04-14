@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen({ route, navigation }: any) {
   const { serverUrl } = route.params || {};
@@ -38,6 +39,11 @@ export default function LoginScreen({ route, navigation }: any) {
       const data = await response.json();
 
       if (data.success) {
+        // Save magicToken for WebView bridging
+        if (data.magicToken) {
+          await AsyncStorage.setItem('@admin_magic_token', data.magicToken);
+        }
+
         // Simulasi Arahkan ke Layar Admin
         navigation.navigate('AdminDashboard', { 
             serverUrl, 

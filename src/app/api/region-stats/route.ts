@@ -66,7 +66,11 @@ export async function GET(req: Request) {
       s.percentage = s.total > 0 ? (s.lunas / s.total) * 100 : 0;
     }
 
-    return NextResponse.json(stats);
+    return NextResponse.json(stats, {
+      headers: {
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      },
+    });
   } catch (error) {
     console.error("Gagal menghitung statistik wilayah:", error);
     return NextResponse.json({}, { status: 500 });

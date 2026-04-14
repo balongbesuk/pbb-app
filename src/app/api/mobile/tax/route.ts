@@ -43,22 +43,19 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'Data Wajib Pajak atau NOP tidak ditemukan' }, { status: 404, headers });
     }
 
-    // Biasanya ambil data tahun terbaru
-    const latestTax = taxes[0];
-
     return NextResponse.json({
       success: true,
-      data: {
-        id: latestTax.id,
-        nop: latestTax.nop,
-        namaWp: latestTax.namaWp,
-        alamatObjek: latestTax.alamatObjek,
-        tahun: latestTax.tahun,
-        tagihanPajak: latestTax.tagihanDenda + latestTax.ketetapan,
-        status: latestTax.paymentStatus,
-        luasTanah: latestTax.luasTanah,
-        luasBangunan: latestTax.luasBangunan,
-      }
+      data: taxes.map(tax => ({
+        id: tax.id,
+        nop: tax.nop,
+        namaWp: tax.namaWp,
+        alamatObjek: tax.alamatObjek,
+        tahun: tax.tahun,
+        tagihanPajak: tax.tagihanDenda + tax.ketetapan,
+        status: tax.paymentStatus,
+        luasTanah: tax.luasTanah,
+        luasBangunan: tax.luasBangunan,
+      }))
     }, { headers });
   } catch (error) {
     console.error('API Mobile Tax Error:', error);

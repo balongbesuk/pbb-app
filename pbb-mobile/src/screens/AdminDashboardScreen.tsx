@@ -1,12 +1,22 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Menggunakan WebView untuk Leaflet JS yang sudah ada di web biar tidak perlu recreate polygon
 import { WebView } from 'react-native-webview';
 
 export default function AdminDashboardScreen({ route, navigation }: any) {
   const { serverUrl, user, stats, villageName } = route.params;
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('@admin_magic_token');
+      navigation.replace('Dashboard', { serverUrl, stats, villageName });
+    } catch (e) {
+      navigation.replace('Dashboard', { serverUrl, stats, villageName });
+    }
+  };
 
   return (
     <View className="flex-1 bg-slate-900">
@@ -81,7 +91,7 @@ export default function AdminDashboardScreen({ route, navigation }: any) {
 
         <TouchableOpacity 
           className="bg-rose-500/20 border border-rose-500/50 px-8 py-4 rounded-xl w-full"
-          onPress={() => navigation.replace('Dashboard', { serverUrl, stats, villageName })}
+          onPress={handleLogout}
         >
           <Text className="text-rose-400 text-center font-bold uppercase tracking-widest text-xs">Keluar (Logout)</Text>
         </TouchableOpacity>

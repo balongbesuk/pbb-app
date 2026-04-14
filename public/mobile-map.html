@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Peta GIS Desa</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; }
+    #map { width: 100vw; height: 100vh; }
+    
+    #loading-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #0f172a;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transition: opacity 0.5s;
+    }
+    #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    
+    .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid rgba(59,130,246,0.2);
+      border-top: 4px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    .spinner-sm {
+      width: 24px; height: 24px;
+      border: 3px solid rgba(59,130,246,0.2);
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    #status-text {
+      color: #94a3b8; font-size: 12px;
+      font-weight: 700; text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    #error-text {
+      color: #f87171; font-size: 11px;
+      margin-top: 12px; display: none;
+      text-align: center; max-width: 280px;
+      line-height: 1.5;
+    }
+    #retry-btn {
+      display: none; margin-top: 24px;
+      padding: 12px 32px;
+      background: #3b82f6; color: white;
+      border: none; border-radius: 16px;
+      font-weight: 800; font-size: 11px;
+      text-transform: uppercase; letter-spacing: 1px;
+      cursor: pointer;
+    }
+
+    /* Legend */
+    .legend {
+      position: fixed; top: 16px; right: 16px; z-index: 1000;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+      border-radius: 16px; padding: 14px 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      font-size: 10px;
+    }
+    .legend-title {
+      font-weight: 900; color: #64748b;
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 8px; font-size: 9px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .legend-color { width: 18px; height: 4px; border-radius: 4px; }
+    .legend-label { font-weight: 600; color: #475569; }
+
+    /* Popup styling */
+    .leaflet-popup-content-wrapper {
+      border-radius: 16px !important;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15) !important;
+      border: 1px solid rgba(0,0,0,0.06) !important;
+    }
+    .leaflet-popup-tip { background: white !important; }
+    .popup-title { font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
+    .popup-stat { background: #f8fafc; border-radius: 10px; padding: 10px; border: 1px solid #f1f5f9; }
+    .popup-pct { font-size: 22px; font-weight: 900; color: #0f172a; }
+    .popup-bar { width: 100%; height: 5px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin: 6px 0; }
+    .popup-bar-fill { height: 100%; border-radius: 10px; }
+    .popup-detail { display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #64748b; }
+    .detail-wp-btn {
+      width: 100%; margin-top: 10px; padding: 9px 12px;
+      background: #0f172a; color: white; border: none; border-radius: 10px;
+      font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .detail-wp-btn:active { background: #334155; }
+
+    /* WP Panel (slide-up) */
+    #wp-panel-backdrop {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.5);
+      display: none; opacity: 0;
+      transition: opacity 0.3s;
+    }
+    #wp-panel-backdrop.visible { display: block; opacity: 1; }
+
+    #wp-panel {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001;
+      background: white; border-radius: 24px 24px 0 0;
+      max-height: 80vh; display: none;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      flex-direction: column;
+    }
+    #wp-panel.visible { display: flex; transform: translateY(0); }
+
+    .wp-panel-header {
+      padding: 20px 20px 16px; border-bottom: 1px solid #f1f5f9;
+      position: sticky; top: 0; background: white; z-index: 1;
+      border-radius: 24px 24px 0 0;
+    }
+    .wp-panel-handle {
+      width: 40px; height: 4px; background: #e2e8f0;
+      border-radius: 4px; margin: 0 auto 14px;
+    }
+    .wp-panel-title { font-size: 16px; font-weight: 900; color: #0f172a; margin-bottom: 4px; }
+    .wp-panel-subtitle { font-size: 11px; color: #64748b; font-weight: 600; }
+    .wp-panel-piutang { 
+      font-size: 18px; font-weight: 900; color: #ef4444; 
+      margin-top: 8px; letter-spacing: -0.5px;
+    }
+    .wp-panel-close {
+      position: absolute; top: 18px; right: 18px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #f1f5f9; border: none; cursor: pointer;
+      font-size: 16px; color: #64748b; font-weight: bold;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .wp-list {
+      overflow-y: auto; flex: 1; padding: 12px 16px 40px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .wp-card {
+      padding: 14px; border: 1px solid #f1f5f9; border-radius: 16px;
+      margin-bottom: 10px; background: white;
+    }
+    .wp-name { font-size: 13px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-bottom: 4px; }
+    .wp-nop { font-size: 10px; font-family: monospace; color: #94a3b8; font-weight: 600; margin-bottom: 3px; }
+    .wp-region { font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .wp-amount { font-size: 14px; font-weight: 900; color: #ef4444; margin-top: 6px; letter-spacing: -0.3px; }
+    .wp-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .wp-btn-pay {
+      flex: 1; padding: 10px 12px; border: none; border-radius: 12px;
+      font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+      cursor: pointer; text-align: center; text-decoration: none; display: block;
+      background: #059669; color: white; transition: background 0.2s;
+    }
+    .wp-btn-pay:active { background: #047857; }
+    
+    .wp-empty {
+      text-align: center; padding: 40px 20px; color: #64748b;
+    }
+    .wp-empty-icon { font-size: 32px; margin-bottom: 8px; }
+    .wp-empty-text { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
+    .wp-loading {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 40px; gap: 12px;
+    }
+    .wp-loading-text { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+    
+    .wp-load-more {
+      text-align: center; padding: 12px;
+      color: #3b82f6; font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
+      border: 1px dashed #bfdbfe; border-radius: 12px; margin-top: 4px;
+    }
+    .wp-load-more:active { background: #eff6ff; }
+  </style>
+</head>
+<body>
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div id="status-text">Menghubungkan...</div>
+    <div id="error-text"></div>
+    <button id="retry-btn" onclick="loadMap()">Coba Lagi</button>
+  </div>
+
+  <div id="map"></div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-title">Status Bayar</div>
+    <div class="legend-item"><div class="legend-color" style="background:#10b981"></div><span class="legend-label">Sangat Baik</span></div>
+    <div class="legend-item"><div class="legend-color" style="background:#eab308"></div><span class="legend-label">Cukup</span></div>
+    <div class="legend-item"><div class="legend-color" style="background:#ef4444"></div><span class="legend-label">Buruk</span></div>
+  </div>
+
+  <!-- WP Panel (slide up from bottom) -->
+  <div id="wp-panel-backdrop" onclick="closeWpPanel()"></div>
+  <div id="wp-panel">
+    <div class="wp-panel-header">
+      <div class="wp-panel-handle"></div>
+      <button class="wp-panel-close" onclick="closeWpPanel()">✕</button>
+      <div class="wp-panel-title" id="wp-panel-title">-</div>
+      <div class="wp-panel-subtitle" id="wp-panel-subtitle">Memuat data...</div>
+      <div class="wp-panel-piutang" id="wp-panel-piutang"></div>
+    </div>
+    <div class="wp-list" id="wp-list"></div>
+  </div>
+
+  <script>
+    var map = null;
+    var geoLayer = null;
+    var currentTahun = new Date().getFullYear();
+
+    function getColor(pct) {
+      if (pct === 0) return '#94a3b8';
+      if (pct >= 90) return '#10b981';
+      if (pct >= 75) return '#84cc16';
+      if (pct >= 50) return '#eab308';
+      if (pct >= 25) return '#f97316';
+      return '#ef4444';
+    }
+
+    function getStatsKey(props) {
+      if (props.regionType === 'RT') return 'RT_' + parseInt(props.rt || '0') + 'RW_' + parseInt(props.rw || '0');
+      if (props.regionType === 'RW') return 'RW_' + parseInt(props.rw || '0');
+      if (props.regionType === 'DUSUN') return 'DUSUN_' + (props.dusun || '').toUpperCase();
+      if (props.regionType === 'DESA') return 'DESA_TOTAL';
+      return '';
+    }
+
+    function formatRupiah(amount) {
+      return 'Rp ' + Number(amount || 0).toLocaleString('id-ID');
+    }
+
+    function setStatus(text) {
+      document.getElementById('status-text').textContent = text;
+    }
+
+    function showError(msg) {
+      var el = document.getElementById('error-text');
+      el.textContent = msg;
+      el.style.display = 'block';
+      document.getElementById('retry-btn').style.display = 'block';
+    }
+
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.add('hidden');
+    }
+
+    // ========== WP Panel ==========
+    var wpPanelPage = 1;
+    var wpPanelHasMore = false;
+    var wpPanelParams = {};
+
+    function openWpPanel(type, rt, rw, dusun, title) {
+      wpPanelPage = 1;
+      wpPanelHasMore = false;
+      wpPanelParams = { type: type, rt: rt, rw: rw, dusun: dusun };
+      
+      document.getElementById('wp-panel-title').textContent = title;
+      document.getElementById('wp-panel-subtitle').textContent = 'Memuat data...';
+      document.getElementById('wp-panel-piutang').textContent = '';
+      document.getElementById('wp-list').innerHTML = '<div class="wp-loading"><div class="spinner-sm"></div><div class="wp-loading-text">Mengambil Data WP...</div></div>';
+      
+      document.getElementById('wp-panel-backdrop').classList.add('visible');
+      // Small delay for animation
+      setTimeout(function() {
+        document.getElementById('wp-panel').classList.add('visible');
+      }, 50);
+      
+      fetchWpData(1, true);
+    }
+
+    function closeWpPanel() {
+      document.getElementById('wp-panel').classList.remove('visible');
+      setTimeout(function() {
+        document.getElementById('wp-panel-backdrop').classList.remove('visible');
+      }, 350);
+    }
+
+    async function fetchWpData(page, isInitial) {
+      try {
+        var params = new URLSearchParams({
+          tahun: currentTahun.toString(),
+          type: wpPanelParams.type,
+          page: page.toString(),
+          limit: '20'
+        });
+        if (wpPanelParams.rt) params.set('rt', wpPanelParams.rt);
+        if (wpPanelParams.rw) params.set('rw', wpPanelParams.rw);
+        if (wpPanelParams.dusun) params.set('dusun', wpPanelParams.dusun);
+
+        var res = await fetch('/api/region-unpaid?' + params.toString());
+        var json = await res.json();
+
+        wpPanelPage = page;
+        wpPanelHasMore = json.hasMore;
+
+        document.getElementById('wp-panel-subtitle').textContent = 
+          json.totalCount + ' Wajib Pajak belum lunas (Tahun ' + currentTahun + ')';
+        document.getElementById('wp-panel-piutang').textContent = formatRupiah(json.totalPiutang);
+
+        var listEl = document.getElementById('wp-list');
+
+        if (isInitial) {
+          listEl.innerHTML = '';
+        }
+
+        if (json.data.length === 0 && isInitial) {
+          listEl.innerHTML = '<div class="wp-empty"><div class="wp-empty-icon">🎉</div><div class="wp-empty-text" style="color:#10b981">Semua Terbayar Lunas!</div><div style="color:#94a3b8;font-size:11px;margin-top:6px">Tidak ada tunggakan di wilayah ini</div></div>';
+          return;
+        }
+
+        // Remove existing "load more" button
+        var existingLoadMore = listEl.querySelector('.wp-load-more');
+        if (existingLoadMore) existingLoadMore.remove();
+
+        json.data.forEach(function(wp) {
+          var cleanNop = (wp.nop || '').replace(/\D/g, '');
+          var payUrl = 'https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=' + cleanNop;
+          var cardId = 'wp-card-' + wp.id;
+          var card = document.createElement('div');
+          card.className = 'wp-card';
+          card.id = cardId;
+          card.innerHTML = 
+            '<div class="wp-name">' + escapeHtml(wp.namaWp) + '</div>' +
+            '<div class="wp-nop">' + escapeHtml(wp.nop) + '</div>' +
+            '<div class="wp-region">RT ' + (wp.rt || '-') + ' / RW ' + (wp.rw || '-') + '</div>' +
+            '<div class="wp-amount">' + formatRupiah(wp.ketetapan) + '</div>' +
+            '<div class="wp-actions">' +
+              '<button class="wp-btn-pay wp-btn-check" data-nop="' + escapeHtml(wp.nop) + '" data-name="' + escapeHtml(wp.namaWp) + '" data-id="' + wp.id + '" data-pay-url="' + payUrl + '" data-ketetapan="' + wp.ketetapan + '">🔍 Cek & Bayar Online</button>' +
+            '</div>';
+          listEl.appendChild(card);
+        });
+
+        if (json.hasMore) {
+          var loadMoreEl = document.createElement('div');
+          loadMoreEl.className = 'wp-load-more';
+          loadMoreEl.textContent = 'Muat Lebih Banyak ▼';
+          loadMoreEl.onclick = function() {
+            loadMoreEl.textContent = 'Memuat...';
+            fetchWpData(wpPanelPage + 1, false);
+          };
+          listEl.appendChild(loadMoreEl);
+        }
+
+      } catch (err) {
+        console.error('WP fetch error:', err);
+        document.getElementById('wp-list').innerHTML = 
+          '<div class="wp-empty"><div class="wp-empty-icon">⚠️</div><div class="wp-empty-text" style="color:#ef4444">Gagal Memuat Data</div><div style="color:#94a3b8;font-size:11px;margin-top:6px">' + err.message + '</div></div>';
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ========== Check & Pay ==========
+    var checkCooldowns = {};
+
+    async function checkAndPay(btn) {
+      var nop = btn.getAttribute('data-nop');
+      var name = btn.getAttribute('data-name');
+      var wpId = btn.getAttribute('data-id');
+      var payUrl = btn.getAttribute('data-pay-url');
+      var ketetapan = parseInt(btn.getAttribute('data-ketetapan') || '0');
+
+      // Cooldown check (15s)
+      var lastCheck = checkCooldowns[nop] || 0;
+      var now = Date.now();
+      if (now - lastCheck < 15000) {
+        var remaining = Math.ceil((15000 - (now - lastCheck)) / 1000);
+        showToast('⏳ Tunggu ' + remaining + ' detik lagi', '#f59e0b');
+        return;
+      }
+      checkCooldowns[nop] = now;
+
+      // Show loading state
+      var origText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner-sm" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px"></div> Mengecek...';
+      btn.style.opacity = '0.7';
+
+      try {
+        var res = await fetch('/api/check-bapenda', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nop: nop, tahun: currentTahun })
+        });
+        var data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Gagal terhubung ke Bapenda');
+        }
+
+        if (data.isPaid) {
+          // Already paid! Show success and remove card
+          showToast('✅ ' + name + ' sudah LUNAS!', '#10b981');
+          var cardEl = document.getElementById('wp-card-' + wpId);
+          if (cardEl) {
+            cardEl.style.transition = 'all 0.4s';
+            cardEl.style.opacity = '0';
+            cardEl.style.transform = 'translateX(-100%)';
+            setTimeout(function() { cardEl.remove(); }, 400);
+          }
+          // Update counters
+          var subtitleEl = document.getElementById('wp-panel-subtitle');
+          var piutangEl = document.getElementById('wp-panel-piutang');
+          var currentCount = parseInt(subtitleEl.textContent) || 0;
+          if (currentCount > 0) {
+            subtitleEl.textContent = (currentCount - 1) + ' Wajib Pajak belum lunas (Tahun ' + currentTahun + ')';
+          }
+        } else {
+          // Not paid - redirect to EPAY
+          showToast('⚠️ Belum lunas. Membuka halaman pembayaran...', '#f59e0b');
+          setTimeout(function() {
+            window.open(payUrl, '_blank');
+          }, 800);
+
+          // Restore button
+          btn.disabled = false;
+          btn.innerHTML = origText;
+          btn.style.opacity = '1';
+        }
+
+      } catch (err) {
+        console.error('Check Bapenda error:', err);
+        showToast('❌ ' + err.message, '#ef4444');
+        btn.disabled = false;
+        btn.innerHTML = origText;
+        btn.style.opacity = '1';
+      }
+    }
+
+    // Simple toast notification
+    function showToast(message, color) {
+      var existing = document.getElementById('map-toast');
+      if (existing) existing.remove();
+
+      var toast = document.createElement('div');
+      toast.id = 'map-toast';
+      toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:' + color + ';color:white;padding:12px 20px;border-radius:16px;font-size:12px;font-weight:700;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:85vw;text-align:center;transition:opacity 0.4s;';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(function() {
+        toast.style.opacity = '0';
+        setTimeout(function() { toast.remove(); }, 400);
+      }, 3500);
+    }
+
+    // Global click handler for check buttons
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('.wp-btn-check');
+      if (btn) {
+        e.preventDefault();
+        checkAndPay(btn);
+      }
+    });
+    // ========== End WP Panel ==========
+
+    async function loadMap() {
+      // Reset UI
+      document.getElementById('error-text').style.display = 'none';
+      document.getElementById('retry-btn').style.display = 'none';
+      document.getElementById('loading-overlay').classList.remove('hidden');
+
+      var geoData = null;
+      var stats = {};
+
+      try {
+        // Step 1: Load village config
+        setStatus('Memuat Konfigurasi...');
+        var configRes = await fetch('/api/village-config');
+        var config = {};
+        if (configRes.ok) {
+          config = await configRes.json();
+          if (config.tahunPajak) currentTahun = config.tahunPajak;
+        }
+        var centerLat = config.mapCenterLat || -7.5744;
+        var centerLng = config.mapCenterLng || 112.235;
+        var defaultZoom = config.mapDefaultZoom || 15;
+
+        // Step 2: Load GeoJSON
+        setStatus('Memuat Batas Wilayah...');
+        var geoRes = await fetch('/maps/village.json?v=' + Date.now());
+        if (!geoRes.ok) throw new Error('Gagal memuat peta: ' + geoRes.status);
+        geoData = await geoRes.json();
+
+        // Step 3: Load Stats
+        setStatus('Memuat Data Statistik...');
+        var statsRes = await fetch('/api/region-stats?tahun=' + currentTahun);
+        if (statsRes.ok) stats = await statsRes.json();
+
+        // Step 4: Render Map
+        setStatus('Menggambar Peta...');
+
+        if (!map) {
+          map = L.map('map', {
+            center: [centerLat, centerLng],
+            zoom: defaultZoom,
+            zoomControl: false
+          });
+
+          L.control.zoom({ position: 'topleft' }).addTo(map);
+
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OSM'
+          }).addTo(map);
+        }
+
+        // Remove old layer
+        if (geoLayer) map.removeLayer(geoLayer);
+
+        // Add GeoJSON
+        geoLayer = L.geoJSON(geoData, {
+          style: function(feature) {
+            var props = feature.properties;
+            var type = props.regionType;
+            var key = getStatsKey(props);
+            var s = stats[key] || { percentage: 0 };
+
+            var hasRT = geoData.features.some(function(f) { return f.properties.regionType === 'RT'; });
+            var hasRW = geoData.features.some(function(f) { return f.properties.regionType === 'RW'; });
+            var hasDusun = geoData.features.some(function(f) { return f.properties.regionType === 'DUSUN'; });
+
+            var isPrimary = 
+              (type === 'RT') ||
+              (type === 'RW' && !hasRT) ||
+              (type === 'DUSUN' && !hasRW && !hasRT) ||
+              (type === 'DESA' && !hasDusun && !hasRW && !hasRT);
+
+            return {
+              fillColor: isPrimary ? getColor(s.percentage) : 'transparent',
+              fillOpacity: isPrimary ? 0.65 : 0,
+              weight: type === 'DESA' ? 3.5 : type === 'DUSUN' ? 2 : 1,
+              color: type === 'DESA' ? '#000' : type === 'DUSUN' ? '#475569' : '#94a3b8',
+              dashArray: type === 'DESA' ? '' : '4',
+              interactive: isPrimary
+            };
+          },
+          onEachFeature: function(feature, layer) {
+            var props = feature.properties;
+            var key = getStatsKey(props);
+            var s = stats[key] || { total: 0, lunas: 0, percentage: 0 };
+            var color = getColor(s.percentage);
+            var pct = Math.round(s.percentage);
+
+            var title = '';
+            if (props.regionType === 'RT') title = 'RT ' + (props.rt || '') + ' RW ' + (props.rw || '');
+            else if (props.regionType === 'RW') title = 'RW ' + (props.rw || '');
+            else if (props.regionType === 'DUSUN') title = 'Dusun ' + (props.dusun || '');
+            else if (props.regionType === 'DESA') title = 'Desa Balongbesuk';
+
+            // Build the "Detail WP" button data
+            var btnData = 'data-type="' + props.regionType + '"'
+              + ' data-rt="' + (props.rt || '') + '"'
+              + ' data-rw="' + (props.rw || '') + '"'
+              + ' data-dusun="' + (props.dusun || '') + '"'
+              + ' data-title="' + escapeHtml(title) + '"';
+
+            var html = '<div style="min-width:170px">' +
+              '<div class="popup-title">' + title + '</div>' +
+              '<div class="popup-stat">' +
+                '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">' +
+                  '<span class="popup-pct">' + pct + '%</span>' +
+                  '<span style="font-size:10px;font-weight:700;color:' + color + ';text-transform:uppercase">Lunas</span>' +
+                '</div>' +
+                '<div class="popup-bar"><div class="popup-bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>' +
+                '<div class="popup-detail"><span>' + s.lunas + ' Terbayar</span><span>' + s.total + ' Objek</span></div>' +
+              '</div>' +
+              '<button class="detail-wp-btn" ' + btnData + '>Detail WP Belum Bayar</button>' +
+            '</div>';
+
+            layer.bindPopup(html, { closeButton: false, minWidth: 200 });
+
+            layer.on({
+              mouseover: function(e) { e.target.setStyle({ fillOpacity: 0.85, weight: 2 }); },
+              mouseout: function(e) { geoLayer.resetStyle(e.target); },
+              click: function(e) { layer.openPopup(); }
+            });
+          }
+        }).addTo(map);
+
+        // Done
+        hideLoading();
+        map.invalidateSize();
+
+      } catch (err) {
+        console.error('Map load error:', err);
+        showError('Gagal memuat peta: ' + err.message + '. Pastikan server berjalan dan koneksi stabil.');
+      }
+    }
+
+    // Global click handler for dynamically created "Detail WP" buttons
+    document.addEventListener('click', function(e) {
+      var btn = e.target;
+      if (btn.classList && btn.classList.contains('detail-wp-btn')) {
+        var type = btn.getAttribute('data-type');
+        var rt = btn.getAttribute('data-rt');
+        var rw = btn.getAttribute('data-rw');
+        var dusun = btn.getAttribute('data-dusun');
+        var title = btn.getAttribute('data-title');
+        openWpPanel(type, rt, rw, dusun, title);
+      }
+    });
+
+    // Start
+    loadMap();
+  </script>
+</body>
+</html>

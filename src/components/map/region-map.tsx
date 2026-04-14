@@ -199,19 +199,25 @@ export function RegionMap({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  const [statusText, setStatusText] = useState("Memuat Peta Desa...");
+
   useEffect(() => {
     async function fetchData() {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+      setLoading(true);
       try {
-        const [geoRes, statsRes] = await Promise.all([
-          fetch(`/maps/village.json?v=${Date.now()}`, { cache: "no-store" }),
-          fetch(`/api/region-stats?tahun=${tahun}`, { cache: "no-store" })
-        ]);
+        setStatusText("Memuat Batas Wilayah...");
+        const geoRes = await fetch(`/maps/village.json?v=${Date.now()}`, { 
+          cache: "no-store",
+          signal: controller.signal 
+        });
         
         if (geoRes.ok) {
             const data = (await geoRes.json()) as RegionFeatureCollection;
             setGeoData(data);
 
-            // Auto-ON layer hanya jika ada datanya
             const features = data?.features || [];
             if (features.some((feature) => feature.properties?.regionType === "RT")) setShowRT(true);
             if (features.some((feature) => feature.properties?.regionType === "RW")) setShowRW(true);
@@ -219,17 +225,34 @@ export function RegionMap({
             if (features.some((feature) => feature.properties?.regionType === "DESA")) setShowDesa(true);
         }
 
+        setStatusText("Memuat Statistik Pembayaran...");
+        const statsRes = await fetch(`/api/region-stats?tahun=${tahun}`, { 
+          cache: "no-store",
+          signal: controller.signal
+        });
+
         if (statsRes.ok) {
           setStats((await statsRes.json()) as Record<string, RegionStat>);
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+           console.error("Fetch timeout");
+        }
         console.error("Gagal memuat data peta:", err);
       } finally {
+        clearTimeout(timeoutId);
         setLoading(false);
       }
     }
     fetchData();
   }, [tahun]);
+
+  const handleRetry = () => {
+    setLoading(true);
+    setGeoData(null);
+    // This will trigger the useEffect because it changes local state if we had a trigger
+    window.location.reload();
+  };
 
   // Handle global click for Leaflet buttons
   useEffect(() => {
@@ -386,8 +409,37 @@ export function RegionMap({
     });
   };
 
-  if (loading) return <div className="h-[500px] flex items-center justify-center bg-slate-50 rounded-xl border border-dashed border-slate-300">Memuat Peta Desa...</div>;
-  if (!geoData) return <div className="h-[500px] flex items-center justify-center text-rose-500 font-medium">Batas wilayah tidak ditemukan.</div>;
+  if (loading) return (
+    <div className="h-[500px] flex flex-col items-center justify-center bg-slate-50/50 backdrop-blur-sm rounded-3xl border border-dashed border-slate-300">
+      <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+      <p className="text-slate-600 font-bold tracking-tight text-lg mb-2">{statusText}</p>
+      <p className="text-slate-400 text-xs uppercase tracking-widest font-black">Mohon Tunggu Sebentar...</p>
+      
+      {/* Tombol bantuan jika terlalu lama */}
+      <button 
+        onClick={handleRetry}
+        className="mt-8 px-6 py-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+      >
+        Muat Ulang Paksa
+      </button>
+    </div>
+  );
+
+  if (!geoData) return (
+    <div className="h-[500px] flex flex-col items-center justify-center bg-rose-50 rounded-3xl border border-dashed border-rose-200 px-10 text-center">
+      <div className="w-16 h-16 bg-rose-100 rounded-full items-center justify-center flex mb-4">
+        <span className="text-2xl">🗺️</span>
+      </div>
+      <p className="text-rose-600 font-bold mb-2">Batas wilayah tidak ditemukan.</p>
+      <p className="text-slate-500 text-xs mb-6 max-w-xs leading-relaxed">Server mungkin sedang sibuk atau data peta belum terkonfigurasi untuk tahun ini.</p>
+      <button 
+        onClick={handleRetry}
+        className="px-8 py-3 bg-rose-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-rose-200"
+      >
+        Coba Hubungkan Kembali
+      </button>
+    </div>
+  );
 
   // Filter fitur berdasarkan tipe untuk dirender di layer terpisah
   const rtFeatures = geoData.features.filter((feature) => feature.properties?.regionType === "RT");

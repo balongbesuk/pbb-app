@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs'; // Often bcryptjs is used in Nextjs, let's assume bcryptjs or try to import it.
+import bcrypt from 'bcryptjs';
+import { encode } from 'next-auth/jwt';
 
 export async function POST(request: Request) {
   const headers = {
@@ -41,8 +42,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Kredensial tidak valid' }, { status: 401, headers });
     }
 
+    const magicToken = await encode({
+      token: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword,
+      },
+      secret: process.env.NEXTAUTH_SECRET || 'pbb-desa-rahasia-sekali-123',
+    });
+
     return NextResponse.json({
       success: true,
+      magicToken,
       user: {
         id: user.id,
         name: user.name,

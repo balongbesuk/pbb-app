@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, TouchableWithoutFeedback } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function DashboardScreen({ route, navigation }: any) {
   const { villageName, serverUrl, stats = {}, villageLogo } = route.params || {};
@@ -77,60 +78,76 @@ export default function DashboardScreen({ route, navigation }: any) {
          <View className="px-6 mt-8">
            <Text className="text-slate-400 font-black text-[10px] uppercase tracking-[2px] mb-5 ml-1">Layanan Utama</Text>
            
-           <View className="flex-row flex-wrap justify-between">
-              {/* Card 1 */}
+           <View className="flex-col space-y-3">
+              {/* Card 1 - Cek Tagihan */}
               <TouchableOpacity 
-                className="w-[48%] bg-white p-6 rounded-[28px] shadow-sm mb-4 border border-slate-100/50"
+                activeOpacity={0.7}
+                className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm"
                 onPress={() => navigation.navigate('PaymentCheck', { serverUrl })}
               >
-                <View className="w-12 h-12 bg-orange-50 rounded-2xl items-center justify-center mb-4">
-                  <Text className="text-2xl">💳</Text>
+                <View className="w-14 h-14 bg-indigo-50 rounded-2xl items-center justify-center border border-indigo-100/50 mr-4">
+                  <Ionicons name="card-outline" size={26} color="#4f46e5" />
                 </View>
-                <Text className="font-black text-slate-800 text-base leading-5">Cek{"\n"}Tagihan</Text>
-                <Text className="text-[9px] text-slate-400 font-bold mt-1">Cari NOP & status</Text>
+                <View className="flex-1">
+                  <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Cek Tagihan PBB</Text>
+                  <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Status & Pembayaran</Text>
+                </View>
+                <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
+                  <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                </View>
               </TouchableOpacity>
 
-              {/* Card 2 */}
+              {/* Card 2 - Mutasi Pajak */}
               <TouchableOpacity 
-                className="w-[48%] bg-white p-6 rounded-[28px] shadow-sm mb-4 border border-slate-100/50"
+                activeOpacity={0.7}
+                className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm mt-3"
                 onPress={() => navigation.navigate('Mutation', { serverUrl })}
               >
-                <View className="w-12 h-12 bg-emerald-50 rounded-2xl items-center justify-center mb-4">
-                  <Text className="text-2xl">🔄</Text>
+                <View className="w-14 h-14 bg-emerald-50 rounded-2xl items-center justify-center border border-emerald-100/50 mr-4">
+                  <Ionicons name="swap-horizontal-outline" size={26} color="#059669" />
                 </View>
-                <Text className="font-black text-slate-800 text-base leading-5">Mutasi{"\n"}Pajak</Text>
-                <Text className="text-[9px] text-slate-400 font-bold mt-1">Permohonan ubah data</Text>
+                <View className="flex-1">
+                  <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Mutasi Pajak</Text>
+                  <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Permohonan Ubah Data</Text>
+                </View>
+                <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
+                  <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                </View>
               </TouchableOpacity>
 
-              {/* Card 3 - Full Width */}
-              <TouchableOpacity className="w-full bg-white p-5 rounded-[28px] flex-row items-center shadow-sm mb-4 border border-slate-100/50">
-                 <View className="w-14 h-14 bg-amber-50 rounded-2xl items-center justify-center mr-4">
-                    <Text className="text-2xl">📑</Text>
-                 </View>
-                 <View className="flex-1">
-                    <Text className="font-black text-slate-800 text-base">Pencarian Data SPOP</Text>
-                    <Text className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Arsip Digital</Text>
-                 </View>
-                 <View className="w-9 h-9 bg-slate-50 rounded-full items-center justify-center">
-                    <Text className="text-slate-300 font-bold">→</Text>
-                 </View>
-              </TouchableOpacity>
-
-              {/* Card 4 - Extra Access */}
+              {/* Card 3 - Pencarian SPOP */}
               <TouchableOpacity 
-                className="w-full bg-blue-50/50 p-5 rounded-[28px] flex-row items-center border border-blue-100/50"
-                onPress={() => navigation.navigate('Login', { serverUrl })}
+                activeOpacity={0.7}
+                className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm mt-3"
               >
-                 <View className="w-14 h-14 bg-white rounded-2xl items-center justify-center mr-4 shadow-sm">
-                    <Text className="text-2xl">🛡️</Text>
-                 </View>
-                 <View className="flex-1">
-                    <Text className="font-black text-blue-900 text-base">Akses Petugas</Text>
-                    <Text className="text-[9px] text-blue-600 font-bold uppercase tracking-wider">Khusus Operator</Text>
-                 </View>
-                 <View className="w-9 h-9 bg-white rounded-full items-center justify-center shadow-sm">
-                    <Text className="text-blue-400 font-bold">→</Text>
-                 </View>
+                <View className="w-14 h-14 bg-amber-50 rounded-2xl items-center justify-center border border-amber-100/50 mr-4">
+                  <Ionicons name="document-text-outline" size={26} color="#d97706" />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Data Arsip SPOP</Text>
+                  <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Pencarian Berkas Digital</Text>
+                </View>
+                <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
+                  <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                </View>
+              </TouchableOpacity>
+
+              {/* Card 4 - Peta GIS */}
+              <TouchableOpacity 
+                activeOpacity={0.7}
+                className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm mt-3"
+                onPress={() => navigation.navigate('GisMap', { serverUrl })}
+              >
+                <View className="w-14 h-14 bg-rose-50 rounded-2xl items-center justify-center border border-rose-100/50 mr-4">
+                  <Ionicons name="map-outline" size={26} color="#e11d48" />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Peta GIS Desa</Text>
+                  <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Visualisasi Sebaran PBB</Text>
+                </View>
+                <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
+                  <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                </View>
               </TouchableOpacity>
            </View>
          </View>
@@ -170,7 +187,7 @@ export default function DashboardScreen({ route, navigation }: any) {
                      onPress={() => setMenuVisible(false)}
                      style={{ width: 36, height: 36, backgroundColor: '#f1f5f9', borderRadius: 18, alignItems: 'center', justifyContent: 'center' }}
                    >
-                     <Text style={{ color: '#64748b', fontWeight: '700' }}>✕</Text>
+                     <Ionicons name="close" size={20} color="#64748b" />
                    </TouchableOpacity>
                  </View>
 
@@ -187,13 +204,13 @@ export default function DashboardScreen({ route, navigation }: any) {
                       }}
                     >
                       <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#dbeafe', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-                        <Text style={{ fontSize: 18 }}>🛡️</Text>
+                        <Ionicons name="shield-checkmark" size={20} color="#3b82f6" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontWeight: '900', color: '#1e293b', fontSize: 14 }}>Akses Petugas</Text>
                         <Text style={{ fontSize: 9, color: '#3b82f6', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 }}>Operator Panel</Text>
                       </View>
-                      <Text style={{ color: '#93c5fd', fontWeight: '700', fontSize: 18 }}>›</Text>
+                      <Ionicons name="chevron-forward" size={20} color="#93c5fd" />
                     </TouchableOpacity>
 
                     {/* Ganti Koneksi */}
@@ -205,13 +222,13 @@ export default function DashboardScreen({ route, navigation }: any) {
                       }}
                     >
                       <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-                        <Text style={{ fontSize: 18 }}>🔗</Text>
+                        <Ionicons name="link" size={20} color="#64748b" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontWeight: '900', color: '#1e293b', fontSize: 14 }}>Ganti Koneksi</Text>
                         <Text style={{ fontSize: 9, color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 }}>Server URL</Text>
                       </View>
-                      <Text style={{ color: '#cbd5e1', fontWeight: '700', fontSize: 18 }}>›</Text>
+                      <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
                     </TouchableOpacity>
                  </ScrollView>
                </View>

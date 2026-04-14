@@ -1,16 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function GisMapScreen({ route, navigation }: any) {
   const { serverUrl } = route.params;
   const [loading, setLoading] = useState(true);
+  const [mapUrl, setMapUrl] = useState('');
+  const webViewRef = useRef<any>(null);
 
-  // We point the webview to the Next.js map page.
-  // Assuming the user has a public map or we append a mobile flag.
-  // Let's assume the map can be accessed at /peta for this demo.
-  const mapUrl = `${serverUrl}/peta`;
+  useEffect(() => {
+    prepareMapUrl();
+  }, []);
+
+  const prepareMapUrl = async () => {
+    try {
+      // Clean baseUrl
+      let baseUrl = serverUrl.replace(/\/$/, '');
+      if (!baseUrl.startsWith('http')) baseUrl = `http://${baseUrl}`;
+
+      // Use the lightweight standalone map page - no auth needed, 
+      // it just fetches public JSON data from the same server
+      const url = `${baseUrl}/mobile-map.html`;
+      console.log('Map URL:', url);
+      setMapUrl(url);
+    } catch (e) {
+      console.error('Failed to prepare map URL:', e);
+    }
+  };
+
+  const handleReload = () => {
+    setLoading(true);
+    if (webViewRef.current) {
+      webViewRef.current.reload();
+    }
+  };
 
   return (
     <View className="flex-1 bg-slate-900">
@@ -22,13 +47,18 @@ export default function GisMapScreen({ route, navigation }: any) {
           <Text className="text-xl font-black text-white uppercase tracking-tighter">Peta GIS</Text>
           <Text className="text-slate-400 font-medium text-[10px] tracking-widest uppercase">Peta Persebaran PBB (Live)</Text>
         </View>
-        <TouchableOpacity onPress={() => setLoading(true)} className="p-2 bg-blue-600 rounded-full w-10 h-10 items-center justify-center shadow-lg shadow-blue-500/50">
+        <TouchableOpacity onPress={handleReload} className="p-2 bg-blue-600 rounded-full w-10 h-10 items-center justify-center shadow-lg shadow-blue-500/50">
            <Text className="text-white font-bold text-sm">↻</Text>
         </TouchableOpacity>
       </View>
 
       <View className="flex-1 rounded-t-3xl overflow-hidden bg-slate-800 relative">
-        {Platform.OS === 'web' ? (
+        {!mapUrl ? (
+          <View className="flex-1 items-center justify-center p-10">
+             <ActivityIndicator size="large" color="#3b82f6" />
+             <Text className="text-blue-400 font-bold mt-4">Menyiapkan Koneksi...</Text>
+          </View>
+        ) : Platform.OS === 'web' ? (
           <iframe 
             src={mapUrl} 
             style={{ width: '100%', height: '100%', border: 'none' }}
@@ -36,18 +66,31 @@ export default function GisMapScreen({ route, navigation }: any) {
           />
         ) : (
           <WebView
+            ref={webViewRef}
             source={{ uri: mapUrl }}
             style={{ flex: 1 }}
             onLoad={() => setLoading(false)}
             javaScriptEnabled={true}
             domStorageEnabled={true}
+            startInLoadingState={false}
+            originWhitelist={['*']}
+            mixedContentMode="always"
+            allowFileAccess={true}
+            cacheEnabled={true}
+            onError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.warn('WebView error: ', nativeEvent);
+              setLoading(false);
+            }}
           />
         )}
-        
+
         {loading && (
-          <View className="absolute inset-0 bg-slate-800/80 items-center justify-center">
+          <View className="absolute inset-0 bg-slate-900 items-center justify-center">
             <ActivityIndicator size="large" color="#3b82f6" />
-            <Text className="text-blue-400 font-black tracking-widest uppercase text-xs mt-4">Memuat Peta...</Text>
+            <Text className="text-blue-400 font-black tracking-widest uppercase text-[10px] mt-6">
+               Memuat Peta...
+            </Text>
           </View>
         )}
       </View>
