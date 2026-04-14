@@ -6,6 +6,17 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get('token');
   const target = searchParams.get('target') || '/';
 
+  let safeTarget = '/';
+  try {
+    const baseUrl = new URL(request.url);
+    const resolvedTarget = new URL(target, baseUrl);
+    if (resolvedTarget.origin === baseUrl.origin) {
+      safeTarget = `${resolvedTarget.pathname}${resolvedTarget.search}${resolvedTarget.hash}`;
+    }
+  } catch {
+    safeTarget = '/';
+  }
+
   if (!token) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
@@ -30,7 +41,7 @@ export async function GET(request: NextRequest) {
         <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
         <script>
           setTimeout(function() {
-            window.location.href = "${target}";
+            window.location.href = ${JSON.stringify(safeTarget)};
           }, 500);
         </script>
       </body>
