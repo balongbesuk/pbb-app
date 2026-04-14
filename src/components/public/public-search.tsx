@@ -677,27 +677,32 @@ export function PublicSearch({
                       <div className="flex flex-wrap items-center justify-end gap-3 mt-4">
                         <Button
                           variant="outline"
+                          size="icon"
                           className={cn(
-                            "h-12 text-xs font-black uppercase tracking-widest gap-2.5 rounded-2xl transition-all shadow-sm active:scale-95 px-6",
+                            "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
                             isDark 
                               ? "border-white/10 bg-white/5 text-white hover:bg-white/10" 
                               : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
                           )}
                           onClick={() => window.open(item.arsipUrl || "", "_blank")}
+                          title="Cetak SPPT"
                         >
-                          <Printer className="w-5 h-5" />
-                          Cetak SPPT
+                          <Printer className="w-5.25 h-5.25" />
                         </Button>
                         <Button
                           variant="default"
+                          size="icon"
                           nativeButton={false}
                           className={cn(
-                            "h-12 text-xs font-black uppercase tracking-widest gap-2.5 rounded-2xl transition-all shadow-lg shadow-primary/20 px-8 active:scale-95",
+                            "h-11 w-11 rounded-2xl transition-all shadow-lg shadow-primary/20 active:scale-95",
                           )}
+                          title="Unduh PDF"
                           render={
-                            <a href={item.arsipUrl || ""} target="_blank" rel="noopener noreferrer">
-                              <Download className="w-5 h-5" />
-                              Unduh PDF
+                            <a 
+                              href={`${item.arsipUrl}?dl=1`} 
+                              download={`${item.nop}-${tahunPajak}.pdf`}
+                            >
+                              <Download className="w-5.25 h-5.25" />
                             </a>
                           }
                         />

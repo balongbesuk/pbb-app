@@ -74,6 +74,11 @@ export async function GET(
       );
     }
 
+    // --- DOWNLOAD PARAMETER ---
+    const searchParams = req.nextUrl.searchParams;
+    const isDownload = searchParams.get("dl") === "1" || searchParams.get("download") === "1";
+    const disposition = isDownload ? "attachment" : "inline";
+
     // 2. Cek apakah yang akses adalah ADMIN
     const session = await getServerSession(authOptions);
     const currentUser = session?.user as AppUser | undefined;
@@ -85,7 +90,7 @@ export async function GET(
       return new NextResponse(fileBuffer, {
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `inline; filename="${file}"`,
+          "Content-Disposition": `${disposition}; filename="${file}"`,
         },
       });
     }
@@ -150,7 +155,7 @@ export async function GET(
     return new NextResponse(fileBuffer, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${file}"`,
+        "Content-Disposition": `${disposition}; filename="${file}"`,
       },
     });
 
@@ -159,5 +164,3 @@ export async function GET(
     return new NextResponse("Kesalahan Server", { status: 500 });
   }
 }
-
-
