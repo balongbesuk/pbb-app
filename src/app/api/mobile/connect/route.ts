@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isPbbMobileEnabled } from '@/lib/mobile-access';
 
 export async function GET() {
   try {
@@ -11,6 +12,14 @@ export async function GET() {
     };
 
     const config = await prisma.villageConfig.findFirst();
+    const mobileEnabled = await isPbbMobileEnabled();
+    if (!mobileEnabled) {
+      return NextResponse.json(
+        { success: false, error: 'Akses PBB Mobile sedang dinonaktifkan oleh admin desa.' },
+        { status: 403, headers }
+      );
+    }
+
     const totalSppt = await prisma.taxData.count();
     const lunasSppt = await prisma.taxData.count({
       where: { paymentStatus: 'LUNAS' }

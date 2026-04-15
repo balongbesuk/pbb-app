@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isPbbMobileEnabled } from '@/lib/mobile-access';
 import bcrypt from 'bcryptjs';
 import { encode } from 'next-auth/jwt';
 
@@ -11,6 +12,14 @@ export async function POST(request: Request) {
   };
 
   try {
+    const mobileEnabled = await isPbbMobileEnabled();
+    if (!mobileEnabled) {
+      return NextResponse.json(
+        { success: false, error: 'Login PBB Mobile sedang dinonaktifkan oleh admin desa.' },
+        { status: 403, headers }
+      );
+    }
+
     const body = await request.json();
     const { username, password } = body;
 

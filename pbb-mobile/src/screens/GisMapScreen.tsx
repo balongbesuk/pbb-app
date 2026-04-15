@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity, ActivityIndicator, Platform } from 'react
 import { WebView } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { ScreenProps } from '../types/navigation';
+import { joinServerUrl, normalizeServerUrl } from '../utils/server';
 
-export default function GisMapScreen({ route, navigation }: any) {
+export default function GisMapScreen({ route, navigation }: ScreenProps<'GisMap'>) {
   const { serverUrl } = route.params;
   const [loading, setLoading] = useState(true);
   const [mapUrl, setMapUrl] = useState('');
@@ -17,12 +19,11 @@ export default function GisMapScreen({ route, navigation }: any) {
   const prepareMapUrl = async () => {
     try {
       // Clean baseUrl
-      let baseUrl = serverUrl.replace(/\/$/, '');
-      if (!baseUrl.startsWith('http')) baseUrl = `http://${baseUrl}`;
+      const baseUrl = normalizeServerUrl(serverUrl);
 
       // Use the lightweight standalone map page - no auth needed, 
       // it just fetches public JSON data from the same server
-      const url = `${baseUrl}/mobile-map.html`;
+      const url = joinServerUrl(baseUrl, '/mobile-map.html');
       console.log('Map URL:', url);
       setMapUrl(url);
     } catch (e) {

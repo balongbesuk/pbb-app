@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { ScreenProps } from '../types/navigation';
+import { joinServerUrl } from '../utils/server';
 
-export default function LoginScreen({ route, navigation }: any) {
+export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>) {
   const { serverUrl } = route.params || {};
 
   const [form, setForm] = useState({ username: '', password: '' });
@@ -25,7 +27,7 @@ export default function LoginScreen({ route, navigation }: any) {
     setErrorMsg('');
 
     try {
-      const response = await fetch(`${serverUrl}/api/mobile/auth/login`, {
+      const response = await fetch(joinServerUrl(serverUrl, '/api/mobile/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

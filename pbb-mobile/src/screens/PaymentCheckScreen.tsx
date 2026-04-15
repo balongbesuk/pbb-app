@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Linking, Alert, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Linking, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import type { ScreenProps } from '../types/navigation';
+import { joinServerUrl } from '../utils/server';
 
-export default function PaymentCheckScreen({ route, navigation }: any) {
+export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'PaymentCheck'>) {
   const { serverUrl } = route.params;
   const [nop, setNop] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,7 +45,7 @@ export default function PaymentCheckScreen({ route, navigation }: any) {
     setErrorMsg('');
     setResults([]);
     try {
-      const response = await fetch(`${serverUrl}/api/mobile/tax?nop=${targetNop}`);
+      const response = await fetch(`${joinServerUrl(serverUrl, '/api/mobile/tax')}?nop=${encodeURIComponent(targetNop.trim())}`);
       const data = await response.json();
       if (data.success && Array.isArray(data.data)) {
         setResults(data.data);
@@ -194,7 +196,7 @@ export default function PaymentCheckScreen({ route, navigation }: any) {
                         onPress={async () => {
                            try {
                              setLoading(true);
-                             const res = await fetch(`${serverUrl}/api/check-bapenda`, {
+                             const res = await fetch(joinServerUrl(serverUrl, '/api/check-bapenda'), {
                                method: 'POST',
                                headers: { 'Content-Type': 'application/json' },
                                body: JSON.stringify({ nop: item.nop, tahun: item.tahun })
@@ -213,6 +215,22 @@ export default function PaymentCheckScreen({ route, navigation }: any) {
                        <Text className="text-white font-black text-[10px] uppercase tracking-widest">Bayar Online Sekarang</Text>
                      </TouchableOpacity>
                    )}
+
+                   <TouchableOpacity
+                      className="mt-3 bg-white py-4 rounded-2xl items-center border border-slate-200"
+                      onPress={() =>
+                        navigation.navigate('Mutation', {
+                          serverUrl,
+                          initialDraft: {
+                            nopLama: item.nop,
+                            namaPemohon: item.namaWp,
+                            alasan: `Pengajuan perubahan data SPPT untuk objek pajak ${item.nop}`,
+                          },
+                        })
+                      }
+                   >
+                     <Text className="text-slate-700 font-black text-[10px] uppercase tracking-widest">Buat Draft Mutasi</Text>
+                   </TouchableOpacity>
                 </View>
               </Animated.View>
             ))}
@@ -233,9 +251,13 @@ export default function PaymentCheckScreen({ route, navigation }: any) {
               </Text>
               <TouchableOpacity 
                  className="w-full bg-emerald-700 py-4 rounded-2xl items-center mb-3"
-                 onPress={() => {
+                 onPress={async () => {
                     setShowUnpaidModal(null);
-                    Linking.openURL(`https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=${showUnpaidModal.nop}`);
+                    try {
+                      await Linking.openURL(`https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=${encodeURIComponent(showUnpaidModal.nop)}`);
+                    } catch (e) {
+                      Alert.alert('Error', 'Gagal membuka halaman pembayaran.');
+                    }
                  }}
               >
                  <Text className="text-white font-black text-[11px] uppercase tracking-widest">Lanjut ke EPAY JOMBANG</Text>

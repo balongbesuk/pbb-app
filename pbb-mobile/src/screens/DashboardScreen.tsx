@@ -1,14 +1,39 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, TouchableWithoutFeedback } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import type { ScreenProps } from '../types/navigation';
+import { joinServerUrl } from '../utils/server';
 
-export default function DashboardScreen({ route, navigation }: any) {
+export default function DashboardScreen({ route, navigation }: ScreenProps<'Dashboard'>) {
   const { villageName, serverUrl, stats = {}, villageLogo } = route.params || {};
   const [menuVisible, setMenuVisible] = useState(false);
+  const [draftCount, setDraftCount] = useState(0);
 
   const totalSppt = stats.totalSppt || 0;
   const lunasSppt = stats.lunasSppt || 0;
+
+  useEffect(() => {
+    loadDraftCount();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadDraftCount();
+    }, [])
+  );
+
+  const loadDraftCount = async () => {
+    try {
+      const savedDrafts = await AsyncStorage.getItem('@mutation_drafts_v1');
+      const parsedDrafts = savedDrafts ? JSON.parse(savedDrafts) : [];
+      setDraftCount(parsedDrafts.length);
+    } catch (error) {
+      setDraftCount(0);
+    }
+  };
 
   // Dynamic Logo Logic
   const getLogoSource = () => {
@@ -16,7 +41,7 @@ export default function DashboardScreen({ route, navigation }: any) {
       if (villageLogo.startsWith('http')) {
         return { uri: villageLogo };
       }
-      return { uri: `${serverUrl.replace(/\/$/, '')}${villageLogo.startsWith('/') ? '' : '/'}${villageLogo}` };
+      return { uri: joinServerUrl(serverUrl, villageLogo) };
     }
     return require('../../assets/icon.png');
   };
@@ -39,7 +64,7 @@ export default function DashboardScreen({ route, navigation }: any) {
                  />
                </View>
                <View className="ml-4">
-                 <Text style={{ fontSize: 26, fontWeight: '900', color: '#0f172a', letterSpacing: -1 }}>PBB Mobile</Text>
+                 <Text style={{ fontSize: 26, fontWeight: '900', color: '#0f172a', letterSpacing: -1 }}>PBB Desa</Text>
                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#64748b', letterSpacing: 3, textTransform: 'uppercase' }}>{villageName || 'Balongbesuk'}</Text>
                </View>
              </View>
@@ -52,6 +77,12 @@ export default function DashboardScreen({ route, navigation }: any) {
              </TouchableOpacity>
            </View>
 
+           <View className="mt-5 self-start bg-emerald-50 border border-emerald-100 rounded-full px-3 py-2">
+             <Text className="text-[9px] font-black text-emerald-700 uppercase tracking-[2px]">
+               Terhubung ke layanan desa {villageName || 'aktif'}
+             </Text>
+           </View>
+
            {/* Informational Banner Card - Premium Visual */}
            <View className="mt-8 overflow-hidden rounded-[32px] bg-emerald-900 shadow-xl shadow-emerald-900/20">
               <View className="flex-row items-center p-6 relative">
@@ -59,15 +90,15 @@ export default function DashboardScreen({ route, navigation }: any) {
                  <View className="absolute -right-20 -bottom-20 w-64 h-64 bg-emerald-800/20 rounded-full" />
                  
                  <View className="flex-1 pr-4 z-10">
-                    <Text className="text-white text-2xl font-black leading-tight tracking-tight">Cek Tagihan PBB{"\n"}Lebih Mudah</Text>
+                    <Text className="text-white text-2xl font-black leading-tight tracking-tight">Layanan PBB{"\n"}Untuk Warga Desa</Text>
                     <Text className="text-emerald-100/60 mt-2 font-bold text-[11px] leading-relaxed">Cari data berdasarkan NOP{"\n"}atau nama wajib pajak</Text>
                  </View>
 
                  <View className="w-32 h-32 z-10">
-                    <Image 
-                       source={{ uri: 'file:///C:/Users/MSI MODern 14/.gemini/antigravity/brain/621bc9c6-85ca-47dc-9762-106e7f713578/pbb_house_banner_illustration_1775836881840.png' }}
-                       className="w-full h-full"
-                       resizeMode="contain"
+                    <Image
+                       source={require('../../assets/village-bg.png')}
+                       className="w-full h-full rounded-[28px]"
+                       resizeMode="cover"
                     />
                  </View>
               </View>
@@ -107,8 +138,17 @@ export default function DashboardScreen({ route, navigation }: any) {
                   <Ionicons name="swap-horizontal-outline" size={26} color="#059669" />
                 </View>
                 <View className="flex-1">
-                  <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Mutasi Pajak</Text>
-                  <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Permohonan Ubah Data</Text>
+                  <View className="flex-row items-center">
+                    <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Mutasi Pajak</Text>
+                    {draftCount > 0 && (
+                      <View className="ml-2 px-2 py-0.5 rounded-full bg-amber-100">
+                        <Text className="text-[8px] font-black text-amber-700 uppercase tracking-wide">{draftCount} Draft</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                    {draftCount > 0 ? 'Lanjutkan Pengajuan Tersimpan' : 'Permohonan Ubah Data'}
+                  </Text>
                 </View>
                 <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
                   <Ionicons name="chevron-forward" size={16} color="#94a3b8" />

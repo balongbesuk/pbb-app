@@ -20,6 +20,7 @@ export async function GET() {
         mapDefaultZoom: true,
         tahunPajak: true,
         showUnpaidDetailsGis: true,
+        enablePbbMobile: true,
         updatedAt: true,
       },
     });

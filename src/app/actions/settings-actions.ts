@@ -10,6 +10,10 @@ import { Prisma } from "@prisma/client";
 
 type VillageConfigInput = Parameters<typeof VillageConfigSchema.parse>[0];
 
+const supportsEnablePbbMobile = Prisma.dmmf.datamodel.models
+  .find((model) => model.name === "VillageConfig")
+  ?.fields.some((field) => field.name === "enablePbbMobile") ?? false;
+
 export async function deleteAllTaxData() {
   try {
     await requireAdmin();
@@ -38,6 +42,7 @@ export async function deleteAllTaxData() {
         bapendaUrl: null,
         isJombangBapenda: true,
         logoUrl: null,
+        ...(supportsEnablePbbMobile ? { enablePbbMobile: true } : {}),
       },
     });
 
@@ -118,6 +123,7 @@ export const getVillageConfig = cache(async () => {
         archiveOnlyLunas: true,
         enablePublicGis: true,
         showUnpaidDetailsGis: false,
+        ...(supportsEnablePbbMobile ? { enablePbbMobile: true } : {}),
       },
     });
   } catch (error) {
@@ -142,6 +148,7 @@ export const getVillageConfig = cache(async () => {
       archiveOnlyLunas: true,
       enablePublicGis: true,
       showUnpaidDetailsGis: false,
+      enablePbbMobile: true,
       updatedAt: new Date() 
     };
   }
@@ -200,7 +207,7 @@ export async function updateVillageConfig(raw: VillageConfigInput) {
     if (data.showUnpaidDetailsGis !== undefined) {
       updateData.showUnpaidDetailsGis = data.showUnpaidDetailsGis;
     }
-    
+
     if (data.mapCenterLat !== undefined) {
       updateData.mapCenterLat = data.mapCenterLat;
     }
@@ -217,6 +224,14 @@ export async function updateVillageConfig(raw: VillageConfigInput) {
       where: { id: 1 },
       data: updateData,
     });
+
+    if (data.enablePbbMobile !== undefined) {
+      await prisma.$executeRaw`
+        UPDATE "VillageConfig"
+        SET "enablePbbMobile" = ${data.enablePbbMobile}
+        WHERE "id" = 1
+      `;
+    }
 
     revalidatePath("/settings");
     revalidatePath("/", "layout");

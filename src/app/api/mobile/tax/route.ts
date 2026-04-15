@@ -1,5 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isPbbMobileEnabled } from '@/lib/mobile-access';
+
+async function ensureMobileEnabled(headers: Record<string, string>) {
+  const mobileEnabled = await isPbbMobileEnabled();
+  if (!mobileEnabled) {
+    return NextResponse.json(
+      { success: false, error: 'Akses data PBB Mobile sedang dinonaktifkan oleh admin desa.' },
+      { status: 403, headers }
+    );
+  }
+
+  return null;
+}
 
 export async function GET(request: Request) {
   try {
@@ -11,6 +24,9 @@ export async function GET(request: Request) {
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
+
+    const blockedResponse = await ensureMobileEnabled(headers);
+    if (blockedResponse) return blockedResponse;
 
     const rawQuery = (nop || '').trim();
     if (!rawQuery) {
@@ -76,6 +92,9 @@ export async function POST(request: Request) {
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
+
+    const blockedResponse = await ensureMobileEnabled(headers);
+    if (blockedResponse) return blockedResponse;
 
     if (!nop) {
       return NextResponse.json({ success: false, error: 'NOP wajib dikirim' }, { status: 400, headers });

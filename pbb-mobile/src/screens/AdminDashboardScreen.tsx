@@ -2,12 +2,17 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { ScreenProps } from '../types/navigation';
 
 // Menggunakan WebView untuk Leaflet JS yang sudah ada di web biar tidak perlu recreate polygon
 import { WebView } from 'react-native-webview';
 
-export default function AdminDashboardScreen({ route, navigation }: any) {
+export default function AdminDashboardScreen({ route, navigation }: ScreenProps<'AdminDashboard'>) {
   const { serverUrl, user, stats, villageName } = route.params;
+  const firstName = user?.name?.trim()?.split(/\s+/)[0] || 'Petugas';
+  const totalSppt = stats?.totalSppt ?? 0;
+  const lunasSppt = stats?.lunasSppt ?? 0;
+  const tertunggakSppt = Math.max(totalSppt - lunasSppt, 0);
 
   const handleLogout = async () => {
     try {
@@ -24,7 +29,7 @@ export default function AdminDashboardScreen({ route, navigation }: any) {
         <View className="flex-row items-center justify-between mb-4">
           <View>
             <Text className="text-blue-200 font-bold text-[10px] uppercase tracking-widest mb-1">Panel Petugas: {villageName}</Text>
-            <Text className="text-3xl font-black text-white tracking-tighter">Halo, {user.name.split(' ')[0]}!</Text>
+            <Text className="text-3xl font-black text-white tracking-tighter">Halo, {firstName}!</Text>
           </View>
           <View className="w-14 h-14 bg-white/20 rounded-full items-center justify-center border-2 border-white/40">
             <Text className="text-white font-black text-xl">👮</Text>
@@ -34,17 +39,17 @@ export default function AdminDashboardScreen({ route, navigation }: any) {
         <View className="bg-white/10 p-5 rounded-3xl mt-2 border border-white/20 flex-row justify-between">
            <View className="items-center">
              <Text className="text-blue-100 text-[10px] font-black uppercase tracking-widest mb-1">Tugas Anda</Text>
-             <Text className="text-white text-2xl font-black">124</Text>
+             <Text className="text-white text-2xl font-black">{totalSppt}</Text>
            </View>
            <View className="h-full w-[1px] bg-white/20"></View>
            <View className="items-center">
              <Text className="text-blue-100 text-[10px] font-black uppercase tracking-widest mb-1">Telah Lunas</Text>
-             <Text className="text-emerald-300 text-2xl font-black">89</Text>
+             <Text className="text-emerald-300 text-2xl font-black">{lunasSppt}</Text>
            </View>
            <View className="h-full w-[1px] bg-white/20"></View>
            <View className="items-center">
              <Text className="text-blue-100 text-[10px] font-black uppercase tracking-widest mb-1">Tertunggak</Text>
-             <Text className="text-rose-300 text-2xl font-black">35</Text>
+             <Text className="text-rose-300 text-2xl font-black">{tertunggakSppt}</Text>
            </View>
         </View>
       </View>
