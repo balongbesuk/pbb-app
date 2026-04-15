@@ -346,7 +346,7 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
               </View>
               
               <View className="items-center mt-8">
-                <Text className="text-white/30 text-[9px] font-bold tracking-[3px] uppercase">Versi 9.0.0 — Pemuatan Unggulan</Text>
+                <Text className="text-white/30 text-[9px] font-black tracking-[4px] uppercase">v9.0 — Fitur Unggulan PBB Mobile</Text>
               </View>
             </Animated.View>
 

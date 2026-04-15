@@ -80,7 +80,7 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
           <View className="w-16 h-16 bg-blue-600 rounded-[22px] items-center justify-center mb-6 shadow-xl shadow-blue-600/30">
              <Ionicons name="shield-checkmark" size={32} color="white" />
           </View>
-          <Text className="text-slate-900 text-4xl font-black mb-2 tracking-tighter uppercase">Panel Petugas</Text>
+          <Text className="text-slate-900 text-4xl font-black mb-2 tracking-tighter uppercase">PBB Manager v9.0</Text>
           <Text className="text-slate-500 text-sm font-medium leading-relaxed">
             Silakan masuk dengan kredensial SPOP Anda untuk akses penagihan lapangan.
           </Text>
@@ -141,7 +141,7 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
         </View>
 
         <View className="items-center mt-12">
-           <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">PBB Mobile v9.0 — Fitur Unggulan</Text>
+           <Text className="text-slate-400 text-[10px] font-black uppercase tracking-[3px]">Fitur Unggulan PBB Mobile</Text>
         </View>
 
         <StatusBar style="dark" />
