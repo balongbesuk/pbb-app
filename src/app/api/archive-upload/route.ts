@@ -16,8 +16,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const formData = await req.formData();
-    const files = formData.getAll("files") as File[];
+    const formData = (await req.formData()) as any;
+    const files = formData.getAll("files") as unknown as File[];
     const yearRaw = formData.get("year");
     const year = yearRaw ? parseInt(yearRaw.toString()) : new Date().getFullYear();
 

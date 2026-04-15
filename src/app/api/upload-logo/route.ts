@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Hanya Admin yang dapat mengubah logo desa." }, { status: 403 });
     }
 
-    const formData = await req.formData();
+    const formData = (await req.formData()) as any;
     const file = formData.get("logo") as File | null;
 
     if (!file) {

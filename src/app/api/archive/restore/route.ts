@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
           return;
         }
 
-        const formData = await req.formData();
+        const formData = (await req.formData()) as any;
         const file = formData.get("file") as File | null;
         const year = formData.get("year") as string | null;
 

@@ -16,7 +16,7 @@ type SmartScanStreamMessage =
 export async function POST(req: NextRequest) {
   try {
     await requireAdmin();
-    const formData = await req.formData();
+    const formData = (await req.formData()) as any;
     const file = formData.get("file") as File;
     const yearRaw = formData.get("year");
     const year = yearRaw ? parseInt(yearRaw.toString()) : new Date().getFullYear();

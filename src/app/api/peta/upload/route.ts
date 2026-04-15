@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const formData = await req.formData();
+    const formData = (await req.formData()) as any;
     const files = formData.getAll("file") as File[];
     const lat = formData.get("lat") as string;
     const lng = formData.get("lng") as string;

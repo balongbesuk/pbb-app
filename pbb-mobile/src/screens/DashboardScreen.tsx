@@ -178,7 +178,7 @@ export default function DashboardScreen({ route, navigation }: any) {
                  elevation: 20,
                }}>
                  {/* Header */}
-                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyBetween: 'space-between', marginBottom: 20 }}>
+                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                    <View style={{ flex: 1 }}>
                      <Text style={{ fontSize: 20, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 }}>Pengaturan</Text>
                      <Text style={{ fontSize: 9, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 2 }}>Akses & Koneksi Portal</Text>

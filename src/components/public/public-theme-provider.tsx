@@ -10,12 +10,12 @@ interface PublicThemeContextValue {
 }
 
 const PublicThemeContext = createContext<PublicThemeContextValue>({
-  theme: "dark",
+  theme: "light",
   toggleTheme: () => {},
 });
 
 export function PublicThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<PublicTheme>("dark");
+  const [theme, setTheme] = useState<PublicTheme>("light");
 
   // Read from localStorage or system preference on mount
   useEffect(() => {
@@ -35,7 +35,13 @@ export function PublicThemeProvider({ children }: { children: React.ReactNode })
     const root = document.documentElement;
     const body = document.body;
 
+    // Save original dark class state from next-themes so we can restore on cleanup
+    const hadDarkClass = root.classList.contains("dark");
+
+    // Force the html element's dark class to match our public theme
+    // This overrides next-themes' system preference detection
     if (theme === "dark") {
+      root.classList.add("dark");
       // CSS variables for dark - set on html element to override .dark class vars
       root.style.setProperty("--background", "#050B14");
       root.style.setProperty("--foreground", "#F8FAFC");
@@ -58,6 +64,7 @@ export function PublicThemeProvider({ children }: { children: React.ReactNode })
       body.style.setProperty("background-image", "radial-gradient(ellipse at top, #0F203B 0%, #050B14 60%, #02060D 100%)", "important");
       body.style.removeProperty("color");
     } else {
+      root.classList.remove("dark");
       // CSS variables for light - override back to light values on html element
       root.style.setProperty("--background", "#f8fafc");
       root.style.setProperty("--foreground", "#0f172a");
@@ -91,6 +98,9 @@ export function PublicThemeProvider({ children }: { children: React.ReactNode })
       body.style.removeProperty("background-color");
       body.style.removeProperty("background-image");
       body.style.removeProperty("color");
+      // Restore original dark class state for next-themes
+      if (hadDarkClass) root.classList.add("dark");
+      else root.classList.remove("dark");
     };
   }, [theme]);
 
