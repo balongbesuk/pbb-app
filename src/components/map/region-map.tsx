@@ -514,7 +514,7 @@ export function RegionMap({
 
       {/* Mini Legend (Top Right) */}
       <div className={cn(
-          "absolute z-[2000] bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl border border-slate-200 dark:border-white/10 min-w-[120px] sm:min-w-[160px]",
+          "absolute z-[2000] bg-white dark:bg-[#050505]/95 backdrop-blur-3xl p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] shadow-xl dark:shadow-2xl border border-slate-300 dark:border-white/10 min-w-[120px] sm:min-w-[160px]",
           "top-8 right-8"
       )}>
         <div className="text-[9px] font-black text-slate-500 dark:text-white/40 uppercase tracking-widest mb-3 text-center">Status Bayar</div>
