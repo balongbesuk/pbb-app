@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState, useRef } from "react";
-import { Maximize, Plus, Minus } from "lucide-react";
+import { Maximize, Plus, Minus, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMap } from "react-leaflet";
 import type { Feature, FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
@@ -105,24 +105,37 @@ function MapWatcher({ center, zoom }: { center: [number, number], zoom: number }
   return null;
 }
 
-// Custom Map Controls (Zoom + Fullscreen)
-function MapControls() {
+// Custom Map Controls (Zoom + Fullscreen + Satellite + Regions)
+function MapControls({ 
+  showSatellite, setShowSatellite,
+  showDesa, setShowDesa,
+  showDusun, setShowDusun,
+  showRW, setShowRW,
+  showRT, setShowRT
+}: { 
+  showSatellite: boolean; 
+  setShowSatellite: (v: boolean) => void;
+  showDesa: boolean; setShowDesa: (v: boolean) => void;
+  showDusun: boolean; setShowDusun: (v: boolean) => void;
+  showRW: boolean; setShowRW: (v: boolean) => void;
+  showRT: boolean; setShowRT: (v: boolean) => void;
+}) {
   const map = useMap();
 
   return (
     <div className="absolute top-6 left-6 z-[2000] flex flex-col gap-3">
         {/* Zoom Controls */}
-        <div className="flex flex-col bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
+        <div className="flex flex-col bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl rounded-2xl shadow-2xl overflow-hidden">
             <button
                 onClick={() => map.zoomIn()}
-                className="p-3 text-slate-600 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 transition-colors border-b border-slate-100 dark:border-white/5"
+                className="p-2.5 text-slate-600 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 transition-colors border-b border-slate-100 dark:border-white/5"
                 title="Zoom In"
             >
                 <Plus className="w-5 h-5" />
             </button>
             <button
                 onClick={() => map.zoomOut()}
-                className="p-3 text-slate-600 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 transition-colors"
+                className="p-2.5 text-slate-600 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 transition-colors"
                 title="Zoom Out"
             >
                 <Minus className="w-5 h-5" />
@@ -139,11 +152,57 @@ function MapControls() {
                     document.exitFullscreen();
                 }
             }}
-            className="p-3 bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 transition-all active:scale-95"
+            className="p-3 bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl rounded-2xl shadow-2xl text-slate-600 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 transition-all active:scale-95"
             title="Toggle Fullscreen"
         >
             <Maximize className="w-5 h-5" />
         </button>
+
+        {/* Satellite Toggle */}
+        <button
+            onClick={() => setShowSatellite(!showSatellite)}
+            className={cn(
+              "p-3 backdrop-blur-3xl rounded-2xl shadow-2xl transition-all active:scale-95",
+              showSatellite
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-white/95 dark:bg-[#050505]/95 text-slate-600 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10"
+            )}
+            title={showSatellite ? "Tampilan Peta" : "Tampilan Satelit"}
+        >
+            <Layers className="w-5 h-5" />
+        </button>
+
+        {/* Region Toggles Section */}
+        <div className="flex flex-col bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl rounded-2xl shadow-2xl overflow-hidden mt-1">
+            {[
+                { label: "DS", full: "Desa", state: showDesa, setter: setShowDesa },
+                { label: "DN", full: "Dusun", state: showDusun, setter: setShowDusun },
+                { label: "RW", full: "RW", state: showRW, setter: setShowRW },
+                { label: "RT", full: "RT", state: showRT, setter: setShowRT },
+            ].map((item, i) => (
+                <button
+                    key={item.label}
+                    onClick={() => item.setter(!item.state)}
+                    className={cn(
+                        "flex flex-col items-center justify-center p-3 transition-all active:scale-95 group",
+                        item.state 
+                          ? "bg-blue-600 dark:bg-blue-600 text-white" 
+                          : "hover:bg-slate-50 dark:hover:bg-white/10 text-slate-600 dark:text-white",
+                        i !== 3 && (item.state ? "border-b border-blue-500/20" : "border-b border-slate-100 dark:border-white/5")
+                    )}
+                    title={`Toggle ${item.full}`}
+                >
+                    <span className={cn(
+                        "text-[10px] font-black tracking-widest transition-colors",
+                    )}>
+                        {item.label}
+                    </span>
+                    {!item.state && (
+                      <div className="w-1 h-1 rounded-full mt-1 bg-slate-300 dark:bg-slate-600" />
+                    )}
+                </button>
+            ))}
+        </div>
     </div>
   );
 }
@@ -463,7 +522,13 @@ export function RegionMap({
           )}
 
           <MapWatcher center={center} zoom={zoom} />
-          <MapControls />
+          <MapControls 
+            showSatellite={showSatellite} setShowSatellite={setShowSatellite} 
+            showDesa={showDesa} setShowDesa={setShowDesa}
+            showDusun={showDusun} setShowDusun={setShowDusun}
+            showRW={showRW} setShowRW={setShowRW}
+            showRT={showRT} setShowRT={setShowRT}
+          />
           
           {showDesa && <GeoJSON key={`desa-${showDesa}`} data={{ type: "FeatureCollection", features: desaFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
           {showDusun && <GeoJSON key={`dusun-${showDusun}`} data={{ type: "FeatureCollection", features: dusunFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
@@ -472,49 +537,9 @@ export function RegionMap({
         </MapContainer>
       </div>
 
-      {/* Floating Pill Bar - Navigation (Bottom Center) */}
-      <div className={cn(
-          "absolute bottom-10 left-1/2 -translate-x-1/2 z-[2000] flex items-center p-1 bg-[#050505]/95 backdrop-blur-3xl rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10",
-          "max-w-[calc(100vw-32px)] w-max overflow-x-auto no-scrollbar"
-      )}>
-        <div className="flex items-center px-4 py-2 gap-5 sm:gap-6 whitespace-nowrap">
-            <label className="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" checked={showDesa} onChange={e => setShowDesa(e.target.checked)} className="peer sr-only" />
-                <div className="w-2 h-2 rounded-full bg-slate-600 peer-checked:bg-white transition-all peer-checked:scale-125 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
-                <span className="text-[10px] font-black text-slate-400 peer-checked:text-white uppercase tracking-tighter transition-colors">Desa</span>
-            </label>
-            
-            <label className="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" checked={showDusun} onChange={e => setShowDusun(e.target.checked)} className="peer sr-only" />
-                <div className="w-2 h-2 rounded-full bg-slate-600 peer-checked:bg-white transition-all peer-checked:scale-125 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
-                <span className="text-[10px] font-black text-slate-400 peer-checked:text-white uppercase tracking-tighter transition-colors">Dusun</span>
-            </label>
-
-            <label className="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" checked={showRW} onChange={e => setShowRW(e.target.checked)} className="peer sr-only" />
-                <div className="w-2 h-2 rounded-full bg-slate-600 peer-checked:bg-white transition-all peer-checked:scale-125 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
-                <span className="text-[10px] font-black text-slate-400 peer-checked:text-white uppercase tracking-tighter transition-colors">RW</span>
-            </label>
-
-            <label className="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" checked={showRT} onChange={e => setShowRT(e.target.checked)} className="peer sr-only" />
-                <div className="w-2 h-2 rounded-full bg-slate-600 peer-checked:bg-white transition-all peer-checked:scale-125 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
-                <span className="text-[10px] font-black text-slate-400 peer-checked:text-white uppercase tracking-tighter transition-colors">RT</span>
-            </label>
-
-            <div className="w-px h-4 bg-white/10 mx-1" />
-
-            <label className="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" checked={showSatellite} onChange={e => setShowSatellite(e.target.checked)} className="peer sr-only" />
-                <div className="w-2 h-2 rounded-full bg-slate-600 peer-checked:bg-blue-400 transition-all peer-checked:scale-125 shadow-[0_0_10px_rgba(96,165,250,0.5)]" />
-                <span className="text-[10px] font-black text-slate-400 peer-checked:text-blue-400 uppercase tracking-tighter transition-colors">Satelit</span>
-            </label>
-        </div>
-      </div>
-
       {/* Mini Legend (Top Right) */}
       <div className={cn(
-          "absolute z-[2000] bg-white dark:bg-[#050505]/95 backdrop-blur-3xl p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] shadow-xl dark:shadow-2xl border border-slate-300 dark:border-white/10 min-w-[120px] sm:min-w-[160px]",
+          "absolute z-[2000] bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl border border-slate-200 dark:border-white/10 min-w-[120px] sm:min-w-[160px]",
           "top-8 right-8"
       )}>
         <div className="text-[9px] font-black text-slate-500 dark:text-white/40 uppercase tracking-widest mb-3 text-center">Status Bayar</div>
