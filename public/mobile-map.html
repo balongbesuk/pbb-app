@@ -178,6 +178,38 @@
       border: 1px dashed #bfdbfe; border-radius: 12px; margin-top: 4px;
     }
     .wp-load-more:active { background: #eff6ff; }
+
+    /* New Search Styling */
+    .wp-search-container {
+      margin-top: 16px;
+      position: relative;
+    }
+    .wp-search-input {
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 16px 12px 40px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #0f172a;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .wp-search-input:focus {
+      border-color: #3b82f6;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+    }
+    .wp-search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: #94a3b8;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -207,6 +239,18 @@
       <div class="wp-panel-title" id="wp-panel-title">-</div>
       <div class="wp-panel-subtitle" id="wp-panel-subtitle">Memuat data...</div>
       <div class="wp-panel-piutang" id="wp-panel-piutang"></div>
+      
+      <!-- Search Input -->
+      <div class="wp-search-container">
+        <span class="wp-search-icon">🔍</span>
+        <input 
+          type="text" 
+          id="wp-search-input" 
+          class="wp-search-input" 
+          placeholder="Cari Nama atau NOP..."
+          oninput="handleSearchInput(this.value)"
+        >
+      </div>
     </div>
     <div class="wp-list" id="wp-list"></div>
   </div>
@@ -261,7 +305,11 @@
       wpPanelPage = 1;
       wpPanelHasMore = false;
       wpPanelParams = { type: type, rt: rt, rw: rw, dusun: dusun };
+      wpPanelSearch = '';
       
+      var searchInput = document.getElementById('wp-search-input');
+      if (searchInput) searchInput.value = '';
+
       document.getElementById('wp-panel-title').textContent = title;
       document.getElementById('wp-panel-subtitle').textContent = 'Memuat data...';
       document.getElementById('wp-panel-piutang').textContent = '';
@@ -283,6 +331,17 @@
       }, 350);
     }
 
+    var searchTimer = null;
+    var wpPanelSearch = '';
+
+    function handleSearchInput(val) {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(function() {
+        wpPanelSearch = val.trim();
+        fetchWpData(1, true);
+      }, 500);
+    }
+
     async function fetchWpData(page, isInitial) {
       try {
         var params = new URLSearchParams({
@@ -294,6 +353,7 @@
         if (wpPanelParams.rt) params.set('rt', wpPanelParams.rt);
         if (wpPanelParams.rw) params.set('rw', wpPanelParams.rw);
         if (wpPanelParams.dusun) params.set('dusun', wpPanelParams.dusun);
+        if (wpPanelSearch) params.set('search', wpPanelSearch);
 
         var res = await fetch('/api/region-unpaid?' + params.toString());
         var json = await res.json();

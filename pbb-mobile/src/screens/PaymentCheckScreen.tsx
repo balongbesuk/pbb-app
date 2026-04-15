@@ -216,21 +216,7 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
                      </TouchableOpacity>
                    )}
 
-                   <TouchableOpacity
-                      className="mt-3 bg-white py-4 rounded-2xl items-center border border-slate-200"
-                      onPress={() =>
-                        navigation.navigate('Mutation', {
-                          serverUrl,
-                          initialDraft: {
-                            nopLama: item.nop,
-                            namaPemohon: item.namaWp,
-                            alasan: `Pengajuan perubahan data SPPT untuk objek pajak ${item.nop}`,
-                          },
-                        })
-                      }
-                   >
-                     <Text className="text-slate-700 font-black text-[10px] uppercase tracking-widest">Buat Draft Mutasi</Text>
-                   </TouchableOpacity>
+
                 </View>
               </Animated.View>
             ))}

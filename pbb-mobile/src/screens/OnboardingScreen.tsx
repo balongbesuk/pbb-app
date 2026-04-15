@@ -305,13 +305,6 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
                       autoCorrect={false}
                     />
                   </View>
-                  <View className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-3 mb-2">
-                    <Text className="text-emerald-300 text-[10px] font-black uppercase tracking-widest mb-1">Alamat Tujuan</Text>
-                    <Text className="text-white text-xs font-bold">{getResolvedServerUrl() || 'https://desasaya.id'}</Text>
-                  </View>
-                  <Text className="text-slate-400 text-[10px] leading-relaxed mt-1 mb-1">
-                    Gunakan alamat website resmi desa Anda. Untuk testing, Anda juga bisa memasukkan `localhost:3000`.
-                  </Text>
                   {recentServers.length > 0 && (
                     <View className="mt-3 mb-1">
                       <Text className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-2 ml-1">Sambungan Terakhir</Text>
@@ -353,7 +346,7 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
               </View>
               
               <View className="items-center mt-8">
-                <Text className="text-white/30 text-[9px] font-bold tracking-[3px] uppercase">Versi 1.0.0 • Desa Digital</Text>
+                <Text className="text-white/30 text-[9px] font-bold tracking-[3px] uppercase">Versi 9.0.0 — Pemuatan Unggulan</Text>
               </View>
             </Animated.View>
 

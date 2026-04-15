@@ -28,3 +28,8 @@ export const buildVillageHost = (villageCode: string, baseDomain: string) => {
     ? `${normalizedVillageCode}.${normalizedBaseDomain}`
     : '';
 };
+
+export const formatCurrency = (amount: number) => {
+  return 'Rp ' + Number(amount || 0).toLocaleString('id-ID');
+};
+

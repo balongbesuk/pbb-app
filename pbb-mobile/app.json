@@ -2,7 +2,7 @@
   "expo": {
     "name": "pbb-mobile",
     "slug": "pbb-mobile",
-    "version": "1.0.0",
+    "version": "9.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,6 +16,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.balongbesuk.pbbmobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -25,6 +26,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f0e795b1-b819-4836-9705-887fa065a012"
+      }
     }
   }
 }

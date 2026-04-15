@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl } from '../utils/server';
@@ -46,12 +47,11 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
           await AsyncStorage.setItem('@admin_magic_token', data.magicToken);
         }
 
-        // Simulasi Arahkan ke Layar Admin
+        // Arahkan ke Layar Admin
         navigation.navigate('AdminDashboard', { 
             serverUrl, 
             user: data.user, 
             isAdmin: true,
-            // dummy stats for admin dashboard view
             stats: { totalSppt: 0, lunasSppt: 0 }, 
             villageName: data.user.dusun || 'Hak Akses Admin'
         });
@@ -66,55 +66,85 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1 bg-slate-900">
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1 bg-slate-50">
       <View className="flex-1 justify-center p-8">
         
-        <TouchableOpacity onPress={() => navigation.goBack()} className="absolute top-16 left-8 bg-slate-800 p-3 rounded-full z-10 w-12 h-12 items-center justify-center">
-           <Text className="text-slate-400 font-bold text-lg">←</Text>
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()} 
+          className="absolute top-16 left-8 bg-white p-3 rounded-full z-10 w-12 h-12 items-center justify-center border border-slate-100 shadow-sm"
+        >
+           <Ionicons name="arrow-back" size={24} color="#64748b" />
         </TouchableOpacity>
 
-        <View className="mb-12 mt-12">
-          <View className="w-16 h-16 bg-blue-600 rounded-2xl items-center justify-center mb-6 shadow-lg shadow-blue-500/50">
-             <Text className="text-white text-3xl">🛡️</Text>
+        <View className="mb-10 mt-12 px-2">
+          <View className="w-16 h-16 bg-blue-600 rounded-[22px] items-center justify-center mb-6 shadow-xl shadow-blue-600/30">
+             <Ionicons name="shield-checkmark" size={32} color="white" />
           </View>
-          <Text className="text-white text-4xl font-black mb-2 uppercase tracking-tighter">Login Petugas</Text>
-          <Text className="text-slate-400 text-base leading-relaxed">
-            Masukkan kredensial Anda yang terdaftar pada sistem utama Pemda.
+          <Text className="text-slate-900 text-4xl font-black mb-2 tracking-tighter uppercase">Panel Petugas</Text>
+          <Text className="text-slate-500 text-sm font-medium leading-relaxed">
+            Silakan masuk dengan kredensial SPOP Anda untuk akses penagihan lapangan.
           </Text>
         </View>
 
-        <View className="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-xl">
-          <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3 ml-1">Username / NIP</Text>
-          <TextInput
-            className="bg-slate-900/50 text-white px-5 py-4 rounded-2xl border border-slate-700 mb-6 font-medium focus:border-blue-500 focus:bg-slate-900"
-            placeholder="Ketik username Anda"
-            placeholderTextColor="#475569"
-            autoCapitalize="none"
-            value={form.username}
-            onChangeText={(t) => setForm({ ...form, username: t })}
-          />
+        <View className="bg-white p-7 rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200">
+          <Text className="text-slate-400 text-[10px] font-black uppercase tracking-[2px] mb-3 ml-1">Username / NIP</Text>
+          <View className="relative mb-6">
+            <View className="absolute left-4 top-4 z-10">
+              <Ionicons name="person-outline" size={20} color="#94a3b8" />
+            </View>
+            <TextInput
+              className="bg-slate-50 text-slate-900 px-12 py-4 rounded-2xl border border-slate-100 font-bold focus:border-blue-500 focus:bg-white"
+              placeholder="Username petugas"
+              placeholderTextColor="#94a3b8"
+              autoCapitalize="none"
+              value={form.username}
+              onChangeText={(t) => setForm({ ...form, username: t })}
+            />
+          </View>
 
-          <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3 ml-1">Kata Sandi</Text>
-          <TextInput
-            className="bg-slate-900/50 text-white px-5 py-4 rounded-2xl border border-slate-700 mb-4 font-medium focus:border-blue-500 focus:bg-slate-900"
-            placeholder="••••••••"
-            placeholderTextColor="#475569"
-            secureTextEntry={true}
-            value={form.password}
-            onChangeText={(t) => setForm({ ...form, password: t })}
-          />
+          <Text className="text-slate-400 text-[10px] font-black uppercase tracking-[2px] mb-3 ml-1">Kata Sandi</Text>
+          <View className="relative mb-4">
+            <View className="absolute left-4 top-4 z-10">
+              <Ionicons name="lock-closed-outline" size={20} color="#94a3b8" />
+            </View>
+            <TextInput
+              className="bg-slate-50 text-slate-900 px-12 py-4 rounded-2xl border border-slate-100 font-bold focus:border-blue-500 focus:bg-white"
+              placeholder="••••••••"
+              placeholderTextColor="#94a3b8"
+              secureTextEntry={true}
+              value={form.password}
+              onChangeText={(t) => setForm({ ...form, password: t })}
+            />
+          </View>
 
-          {errorMsg ? <Text className="text-red-400 text-[10px] font-bold mb-4 ml-1">{errorMsg}</Text> : null}
+          {errorMsg ? (
+            <View className="bg-rose-50 p-3 rounded-xl mb-4 border border-rose-100 flex-row items-center">
+              <Ionicons name="alert-circle" size={16} color="#e11d48" />
+              <Text className="text-rose-600 text-[10px] font-bold ml-2">{errorMsg}</Text>
+            </View>
+          ) : null}
 
           <TouchableOpacity 
-            className={`py-4 mt-2 rounded-2xl flex-row justify-center items-center shadow-lg ${form.username && form.password ? 'bg-blue-600 shadow-blue-500/30' : 'bg-slate-700'}`}
+            className={`py-5 mt-2 rounded-[22px] flex-row justify-center items-center shadow-xl ${form.username && form.password ? 'bg-blue-600 shadow-blue-600/30' : 'bg-slate-200'}`}
             disabled={!form.username || !form.password || loading}
             onPress={handleLogin}
           >
-            {loading ? <ActivityIndicator color="white" /> : <Text className={`font-black uppercase tracking-widest text-[11px] ${form.username && form.password ? 'text-white' : 'text-slate-400'}`}>Masuk ke Sistem</Text>}
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Text className={`font-black uppercase tracking-[2px] text-[11px] ${form.username && form.password ? 'text-white' : 'text-slate-400'}`}>Masuk ke Sistem</Text>
+                <Ionicons name="chevron-forward" size={16} color={form.username && form.password ? "white" : "#94a3b8"} style={{ marginLeft: 8 }} />
+              </>
+            )}
           </TouchableOpacity>
         </View>
-        <StatusBar style="light" />
+
+        <View className="items-center mt-12">
+           <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">PBB Mobile v9.0 — Fitur Unggulan</Text>
+        </View>
+
+        <StatusBar style="dark" />
       </View>
     </KeyboardAvoidingView>
   );

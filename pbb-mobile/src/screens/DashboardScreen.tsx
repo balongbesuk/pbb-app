@@ -10,30 +10,13 @@ import { joinServerUrl } from '../utils/server';
 export default function DashboardScreen({ route, navigation }: ScreenProps<'Dashboard'>) {
   const { villageName, serverUrl, stats = {}, villageLogo } = route.params || {};
   const [menuVisible, setMenuVisible] = useState(false);
-  const [draftCount, setDraftCount] = useState(0);
 
   const totalSppt = stats.totalSppt || 0;
   const lunasSppt = stats.lunasSppt || 0;
 
   useEffect(() => {
-    loadDraftCount();
+    // Logic for other initializations can go here
   }, []);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      loadDraftCount();
-    }, [])
-  );
-
-  const loadDraftCount = async () => {
-    try {
-      const savedDrafts = await AsyncStorage.getItem('@mutation_drafts_v1');
-      const parsedDrafts = savedDrafts ? JSON.parse(savedDrafts) : [];
-      setDraftCount(parsedDrafts.length);
-    } catch (error) {
-      setDraftCount(0);
-    }
-  };
 
   // Dynamic Logo Logic
   const getLogoSource = () => {
@@ -77,8 +60,8 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
              </TouchableOpacity>
            </View>
 
-           <View className="mt-5 self-start bg-emerald-50 border border-emerald-100 rounded-full px-3 py-2">
-             <Text className="text-[9px] font-black text-emerald-700 uppercase tracking-[2px]">
+           <View className="mt-5 self-center bg-emerald-50 border border-emerald-100 rounded-full px-8 py-2">
+             <Text className="text-[9px] font-black text-emerald-700 uppercase tracking-[2px] text-center">
                Terhubung ke layanan desa {villageName || 'aktif'}
              </Text>
            </View>
@@ -122,50 +105,6 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
                 <View className="flex-1">
                   <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Cek Tagihan PBB</Text>
                   <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Status & Pembayaran</Text>
-                </View>
-                <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
-                  <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                </View>
-              </TouchableOpacity>
-
-              {/* Card 2 - Mutasi Pajak */}
-              <TouchableOpacity 
-                activeOpacity={0.7}
-                className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm mt-3"
-                onPress={() => navigation.navigate('Mutation', { serverUrl })}
-              >
-                <View className="w-14 h-14 bg-emerald-50 rounded-2xl items-center justify-center border border-emerald-100/50 mr-4">
-                  <Ionicons name="swap-horizontal-outline" size={26} color="#059669" />
-                </View>
-                <View className="flex-1">
-                  <View className="flex-row items-center">
-                    <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Mutasi Pajak</Text>
-                    {draftCount > 0 && (
-                      <View className="ml-2 px-2 py-0.5 rounded-full bg-amber-100">
-                        <Text className="text-[8px] font-black text-amber-700 uppercase tracking-wide">{draftCount} Draft</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                    {draftCount > 0 ? 'Lanjutkan Pengajuan Tersimpan' : 'Permohonan Ubah Data'}
-                  </Text>
-                </View>
-                <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
-                  <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                </View>
-              </TouchableOpacity>
-
-              {/* Card 3 - Pencarian SPOP */}
-              <TouchableOpacity 
-                activeOpacity={0.7}
-                className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm mt-3"
-              >
-                <View className="w-14 h-14 bg-amber-50 rounded-2xl items-center justify-center border border-amber-100/50 mr-4">
-                  <Ionicons name="document-text-outline" size={26} color="#d97706" />
-                </View>
-                <View className="flex-1">
-                  <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Data Arsip SPOP</Text>
-                  <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Pencarian Berkas Digital</Text>
                 </View>
                 <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
                   <Ionicons name="chevron-forward" size={16} color="#94a3b8" />

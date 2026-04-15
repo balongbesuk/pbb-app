@@ -1,0 +1,83 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export async function GET(req: Request) {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
+  try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+    const tahun = parseInt(searchParams.get("tahun") || new Date().getFullYear().toString());
+
+    if (!userId) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400, headers });
+    }
+
+    const [all, lunas, sengketa, tdkTerbit, logs, villageConfig, unreadCount] = await Promise.all([
+      prisma.taxData.aggregate({
+        where: { penarikId: userId, tahun },
+        _sum: { ketetapan: true },
+        _count: true,
+      }),
+      prisma.taxData.aggregate({
+        where: { penarikId: userId, tahun, paymentStatus: "LUNAS" },
+        _sum: { pembayaran: true },
+        _count: true,
+      }),
+      prisma.taxData.count({
+        where: { penarikId: userId, tahun, paymentStatus: "SUSPEND" }
+      }),
+      prisma.taxData.count({
+        where: { penarikId: userId, tahun, paymentStatus: "TIDAK_TERBIT" }
+      }),
+      prisma.auditLog.findMany({
+        where: { 
+          userId, 
+          action: "UPDATE_PAYMENT",
+        },
+        orderBy: { createdAt: "desc" },
+        take: 5
+      }),
+      prisma.villageConfig.findFirst({ where: { id: 1 } }),
+      prisma.notification.count({
+        where: { userId, isRead: false }
+      })
+    ]);
+
+    const stats = {
+      totalTarget: all._sum.ketetapan || 0,
+      totalWp: all._count || 0,
+      totalLunas: lunas._sum.pembayaran || 0,
+      wpLunas: lunas._count || 0,
+      wpSengketa: sengketa,
+      wpTdkTerbit: tdkTerbit,
+    };
+
+    return NextResponse.json({
+      success: true,
+      stats,
+      logs,
+      unreadNotificationsCount: unreadCount,
+      tahunPajak: villageConfig?.tahunPajak || tahun
+    }, { headers });
+
+  } catch (error) {
+    console.error("Dashboard API Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500, headers });
+  }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}

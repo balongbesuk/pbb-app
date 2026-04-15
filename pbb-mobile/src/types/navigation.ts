@@ -21,15 +21,7 @@ export type RootStackParamList = {
   PaymentCheck: {
     serverUrl: string;
   };
-  Mutation: {
-    serverUrl: string;
-    isDark?: boolean;
-    initialDraft?: {
-      nopLama?: string;
-      namaPemohon?: string;
-      alasan?: string;
-    };
-  };
+
   Login: {
     serverUrl?: string;
   };
@@ -42,6 +34,21 @@ export type RootStackParamList = {
   };
   GisMap: {
     serverUrl: string;
+  };
+  TaxpayerList: {
+    serverUrl: string;
+    user: AdminUser & { id: string };
+    tahun: number;
+    villageName: string;
+  };
+  BillingHistory: {
+    serverUrl: string;
+    user: AdminUser & { id: string };
+    villageName: string;
+  };
+  Notification: {
+    serverUrl: string;
+    user: AdminUser & { id: string };
   };
 };
 
