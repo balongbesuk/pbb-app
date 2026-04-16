@@ -1,7 +1,13 @@
-export const normalizeServerUrl = (serverUrl: string, isHttps = false) => {
-  const protocol = isHttps ? 'https://' : 'http://';
-  const cleanUrl = serverUrl.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
-  return `${protocol}${cleanUrl}`;
+export const normalizeServerUrl = (serverUrl: string, defaultToHttps = false) => {
+  let url = serverUrl.trim();
+
+  // If no protocol is present, add the default one
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    const protocol = defaultToHttps ? 'https://' : 'http://';
+    url = `${protocol}${url}`;
+  }
+
+  return url.replace(/\/+$/, '');
 };
 
 export const joinServerUrl = (serverUrl: string, path: string) => {
