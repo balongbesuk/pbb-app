@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatCurrency, cn } from "@/lib/utils";
-import { TrendingUp, Calendar, Clock, CheckCircle2, ChevronDown, Download, Map as MapIcon } from "lucide-react";
+import { TrendingUp, Calendar, Clock, CheckCircle2, ChevronDown, Download, Map as MapIcon, Target, Wallet } from "lucide-react";
 import { toPng } from "html-to-image";
 import type { StatusPieChartItem } from "@/types/app";
 
@@ -38,6 +38,33 @@ interface MonthlyPayment {
   tanggalBayar: Date | string | null;
   _sum: { pembayaran: number | null };
 }
+
+const RWCustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-background/95 border-border shadow-2xl backdrop-blur-md rounded-2xl border p-4 min-w-[180px]">
+        <p className="text-foreground text-xs font-bold mb-3 pb-2 border-b border-border/50">{label}</p>
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between gap-4">
+             <div className="flex items-center gap-2">
+                 <div className="h-2 w-2 rounded-full bg-indigo-500" />
+                 <span className="text-[10px] font-medium text-muted-foreground uppercase">Target</span>
+             </div>
+             <p className="text-xs font-black">{formatCurrency(payload[0].value)}</p>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+             <div className="flex items-center gap-2">
+                 <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                 <span className="text-[10px] font-medium text-muted-foreground uppercase">Terbayar</span>
+             </div>
+             <p className="text-xs font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(payload[1].value)}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 export function RWBarChart({ data }: { data: RwGroupStat[] }) {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -90,26 +117,24 @@ export function RWBarChart({ data }: { data: RwGroupStat[] }) {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#888888" opacity={0.1} />
-            <XAxis dataKey="name" stroke="#94A3B8" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: "#94A3B8", fontWeight: 600 }} />
+            <XAxis 
+              dataKey="name" 
+              stroke="#94A3B8" 
+              fontSize={11} 
+              tickLine={false} 
+              axisLine={false} 
+              tick={{ fill: "#A1A1AA", fontWeight: 700 }} 
+            />
             <YAxis
               stroke="#94A3B8"
               fontSize={10}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: "#94A3B8", fontWeight: 600 }}
+              tick={{ fill: "#A1A1AA", fontWeight: 700 }}
               tickFormatter={(value) => `Rp${(value / 1000000).toFixed(0)}J`}
             />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "rgba(255, 255, 255, 0.9)",
-                borderRadius: "16px",
-                border: "1px solid #F1F5F9",
-                boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
-                backdropFilter: "blur(8px)",
-              }}
-              formatter={(value) => [formatCurrency(Number(value)), ""]}
-            />
-            <Legend wrapperStyle={{ paddingTop: '20px' }} />
+            <Tooltip content={<RWCustomTooltip />} cursor={{ fill: 'rgba(148, 163, 184, 0.1)' }} />
+            <Legend verticalAlign="bottom" align="center" wrapperStyle={{ paddingTop: '20px', color: '#A1A1AA', fontWeight: 600, fontSize: '12px' }} />
             <Bar dataKey="target" fill="#6366F1" radius={[4, 4, 0, 0]} name="Target" />
             <Bar dataKey="terbayar" fill="#10B981" radius={[4, 4, 0, 0]} name="Terbayar" />
           </BarChart>
@@ -163,8 +188,29 @@ export function StatusPieChart({ data }: { data: StatusPieChartItem[] }) {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip />
-            <Legend verticalAlign="bottom" height={36} />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: "rgba(9, 9, 11, 0.8)",
+                borderColor: "rgba(39, 39, 42, 0.8)",
+                borderRadius: "12px",
+                backdropFilter: "blur(8px)",
+                color: "#FFFFFF",
+                fontSize: "12px",
+                fontWeight: "bold",
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+              }}
+              itemStyle={{ color: "#E4E4E7" }}
+            />
+            <Legend 
+               verticalAlign="bottom" 
+               height={36} 
+               wrapperStyle={{ 
+                 color: '#A1A1AA', 
+                 fontWeight: 600, 
+                 fontSize: '11px',
+                 paddingTop: '20px'
+               }} 
+            />
           </PieChart>
         </ResponsiveContainer>
       </div>
@@ -376,7 +422,7 @@ export function TrendAnalysisChart({ data }: { data: MonthlyPayment[] }) {
               fontSize={10}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: "#94A3B8", fontWeight: 600 }}
+              tick={{ fill: "#A1A1AA", fontWeight: 700 }}
               interval={0}
               padding={{ left: 10, right: 10 }}
             />
@@ -385,7 +431,7 @@ export function TrendAnalysisChart({ data }: { data: MonthlyPayment[] }) {
               fontSize={10}
               tickLine={false}
               axisLine={false}
-              tick={{ fill: "#94A3B8", fontWeight: 600 }}
+              tick={{ fill: "#A1A1AA", fontWeight: 700 }}
               tickFormatter={(value) => `Rp${(value / 1000000).toFixed(0)}J`}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366F1', strokeWidth: 1, strokeDasharray: '4 4' }} />
