@@ -179,7 +179,7 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
                       style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: '#eff6ff', borderRadius: 16, borderWidth: 1, borderColor: '#bfdbfe', marginBottom: 10 }}
                       onPress={() => {
                         setMenuVisible(false);
-                        navigation.navigate('Login', { serverUrl });
+                        navigation.navigate('Login', { serverUrl, villageName });
                       }}
                     >
                       <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#dbeafe', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>

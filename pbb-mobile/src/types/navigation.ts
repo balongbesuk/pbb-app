@@ -50,6 +50,19 @@ export type RootStackParamList = {
     serverUrl: string;
     user: AdminUser & { id: string };
   };
+  TaxpayerDetail: {
+    serverUrl: string;
+    user: AdminUser & { id: string; role?: string };
+    taxpayer: any;
+    villageName: string;
+  };
+  SelectOfficer: {
+    serverUrl: string;
+    senderId: string;
+    senderRole: string;
+    taxId: string | number;
+    taxName: string;
+  };
 };
 
 export type ScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<

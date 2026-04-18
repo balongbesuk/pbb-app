@@ -18,6 +18,8 @@ import GisMapScreen from './src/screens/GisMapScreen';
 import TaxpayerListScreen from './src/screens/TaxpayerListScreen';
 import BillingHistoryScreen from './src/screens/BillingHistoryScreen';
 import NotificationScreen from './src/screens/NotificationScreen';
+import TaxpayerDetailScreen from './src/screens/TaxpayerDetailScreen';
+import SelectOfficerScreen from './src/screens/SelectOfficerScreen';
 import type { RootStackParamList } from './src/types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -76,6 +78,8 @@ export default function App() {
         <Stack.Screen name="TaxpayerList" component={TaxpayerListScreen} />
         <Stack.Screen name="BillingHistory" component={BillingHistoryScreen} />
         <Stack.Screen name="Notification" component={NotificationScreen} />
+        <Stack.Screen name="TaxpayerDetail" component={TaxpayerDetailScreen} />
+        <Stack.Screen name="SelectOfficer" component={SelectOfficerScreen} />
 
 
       </Stack.Navigator>

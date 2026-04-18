@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -40,7 +40,11 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
     fetchDashboard();
   };
 
+  // Logout Modal State
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
   const handleLogout = async () => {
+    setLogoutModalVisible(false);
     try {
       await AsyncStorage.removeItem('@admin_magic_token');
       navigation.replace('Dashboard', { 
@@ -255,13 +259,54 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
 
            <TouchableOpacity 
              className="bg-rose-50 border border-rose-100 px-8 py-5 rounded-[28px] w-full mt-4 flex-row items-center justify-center"
-             onPress={handleLogout}
+             onPress={() => setLogoutModalVisible(true)}
            >
              <Ionicons name="log-out-outline" size={18} color="#e11d48" />
              <Text className="text-rose-600 text-center font-black uppercase tracking-[2px] text-[10px] ml-3">Keluar Sesi Petugas</Text>
            </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={logoutModalVisible}
+        onRequestClose={() => setLogoutModalVisible(false)}
+      >
+        <View className="flex-1 bg-slate-900/60 justify-center items-center p-8">
+           <View className="bg-white w-full rounded-[40px] p-8 items-center shadow-2xl">
+              <View className="w-20 h-20 bg-rose-50 rounded-[28px] items-center justify-center mb-6">
+                 <Ionicons name="log-out" size={40} color="#f43f5e" />
+              </View>
+              
+              <Text className="text-2xl font-black text-slate-900 mb-2 text-center uppercase tracking-tighter">Keluar Sesi</Text>
+              
+              <View className="bg-slate-50 p-6 rounded-3xl w-full mb-8 border border-slate-100">
+                <Text className="text-center text-slate-500 text-xs font-bold leading-relaxed">
+                   Apakah Anda yakin ingin mengakhiri sesi petugas lapangan ini?
+                </Text>
+              </View>
+
+              <View className="w-full space-y-3">
+                <TouchableOpacity 
+                   className="w-full bg-rose-600 py-5 rounded-[22px] items-center shadow-lg shadow-rose-600/30 flex-row justify-center"
+                   onPress={handleLogout}
+                >
+                   <Text className="text-white font-black text-xs uppercase tracking-[2px]">Ya, Keluar Sesi</Text>
+                   <Ionicons name="checkmark-circle" size={18} color="white" style={{ marginLeft: 8 }} />
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  onPress={() => setLogoutModalVisible(false)} 
+                  className="py-4 w-full items-center mt-2"
+                >
+                  <Text className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Tetap di Sini</Text>
+                </TouchableOpacity>
+              </View>
+           </View>
+        </View>
+      </Modal>
 
       <StatusBar style="dark" />
     </View>

@@ -35,10 +35,7 @@ export async function GET(req: Request) {
         where: { penarikId: userId, tahun, paymentStatus: "TIDAK_TERBIT" }
       }),
       prisma.auditLog.findMany({
-        where: { 
-          userId, 
-          action: "UPDATE_PAYMENT",
-        },
+        where: { userId },
         orderBy: { createdAt: "desc" },
         take: 5
       }),

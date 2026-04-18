@@ -120,7 +120,12 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
               <TouchableOpacity 
                 key={wp.id} 
                 className="bg-white p-5 rounded-3xl mb-4 border border-slate-100 shadow-sm"
-                onPress={() => navigation.navigate('PaymentCheck', { serverUrl })}
+                onPress={() => navigation.navigate('TaxpayerDetail', { 
+                  serverUrl, 
+                  taxpayer: wp, 
+                  user, 
+                  villageName 
+                })}
               >
                 <View className="flex-row justify-between items-start mb-3">
                   <View className="flex-1 mr-4">

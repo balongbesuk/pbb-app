@@ -50,7 +50,11 @@ export async function POST(req: Request) {
 
     if (markAll) {
       await prisma.notification.updateMany({
-        where: { userId, isRead: false },
+        where: { 
+          userId, 
+          isRead: false,
+          NOT: { type: 'REQUEST' } // Don't auto-read requests
+        },
         data: { isRead: true }
       });
     } else if (notificationId) {
