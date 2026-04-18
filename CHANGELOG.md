@@ -1,5 +1,30 @@
 # Changelog
 
+## v9.1 - 2026-04-18: PBB Mobile Action & Integration
+
+Peningkatan kapabilitas operasional petugas lapangan dengan fokus pada aksi interaktif, integrasi pembayaran pusat, dan penguatan identitas desa.
+
+### PBB Mobile (Fitur Operasional)
+- **Dynamic Action Footer**: Implementasi barisan tombol aksi di Detail WP (Sengketa, Tdk Terbit, Tandai Lunas, Batal Lunas) yang menyederhanakan pembaruan status data langsung dari lapangan.
+- **EPAY Jombang Integration**: Fitur "Bayar Online" yang secara otomatis mengecek status ke Bapenda pusat dan mengarahkan petugas/WP ke portal EPAY Jombang dengan NOP terisi otomatis.
+- **Interactive Notifications**: Penarikan notifikasi pemindahan alokasi kini dilengkapi tombol aksi (Terima/Tolak) yang memicu pembaruan status alokasi secara instan.
+- **Premium Feedback Modals**: Penggantian alert sistem dengan *Custom Status Modal* (High-Fidelity) untuk memberikan umpan balik sukses/gagal yang lebih seragam dan modern.
+- **Logout Protection**: Penambahan dialog konfirmasi keluar sesi untuk menghindari penghentian sesi petugas secara tidak sengaja.
+- **Village Dynamic Branding**: Penampilan nama desa secara dinamis pada footer halaman login (Contoh: PBB Mobile Desa Balongbesuk).
+
+### Core Backend & Logics
+- **Taxpayer Status API**: Endpoint baru `/api/mobile/officer/taxpayers/status` dengan penambahan logika *Audit Log* otomatis untuk setiap pembaruan status data.
+- **Transfer Response API**: Pembaruan sistem penanganan transfer data dengan sinkronisasi status alokasi real-time.
+- **Advanced Activity Tracking**: Perbaikan algoritma penarikan log pada Dashboard API yang kini mencakup seluruh spektrum aktivitas petugas (Update Status, Transfer, Sinkronisasi).
+- **Server Session Fix**: Pembaruan parameter `userId` pada pemanggilan *logging* server-side untuk mencegah *hang* saat pengiriman data dari platform mobile.
+
+### UI/UX Polish
+- **Rebranding Update**: Pembaruan teks label login dan identitas utama menjadi **PBB Mobile** untuk kejelasan fungsi sebagai alat operasional lapangan.
+- **Layout Overlap Fix**: Optimalisasi *bottom padding* dan *safe area* pada layar detail untuk memastikan semua elemen interaktif dapat diakses dengan nyaman.
+
+---
+
+
 ## v9.0 - 2026-04-16: PBB Mobile Excellence
 
 Pembaruan besar pada ekosistem mobile yang mentransformasi PBB Manager menjadi alat operasional lapangan yang tangguh, cepat, dan modern.
