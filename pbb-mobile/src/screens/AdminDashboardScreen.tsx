@@ -12,6 +12,7 @@ import { AppModalCard } from '../components/AppModalCard';
 import { AppSectionTitle } from '../components/AppSectionTitle';
 import { AppStatCard } from '../components/AppStatCard';
 import { AppEmptyState } from '../components/AppEmptyState';
+import { AppSkeletonCard } from '../components/AppSkeletonCard';
 import { appTheme } from '../theme/app-theme';
 
 export default function AdminDashboardScreen({ route, navigation }: ScreenProps<'AdminDashboard'>) {
@@ -117,11 +118,17 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
 
   if (loading && !refreshing) {
     return (
-      <View style={{ flex: 1, backgroundColor: appTheme.colors.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color={appTheme.colors.primary} />
-        <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, fontWeight: '700', marginTop: 12 }}>
-          Memuat panel petugas
-        </Text>
+      <View style={{ flex: 1, backgroundColor: appTheme.colors.bg }}>
+        <AppScreenHeader title="Panel Petugas" subtitle="Memuat dashboard" style={{ paddingBottom: 26 }}>
+          <Text style={{ color: 'rgba(255,255,255,0.78)', fontSize: 13, marginTop: 6 }}>
+            Menyiapkan ringkasan target dan layanan operasional.
+          </Text>
+        </AppScreenHeader>
+        <View style={{ paddingHorizontal: 24, paddingTop: 20 }}>
+          <AppSkeletonCard lines={3} />
+          <AppSkeletonCard compact />
+          <AppSkeletonCard compact />
+        </View>
       </View>
     );
   }

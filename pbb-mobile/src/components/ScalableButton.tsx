@@ -4,7 +4,8 @@ import Animated, {
   useSharedValue, 
   useAnimatedStyle, 
   withSpring, 
-  withTiming 
+  withTiming,
+  interpolate,
 } from 'react-native-reanimated';
 
 interface ScalableButtonProps {
@@ -30,6 +31,7 @@ export const ScalableButton: React.FC<ScalableButtonProps> = ({
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scale.value }],
+      opacity: interpolate(scale.value, [scaleTo, 1], [0.92, disabled ? 0.55 : 1]),
     };
   });
 
@@ -53,6 +55,7 @@ export const ScalableButton: React.FC<ScalableButtonProps> = ({
       onPressOut={handlePressOut}
       disabled={disabled}
       style={[style, animatedStyle]}
+      android_ripple={{ color: 'rgba(255,255,255,0.08)', borderless: false }}
     >
       {children}
     </AnimatedPressable>

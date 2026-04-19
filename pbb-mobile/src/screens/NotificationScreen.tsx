@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, RefreshControl, Modal } from 'react-native';
+import { View, Text, ActivityIndicator, RefreshControl, FlatList } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
@@ -8,6 +8,7 @@ import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppModalCard } from '../components/AppModalCard';
 import { AppEmptyState } from '../components/AppEmptyState';
+import { AppSkeletonCard } from '../components/AppSkeletonCard';
 import { appTheme } from '../theme/app-theme';
 
 export default function NotificationScreen({ route, navigation }: ScreenProps<'Notification'>) {
@@ -125,77 +126,104 @@ export default function NotificationScreen({ route, navigation }: ScreenProps<'N
     }
   };
 
+  const renderHeader = () => (
+    <AppScreenHeader title="Notifikasi" subtitle="Panel Petugas" onBack={() => navigation.goBack()}>
+      <Text style={{ color: 'rgba(255,255,255,0.78)', fontSize: 13, lineHeight: 20, marginTop: 6 }}>
+        Pantau permintaan masuk, update status transfer, dan aktivitas operasional terbaru dalam satu tempat.
+      </Text>
+    </AppScreenHeader>
+  );
+
+  const renderItem = ({ item: notif }: { item: any }) => {
+    const icon = getIcon(notif.type);
+    const date = new Date(notif.createdAt);
+    const isRequest = notif.type === 'REQUEST' && notif.link;
+
+    return (
+      <View
+        style={{
+          backgroundColor: appTheme.colors.surface,
+          borderRadius: 26,
+          padding: 18,
+          borderWidth: 1,
+          borderColor: isRequest && !notif.isRead ? '#c8dde9' : appTheme.colors.border,
+          marginBottom: 14,
+          ...appTheme.shadow.card,
+        }}
+      >
+        {isRequest && !notif.isRead ? (
+          <View style={{ alignSelf: 'flex-start', marginBottom: 12, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: appTheme.colors.infoSoft }}>
+            <Text style={{ color: appTheme.colors.info, fontSize: 10, fontWeight: '900' }}>PERLU RESPONS</Text>
+          </View>
+        ) : null}
+
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+          <View style={{ width: 50, height: 50, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: icon.bg }}>
+            <Ionicons name={icon.name as any} size={24} color={icon.color} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 14 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <Text style={{ color: appTheme.colors.text, fontSize: 15, fontWeight: '800', flex: 1, marginRight: 10 }}>{notif.title}</Text>
+              {!notif.isRead ? <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: appTheme.colors.primary, marginTop: 4 }} /> : null}
+            </View>
+            <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 6 }}>{notif.message}</Text>
+            <Text style={{ color: appTheme.colors.textSoft, fontSize: 11, marginTop: 10 }}>
+              {date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • {date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+            </Text>
+          </View>
+        </View>
+
+        {isRequest && !notif.isRead ? (
+          <View style={{ flexDirection: 'row', marginTop: 16 }}>
+            <ScalableButton onPress={() => handleTransferResponse(notif.id, notif.link, 'ACCEPTED')} style={{ flex: 1, marginRight: 6 }}>
+              <View style={{ backgroundColor: appTheme.colors.primary, borderRadius: 18, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}>
+                <Ionicons name="checkmark-circle-outline" size={16} color="white" />
+                <Text style={{ color: 'white', fontSize: 12, fontWeight: '900', marginLeft: 6 }}>Terima</Text>
+              </View>
+            </ScalableButton>
+            <ScalableButton onPress={() => handleTransferResponse(notif.id, notif.link, 'REJECTED')} style={{ flex: 1, marginLeft: 6 }}>
+              <View style={{ backgroundColor: appTheme.colors.dangerSoft, borderRadius: 18, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderWidth: 1, borderColor: '#efcccc' }}>
+                <Ionicons name="close-circle-outline" size={16} color={appTheme.colors.danger} />
+                <Text style={{ color: appTheme.colors.danger, fontSize: 12, fontWeight: '900', marginLeft: 6 }}>Tolak</Text>
+              </View>
+            </ScalableButton>
+          </View>
+        ) : null}
+      </View>
+    );
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: appTheme.colors.bg }}>
-      <AppScreenHeader title="Notifikasi" subtitle="Panel Petugas" onBack={() => navigation.goBack()} />
-
-      <ScrollView
-        style={{ flex: 1, paddingHorizontal: 24, paddingTop: 18 }}
+      <FlatList
+        data={loading ? [] : notifications}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={renderItem}
+        ListHeaderComponent={renderHeader}
+        ListHeaderComponentStyle={{ marginBottom: 18 }}
+        ListEmptyComponent={
+          loading ? (
+            <View style={{ paddingHorizontal: 24 }}>
+              <AppSkeletonCard compact />
+              <AppSkeletonCard compact />
+              <AppSkeletonCard compact />
+            </View>
+          ) : (
+            <View style={{ paddingHorizontal: 24 }}>
+              <AppEmptyState icon="notifications-off-outline" title="Tidak ada notifikasi" description="Belum ada aktivitas atau permintaan baru." />
+            </View>
+          )
+        }
         contentContainerStyle={{ paddingBottom: 60 }}
+        style={{ flex: 1 }}
+        contentInsetAdjustmentBehavior="never"
+        showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={appTheme.colors.primary} />}
-      >
-        {notifications.length > 0 ? (
-          notifications.map((notif) => {
-            const icon = getIcon(notif.type);
-            const date = new Date(notif.createdAt);
-            const isRequest = notif.type === 'REQUEST' && notif.link;
-
-            return (
-              <View
-                key={notif.id}
-                style={{
-                  backgroundColor: appTheme.colors.surface,
-                  borderRadius: appTheme.radius.lg,
-                  padding: 18,
-                  borderWidth: 1,
-                  borderColor: isRequest && !notif.isRead ? '#c8dde9' : appTheme.colors.border,
-                  marginBottom: 14,
-                  ...appTheme.shadow.card,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-                  <View style={{ width: 50, height: 50, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: icon.bg }}>
-                    <Ionicons name={icon.name as any} size={24} color={icon.color} />
-                  </View>
-                  <View style={{ flex: 1, marginLeft: 14 }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <Text style={{ color: appTheme.colors.text, fontSize: 15, fontWeight: '800', flex: 1, marginRight: 10 }}>{notif.title}</Text>
-                      {!notif.isRead && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: appTheme.colors.primary, marginTop: 4 }} />}
-                    </View>
-                    <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 6 }}>{notif.message}</Text>
-                    <Text style={{ color: appTheme.colors.textSoft, fontSize: 11, marginTop: 10 }}>
-                      {date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • {date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </View>
-                </View>
-
-                {isRequest && !notif.isRead && (
-                  <View style={{ flexDirection: 'row', marginTop: 16 }}>
-                    <ScalableButton onPress={() => handleTransferResponse(notif.id, notif.link, 'ACCEPTED')} style={{ flex: 1, marginRight: 6 }}>
-                      <View style={{ backgroundColor: appTheme.colors.primary, borderRadius: 16, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}>
-                        <Ionicons name="checkmark-circle-outline" size={16} color="white" />
-                        <Text style={{ color: 'white', fontSize: 12, fontWeight: '900', marginLeft: 6 }}>Terima</Text>
-                      </View>
-                    </ScalableButton>
-                    <ScalableButton onPress={() => handleTransferResponse(notif.id, notif.link, 'REJECTED')} style={{ flex: 1, marginLeft: 6 }}>
-                      <View style={{ backgroundColor: appTheme.colors.dangerSoft, borderRadius: 16, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderWidth: 1, borderColor: '#efcccc' }}>
-                        <Ionicons name="close-circle-outline" size={16} color={appTheme.colors.danger} />
-                        <Text style={{ color: appTheme.colors.danger, fontSize: 12, fontWeight: '900', marginLeft: 6 }}>Tolak</Text>
-                      </View>
-                    </ScalableButton>
-                  </View>
-                )}
-              </View>
-            );
-          })
-        ) : loading ? (
-          <View style={{ paddingVertical: 90, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={appTheme.colors.primary} />
-          </View>
-        ) : (
-          <AppEmptyState icon="notifications-off-outline" title="Tidak ada notifikasi" description="Belum ada aktivitas atau permintaan baru." />
-        )}
-      </ScrollView>
+        initialNumToRender={8}
+        windowSize={7}
+        maxToRenderPerBatch={10}
+        removeClippedSubviews
+      />
 
       <AppModalCard
         visible={statusModal.visible}
