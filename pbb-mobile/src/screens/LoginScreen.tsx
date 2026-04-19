@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl } from '../utils/server';
-
 import { ScalableButton } from '../components/ScalableButton';
+import { appTheme } from '../theme/app-theme';
 
 export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>) {
   const { serverUrl, villageName } = route.params || {};
@@ -14,15 +21,16 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
   const [form, setForm] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!form.username || !form.password) {
-      setErrorMsg('Username dan Password wajib diisi');
+      setErrorMsg('Username dan password wajib diisi.');
       return;
     }
 
     if (!serverUrl) {
-      setErrorMsg('Koneksi server terputus. Silakan kembalil ke menu ganti server.');
+      setErrorMsg('Koneksi server terputus. Silakan kembali ke pengaturan koneksi.');
       return;
     }
 
@@ -33,32 +41,29 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
       const response = await fetch(joinServerUrl(serverUrl, '/api/mobile/auth/login'), {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           username: form.username,
-          password: form.password
-        })
+          password: form.password,
+        }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // Save magicToken for WebView bridging
         if (data.magicToken) {
           await AsyncStorage.setItem('@admin_magic_token', data.magicToken);
         }
 
-        // Simpan sesi user agar bisa login otomatis
         await AsyncStorage.setItem('@auth_user', JSON.stringify(data.user));
 
-        // Arahkan ke Layar Admin
-        navigation.navigate('AdminDashboard', { 
-            serverUrl, 
-            user: data.user, 
-            isAdmin: true,
-            stats: { totalSppt: 0, lunasSppt: 0 }, 
-            villageName: data.user.dusun || 'Hak Akses Admin'
+        navigation.navigate('AdminDashboard', {
+          serverUrl,
+          user: data.user,
+          isAdmin: true,
+          stats: { totalSppt: 0, lunasSppt: 0 },
+          villageName: data.user.dusun || villageName || 'Panel Petugas',
         });
       } else {
         setErrorMsg(data.error || 'Username atau password salah.');
@@ -70,90 +75,224 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
     }
   };
 
+  const canSubmit = Boolean(form.username && form.password && !loading);
+
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1 bg-slate-50">
-      <View className="flex-1 justify-center p-8">
-        
-        <ScalableButton 
-          onPress={() => navigation.goBack()} 
-          style={{ position: 'absolute', top: 64, left: 32, zIndex: 10 }}
-        >
-           <View className="bg-white p-3 rounded-full w-12 h-12 items-center justify-center border border-slate-100 shadow-sm">
-             <Ionicons name="arrow-back" size={24} color="#64748b" />
-           </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1, backgroundColor: appTheme.colors.bg }}
+    >
+      <View style={{ position: 'absolute', top: -40, right: -30, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(238,138,91,0.18)' }} />
+      <View style={{ position: 'absolute', bottom: 90, left: -40, width: 170, height: 170, borderRadius: 85, backgroundColor: 'rgba(63,103,214,0.10)' }} />
+      <View style={{ flex: 1, padding: 24, justifyContent: 'center' }}>
+        <ScalableButton onPress={() => navigation.goBack()} style={{ position: 'absolute', top: 64, left: 24, zIndex: 10 }}>
+          <View
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: appTheme.colors.surface,
+              borderWidth: 1,
+              borderColor: appTheme.colors.border,
+              alignItems: 'center',
+              justifyContent: 'center',
+              ...appTheme.shadow.card,
+            }}
+          >
+            <Ionicons name="arrow-back" size={22} color={appTheme.colors.text} />
+          </View>
         </ScalableButton>
 
-        <View className="mb-10 mt-12 px-2">
-          <View className="w-16 h-16 bg-blue-600 rounded-[22px] items-center justify-center mb-6 shadow-xl shadow-blue-600/40">
-             <Ionicons name="shield-checkmark" size={32} color="white" />
+        <View
+          style={{
+            backgroundColor: appTheme.colors.primaryDark,
+            borderRadius: appTheme.radius.xl,
+            padding: 28,
+            marginBottom: 20,
+            ...appTheme.shadow.floating,
+            overflow: 'hidden',
+          }}
+        >
+          <View style={{ position: 'absolute', top: -30, right: -16, width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+          <View style={{ position: 'absolute', bottom: -24, left: -10, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(238,138,91,0.2)' }} />
+          <View
+            style={{
+              alignSelf: 'flex-start',
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 999,
+              backgroundColor: 'rgba(255,255,255,0.12)',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.12)',
+              marginBottom: 16,
+            }}
+          >
+            <Text style={{ color: 'white', fontSize: 11, fontWeight: '800', letterSpacing: 0.8 }}>AKSES PETUGAS</Text>
           </View>
-          <Text className="text-slate-900 text-4xl font-black mb-2 tracking-tighter uppercase">PBB Mobile</Text>
-          <Text className="text-slate-600 text-sm font-semibold leading-relaxed">
-            Halaman login untuk Petugas / Penarik Lapangan
+          <View
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: 20,
+              backgroundColor: 'rgba(255,255,255,0.14)',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 18,
+            }}
+          >
+            <Ionicons name="shield-checkmark" size={28} color="white" />
+          </View>
+          <Text style={{ color: 'white', fontSize: 31, fontWeight: '900', marginBottom: 8, lineHeight: 36 }}>
+            Panel Petugas
           </Text>
+          <Text style={{ color: 'rgba(255,248,240,0.82)', fontSize: 14, lineHeight: 22 }}>
+            Masuk untuk mengelola penagihan, status pembayaran, dan distribusi data lapangan.
+          </Text>
+
+          <View
+            style={{
+              marginTop: 18,
+              alignSelf: 'flex-start',
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 999,
+              backgroundColor: 'rgba(255,255,255,0.12)',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.12)',
+            }}
+          >
+            <Text style={{ color: 'white', fontSize: 11, fontWeight: '700' }}>
+              {villageName || 'Desa aktif'} • {serverUrl?.replace(/^https?:\/\//, '') || 'server belum dipilih'}
+            </Text>
+          </View>
         </View>
 
-        <View className="bg-white p-7 rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200">
-          <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-[2px] mb-3 ml-1">Username / NIP</Text>
-          <View className="relative mb-6">
-            <View className="absolute left-4 top-4 z-10">
-              <Ionicons name="person-outline" size={20} color="#94a3b8" />
-            </View>
+        <View
+          style={{
+            backgroundColor: appTheme.colors.surface,
+            borderRadius: appTheme.radius.xl,
+            padding: 24,
+            borderWidth: 1,
+            borderColor: appTheme.colors.border,
+            ...appTheme.shadow.card,
+          }}
+        >
+          <Text style={{ color: appTheme.colors.textMuted, fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
+            Username / NIP
+          </Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: appTheme.colors.surfaceMuted,
+              borderRadius: appTheme.radius.md,
+              borderWidth: 1,
+              borderColor: appTheme.colors.border,
+              paddingHorizontal: 16,
+              marginBottom: 16,
+            }}
+          >
+            <Ionicons name="person-outline" size={18} color={appTheme.colors.textSoft} />
             <TextInput
-              className="bg-slate-50 text-slate-900 px-12 py-4 rounded-2xl border border-slate-100 font-bold focus:border-blue-500 focus:bg-white"
-              placeholder="Username petugas"
-              placeholderTextColor="#94a3b8"
+              style={{ flex: 1, paddingVertical: 16, paddingLeft: 12, color: appTheme.colors.text, fontSize: 15, fontWeight: '700' }}
+              placeholder="Masukkan username petugas"
+              placeholderTextColor={appTheme.colors.textSoft}
               autoCapitalize="none"
               value={form.username}
               onChangeText={(t) => setForm({ ...form, username: t })}
             />
           </View>
 
-          <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-[2px] mb-3 ml-1">Kata Sandi</Text>
-          <View className="relative mb-4">
-            <View className="absolute left-4 top-4 z-10">
-              <Ionicons name="lock-closed-outline" size={20} color="#94a3b8" />
-            </View>
+          <Text style={{ color: appTheme.colors.textMuted, fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
+            Kata sandi
+          </Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: appTheme.colors.surfaceMuted,
+              borderRadius: appTheme.radius.md,
+              borderWidth: 1,
+              borderColor: appTheme.colors.border,
+              paddingHorizontal: 16,
+            }}
+          >
+            <Ionicons name="lock-closed-outline" size={18} color={appTheme.colors.textSoft} />
             <TextInput
-              className="bg-slate-50 text-slate-900 px-12 py-4 rounded-2xl border border-slate-100 font-bold focus:border-blue-500 focus:bg-white"
-              placeholder="••••••••"
-              placeholderTextColor="#94a3b8"
-              secureTextEntry={true}
+              style={{ flex: 1, paddingVertical: 16, paddingLeft: 12, color: appTheme.colors.text, fontSize: 15, fontWeight: '700' }}
+              placeholder="Masukkan kata sandi"
+              placeholderTextColor={appTheme.colors.textSoft}
+              secureTextEntry={!showPassword}
               value={form.password}
               onChangeText={(t) => setForm({ ...form, password: t })}
             />
+            <ScalableButton onPress={() => setShowPassword((prev) => !prev)}>
+              <View style={{ padding: 6 }}>
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color={appTheme.colors.textMuted}
+                />
+              </View>
+            </ScalableButton>
           </View>
 
           {errorMsg ? (
-            <View className="bg-rose-50 p-3 rounded-xl mb-4 border border-rose-100 flex-row items-center">
-              <Ionicons name="alert-circle" size={16} color="#e11d48" />
-              <Text className="text-rose-600 text-[10px] font-bold ml-2">{errorMsg}</Text>
+            <View
+              style={{
+                marginTop: 14,
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: appTheme.colors.dangerSoft,
+                borderRadius: appTheme.radius.md,
+                borderWidth: 1,
+                borderColor: '#f0caca',
+                padding: 12,
+              }}
+            >
+              <Ionicons name="alert-circle" size={16} color={appTheme.colors.danger} />
+              <Text style={{ color: appTheme.colors.danger, fontSize: 12, fontWeight: '700', marginLeft: 8, flex: 1 }}>
+                {errorMsg}
+              </Text>
             </View>
           ) : null}
 
-          <ScalableButton
-            disabled={!form.username || !form.password || loading}
-            onPress={handleLogin}
+          <ScalableButton disabled={!canSubmit} onPress={handleLogin} style={{ marginTop: 18 }}>
+            <View
+              style={{
+                backgroundColor: canSubmit ? appTheme.colors.primary : appTheme.colors.surfaceStrong,
+                borderRadius: appTheme.radius.md,
+                paddingVertical: 18,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              shadowColor: appTheme.colors.primaryDark,
+              shadowOffset: { width: 0, height: 14 },
+              shadowOpacity: 0.18,
+              shadowRadius: 22,
+              elevation: 10,
+            }}
           >
-            <View className={`py-5 mt-2 rounded-[22px] flex-row justify-center items-center shadow-xl ${form.username && form.password ? 'bg-blue-600 shadow-blue-600/30' : 'bg-slate-200'}`}>
               {loading ? (
                 <ActivityIndicator color="white" />
               ) : (
                 <>
-                  <Text className={`font-black uppercase tracking-[2px] text-[11px] ${form.username && form.password ? 'text-white' : 'text-slate-400'}`}>Masuk ke Sistem</Text>
-                  <Ionicons name="chevron-forward" size={16} color={form.username && form.password ? "white" : "#94a3b8"} style={{ marginLeft: 8 }} />
+                  <Text style={{ color: canSubmit ? 'white' : appTheme.colors.textSoft, fontSize: 13, fontWeight: '900' }}>
+                    Masuk ke Panel
+                  </Text>
+                  <Ionicons
+                    name="arrow-forward"
+                    size={18}
+                    color={canSubmit ? 'white' : appTheme.colors.textSoft}
+                    style={{ marginLeft: 8 }}
+                  />
                 </>
               )}
             </View>
           </ScalableButton>
         </View>
-
-        <View className="items-center mt-12">
-           <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-[3px]">PBB Mobile Desa {villageName || '...'}</Text>
-        </View>
-
-        <StatusBar style="dark" />
       </View>
+      <StatusBar style="dark" />
     </KeyboardAvoidingView>
   );
 }

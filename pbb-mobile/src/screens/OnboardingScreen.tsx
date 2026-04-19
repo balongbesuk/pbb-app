@@ -1,34 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  KeyboardAvoidingView, 
-  Platform, 
-  ActivityIndicator, 
-  Image, 
+import {
+  View,
+  Text,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Image,
   StyleSheet,
-  Dimensions,
-  ScrollView
+  ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
-  Easing, 
-  FadeInDown, 
-  FadeInUp, 
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  FadeInDown,
+  FadeInUp,
   runOnJS,
-  withRepeat,
-  withSequence
 } from 'react-native-reanimated';
 import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl, normalizeServerUrl } from '../utils/server';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('screen');
+import { ScalableButton } from '../components/ScalableButton';
+import { appTheme } from '../theme/app-theme';
 
 export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding'>) {
   const [serverUrl, setServerUrl] = useState('localhost:3000');
@@ -40,34 +36,19 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
   const [recentServers, setRecentServers] = useState<string[]>([]);
 
   const progress = useSharedValue(0);
-  const pulse = useSharedValue(1);
 
   useEffect(() => {
     loadSavedConnection();
   }, []);
 
-  // Effect to try and fetch logo from the entered URL live
   useEffect(() => {
     const timer = setTimeout(() => {
       if (serverUrl.length > 3) {
         fetchPreviewLogo();
       }
-    }, 1000);
+    }, 900);
     return () => clearTimeout(timer);
   }, [serverUrl, isHttps]);
-
-  useEffect(() => {
-    if (syncing) {
-      pulse.value = withRepeat(
-        withSequence(
-          withTiming(1.1, { duration: 1000, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
-          withTiming(1, { duration: 1000, easing: Easing.bezier(0.4, 0, 0.2, 1) })
-        ),
-        -1,
-        true
-      );
-    }
-  }, [syncing]);
 
   const loadSavedConnection = async () => {
     try {
@@ -83,14 +64,16 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
       setIsHttps(usingHttps);
       setServerUrl(savedHost);
     } catch (e) {
-      // Ignore storage read failure and keep default onboarding state
+      // ignore
     }
   };
+
+  const getResolvedServerUrl = () => normalizeServerUrl(serverUrl, isHttps);
 
   const fetchPreviewLogo = async () => {
     const fullUrl = getResolvedServerUrl();
     if (!fullUrl) return;
-    
+
     try {
       const response = await fetch(joinServerUrl(fullUrl, '/api/mobile/connect'));
       const data = await response.json();
@@ -102,7 +85,7 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
         setPreviewLogo(logo);
       }
     } catch (e) {
-      // Keep existing logo or null if error
+      // keep silent
     }
   };
 
@@ -113,14 +96,14 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
     const fullUrl = getResolvedServerUrl();
     if (!fullUrl) {
       setLoading(false);
-      setErrorMsg('Alamat website desa wajib diisi.');
+      setErrorMsg('Alamat server desa wajib diisi.');
       return;
     }
-    
+
     try {
       const response = await fetch(joinServerUrl(fullUrl, '/api/mobile/connect'), {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (response.ok) {
@@ -130,7 +113,11 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
           return;
         }
         setSyncing(true);
-        startSyncAnimation(data);
+        progress.value = withTiming(1, { duration: 2200, easing: Easing.bezier(0.4, 0, 0.2, 1) }, (finished) => {
+          if (finished) {
+            runOnJS(finishSync)(data);
+          }
+        });
       } else {
         setErrorMsg(`Gagal terhubung (Status: ${response.status})`);
       }
@@ -139,14 +126,6 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
     } finally {
       setLoading(false);
     }
-  };
-
-  const startSyncAnimation = (data: any) => {
-    progress.value = withTiming(1, { duration: 4000, easing: Easing.bezier(0.4, 0, 0.2, 1) }, (finished) => {
-      if (finished) {
-        runOnJS(finishSync)(data);
-      }
-    });
   };
 
   const finishSync = async (data: any) => {
@@ -158,14 +137,14 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
 
     const villageName = data.village?.namaDesa || 'Balongbesuk';
     const villageLogo = data.village?.logoUrl || null;
-
     const fullUrl = getResolvedServerUrl();
+
     if (!fullUrl) {
       setSyncing(false);
       setErrorMsg('Alamat server tidak valid.');
       return;
     }
-    
+
     await AsyncStorage.setItem('serverUrl', fullUrl);
     await AsyncStorage.setItem('villageName', villageName);
     if (villageLogo) await AsyncStorage.setItem('villageLogo', villageLogo);
@@ -173,187 +152,284 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
     await AsyncStorage.setItem('recentServerUrls', JSON.stringify(nextRecentServers));
     setRecentServers(nextRecentServers);
 
-    navigation.replace('Dashboard', { 
-      villageName: villageName,
+    navigation.replace('Dashboard', {
+      villageName,
       serverUrl: fullUrl,
       stats: data.stats,
-      villageLogo: villageLogo
+      villageLogo,
     });
   };
 
   const animatedProgressStyle = useAnimatedStyle(() => ({
-    width: `${progress.value * 100}%`
+    width: `${progress.value * 100}%`,
   }));
-
-  const animatedPulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulse.value }],
-    opacity: 0.8 + (pulse.value - 1) * 2
-  }));
-
-  const getResolvedServerUrl = () => normalizeServerUrl(serverUrl, isHttps);
 
   if (syncing) {
     return (
-      <View className="flex-1 bg-black items-center justify-center p-12">
-        {/* Background Image - Persisted for visual continuity */}
-        <View style={StyleSheet.absoluteFill}>
-          <Image 
-            source={require('../../assets/village-bg.png')} 
-            style={{ width: '100%', height: '100%', opacity: 0.4 }}
-            resizeMode="cover"
-          />
-          <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.6)' }} />
+      <View style={{ flex: 1, backgroundColor: appTheme.colors.primaryDark, justifyContent: 'center', padding: 28 }}>
+        <View style={StyleSheet.absoluteFillObject}>
+          <Image source={require('../../assets/village-bg.png')} style={{ width: '100%', height: '100%', opacity: 0.18 }} resizeMode="cover" />
+          <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: appTheme.colors.overlay }} />
         </View>
-
-        <Animated.View entering={FadeInUp} className="items-center w-full">
-          <Animated.View 
-            style={[animatedPulseStyle]}
-            className="w-32 h-32 rounded-[40px] items-center justify-center mb-12 bg-white/5 border border-white/10"
-          >
-             {previewLogo ? (
-               <Image 
-                 source={{ uri: previewLogo }} 
-                 style={{ width: 80, height: 80 }}
-                 resizeMode="contain"
-               />
-             ) : (
-               <ActivityIndicator size="large" color="#10b981" />
-             )}
-          </Animated.View>
-          
-          <Text className="text-white text-3xl font-black mb-2 uppercase tracking-tight text-center">Sinkronisasi</Text>
-          <Text className="text-emerald-400 text-[10px] font-black uppercase tracking-[3px] mb-12 text-center">Menyimpan profil desa anda...</Text>
-          
-          <View className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-            <Animated.View 
-              style={[animatedProgressStyle, { height: '100%', backgroundColor: '#10b981' }]}
-            />
+        <View
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.08)',
+            borderRadius: 34,
+            padding: 28,
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.1)',
+          }}
+        >
+          <View style={{ alignItems: 'center' }}>
+            <View
+              style={{
+                width: 88,
+                height: 88,
+                borderRadius: 28,
+                backgroundColor: 'rgba(255,255,255,0.12)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 18,
+              }}
+            >
+              {previewLogo ? (
+                <Image source={{ uri: previewLogo }} style={{ width: 54, height: 54 }} resizeMode="contain" />
+              ) : (
+                <ActivityIndicator size="large" color="white" />
+              )}
+            </View>
+            <Text style={{ color: 'white', fontSize: 28, fontWeight: '900', marginBottom: 8 }}>Menyambungkan desa</Text>
+            <Text style={{ color: 'rgba(255,255,255,0.74)', fontSize: 14, textAlign: 'center', lineHeight: 21, marginBottom: 22 }}>
+              Menyimpan profil desa dan menyiapkan layanan mobile untuk digunakan.
+            </Text>
           </View>
-        </Animated.View>
+
+          <View style={{ height: 8, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 999, overflow: 'hidden' }}>
+            <Animated.View style={[animatedProgressStyle, { height: '100%', backgroundColor: '#ffffff' }]} />
+          </View>
+        </View>
         <StatusBar style="light" />
       </View>
     );
   }
 
   return (
-    <View style={{ height: SCREEN_HEIGHT, backgroundColor: '#0f172a' }}>
-      {/* Background Image - User's Majestic Village Panorama */}
-      <View style={StyleSheet.absoluteFill}>
-        <Image 
-          source={require('../../assets/village-bg.png')} 
-          style={{ width: '100%', height: '100%', opacity: 0.7 }}
-          resizeMode="cover"
-        />
-        {/* Dark overlay for readability */}
-        <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(15, 23, 42, 0.3)' }} />
+    <View style={{ flex: 1, backgroundColor: appTheme.colors.bg }}>
+      <View style={StyleSheet.absoluteFillObject}>
+        <Image source={require('../../assets/village-bg.png')} style={{ width: '100%', height: '58%', opacity: 0.15 }} resizeMode="cover" />
+        <View style={{ position: 'absolute', top: -40, right: -30, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(238,138,91,0.18)' }} />
+        <View style={{ position: 'absolute', top: 120, left: -50, width: 170, height: 170, borderRadius: 85, backgroundColor: 'rgba(63,103,214,0.10)' }} />
       </View>
-      
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-        style={{ flex: 1 }}
-      >
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false} showsVerticalScrollIndicator={false}>
-          <View className="flex-1 justify-center p-8 pt-5 pb-12 items-center">
-            
-            {/* Header Section - More Compact */}
-            <Animated.View entering={FadeInUp.delay(200).duration(800)} style={{ width: '100%', alignItems: 'center', marginBottom: 20 }}>
-              {/* Dynamic Logo in Circle - Smaller for better spacing */}
-              <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center', marginBottom: 15 }}>
-                {previewLogo ? (
-                  <Image 
-                    source={{ uri: previewLogo }} 
-                    style={{ width: 75, height: 75 }}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <Image 
-                    source={require('../../assets/icon.png')} 
-                    style={{ width: 60, height: 60, opacity: 0.6 }}
-                    resizeMode="contain"
-                  />
-                )}
+
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, justifyContent: 'center' }} showsVerticalScrollIndicator={false}>
+          <Animated.View entering={FadeInUp.duration(600)}>
+            <View
+              style={{
+                backgroundColor: appTheme.colors.primaryDark,
+                borderRadius: appTheme.radius.xl,
+                padding: 28,
+                marginBottom: 18,
+                ...appTheme.shadow.floating,
+                overflow: 'hidden',
+              }}
+            >
+              <View style={{ position: 'absolute', top: -34, right: -22, width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(255,255,255,0.08)' }} />
+              <View style={{ position: 'absolute', bottom: -28, left: -10, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(238,138,91,0.22)' }} />
+              <View
+                style={{
+                  alignSelf: 'flex-start',
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderRadius: 999,
+                  backgroundColor: 'rgba(255,255,255,0.12)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255,255,255,0.12)',
+                  marginBottom: 16,
+                }}
+              >
+                <Text style={{ color: 'white', fontSize: 11, fontWeight: '800', letterSpacing: 0.8 }}>PORTAL DESA MODERN</Text>
               </View>
-
-              <Text style={{ fontSize: 32, fontWeight: '900', color: 'white', letterSpacing: -1, textTransform: 'uppercase' }}>PBB MOBILE</Text>
-              <View style={{ height: 3, width: 60, backgroundColor: '#10b981', marginTop: 4, borderRadius: 2 }} />
-              <Text style={{ color: '#ffffff', fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 4, marginTop: 8, opacity: 0.8 }}>Layanan PBB Desa</Text>
-            </Animated.View>
-
-            {/* Form Card */}
-            <Animated.View entering={FadeInDown.delay(400).duration(800)} className="w-full max-w-sm">
-              <View style={{ backgroundColor: 'rgba(30, 41, 59, 0.95)', borderRadius: 40, padding: 28, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)', shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.5, shadowRadius: 30 }}>
-                <View className="mb-6">
-                  <Text className="text-white text-xl font-black mb-1">Sambungkan Desa Anda</Text>
-                  <Text className="text-slate-400 text-[11px] leading-relaxed font-medium">
-                    Masukkan alamat website desa Anda agar aplikasi terhubung ke layanan PBB resmi desa tersebut.
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18 }}>
+                <View
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 22,
+                    backgroundColor: 'rgba(255,255,255,0.14)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 14,
+                  }}
+                >
+                  {previewLogo ? (
+                    <Image source={{ uri: previewLogo }} style={{ width: 40, height: 40 }} resizeMode="contain" />
+                  ) : (
+                    <Image source={require('../../assets/icon.png')} style={{ width: 34, height: 34 }} resizeMode="contain" />
+                  )}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: 'rgba(255,244,232,0.76)', fontSize: 11, fontWeight: '800', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>
+                    PBB Mobile
                   </Text>
+                  <Text style={{ color: 'white', fontSize: 31, fontWeight: '900', lineHeight: 36 }}>Hubungkan aplikasi desa</Text>
                 </View>
+              </View>
 
-                <View>
-                  <Text className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-2 ml-1">Alamat Website Desa</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', borderRadius: 20, borderWidth: 1, borderColor: '#334155', marginBottom: 8 }}>
-                    <TouchableOpacity onPress={() => setIsHttps(!isHttps)} style={{ paddingLeft: 16 }}>
-                      <Text style={{ color: isHttps ? '#10b981' : '#fbbf24', fontWeight: 'bold', fontSize: 11 }}>{isHttps ? 'HTTPS://' : 'HTTP://'}</Text>
-                    </TouchableOpacity>
-                    <TextInput
-                      style={{ flex: 1, color: 'white', paddingHorizontal: 10, paddingVertical: 12, fontWeight: '900', fontSize: 13 }}
-                      placeholder="contoh: desasaya.id atau localhost:3000"
-                      placeholderTextColor="#475569"
-                      value={serverUrl.replace('http://', '').replace('https://', '')}
-                      onChangeText={(val) => setServerUrl(val)}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                  </View>
-                  {recentServers.length > 0 && (
-                    <View className="mt-3 mb-1">
-                      <Text className="text-slate-500 text-[9px] font-black uppercase tracking-widest mb-2 ml-1">Sambungan Terakhir</Text>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        {recentServers.map((recentServer) => (
-                          <TouchableOpacity
-                            key={recentServer}
-                            className="mr-2 px-3 py-2 rounded-full border border-slate-600 bg-slate-900"
-                            onPress={() => {
-                              setIsHttps(recentServer.startsWith('https://'));
-                              setServerUrl(recentServer.replace(/^https?:\/\//, ''));
-                              setErrorMsg('');
-                            }}
-                          >
-                            <Text className="text-white text-[10px] font-bold">{recentServer.replace(/^https?:\/\//, '')}</Text>
-                          </TouchableOpacity>
-                        ))}
-                      </ScrollView>
-                    </View>
-                  )}
-                  {errorMsg && (
-                    <Text className="text-rose-400 text-[9px] font-bold mt-2 ml-1 uppercase tracking-tighter text-center">
-                      ⚠️ {errorMsg}
-                    </Text>
-                  )}
+              <Text style={{ color: 'rgba(255,248,240,0.82)', fontSize: 14, lineHeight: 22 }}>
+                Masukkan alamat server desa untuk membuka layanan PBB, data warga, dan panel petugas dalam satu aplikasi yang serasi.
+              </Text>
+              <View style={{ flexDirection: 'row', marginTop: 18 }}>
+                <View style={{ backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 18, paddingHorizontal: 12, paddingVertical: 10, marginRight: 10 }}>
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: '800' }}>Cepat disetel</Text>
+                </View>
+                <View style={{ backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 18, paddingHorizontal: 12, paddingVertical: 10 }}>
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: '800' }}>Satu tema utuh</Text>
+                </View>
+              </View>
+            </View>
+          </Animated.View>
 
-                  <TouchableOpacity 
-                    style={{ marginTop: 15, backgroundColor: '#059669', paddingVertical: 16, borderRadius: 20, alignItems: 'center', justifyContent: 'center', shadowColor: '#059669', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.4, shadowRadius: 15 }}
-                    disabled={loading}
-                    onPress={handleConnect}
+          <Animated.View entering={FadeInDown.delay(100).duration(650)}>
+            <View
+              style={{
+                backgroundColor: appTheme.colors.surface,
+                borderRadius: appTheme.radius.xl,
+                padding: 24,
+                borderWidth: 1,
+                borderColor: appTheme.colors.border,
+                ...appTheme.shadow.card,
+                overflow: 'hidden',
+              }}
+            >
+              <View style={{ position: 'absolute', top: -24, right: -16, width: 110, height: 110, borderRadius: 55, backgroundColor: appTheme.colors.primarySoft, opacity: 0.7 }} />
+              <Text style={{ color: appTheme.colors.textMuted, fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
+                Alamat server desa
+              </Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: appTheme.colors.surfaceMuted,
+                  borderRadius: appTheme.radius.md,
+                  borderWidth: 1,
+                  borderColor: appTheme.colors.border,
+                  paddingHorizontal: 14,
+                }}
+              >
+                <ScalableButton onPress={() => setIsHttps(!isHttps)}>
+                  <View
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 8,
+                      borderRadius: 14,
+                      backgroundColor: isHttps ? appTheme.colors.primarySoft : appTheme.colors.accentSoft,
+                    }}
                   >
-                    {loading ? (
-                      <ActivityIndicator color="white" />
-                    ) : (
-                      <Text style={{ color: 'white', fontWeight: '900', textTransform: 'uppercase', letterSpacing: 2, fontSize: 12 }}>Masuk ke Layanan Desa</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
+                    <Text style={{ color: isHttps ? appTheme.colors.primary : appTheme.colors.accent, fontSize: 11, fontWeight: '900' }}>
+                      {isHttps ? 'HTTPS' : 'HTTP'}
+                    </Text>
+                  </View>
+                </ScalableButton>
+                <TextInput
+                  style={{ flex: 1, color: appTheme.colors.text, paddingHorizontal: 12, paddingVertical: 16, fontSize: 15, fontWeight: '700' }}
+                  placeholder="desa.id atau 192.168.1.10:3000"
+                  placeholderTextColor={appTheme.colors.textSoft}
+                  value={serverUrl.replace('http://', '').replace('https://', '')}
+                  onChangeText={(val) => setServerUrl(val)}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
               </View>
-              
-              <View className="items-center mt-8">
-                <Text className="text-white/30 text-[9px] font-black tracking-[4px] uppercase">v9.0 — Fitur Unggulan PBB Mobile</Text>
-              </View>
-            </Animated.View>
 
-          </View>
+              <Text style={{ color: appTheme.colors.textSoft, fontSize: 12, lineHeight: 18, marginTop: 10 }}>
+                Contoh: `desa-ku.id`, `localhost:3000`, atau IP server lokal kantor desa.
+              </Text>
+
+              {recentServers.length > 0 && (
+                <View style={{ marginTop: 18 }}>
+                  <Text style={{ color: appTheme.colors.textMuted, fontSize: 12, fontWeight: '700', marginBottom: 10 }}>
+                    Sambungan terakhir
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {recentServers.map((recentServer) => (
+                      <ScalableButton
+                        key={recentServer}
+                        onPress={() => {
+                          setIsHttps(recentServer.startsWith('https://'));
+                          setServerUrl(recentServer.replace(/^https?:\/\//, ''));
+                          setErrorMsg('');
+                        }}
+                        style={{ marginRight: 10 }}
+                      >
+                        <View
+                          style={{
+                            paddingHorizontal: 14,
+                            paddingVertical: 10,
+                            borderRadius: 999,
+                            backgroundColor: appTheme.colors.surfaceMuted,
+                            borderWidth: 1,
+                            borderColor: appTheme.colors.border,
+                          }}
+                        >
+                          <Text style={{ color: appTheme.colors.text, fontSize: 12, fontWeight: '700' }}>
+                            {recentServer.replace(/^https?:\/\//, '')}
+                          </Text>
+                        </View>
+                      </ScalableButton>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              {errorMsg ? (
+                <View
+                  style={{
+                    marginTop: 14,
+                    backgroundColor: appTheme.colors.dangerSoft,
+                    borderRadius: appTheme.radius.md,
+                    borderWidth: 1,
+                    borderColor: '#f0caca',
+                    padding: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: appTheme.colors.danger, fontSize: 12, fontWeight: '700', flex: 1 }}>{errorMsg}</Text>
+                </View>
+              ) : null}
+
+              <ScalableButton onPress={handleConnect} disabled={loading} style={{ marginTop: 18 }}>
+                <View
+                  style={{
+                    backgroundColor: appTheme.colors.primary,
+                    borderRadius: appTheme.radius.md,
+                    paddingVertical: 18,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'row',
+                    shadowColor: appTheme.colors.primaryDark,
+                    shadowOffset: { width: 0, height: 14 },
+                    shadowOpacity: 0.18,
+                    shadowRadius: 22,
+                    elevation: 10,
+                  }}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <>
+                      <Text style={{ color: 'white', fontSize: 13, fontWeight: '900' }}>Hubungkan dan lanjutkan</Text>
+                      <Text style={{ color: 'white', marginLeft: 8, fontSize: 16 }}>→</Text>
+                    </>
+                  )}
+                </View>
+              </ScalableButton>
+            </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
     </View>
   );
 }

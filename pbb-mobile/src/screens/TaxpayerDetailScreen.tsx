@@ -1,41 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Modal, ActivityIndicator, Linking, Alert } from 'react-native';
+import { View, Text, ScrollView, Modal, ActivityIndicator, Linking, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl, formatCurrency } from '../utils/server';
-
 import { ScalableButton } from '../components/ScalableButton';
+import { AppScreenHeader } from '../components/AppScreenHeader';
+import { AppActionCard } from '../components/AppActionCard';
+import { AppModalCard } from '../components/AppModalCard';
+import { appTheme, statusTone } from '../theme/app-theme';
 
 export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<'TaxpayerDetail'>) {
-  const { serverUrl, taxpayer: initialTaxpayer, user, villageName, bapendaConfig: initialConfig } = route.params;
+  const { serverUrl, taxpayer: initialTaxpayer, user, villageName, bapendaConfig: initialConfig } = route.params as any;
   const [taxpayer, setTaxpayer] = useState(initialTaxpayer);
   const [updating, setUpdating] = useState(false);
   const [bapendaConfig, setBapendaConfig] = useState(initialConfig || null);
-
-  useEffect(() => {
-    fetchLatestConfig();
-  }, []);
-
-  const fetchLatestConfig = async () => {
-    try {
-      const url = joinServerUrl(serverUrl, `/api/mobile/tax?nop=${encodeURIComponent(taxpayer.nop)}`); 
-      const res = await fetch(url);
-      const data = await res.json();
-      if (data.success && data.villageConfig) {
-        setBapendaConfig(data.villageConfig);
-      }
-    } catch (e) { console.log('Fetch config error:', e); }
-  };
-
-  // Status Modal State
   const [statusModal, setStatusModal] = useState({
     visible: false,
     type: 'success' as 'success' | 'error',
-    message: ''
+    message: '',
   });
-
-  // Unified Sync Result Modal State
   const [syncModal, setSyncModal] = useState<{
     visible: boolean;
     type: 'success' | 'unpaid' | 'error';
@@ -45,10 +29,30 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
     type: 'success',
     message: '',
   });
+  const [actionSheetVisible, setActionSheetVisible] = useState(false);
+
+  useEffect(() => {
+    fetchLatestConfig();
+  }, []);
+
+  const fetchLatestConfig = async () => {
+    try {
+      const url = joinServerUrl(serverUrl, `/api/mobile/tax?nop=${encodeURIComponent(taxpayer.nop)}`);
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.success && data.villageConfig) {
+        setBapendaConfig(data.villageConfig);
+      }
+    } catch (e) {
+      console.log('Fetch config error:', e);
+    }
+  };
 
   const isLunas = taxpayer.paymentStatus === 'LUNAS';
+  const tone = statusTone[taxpayer.paymentStatus as keyof typeof statusTone] || statusTone.PIUTANG;
 
   const handleStatusUpdate = async (newStatus: string) => {
+    setActionSheetVisible(false);
     setUpdating(true);
     try {
       const url = joinServerUrl(serverUrl, '/api/mobile/officer/taxpayers/status');
@@ -58,31 +62,31 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
         body: JSON.stringify({
           taxId: taxpayer.id,
           status: newStatus,
-          userId: user.id
-        })
+          userId: user.id,
+        }),
       });
       const data = await res.json();
-      
+
       if (data.success) {
         setTaxpayer(data.data);
         if (route.params.onUpdate) route.params.onUpdate(data.data);
         setStatusModal({
           visible: true,
           type: 'success',
-          message: data.message
+          message: data.message,
         });
       } else {
         setStatusModal({
           visible: true,
           type: 'error',
-          message: data.error || 'Gagal memperbarui status'
+          message: data.error || 'Gagal memperbarui status',
         });
       }
     } catch (err) {
       setStatusModal({
         visible: true,
         type: 'error',
-        message: 'Terjadi kesalahan koneksi'
+        message: 'Terjadi kesalahan koneksi',
       });
     } finally {
       setUpdating(false);
@@ -96,19 +100,19 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          nop: taxpayer.nop, 
-          tahun: taxpayer.tahun || bapendaConfig?.tahunPajak || 2026
-        })
+        body: JSON.stringify({
+          nop: taxpayer.nop,
+          tahun: taxpayer.tahun || bapendaConfig?.tahunPajak || 2026,
+        }),
       });
 
       const data = await res.json();
-      
+
       if (!res.ok) {
         setSyncModal({
           visible: true,
           type: 'error',
-          message: data?.error || 'Gagal sinkronisasi dengan server Bapenda.'
+          message: data?.error || 'Gagal sinkronisasi dengan server Bapenda.',
         });
         return;
       }
@@ -119,17 +123,17 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
           const refreshRes = await fetch(refreshUrl);
           const refreshData = await refreshRes.json();
           if (refreshData.success && refreshData.data?.[0]) {
-             const refreshed = refreshData.data[0];
-             if (refreshed.status && !refreshed.paymentStatus) {
-                refreshed.paymentStatus = refreshed.status;
-             }
-             const mergedTaxpayer = { ...taxpayer, ...refreshed };
-             setTaxpayer(mergedTaxpayer);
-             if (route.params.onUpdate) route.params.onUpdate(mergedTaxpayer);
+            const refreshed = refreshData.data[0];
+            if (refreshed.status && !refreshed.paymentStatus) {
+              refreshed.paymentStatus = refreshed.status;
+            }
+            const mergedTaxpayer = { ...taxpayer, ...refreshed };
+            setTaxpayer(mergedTaxpayer);
+            if (route.params.onUpdate) route.params.onUpdate(mergedTaxpayer);
           } else {
-             const updatedTaxpayer = { ...taxpayer, paymentStatus: 'LUNAS' };
-             setTaxpayer(updatedTaxpayer);
-             if (route.params.onUpdate) route.params.onUpdate(updatedTaxpayer);
+            const updatedTaxpayer = { ...taxpayer, paymentStatus: 'LUNAS' };
+            setTaxpayer(updatedTaxpayer);
+            if (route.params.onUpdate) route.params.onUpdate(updatedTaxpayer);
           }
         } catch (e) {
           const updatedTaxpayer = { ...taxpayer, paymentStatus: 'LUNAS' };
@@ -140,20 +144,20 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
         setSyncModal({
           visible: true,
           type: 'success',
-          message: `Berhasil Sinkron! Tagihan atas nama ${taxpayer.namaWp} telah terdeteksi LUNAS di server Bapenda.`
+          message: `Tagihan atas nama ${taxpayer.namaWp} telah terdeteksi lunas di server Bapenda.`,
         });
       } else {
         setSyncModal({
           visible: true,
           type: 'unpaid',
-          message: `Tagihan atas nama ${taxpayer.namaWp} masih tercatat BELUM LUNAS.`
+          message: `Tagihan atas nama ${taxpayer.namaWp} masih tercatat belum lunas.`,
         });
       }
     } catch (err) {
       setSyncModal({
         visible: true,
         type: 'error',
-        message: 'Gagal menghubungkan ke server Bapenda. Pastikan koneksi internet Anda stabil.'
+        message: 'Gagal menghubungkan ke server Bapenda. Pastikan koneksi internet Anda stabil.',
       });
     } finally {
       setUpdating(false);
@@ -166,14 +170,14 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
       const cleanNop = taxpayer.nop.replace(/\D/g, '');
       const isPayment = bapendaConfig?.enableBapendaPayment;
       const configUrl = isPayment ? bapendaConfig?.bapendaPaymentUrl : bapendaConfig?.bapendaUrl;
-      
+
       if (!configUrl) {
         Alert.alert('Error', 'Konfigurasi portal Bapenda tidak ditemukan.');
         return;
       }
-      
+
       let targetUrl = configUrl;
-      const baseUrl = configUrl.split("?")[0];
+      const baseUrl = configUrl.split('?')[0];
       if (!isPayment && bapendaConfig?.isJombangBapenda && cleanNop.length === 18) {
         const k0 = cleanNop.substring(0, 2);
         const k1 = cleanNop.substring(2, 4);
@@ -186,307 +190,239 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
       } else {
         targetUrl = configUrl.replace(/\{nop\}/gi, cleanNop);
       }
-      
+
       await Linking.openURL(targetUrl);
     } catch (e) {
       Alert.alert('Error', 'Gagal membuka halaman Bapenda.');
     }
   };
 
-  const InfoRow = ({ label, value, icon, color = "#64748b" }: { label: string, value: string, icon: any, color?: string }) => (
-    <View className="flex-row items-center mb-6">
-      <View className="w-10 h-10 rounded-xl bg-slate-50 items-center justify-center border border-slate-100">
-        <Ionicons name={icon} size={18} color={color} />
+  const InfoCard = ({ label, value, icon }: { label: string; value: string; icon: keyof typeof Ionicons.glyphMap }) => (
+    <View style={{ backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 22, padding: 16, flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+      <View style={{ width: 42, height: 42, borderRadius: 16, backgroundColor: appTheme.colors.surface, alignItems: 'center', justifyContent: 'center' }}>
+        <Ionicons name={icon} size={18} color={appTheme.colors.info} />
       </View>
-      <View className="ml-4 flex-1">
-        <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">{label}</Text>
-        <Text className="text-slate-900 font-bold text-sm tracking-tight">{value || '-'}</Text>
+      <View style={{ marginLeft: 12, flex: 1 }}>
+        <Text style={{ color: appTheme.colors.textMuted, fontSize: 11, fontWeight: '700' }}>{label}</Text>
+        <Text style={{ color: appTheme.colors.text, fontSize: 14, fontWeight: '800', marginTop: 4 }}>{value || '-'}</Text>
       </View>
     </View>
   );
 
+  const statusToneModal =
+    syncModal.type === 'success'
+      ? { bg: appTheme.colors.successSoft, color: appTheme.colors.success, icon: 'checkmark-circle' as const, title: 'Sinkron berhasil' }
+      : syncModal.type === 'unpaid'
+        ? { bg: appTheme.colors.accentSoft, color: appTheme.colors.accent, icon: 'wallet-outline' as const, title: 'Belum lunas' }
+        : { bg: appTheme.colors.dangerSoft, color: appTheme.colors.danger, icon: 'alert-circle' as const, title: 'Gangguan sistem' };
+
   return (
-    <View className="flex-1 bg-slate-50">
-      {/* Sticky Header Bar */}
-      <View className="absolute top-0 left-0 right-0 pt-16 pb-4 px-6 z-50 flex-row items-center justify-between bg-slate-900 shadow-md">
-        <ScalableButton 
-          onPress={() => navigation.goBack()}
+    <View style={{ flex: 1, backgroundColor: appTheme.colors.bg }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 150 }} showsVerticalScrollIndicator={false}>
+        <AppScreenHeader
+          title={taxpayer.namaWp}
+          subtitle="Detail wajib pajak"
+          onBack={() => navigation.goBack()}
+          style={{ paddingBottom: 28 }}
         >
-          <View className="w-11 h-11 bg-white/10 rounded-2xl items-center justify-center border border-white/10">
-            <Ionicons name="arrow-back" size={20} color="white" />
-          </View>
-        </ScalableButton>
-        <View className="bg-white/10 px-4 py-2 rounded-full border border-white/10">
-          <Text className="text-white text-[10px] font-bold uppercase tracking-widest">Detail Wajib Pajak</Text>
-        </View>
-        <View className="w-11" />
-      </View>
-
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 220 }}>
-        {/* Header Section */}
-        <View className="bg-slate-900 pt-36 pb-20 px-6 rounded-b-[40px] shadow-lg relative">
-
-          <View className="items-center">
-            <View className={`px-4 py-1.5 rounded-full mb-4 border ${
-              taxpayer.paymentStatus === 'LUNAS' ? 'bg-emerald-500/20 border-emerald-500/30' : 
-              taxpayer.paymentStatus === 'SUSPEND' ? 'bg-amber-500/20 border-amber-500/30' :
-              taxpayer.paymentStatus === 'TIDAK_TERBIT' ? 'bg-slate-500/20 border-slate-500/30' :
-              'bg-rose-500/20 border-rose-500/30'
-            }`}>
-               <Text className={`text-[10px] font-bold uppercase tracking-[2.5px] ${
-                 taxpayer.paymentStatus === 'LUNAS' ? 'text-emerald-400' : 
-                 taxpayer.paymentStatus === 'SUSPEND' ? 'text-amber-400' :
-                 taxpayer.paymentStatus === 'TIDAK_TERBIT' ? 'text-slate-400' :
-                 'text-rose-400'
-               }`}>
-                 {taxpayer.paymentStatus === 'LUNAS' ? 'LUNAS TERBAYAR' : 
-                  taxpayer.paymentStatus === 'SUSPEND' ? 'SENGKETA' :
-                  taxpayer.paymentStatus === 'TIDAK_TERBIT' ? 'TIDAK TERBIT' :
-                  'TAGIHAN PIUTANG'}
-               </Text>
+          <View style={{ marginTop: 6 }}>
+            <View style={{ alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: tone.bg }}>
+              <Text style={{ color: tone.text, fontSize: 11, fontWeight: '800' }}>
+                {taxpayer.paymentStatus === 'LUNAS' ? 'Lunas' : taxpayer.paymentStatus === 'SUSPEND' ? 'Sengketa' : taxpayer.paymentStatus === 'TIDAK_TERBIT' ? 'Tidak terbit' : 'Piutang'}
+              </Text>
             </View>
-            <Text className="text-white text-3xl font-black text-center tracking-tighter uppercase leading-tight px-4" numberOfLines={2}>
-              {taxpayer.namaWp}
-            </Text>
-            <Text className="text-slate-400 font-mono font-bold text-sm mt-3 tracking-widest">
-              {taxpayer.nop}
-            </Text>
-          </View>
-        </View>
+            <Text style={{ color: 'rgba(255,255,255,0.74)', fontSize: 13, marginTop: 12 }}>{taxpayer.nop}</Text>
 
-        {/* Info Content */}
-        <View className="px-6 -mt-10">
-          <View className="bg-white rounded-[32px] p-8 shadow-2xl shadow-slate-200/60 border border-slate-100">
-            <Text className="text-slate-900 font-black text-lg mb-6 tracking-tight">Informasi Objek Pajak</Text>
-            
-            <InfoRow label="Alamat Objek" value={taxpayer.alamatObjek || `Wilayah ${villageName}`} icon="location" color="#3b82f6" />
-            
-            <View className="flex-row mb-6">
-              <View className="flex-1 mr-2">
-                <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Dusun</Text>
-                <View className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                   <Text className="text-slate-900 font-bold text-sm">{taxpayer.dusun || '-'}</Text>
-                </View>
-              </View>
-              <View className="flex-1 ml-2">
-                <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">RT / RW</Text>
-                <View className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                   <Text className="text-slate-900 font-bold text-sm">{taxpayer.rt || '0'} / {taxpayer.rw || '0'}</Text>
-                </View>
-              </View>
-            </View>
-
-            <View className="bg-slate-900 p-6 rounded-[24px] mt-2 shadow-xl shadow-slate-900/30">
-               <View className="flex-row justify-between items-center mb-1">
-                 <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Ketetapan Pajak</Text>
-                 <Ionicons name="card-outline" size={16} color="#94a3b8" />
-               </View>
-               <Text className="text-white text-3xl font-black tracking-tighter">
-                 {formatCurrency(taxpayer.ketetapan)}
-               </Text>
-               <Text className="text-blue-400 text-[10px] font-bold mt-2 uppercase tracking-widest">Tahun Pajak {taxpayer.tahun || new Date().getFullYear()}</Text>
-            </View>
-          </View>
-
-          {/* Transfer Button - Only for Admin or current Penarik */}
-          <ScalableButton 
-            onPress={() => navigation.navigate('SelectOfficer', { 
-              serverUrl, 
-              senderId: user.id, 
-              senderRole: user.role || 'PENARIK',
-              taxId: taxpayer.id,
-              taxName: taxpayer.namaWp
-            })}
-          >
-            <View className="bg-white border border-blue-100 mt-6 p-6 rounded-[32px] flex-row items-center shadow-md">
-              <View className="w-12 h-12 bg-blue-50 rounded-2xl items-center justify-center">
-                <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
-              </View>
-              <View className="flex-1 ml-4">
-                <Text className="text-slate-900 font-black text-base tracking-tight">Pindahkan Alokasi</Text>
-                <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Re-alokasi ke petugas lain</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-            </View>
-          </ScalableButton>
-
-          {!isLunas && bapendaConfig?.enableBapendaSync && bapendaConfig?.isJombangBapenda && (
-            <ScalableButton 
-              onPress={handlePaymentCheck}
+            <View
+              style={{
+                marginTop: 18,
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                borderRadius: 28,
+                padding: 20,
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.1)',
+              }}
             >
-              <View className={`${bapendaConfig.enableBapendaPayment ? 'bg-emerald-600 shadow-emerald-600/30' : 'bg-slate-700 shadow-slate-700/30'} mt-4 p-6 rounded-[32px] flex-row items-center shadow-lg`}>
-                <View className="w-12 h-12 bg-white/20 rounded-2xl items-center justify-center">
-                  <Ionicons name={bapendaConfig.enableBapendaPayment ? "cash-outline" : "information-circle-outline"} size={24} color="white" />
+              <Text style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11, fontWeight: '700' }}>Ketetapan pajak</Text>
+              <Text style={{ color: 'white', fontSize: 30, fontWeight: '900', marginTop: 6 }}>
+                {formatCurrency(taxpayer.ketetapan)}
+              </Text>
+              <View style={{ flexDirection: 'row', marginTop: 14 }}>
+                <View style={{ marginRight: 8, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.12)' }}>
+                  <Text style={{ color: 'white', fontSize: 11, fontWeight: '800' }}>Tahun {taxpayer.tahun || new Date().getFullYear()}</Text>
                 </View>
-                <View className="flex-1 ml-4">
-                  <Text className="text-white font-black text-base tracking-tight">
-                    {bapendaConfig.enableBapendaPayment ? 'Bayar Online Sekarang' : 'Cek Status Bapenda'}
+                <View style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: 'rgba(238,138,91,0.18)' }}>
+                  <Text style={{ color: '#ffd9c8', fontSize: 11, fontWeight: '800' }}>{villageName}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </AppScreenHeader>
+
+        <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
+          <View style={{ backgroundColor: appTheme.colors.surface, borderRadius: 28, padding: 22, borderWidth: 1, borderColor: appTheme.colors.border, ...appTheme.shadow.card }}>
+            <Text style={{ color: appTheme.colors.text, fontSize: 20, fontWeight: '900', marginBottom: 14 }}>Informasi lapangan</Text>
+
+            <View style={{ flexDirection: 'row', marginBottom: 14 }}>
+              <View style={{ flex: 1, backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 22, padding: 16, marginRight: 8 }}>
+                <Text style={{ color: appTheme.colors.textMuted, fontSize: 11, fontWeight: '700' }}>Status aktif</Text>
+                <Text style={{ color: tone.text, fontSize: 17, fontWeight: '900', marginTop: 6 }}>
+                  {taxpayer.paymentStatus === 'LUNAS' ? 'Sudah lunas' : taxpayer.paymentStatus === 'SUSPEND' ? 'Sengketa' : taxpayer.paymentStatus === 'TIDAK_TERBIT' ? 'Tidak terbit' : 'Masih piutang'}
+                </Text>
+              </View>
+              <View style={{ width: 120, backgroundColor: appTheme.colors.primarySoft, borderRadius: 22, padding: 16 }}>
+                <Text style={{ color: appTheme.colors.textMuted, fontSize: 11, fontWeight: '700' }}>Petugas</Text>
+                <Text style={{ color: appTheme.colors.primaryDark, fontSize: 15, fontWeight: '900', marginTop: 6 }} numberOfLines={2}>
+                  {user?.name || 'Petugas'}
+                </Text>
+              </View>
+            </View>
+
+            <InfoCard label="Alamat objek" value={taxpayer.alamatObjek || `Wilayah ${villageName}`} icon="location-outline" />
+            <InfoCard label="Dusun" value={taxpayer.dusun || '-'} icon="home-outline" />
+            <InfoCard label="RT / RW" value={`${taxpayer.rt || '0'} / ${taxpayer.rw || '0'}`} icon="grid-outline" />
+          </View>
+
+          <AppActionCard
+            title="Pindahkan alokasi"
+            subtitle="Alihkan objek pajak ke petugas lain"
+            icon="swap-horizontal-outline"
+            iconColor={appTheme.colors.info}
+            iconBg={appTheme.colors.infoSoft}
+            onPress={() =>
+              navigation.navigate('SelectOfficer', {
+                serverUrl,
+                senderId: user.id,
+                senderRole: user.role || 'PENARIK',
+                taxId: taxpayer.id,
+                taxName: taxpayer.namaWp,
+              })
+            }
+            style={{ marginTop: 16 }}
+          />
+
+          {!isLunas && bapendaConfig?.enableBapendaSync && bapendaConfig?.isJombangBapenda ? (
+            <ScalableButton onPress={handlePaymentCheck} style={{ marginTop: 12 }}>
+              <View style={{ backgroundColor: bapendaConfig.enableBapendaPayment ? appTheme.colors.primary : appTheme.colors.info, borderRadius: 24, padding: 18, flexDirection: 'row', alignItems: 'center', ...appTheme.shadow.card }}>
+                <View style={{ width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name={bapendaConfig.enableBapendaPayment ? 'card-outline' : 'sync-outline'} size={22} color="white" />
+                </View>
+                <View style={{ flex: 1, marginLeft: 14 }}>
+                  <Text style={{ color: 'white', fontSize: 16, fontWeight: '800' }}>
+                    {bapendaConfig.enableBapendaPayment ? 'Bayar online sekarang' : 'Cek status Bapenda'}
                   </Text>
-                  <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-0.5">
-                    {bapendaConfig.enableBapendaPayment ? 'E-Pay Bapenda Jombang' : 'Sinkronisasi Data Pusat'}
+                  <Text style={{ color: 'rgba(255,255,255,0.78)', fontSize: 12, marginTop: 4 }}>
+                    {bapendaConfig.enableBapendaPayment ? 'Lanjut ke portal pembayaran resmi' : 'Sinkronkan status dari server pusat'}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="white" />
               </View>
             </ScalableButton>
-          )}
+          ) : null}
         </View>
       </ScrollView>
 
-      {/* Floating Footer Actions */}
-      <View 
-        style={{
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -6 },
-          shadowOpacity: 0.12,
-          shadowRadius: 12,
-          elevation: 24
-        }}
-        className="absolute bottom-0 left-0 right-0 bg-white px-6 pt-5 pb-10 border-t border-slate-50"
-      >
-         <View className="flex-row gap-3">
-            <ScalableButton 
-              disabled={updating}
-              onPress={() => handleStatusUpdate('SUSPEND')}
-              style={{ flex: 1 }}
-            >
-              <View className="bg-rose-600 rounded-[20px] items-center justify-center py-4 shadow-lg shadow-rose-600/30 h-full">
-                 <Ionicons name="shield-outline" size={20} color="white" />
-                 <Text className="text-white font-bold text-[9px] uppercase tracking-widest mt-1">Sengketa</Text>
-              </View>
-            </ScalableButton>
+      <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 28, backgroundColor: appTheme.colors.surface, borderTopWidth: 1, borderTopColor: appTheme.colors.border }}>
+        <ScalableButton disabled={updating} onPress={() => handleStatusUpdate(isLunas ? 'BELUM_LUNAS' : 'LUNAS')}>
+          <View style={{ backgroundColor: isLunas ? appTheme.colors.accent : appTheme.colors.primary, borderRadius: 22, paddingVertical: 17, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}>
+            <Ionicons name={isLunas ? 'refresh-outline' : 'checkmark-circle-outline'} size={20} color="white" />
+            <Text style={{ color: 'white', fontSize: 14, fontWeight: '900', marginLeft: 8 }}>
+              {isLunas ? 'Batalkan status lunas' : 'Tandai sebagai lunas'}
+            </Text>
+          </View>
+        </ScalableButton>
 
-            <ScalableButton 
-              disabled={updating}
-              onPress={() => handleStatusUpdate('TIDAK_TERBIT')}
-              style={{ flex: 1 }}
-            >
-              <View className="bg-white border border-slate-200 rounded-[20px] items-center justify-center py-4 shadow-sm h-full">
-                 <Ionicons name="document-text-outline" size={20} color="#64748b" />
-                 <Text className="text-slate-600 font-bold text-[9px] uppercase tracking-widest mt-1 text-center">Tdk Terbit</Text>
-              </View>
-            </ScalableButton>
-
-            <ScalableButton 
-              disabled={updating}
-              onPress={() => handleStatusUpdate(isLunas ? 'BELUM_LUNAS' : 'LUNAS')}
-              style={{ flex: 1 }}
-            >
-              <View className={`h-full ${isLunas ? 'bg-amber-500 shadow-amber-500/30' : 'bg-emerald-600 shadow-emerald-600/30'} rounded-[20px] items-center justify-center py-4 shadow-lg`}>
-                 <Ionicons name={isLunas ? "refresh-outline" : "checkmark-circle-outline"} size={20} color="white" />
-                 <Text className="text-white font-bold text-[9px] uppercase tracking-widest mt-1">
-                   {isLunas ? 'Batal Lunas' : 'Tandai Lunas'}
-                 </Text>
-              </View>
-            </ScalableButton>
-         </View>
+        <ScalableButton disabled={updating} onPress={() => setActionSheetVisible(true)} style={{ marginTop: 10 }}>
+          <View style={{ backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 20, paddingVertical: 15, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}>
+            <Ionicons name="ellipsis-horizontal-circle-outline" size={20} color={appTheme.colors.textMuted} />
+            <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, fontWeight: '800', marginLeft: 8 }}>Aksi lainnya</Text>
+          </View>
+        </ScalableButton>
       </View>
 
-      {/* Loading Overlay */}
-      {updating && (
-        <View className="absolute inset-0 bg-white/60 items-center justify-center z-50">
-           <ActivityIndicator size="large" color="#3b82f6" />
+      {updating ? (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={appTheme.colors.primary} />
         </View>
-      )}
+      ) : null}
 
-      {/* Premium Unified Sync Result Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
+      <Modal animationType="slide" transparent visible={actionSheetVisible} onRequestClose={() => setActionSheetVisible(false)}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: appTheme.colors.overlay }}>
+          <View style={{ backgroundColor: appTheme.colors.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24 }}>
+            <Text style={{ color: appTheme.colors.text, fontSize: 20, fontWeight: '900', marginBottom: 6 }}>Aksi lanjutan</Text>
+            <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, lineHeight: 19, marginBottom: 18 }}>
+              Gunakan opsi berikut untuk kasus khusus yang membutuhkan penanganan berbeda.
+            </Text>
+
+            <ScalableButton onPress={() => handleStatusUpdate('SUSPEND')} style={{ marginBottom: 12 }}>
+              <View style={{ backgroundColor: appTheme.colors.accentSoft, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="shield-outline" size={20} color={appTheme.colors.accent} />
+                <View style={{ marginLeft: 12 }}>
+                  <Text style={{ color: appTheme.colors.text, fontSize: 15, fontWeight: '800' }}>Tandai sengketa</Text>
+                  <Text style={{ color: appTheme.colors.textMuted, fontSize: 12, marginTop: 2 }}>Untuk objek pajak yang sedang diperselisihkan</Text>
+                </View>
+              </View>
+            </ScalableButton>
+
+            <ScalableButton onPress={() => handleStatusUpdate('TIDAK_TERBIT')} style={{ marginBottom: 12 }}>
+              <View style={{ backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="document-text-outline" size={20} color={appTheme.colors.textMuted} />
+                <View style={{ marginLeft: 12 }}>
+                  <Text style={{ color: appTheme.colors.text, fontSize: 15, fontWeight: '800' }}>Tandai tidak terbit</Text>
+                  <Text style={{ color: appTheme.colors.textMuted, fontSize: 12, marginTop: 2 }}>Untuk SPPT yang tidak diterbitkan pada periode berjalan</Text>
+                </View>
+              </View>
+            </ScalableButton>
+
+            <ScalableButton onPress={() => setActionSheetVisible(false)}>
+              <View style={{ backgroundColor: appTheme.colors.surfaceStrong, borderRadius: 20, paddingVertical: 15, alignItems: 'center' }}>
+                <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, fontWeight: '800' }}>Tutup</Text>
+              </View>
+            </ScalableButton>
+          </View>
+        </View>
+      </Modal>
+
+      <AppModalCard
         visible={syncModal.visible}
+        title={statusToneModal.title}
+        message={syncModal.message}
+        icon={statusToneModal.icon}
+        iconColor={statusToneModal.color}
+        iconBg={statusToneModal.bg}
         onRequestClose={() => setSyncModal({ ...syncModal, visible: false })}
       >
-        <View className="flex-1 bg-slate-900/60 justify-center items-center p-8">
-           <View className="bg-white w-full rounded-[40px] p-8 items-center shadow-2xl relative">
-              <TouchableOpacity 
-                onPress={() => setSyncModal({ ...syncModal, visible: false })}
-                className="absolute top-6 right-6 w-8 h-8 items-center justify-center bg-slate-50 rounded-full z-10"
-              >
-                <Text className="text-slate-400 font-bold">×</Text>
-              </TouchableOpacity>
-              <View className="mb-6 items-center">
-                <View className={`w-20 h-20 items-center justify-center rounded-full mb-4 ${syncModal.type === 'success' ? 'bg-emerald-100' : (syncModal.type === 'unpaid' ? 'bg-rose-100' : 'bg-emerald-500/10')}`}>
-                  <Ionicons 
-                    name={syncModal.type === 'success' ? "checkmark-circle" : (syncModal.type === 'unpaid' ? "wallet-outline" : "alert-circle")} 
-                    size={48} 
-                    color={syncModal.type === 'success' ? "#10b981" : (syncModal.type === 'unpaid' ? "#e11d48" : "#10b981")} 
-                  />
-                </View>
-                <Text className="text-slate-900 font-black text-2xl uppercase tracking-tighter text-center">
-                  {syncModal.type === 'success' ? 'Pembayaran Lunas' : (syncModal.type === 'unpaid' ? 'Tagihan Belum Lunas' : 'Gangguan Sistem')}
-                </Text>
-                <Text className="text-slate-500 text-center mt-3 leading-relaxed px-4">
-                  {syncModal.type === 'unpaid' 
-                    ? `Sistem telah mengecek ke Bapenda. Tagihan atas nama ${taxpayer.namaWp} masih tercatat BELUM LUNAS.`
-                    : syncModal.message}
-                </Text>
-              </View>
+        {syncModal.type === 'unpaid' ? (
+          <ScalableButton onPress={handleGoToPortal} style={{ marginTop: 20 }}>
+            <View style={{ backgroundColor: appTheme.colors.primary, borderRadius: 18, paddingVertical: 15, alignItems: 'center' }}>
+              <Text style={{ color: 'white', fontSize: 13, fontWeight: '900' }}>
+                {bapendaConfig?.enableBapendaPayment ? 'Lanjut bayar di Bapenda' : 'Buka website Bapenda'}
+              </Text>
+            </View>
+          </ScalableButton>
+        ) : null}
 
-              <View className="w-full space-y-3">
-                 {syncModal.type === 'unpaid' && (
-                  <TouchableOpacity 
-                     className="w-full h-14 bg-emerald-600 rounded-2xl items-center justify-center shadow-lg shadow-emerald-600/20 flex-row"
-                     onPress={handleGoToPortal}
-                  >
-                     <Ionicons 
-                       name={bapendaConfig?.enableBapendaPayment ? "card-outline" : "globe-outline"} 
-                       size={20} 
-                       color="white" 
-                       style={{ marginRight: 8 }} 
-                     />
-                     <Text className="text-white font-black text-xs uppercase tracking-widest">
-                        {bapendaConfig?.enableBapendaPayment ? 'Lanjut Bayar Bapenda' : 'Cek Website Bapenda'}
-                     </Text>
-                  </TouchableOpacity>
-                )}
+        <ScalableButton onPress={() => setSyncModal({ ...syncModal, visible: false })} style={{ marginTop: 12 }}>
+          <View style={{ backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 18, paddingVertical: 15, alignItems: 'center' }}>
+            <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, fontWeight: '800' }}>Tutup</Text>
+          </View>
+        </ScalableButton>
+      </AppModalCard>
 
-                <TouchableOpacity 
-                   onPress={() => setSyncModal({ ...syncModal, visible: false })} 
-                   className="w-full h-14 bg-slate-100 rounded-2xl items-center justify-center"
-                >
-                  <Text className="text-slate-500 font-black text-xs uppercase tracking-widest">Tutup</Text>
-                </TouchableOpacity>
-              </View>
-           </View>
-        </View>
-      </Modal>
-
-      {/* Result Status Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
+      <AppModalCard
         visible={statusModal.visible}
+        title={statusModal.type === 'success' ? 'Perubahan tersimpan' : 'Perubahan gagal'}
+        message={statusModal.message}
+        icon={statusModal.type === 'success' ? 'checkmark-circle' : 'close-circle'}
+        iconColor={statusModal.type === 'success' ? appTheme.colors.success : appTheme.colors.danger}
+        iconBg={statusModal.type === 'success' ? appTheme.colors.successSoft : appTheme.colors.dangerSoft}
         onRequestClose={() => setStatusModal({ ...statusModal, visible: false })}
       >
-        <View className="flex-1 bg-slate-900/60 justify-center items-center p-8">
-           <View className="bg-white w-full rounded-[40px] p-8 items-center shadow-2xl">
-              <View className={`w-20 h-20 ${statusModal.type === 'success' ? 'bg-emerald-50' : 'bg-rose-50'} rounded-[28px] items-center justify-center mb-6`}>
-                 <Ionicons 
-                   name={statusModal.type === 'success' ? "checkmark-circle" : "close-circle"} 
-                   size={40} 
-                   color={statusModal.type === 'success' ? "#10b981" : "#f43f5e"} 
-                 />
-              </View>
-              
-              <Text className="text-2xl font-black text-slate-900 mb-2 text-center uppercase tracking-tighter">
-                {statusModal.type === 'success' ? 'Berhasil!' : 'Gagal!'}
-              </Text>
-              
-              <View className="bg-slate-50 p-6 rounded-3xl w-full mb-8 border border-slate-100">
-                <Text className="text-center text-slate-500 text-xs font-bold leading-relaxed">
-                  {statusModal.message}
-                </Text>
-              </View>
-
-              <TouchableOpacity 
-                className={`w-full ${statusModal.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'} py-5 rounded-[22px] items-center shadow-lg`}
-                onPress={() => setStatusModal({ ...statusModal, visible: false })}
-              >
-                 <Text className="text-white font-black text-xs uppercase tracking-[2px]">Tutup</Text>
-              </TouchableOpacity>
-           </View>
-        </View>
-      </Modal>
+        <ScalableButton onPress={() => setStatusModal({ ...statusModal, visible: false })} style={{ marginTop: 18 }}>
+          <View style={{ backgroundColor: statusModal.type === 'success' ? appTheme.colors.primary : appTheme.colors.danger, borderRadius: 18, paddingVertical: 15, alignItems: 'center' }}>
+            <Text style={{ color: 'white', fontSize: 13, fontWeight: '900' }}>Tutup</Text>
+          </View>
+        </ScalableButton>
+      </AppModalCard>
 
       <StatusBar style="light" />
     </View>

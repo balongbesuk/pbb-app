@@ -6,8 +6,10 @@ export type TaxStats = {
 };
 
 export type AdminUser = {
+  id?: string;
   name?: string;
   dusun?: string;
+  role?: string;
 };
 
 export type RootStackParamList = {
@@ -24,10 +26,11 @@ export type RootStackParamList = {
 
   Login: {
     serverUrl?: string;
+    villageName?: string;
   };
   AdminDashboard: {
     serverUrl: string;
-    user: AdminUser;
+    user: AdminUser & { id: string };
     isAdmin?: boolean;
     stats?: Partial<TaxStats>;
     villageName: string;
@@ -40,11 +43,17 @@ export type RootStackParamList = {
     user: AdminUser & { id: string };
     tahun: number;
     villageName: string;
+    bapendaConfig?: any;
   };
   BillingHistory: {
     serverUrl: string;
     user: AdminUser & { id: string };
     villageName: string;
+  };
+  Mutation: {
+    serverUrl: string;
+    isDark?: boolean;
+    initialDraft?: any;
   };
   Notification: {
     serverUrl: string;
@@ -55,6 +64,8 @@ export type RootStackParamList = {
     user: AdminUser & { id: string; role?: string };
     taxpayer: any;
     villageName: string;
+    bapendaConfig?: any;
+    onUpdate?: (updatedWp: any) => void;
   };
   SelectOfficer: {
     serverUrl: string;

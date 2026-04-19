@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl, formatCurrency } from '../utils/server';
-
 import { ScalableButton } from '../components/ScalableButton';
+import { AppScreenHeader } from '../components/AppScreenHeader';
+import { AppEmptyState } from '../components/AppEmptyState';
+import { appTheme, statusTone } from '../theme/app-theme';
 
 export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'TaxpayerList'>) {
   const { serverUrl, user, tahun, villageName, bapendaConfig } = route.params;
@@ -13,8 +15,6 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
   const [refreshing, setRefreshing] = useState(false);
   const [taxpayers, setTaxpayers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  
-  // Pagination State
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -34,17 +34,17 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
         tahun: tahun.toString(),
         search: searchQuery,
         page: pageNum.toString(),
-        limit: '20'
+        limit: '20',
       });
       const url = joinServerUrl(serverUrl, `/api/mobile/officer/taxpayers?${params.toString()}`);
       const res = await fetch(url);
       const data = await res.json();
-      
+
       if (data.success) {
         if (pageNum === 1) {
           setTaxpayers(data.data);
         } else {
-          setTaxpayers(prev => [...prev, ...data.data]);
+          setTaxpayers((prev) => [...prev, ...data.data]);
         }
         setHasMore(data.hasMore);
       }
@@ -71,115 +71,96 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
     }
   };
 
-  const handleSearch = (text: string) => {
-    setSearch(text);
-  };
-
   return (
-    <View className="flex-1 bg-slate-50">
-      {/* Header */}
-      <View className="bg-slate-900 pt-16 pb-6 px-6 rounded-b-[32px] shadow-lg">
-        <View className="flex-row items-center mb-6">
-          <ScalableButton 
-            onPress={() => navigation.goBack()}
-          >
-            <View className="w-10 h-10 bg-white/10 rounded-full items-center justify-center border border-white/10">
-              <Ionicons name="arrow-back" size={20} color="white" />
-            </View>
-          </ScalableButton>
-          <View className="ml-4">
-            <Text className="text-white text-xl font-bold">Data Wajib Pajak</Text>
-            <Text className="text-blue-400 text-[10px] font-bold uppercase tracking-widest">Wilayah {villageName}</Text>
-          </View>
-        </View>
-
-        {/* Search Bar */}
-        <View className="relative">
-          <Ionicons name="search" size={18} color="#94a3b8" style={{ position: 'absolute', left: 16, top: 14, zIndex: 1 }} />
-          <TextInput 
-            className="bg-white/10 border border-white/20 rounded-2xl py-3 pl-12 pr-6 text-white font-bold"
-            placeholder="Cari Nama atau NOP..."
-            placeholderTextColor="#64748b"
+    <View style={{ flex: 1, backgroundColor: appTheme.colors.bg }}>
+      <AppScreenHeader title="Data wajib pajak" subtitle={`Wilayah ${villageName}`} onBack={() => navigation.goBack()}>
+        <View style={{ backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 22, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 }}>
+          <Ionicons name="search-outline" size={18} color="rgba(255,255,255,0.72)" />
+          <TextInput
+            style={{ flex: 1, paddingVertical: 15, paddingLeft: 12, color: 'white', fontSize: 15, fontWeight: '700' }}
+            placeholder="Cari nama atau NOP"
+            placeholderTextColor="rgba(255,255,255,0.45)"
             value={search}
-            onChangeText={handleSearch}
+            onChangeText={setSearch}
           />
         </View>
-      </View>
+      </AppScreenHeader>
 
-      <ScrollView 
-        className="flex-1 px-6 pt-6" 
+      <ScrollView
+        style={{ flex: 1, paddingHorizontal: 24, paddingTop: 18 }}
         contentContainerStyle={{ paddingBottom: 60 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={appTheme.colors.primary} />}
       >
         {loading && page === 1 ? (
-          <View className="py-20 items-center">
-            <ActivityIndicator size="large" color="#3b82f6" />
+          <View style={{ paddingVertical: 90, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={appTheme.colors.primary} />
           </View>
         ) : taxpayers.length > 0 ? (
           <>
-            {taxpayers.map((wp) => (
-              <ScalableButton 
-                key={wp.id} 
-                onPress={() => navigation.navigate('TaxpayerDetail', { 
-                  serverUrl, 
-                  taxpayer: wp, 
-                  user, 
-                  villageName,
-                  bapendaConfig,
-                  onUpdate: (updatedWp: any) => {
-                    setTaxpayers(prev => prev.map(t => t.id === updatedWp.id ? updatedWp : t));
+            {taxpayers.map((wp) => {
+              const tone = wp.paymentStatus === 'LUNAS' ? statusTone.LUNAS : statusTone.PIUTANG;
+              return (
+                <ScalableButton
+                  key={wp.id}
+                  onPress={() =>
+                    navigation.navigate('TaxpayerDetail', {
+                      serverUrl,
+                      taxpayer: wp,
+                      user,
+                      villageName,
+                      bapendaConfig,
+                      onUpdate: (updatedWp: any) => {
+                        setTaxpayers((prev) => prev.map((t) => (t.id === updatedWp.id ? updatedWp : t)));
+                      },
+                    })
                   }
-                })}
-              >
-                <View className="bg-white p-5 rounded-3xl mb-4 border border-slate-100 shadow-xl shadow-slate-200/50">
-                  <View className="flex-row justify-between items-start mb-3">
-                    <View className="flex-1 mr-4">
-                      <Text className="text-slate-900 font-black text-sm uppercase" numberOfLines={1}>{wp.namaWp}</Text>
-                      <Text className="text-slate-500 font-bold text-[10px] tracking-widest mt-0.5">{wp.nop}</Text>
+                  style={{ marginBottom: 14 }}
+                >
+                  <View style={{ backgroundColor: appTheme.colors.surface, borderRadius: appTheme.radius.lg, padding: 18, borderWidth: 1, borderColor: appTheme.colors.border, ...appTheme.shadow.card }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text style={{ color: appTheme.colors.text, fontSize: 16, fontWeight: '900' }} numberOfLines={1}>
+                          {wp.namaWp}
+                        </Text>
+                        <Text style={{ color: appTheme.colors.textSoft, fontSize: 12, marginTop: 4 }}>{wp.nop}</Text>
+                      </View>
+                      <View style={{ paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: tone.bg }}>
+                        <Text style={{ color: tone.text, fontSize: 10, fontWeight: '800' }}>
+                          {wp.paymentStatus === 'LUNAS' ? 'Lunas' : 'Piutang'}
+                        </Text>
+                      </View>
                     </View>
-                    <View className={`px-3 py-1 rounded-full ${wp.paymentStatus === 'LUNAS' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-                      <Text className={`text-[8px] font-black uppercase ${wp.paymentStatus === 'LUNAS' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {wp.paymentStatus === 'LUNAS' ? 'LUNAS' : 'PIUTANG'}
+
+                    <View style={{ marginTop: 14, flexDirection: 'row', alignItems: 'center' }}>
+                      <Ionicons name="location-outline" size={14} color={appTheme.colors.textSoft} />
+                      <Text style={{ color: appTheme.colors.textMuted, fontSize: 12, marginLeft: 6 }}>
+                        Dusun {wp.dusun || '-'} • RT {wp.rt || '-'} / RW {wp.rw || '-'}
                       </Text>
                     </View>
-                  </View>
 
-                  <View className="flex-row items-center mb-4">
-                     <Ionicons name="location-outline" size={12} color="#94a3b8" />
-                     <Text className="text-slate-500 text-[10px] font-bold ml-1 uppercase">
-                       Dusun {wp.dusun || '-'} • RT {wp.rt || '-'} / RW {wp.rw || '-'}
-                     </Text>
+                    <View style={{ marginTop: 14, backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 18, padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ color: appTheme.colors.textMuted, fontSize: 12, fontWeight: '700' }}>Ketetapan</Text>
+                      <Text style={{ color: appTheme.colors.text, fontSize: 14, fontWeight: '900' }}>{formatCurrency(wp.ketetapan)}</Text>
+                    </View>
                   </View>
-
-                  <View className="flex-row justify-between items-center bg-slate-50 p-3 rounded-2xl">
-                     <Text className="text-slate-500 font-bold text-[9px] uppercase">Ketetapan</Text>
-                     <Text className="text-slate-900 font-black text-sm">{formatCurrency(wp.ketetapan)}</Text>
-                  </View>
-                </View>
-              </ScalableButton>
-            ))}
+                </ScalableButton>
+              );
+            })}
 
             {hasMore && (
-              <ScalableButton 
-                onPress={loadMore}
-                disabled={loadingMore}
-              >
-                <View className="bg-white border border-slate-100 py-4 rounded-2xl items-center shadow-sm mb-4">
+              <ScalableButton onPress={loadMore} disabled={loadingMore}>
+                <View style={{ backgroundColor: appTheme.colors.surface, borderRadius: 18, borderWidth: 1, borderColor: appTheme.colors.border, paddingVertical: 15, alignItems: 'center', ...appTheme.shadow.card }}>
                   {loadingMore ? (
-                    <ActivityIndicator color="#3b82f6" />
+                    <ActivityIndicator color={appTheme.colors.primary} />
                   ) : (
-                    <Text className="text-blue-600 font-bold text-[10px] uppercase tracking-widest">Muat Lebih Banyak</Text>
+                    <Text style={{ color: appTheme.colors.primary, fontSize: 13, fontWeight: '900' }}>Muat lebih banyak</Text>
                   )}
                 </View>
               </ScalableButton>
             )}
           </>
         ) : (
-          <View className="py-20 items-center">
-            <Ionicons name="documents-outline" size={64} color="#e2e8f0" />
-            <Text className="text-slate-500 font-bold text-sm mt-4">Data tidak ditemukan</Text>
-            <Text className="text-slate-500 text-xs">Coba kata kunci lain atau filter berbeda</Text>
-          </View>
+          <AppEmptyState icon="documents-outline" title="Data tidak ditemukan" description="Coba kata kunci lain untuk pencarian." />
         )}
       </ScrollView>
       <StatusBar style="light" />

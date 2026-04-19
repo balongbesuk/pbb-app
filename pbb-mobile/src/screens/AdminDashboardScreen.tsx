@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, Modal } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl, formatCurrency } from '../utils/server';
-
 import { ScalableButton } from '../components/ScalableButton';
+import { AppScreenHeader } from '../components/AppScreenHeader';
+import { AppActionCard } from '../components/AppActionCard';
+import { AppModalCard } from '../components/AppModalCard';
+import { AppSectionTitle } from '../components/AppSectionTitle';
+import { AppStatCard } from '../components/AppStatCard';
+import { AppEmptyState } from '../components/AppEmptyState';
+import { appTheme } from '../theme/app-theme';
 
 export default function AdminDashboardScreen({ route, navigation }: ScreenProps<'AdminDashboard'>) {
   const { serverUrl, user, villageName } = route.params;
@@ -14,7 +20,8 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
   const [refreshing, setRefreshing] = useState(false);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [bapendaConfig, setBapendaConfig] = useState<any>(null);
-  
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
   const firstName = user?.name?.trim()?.split(/\s+/)[0] || 'Petugas';
   const currentYear = dashboardData?.tahunPajak || new Date().getFullYear();
 
@@ -46,18 +53,15 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
     fetchDashboard();
   };
 
-  // Logout Modal State
-  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-
   const handleLogout = async () => {
     setLogoutModalVisible(false);
     try {
       await AsyncStorage.removeItem('@admin_magic_token');
       await AsyncStorage.removeItem('@auth_user');
-      navigation.replace('Dashboard', { 
-        serverUrl, 
+      navigation.replace('Dashboard', {
+        serverUrl,
         villageName,
-        stats: { totalSppt: dashboardData?.stats?.totalWp || 0, lunasSppt: dashboardData?.stats?.wpLunas || 0 }
+        stats: { totalSppt: dashboardData?.stats?.totalWp || 0, lunasSppt: dashboardData?.stats?.wpLunas || 0 },
       });
     } catch (e) {
       navigation.replace('Dashboard', { serverUrl, villageName });
@@ -70,253 +74,223 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
     totalLunas: 0,
     wpLunas: 0,
     wpSengketa: 0,
-    wpTdkTerbit: 0
+    wpTdkTerbit: 0,
   };
 
   const progress = stats.totalTarget > 0 ? (stats.totalLunas / stats.totalTarget) : 0;
   const progressPercent = (progress * 100).toFixed(1);
 
+  const actionCards = [
+    {
+      title: 'Terima Setoran',
+      subtitle: 'Validasi pembayaran dan lanjutkan tindak lanjut',
+      icon: 'cash-outline' as const,
+      bg: appTheme.colors.primarySoft,
+      color: appTheme.colors.primary,
+      onPress: () => navigation.navigate('PaymentCheck', { serverUrl }),
+    },
+    {
+      title: 'Peta GIS Wilayah',
+      subtitle: 'Pantau persebaran target, lunas, dan piutang',
+      icon: 'map-outline' as const,
+      bg: appTheme.colors.infoSoft,
+      color: appTheme.colors.info,
+      onPress: () => navigation.navigate('GisMap', { serverUrl }),
+    },
+    {
+      title: 'Data Wajib Pajak',
+      subtitle: 'Buka daftar objek pajak dan status terkini',
+      icon: 'people-outline' as const,
+      bg: appTheme.colors.surfaceStrong,
+      color: appTheme.colors.primaryDark,
+      onPress: () => navigation.navigate('TaxpayerList', { serverUrl, user, tahun: currentYear, villageName, bapendaConfig }),
+    },
+    {
+      title: 'Riwayat Penagihan',
+      subtitle: 'Tinjau histori transaksi dan aktivitas lapangan',
+      icon: 'receipt-outline' as const,
+      bg: appTheme.colors.accentSoft,
+      color: appTheme.colors.accent,
+      onPress: () => navigation.navigate('BillingHistory', { serverUrl, user, villageName }),
+    },
+  ];
+
   if (loading && !refreshing) {
     return (
-      <View className="flex-1 bg-slate-900 items-center justify-center">
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="text-slate-500 font-bold mt-4 uppercase tracking-widest text-[10px]">Memuat Data Panel...</Text>
+      <View style={{ flex: 1, backgroundColor: appTheme.colors.bg, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={appTheme.colors.primary} />
+        <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, fontWeight: '700', marginTop: 12 }}>
+          Memuat panel petugas
+        </Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-slate-50">
-      <ScrollView 
-        className="flex-1"
+    <View style={{ flex: 1, backgroundColor: appTheme.colors.bg }}>
+      <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}
+        contentContainerStyle={{ paddingBottom: 110 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={appTheme.colors.primary} />}
       >
-        {/* Premium Light Header - Standardized with Main Service */}
-        <View className="bg-white pt-16 pb-32 px-6 rounded-b-[40px] shadow-sm border-b border-slate-100">
-          <View className="flex-row justify-between items-center mb-6">
-            <View>
-              <Text className="text-blue-600 font-bold text-[10px] uppercase tracking-[3px] mb-1">PBB Mobile</Text>
-              <Text className="text-slate-900 text-3xl font-black tracking-tighter">Halo, {firstName}!</Text>
-              <Text className="text-slate-500 text-xs font-semibold mt-1">
-                {villageName} • Tahun {currentYear}
-              </Text>
-            </View>
-            <ScalableButton 
-              onPress={() => navigation.navigate('Notification', { serverUrl, user })}
-            >
-              <View className="w-14 h-14 bg-blue-50 rounded-2xl items-center justify-center border border-blue-100">
-                <Ionicons name="notifications-outline" size={28} color="#3b82f6" />
+        <AppScreenHeader
+          title={`Halo, ${firstName}`}
+          subtitle="Panel Petugas"
+          rightAction={
+            <ScalableButton onPress={() => navigation.navigate('Notification', { serverUrl, user })}>
+              <View
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 24,
+                  backgroundColor: 'rgba(255,255,255,0.14)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255,255,255,0.12)',
+                }}
+              >
+                <Ionicons name="notifications-outline" size={24} color="white" />
                 {dashboardData?.unreadNotificationsCount > 0 && (
-                  <View className="absolute -top-1 -right-1 bg-rose-500 min-w-[20px] h-[20px] rounded-full items-center justify-center border-2 border-white px-1">
-                    <Text className="text-white text-[10px] font-black">{dashboardData.unreadNotificationsCount}</Text>
+                  <View style={{ position: 'absolute', top: -2, right: -2, minWidth: 20, height: 20, borderRadius: 10, backgroundColor: appTheme.colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 }}>
+                    <Text style={{ color: 'white', fontSize: 10, fontWeight: '900' }}>{dashboardData.unreadNotificationsCount}</Text>
                   </View>
                 )}
               </View>
             </ScalableButton>
-          </View>
-
-          {/* Floating Performance Card */}
-          <View className="absolute -bottom-16 left-6 right-6 bg-white rounded-[32px] p-6 shadow-2xl shadow-slate-200/60 border border-slate-100">
-             <View className="flex-row justify-between items-end mb-4">
-                <View>
-                   <Text className="text-slate-500 font-bold text-[11px] uppercase tracking-widest mb-1">Target Terkumpul</Text>
-                   <Text className="text-slate-900 text-2xl font-black tracking-tighter">{formatCurrency(stats.totalLunas)}</Text>
-                   <Text className="text-emerald-600 text-[12px] font-bold mt-1 uppercase mb-2">
-                     {stats.wpLunas} WP Telah Lunas
-                   </Text>
-                </View>
-                <View className="items-end">
-                   <View className="bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 mb-2">
-                      <Text className="text-blue-600 font-black text-xs">{progressPercent}%</Text>
-                   </View>
-                   <Text className="text-slate-500 font-bold text-[11px] uppercase">Dari {formatCurrency(stats.totalTarget)}</Text>
-                </View>
-             </View>
-
-             <View className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                <View 
-                  className="h-full bg-blue-600 rounded-full" 
-                  style={{ width: `${Math.min(parseFloat(progressPercent), 100)}%` }} 
-                />
-             </View>
-             
-             <View className="flex-row items-center gap-3 mt-4 pt-4 border-t border-slate-50">
-                {stats.wpSengketa > 0 && (
-                   <View className="bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-100">
-                      <Text className="text-[11px] font-bold text-amber-700 uppercase tracking-tight">{stats.wpSengketa} Sengketa</Text>
-                   </View>
-                )}
-                <View className="bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100 flex-1">
-                   <Text className="text-[13px] font-bold text-indigo-700 uppercase text-center tracking-tighter" numberOfLines={1}>
-                     Piutang: {formatCurrency(stats.totalTarget - stats.totalLunas)}
-                   </Text>
-                </View>
-             </View>
-          </View>
-        </View>
-
-        {/* Operational Menu Selection - List Style standardized with Main Service */}
-        <View className="mt-24 px-6">
-           <Text className="text-slate-500 font-bold text-[11px] uppercase tracking-[2px] mb-5 ml-1">Layanan Operasional</Text>
-           
-           <View className="flex-col space-y-4">
-              <ScalableButton 
-                onPress={() => navigation.navigate('PaymentCheck', { serverUrl })}
-              >
-                <View className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm">
-                  <View className="w-14 h-14 bg-emerald-50 rounded-2xl items-center justify-center border border-emerald-100/50 mr-4">
-                    <Ionicons name="cash-outline" size={26} color="#059669" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Terima Setoran</Text>
-                    <Text className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest mt-1">Update Status Pembayaran</Text>
-                  </View>
-                  <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
-                    <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                  </View>
-                </View>
-              </ScalableButton>
-
-              <ScalableButton 
-                onPress={() => navigation.navigate('GisMap', { serverUrl })}
-              >
-                <View className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm">
-                  <View className="w-14 h-14 bg-blue-50 rounded-2xl items-center justify-center border border-blue-100/50 mr-4">
-                    <Ionicons name="map-outline" size={26} color="#2563eb" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Peta GIS Wilayah</Text>
-                    <Text className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest mt-1">Peta Sebaran Lunas/Belum</Text>
-                  </View>
-                  <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
-                    <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                  </View>
-                </View>
-              </ScalableButton>
-
-              <ScalableButton 
-                onPress={() => navigation.navigate('TaxpayerList', { serverUrl, user, tahun: currentYear, villageName, bapendaConfig })}
-              >
-                <View className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm">
-                  <View className="w-14 h-14 bg-indigo-50 rounded-2xl items-center justify-center border border-indigo-100/50 mr-4">
-                    <Ionicons name="people-outline" size={26} color="#4f46e5" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Data Wajib Pajak</Text>
-                    <Text className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest mt-1">Daftar Wajib Pajak Kelolaan</Text>
-                  </View>
-                  <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
-                    <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                  </View>
-                </View>
-              </ScalableButton>
-
-              <ScalableButton 
-                onPress={() => navigation.navigate('BillingHistory', { serverUrl, user, villageName })}
-              >
-                <View className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm">
-                  <View className="w-14 h-14 bg-amber-50 rounded-2xl items-center justify-center border border-amber-100/50 mr-4">
-                    <Ionicons name="receipt-outline" size={26} color="#d97706" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Riwayat Penagihan</Text>
-                    <Text className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest mt-1">Log Transaksi & Penarikan</Text>
-                  </View>
-                  <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
-                    <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                  </View>
-                </View>
-              </ScalableButton>
-           </View>
-
-           {/* Recent History Section Summary */}
-           <View className="mt-8 mb-4 flex-row justify-between items-center px-1">
-              <View className="flex-row items-center">
-                 <Ionicons name="time-outline" size={16} color="#64748b" />
-                 <Text className="ml-2 text-slate-500 font-black text-[10px] uppercase tracking-widest">Aktivitas Terakhir</Text>
+          }
+          style={{ paddingBottom: 30 }}
+        >
+          <Text style={{ color: 'rgba(255,255,255,0.78)', fontSize: 13, marginTop: 6 }}>
+            {villageName} • Tahun {currentYear}
+          </Text>
+          <View
+            style={{
+              marginTop: 22,
+              backgroundColor: 'rgba(255,255,255,0.07)',
+              borderRadius: 30,
+              padding: 24,
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.1)',
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <View style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.14)' }}>
+                <Text style={{ color: 'white', fontSize: 10, fontWeight: '900', letterSpacing: 0.8 }}>COMMAND CENTER</Text>
               </View>
-           </View>
+              <View style={{ marginLeft: 10, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: 'rgba(238,138,91,0.18)' }}>
+                <Text style={{ color: '#ffd9c8', fontSize: 10, fontWeight: '800' }}>{stats.totalWp} objek aktif</Text>
+              </View>
+            </View>
 
-           <View className="bg-white rounded-[28px] border border-slate-100 shadow-sm mb-8">
-              {dashboardData?.logs?.length > 0 ? (
-                dashboardData.logs.map((log: any, i: number) => {
-                  const isUnpaid = log.details?.includes("BELUM_LUNAS") || log.details?.includes("TIDAK_TERBIT");
-                  const date = new Date(log.createdAt);
-                  return (
-                    <View key={log.id} className={`flex-row items-center p-4 ${i < dashboardData.logs.length - 1 ? 'border-b border-slate-50' : ''}`}>
-                       <View className={`w-10 h-10 rounded-xl items-center justify-center ${isUnpaid ? 'bg-rose-50' : 'bg-emerald-50'}`}>
-                          <Ionicons name={isUnpaid ? "close-circle" : "checkmark-circle"} size={20} color={isUnpaid ? "#e11d48" : "#059669"} />
-                       </View>
-                       <View className="flex-1 ml-3">
-                          <Text className="text-slate-900 font-bold text-xs" numberOfLines={1}>{log.details}</Text>
-                          <Text className="text-slate-400 text-[9px] font-bold mt-0.5">
-                            {date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • {date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                          </Text>
-                       </View>
-                    </View>
-                  );
-                })
-              ) : (
-                <View className="py-8 items-center">
-                   <Text className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Belum ada aktivitas</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text style={{ color: 'rgba(255,255,255,0.72)', fontSize: 12, fontWeight: '700' }}>Realisasi terkumpul</Text>
+                <Text style={{ color: 'white', fontSize: 28, fontWeight: '900', marginTop: 6 }}>{formatCurrency(stats.totalLunas)}</Text>
+                <Text style={{ color: '#cbe8d7', fontSize: 12, fontWeight: '700', marginTop: 6, lineHeight: 18 }}>
+                  {stats.wpLunas} wajib pajak sudah lunas dan siap direkap hari ini
+                </Text>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <View style={{ backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9 }}>
+                  <Text style={{ color: 'white', fontSize: 13, fontWeight: '900' }}>{progressPercent}%</Text>
                 </View>
-              )}
-           </View>
+                <Text style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11, fontWeight: '700', marginTop: 8 }}>
+                  dari {formatCurrency(stats.totalTarget)}
+                </Text>
+              </View>
+            </View>
 
-           <TouchableOpacity 
-             className="bg-rose-50 border border-rose-100 px-8 py-5 rounded-[28px] w-full mt-4 flex-row items-center justify-center"
-             onPress={() => setLogoutModalVisible(true)}
-           >
-             <Ionicons name="log-out-outline" size={18} color="#e11d48" />
-             <Text className="text-rose-600 text-center font-black uppercase tracking-[2px] text-[10px] ml-3">Keluar Sesi Petugas</Text>
-           </TouchableOpacity>
+            <View style={{ height: 8, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 999, overflow: 'hidden', marginTop: 18 }}>
+              <View style={{ width: `${Math.min(parseFloat(progressPercent), 100)}%`, height: '100%', backgroundColor: '#ffffff' }} />
+            </View>
+
+            <View style={{ flexDirection: 'row', marginTop: 18 }}>
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <AppStatCard label="Piutang" value={formatCurrency(Math.max(stats.totalTarget - stats.totalLunas, 0))} compact />
+              </View>
+              <View style={{ flex: 1, marginLeft: 8 }}>
+                <AppStatCard label="Kasus khusus" value={`${stats.wpSengketa + stats.wpTdkTerbit} data`} compact />
+              </View>
+            </View>
+          </View>
+        </AppScreenHeader>
+
+        <View style={{ paddingHorizontal: 24, marginTop: 22 }}>
+          <AppSectionTitle title="Layanan operasional" />
+
+          {actionCards.map((card) => (
+            <AppActionCard
+              key={card.title}
+              title={card.title}
+              subtitle={card.subtitle}
+              icon={card.icon}
+              iconBg={card.bg}
+              iconColor={card.color}
+              onPress={card.onPress}
+              style={{ marginBottom: 14 }}
+            />
+          ))}
+
+          <AppSectionTitle title="Aktivitas terakhir" subtitle="Update singkat dari transaksi petugas terbaru" icon="time-outline" />
+
+          <View style={{ backgroundColor: appTheme.colors.surface, borderRadius: 28, borderWidth: 1, borderColor: appTheme.colors.border, overflow: 'hidden', ...appTheme.shadow.card }}>
+            {dashboardData?.logs?.length > 0 ? (
+              dashboardData.logs.map((log: any, i: number) => {
+                const isUnpaid = log.details?.includes('BELUM_LUNAS') || log.details?.includes('TIDAK_TERBIT');
+                const date = new Date(log.createdAt);
+                return (
+                  <View key={log.id} style={{ flexDirection: 'row', alignItems: 'center', padding: 18, borderBottomWidth: i < dashboardData.logs.length - 1 ? 1 : 0, borderBottomColor: appTheme.colors.surfaceStrong }}>
+                    <View style={{ width: 44, height: 44, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: isUnpaid ? appTheme.colors.dangerSoft : appTheme.colors.successSoft }}>
+                      <Ionicons name={isUnpaid ? 'close-circle' : 'checkmark-circle'} size={20} color={isUnpaid ? appTheme.colors.danger : appTheme.colors.success} />
+                    </View>
+                    <View style={{ marginLeft: 12, flex: 1 }}>
+                      <Text style={{ color: appTheme.colors.text, fontSize: 13, fontWeight: '800', lineHeight: 19 }} numberOfLines={2}>
+                        {log.details}
+                      </Text>
+                      <Text style={{ color: appTheme.colors.textSoft, fontSize: 11, marginTop: 5 }}>
+                        {date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • {date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })
+            ) : (
+              <AppEmptyState icon="time-outline" title="Belum ada aktivitas" />
+            )}
+          </View>
+
+          <ScalableButton onPress={() => setLogoutModalVisible(true)} style={{ marginTop: 16 }}>
+            <View style={{ backgroundColor: appTheme.colors.surface, borderRadius: 22, paddingVertical: 17, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', borderWidth: 1, borderColor: '#efcccc', ...appTheme.shadow.card }}>
+              <Ionicons name="log-out-outline" size={18} color={appTheme.colors.danger} />
+              <Text style={{ color: appTheme.colors.danger, fontSize: 13, fontWeight: '900', marginLeft: 8 }}>Keluar sesi petugas</Text>
+            </View>
+          </ScalableButton>
         </View>
       </ScrollView>
 
-      {/* Logout Confirmation Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
+      <AppModalCard
         visible={logoutModalVisible}
+        title="Keluar dari sesi"
+        message="Anda akan kembali ke layanan warga dan perlu login lagi untuk mengakses panel petugas."
+        icon="log-out-outline"
+        iconColor={appTheme.colors.danger}
+        iconBg={appTheme.colors.dangerSoft}
         onRequestClose={() => setLogoutModalVisible(false)}
       >
-        <View className="flex-1 bg-slate-900/60 justify-center items-center p-8">
-           <View className="bg-white w-full rounded-[40px] p-8 items-center shadow-2xl">
-              <View className="w-20 h-20 bg-rose-50 rounded-[28px] items-center justify-center mb-6">
-                 <Ionicons name="log-out" size={40} color="#f43f5e" />
-              </View>
-              
-              <Text className="text-2xl font-black text-slate-900 mb-2 text-center uppercase tracking-tighter">Keluar Sesi</Text>
-              
-              <View className="bg-slate-50 p-6 rounded-3xl w-full mb-8 border border-slate-100">
-                <Text className="text-center text-slate-500 text-xs font-bold leading-relaxed">
-                   Apakah Anda yakin ingin mengakhiri sesi petugas lapangan ini?
-                </Text>
-              </View>
+        <ScalableButton onPress={handleLogout} style={{ marginTop: 20 }}>
+          <View style={{ backgroundColor: appTheme.colors.danger, borderRadius: 18, paddingVertical: 15, alignItems: 'center' }}>
+            <Text style={{ color: 'white', fontSize: 13, fontWeight: '900' }}>Ya, keluar sesi</Text>
+          </View>
+        </ScalableButton>
+        <ScalableButton onPress={() => setLogoutModalVisible(false)} style={{ marginTop: 10 }}>
+          <View style={{ backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 18, paddingVertical: 15, alignItems: 'center' }}>
+            <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, fontWeight: '800' }}>Tetap di sini</Text>
+          </View>
+        </ScalableButton>
+      </AppModalCard>
 
-              <View className="w-full space-y-3">
-                <TouchableOpacity 
-                   className="w-full bg-rose-600 py-5 rounded-[22px] items-center shadow-lg shadow-rose-600/30 flex-row justify-center"
-                   onPress={handleLogout}
-                >
-                   <Text className="text-white font-black text-xs uppercase tracking-[2px]">Ya, Keluar Sesi</Text>
-                   <Ionicons name="checkmark-circle" size={18} color="white" style={{ marginLeft: 8 }} />
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  onPress={() => setLogoutModalVisible(false)} 
-                  className="py-4 w-full items-center mt-2"
-                >
-                  <Text className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Tetap di Sini</Text>
-                </TouchableOpacity>
-              </View>
-           </View>
-        </View>
-      </Modal>
-
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
     </View>
   );
 }
