@@ -66,11 +66,13 @@ export function TaxDetailDialog({
   const [enableBapendaSync, setEnableBapendaSync] = useState(false);
   const [enableBapendaPayment, setEnableBapendaPayment] = useState(true);
   const [bapendaPaymentUrl, setBapendaPaymentUrl] = useState<string | null>(null);
+  const [bapendaUrl, setBapendaUrl] = useState<string | null>(null);
   const [bapendaRegionName, setBapendaRegionName] = useState("Bapenda");
   const [lastCheckTime, setLastCheckTime] = useState(0);
   const [copiedNop, setCopiedNop] = useState(false);
   const [isArchiveLoading, setIsArchiveLoading] = useState(false);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [isJombangBapenda, setIsJombangBapenda] = useState(false);
   
   const [isFullEditing, setIsFullEditing] = useState(false);
   const [editNamaWp, setEditNamaWp] = useState("");
@@ -103,7 +105,9 @@ export function TaxDetailDialog({
         setEnableBapendaSync(config.enableBapendaSync ?? true);
         setEnableBapendaPayment(config.enableBapendaPayment ?? true);
         setBapendaPaymentUrl(config.bapendaPaymentUrl || null);
+        setBapendaUrl(config.bapendaUrl || null);
         setBapendaRegionName(config.bapendaRegionName || "Bapenda");
+        setIsJombangBapenda(config.isJombangBapenda ?? false);
       });
 
       setIsFullEditing(false);
@@ -298,10 +302,27 @@ export function TaxDetailDialog({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {item.paymentStatus === "BELUM_LUNAS" && enableBapendaSync && (
+              {item.paymentStatus === "BELUM_LUNAS" && enableBapendaSync && isJombangBapenda && (
                 <Button variant="outline" size="sm" className="flex h-8 items-center justify-center gap-2 rounded-full border-emerald-500/30 bg-emerald-50 px-3 text-[10px] font-black uppercase tracking-widest text-emerald-600 shadow-sm hover:bg-emerald-100 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/50" onClick={handleCheckBapenda} disabled={isUIBlocked || isCheckingBapenda}>
                   {isCheckingBapenda ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
                   <span className="hidden sm:inline text-[9px]">Cek Bapenda</span>
+                </Button>
+              )}
+
+              {item.paymentStatus === "BELUM_LUNAS" && !isJombangBapenda && enableBapendaPayment && bapendaPaymentUrl && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex h-8 items-center justify-center gap-2 rounded-full border-blue-500/30 bg-blue-50 px-3 text-[10px] font-black uppercase tracking-widest text-blue-600 shadow-sm hover:bg-blue-100 dark:bg-blue-950/30 dark:hover:bg-blue-900/50" 
+                  onClick={() => {
+                    const cleanNop = item.nop.replace(/\D/g, "");
+                    const targetUrl = bapendaPaymentUrl.replace(/\{nop\}/gi, cleanNop);
+                    window.open(targetUrl, "_blank");
+                  }} 
+                  disabled={isUIBlocked}
+                >
+                  <Search className="h-4 w-4" />
+                  <span className="hidden sm:inline text-[9px]">Bayar Online</span>
                 </Button>
               )}
               <DialogClose 
@@ -536,7 +557,10 @@ export function TaxDetailDialog({
         namaWp={item?.namaWp || ""} 
         isDark={resolvedTheme === "dark"} 
         bapendaPaymentUrl={bapendaPaymentUrl}
+        bapendaUrl={bapendaUrl}
         enableBapendaPayment={enableBapendaPayment}
+        enableBapendaSync={enableBapendaSync}
+        isJombangBapenda={isJombangBapenda}
         bapendaRegionName={bapendaRegionName}
       />
 

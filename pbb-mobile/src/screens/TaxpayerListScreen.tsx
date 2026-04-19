@@ -5,13 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl, formatCurrency } from '../utils/server';
 
+import { ScalableButton } from '../components/ScalableButton';
+
 export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'TaxpayerList'>) {
   const { serverUrl, user, tahun, villageName, bapendaConfig } = route.params;
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [taxpayers, setTaxpayers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [searchTimer, setSearchTimer] = useState<any>(null);
   
   // Pagination State
   const [page, setPage] = useState(1);
@@ -19,7 +20,6 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
   const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
-    // Reset to page 1 for every search change
     setPage(1);
     fetchTaxpayers(1, search);
   }, [search]);
@@ -80,14 +80,15 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
       {/* Header */}
       <View className="bg-slate-900 pt-16 pb-6 px-6 rounded-b-[32px] shadow-lg">
         <View className="flex-row items-center mb-6">
-          <TouchableOpacity 
+          <ScalableButton 
             onPress={() => navigation.goBack()}
-            className="w-10 h-10 bg-white/10 rounded-full items-center justify-center border border-white/10"
           >
-            <Ionicons name="arrow-back" size={20} color="white" />
-          </TouchableOpacity>
+            <View className="w-10 h-10 bg-white/10 rounded-full items-center justify-center border border-white/10">
+              <Ionicons name="arrow-back" size={20} color="white" />
+            </View>
+          </ScalableButton>
           <View className="ml-4">
-            <Text className="text-white text-xl font-black">Data Wajib Pajak</Text>
+            <Text className="text-white text-xl font-bold">Data Wajib Pajak</Text>
             <Text className="text-blue-400 text-[10px] font-bold uppercase tracking-widest">Wilayah {villageName}</Text>
           </View>
         </View>
@@ -117,9 +118,8 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
         ) : taxpayers.length > 0 ? (
           <>
             {taxpayers.map((wp) => (
-              <TouchableOpacity 
+              <ScalableButton 
                 key={wp.id} 
-                className="bg-white p-5 rounded-3xl mb-4 border border-slate-100 shadow-sm"
                 onPress={() => navigation.navigate('TaxpayerDetail', { 
                   serverUrl, 
                   taxpayer: wp, 
@@ -131,52 +131,54 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
                   }
                 })}
               >
-                <View className="flex-row justify-between items-start mb-3">
-                  <View className="flex-1 mr-4">
-                    <Text className="text-slate-900 font-black text-sm uppercase" numberOfLines={1}>{wp.namaWp}</Text>
-                    <Text className="text-slate-400 font-bold text-[10px] tracking-widest mt-0.5">{wp.nop}</Text>
+                <View className="bg-white p-5 rounded-3xl mb-4 border border-slate-100 shadow-xl shadow-slate-200/50">
+                  <View className="flex-row justify-between items-start mb-3">
+                    <View className="flex-1 mr-4">
+                      <Text className="text-slate-900 font-black text-sm uppercase" numberOfLines={1}>{wp.namaWp}</Text>
+                      <Text className="text-slate-500 font-bold text-[10px] tracking-widest mt-0.5">{wp.nop}</Text>
+                    </View>
+                    <View className={`px-3 py-1 rounded-full ${wp.paymentStatus === 'LUNAS' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+                      <Text className={`text-[8px] font-black uppercase ${wp.paymentStatus === 'LUNAS' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {wp.paymentStatus === 'LUNAS' ? 'LUNAS' : 'PIUTANG'}
+                      </Text>
+                    </View>
                   </View>
-                  <View className={`px-3 py-1 rounded-full ${wp.paymentStatus === 'LUNAS' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-                    <Text className={`text-[8px] font-black uppercase ${wp.paymentStatus === 'LUNAS' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {wp.paymentStatus === 'LUNAS' ? 'LUNAS' : 'PIUTANG'}
-                    </Text>
+
+                  <View className="flex-row items-center mb-4">
+                     <Ionicons name="location-outline" size={12} color="#94a3b8" />
+                     <Text className="text-slate-500 text-[10px] font-bold ml-1 uppercase">
+                       Dusun {wp.dusun || '-'} • RT {wp.rt || '-'} / RW {wp.rw || '-'}
+                     </Text>
+                  </View>
+
+                  <View className="flex-row justify-between items-center bg-slate-50 p-3 rounded-2xl">
+                     <Text className="text-slate-500 font-bold text-[9px] uppercase">Ketetapan</Text>
+                     <Text className="text-slate-900 font-black text-sm">{formatCurrency(wp.ketetapan)}</Text>
                   </View>
                 </View>
-
-                <View className="flex-row items-center mb-4">
-                   <Ionicons name="location-outline" size={12} color="#94a3b8" />
-                   <Text className="text-slate-400 text-[10px] font-bold ml-1 uppercase">
-                     Dusun {wp.dusun || '-'} • RT {wp.rt || '-'} / RW {wp.rw || '-'}
-                   </Text>
-                </View>
-
-                <View className="flex-row justify-between items-center bg-slate-50 p-3 rounded-2xl">
-                   <Text className="text-slate-400 font-black text-[9px] uppercase">Ketetapan</Text>
-                   <Text className="text-slate-900 font-black text-sm">{formatCurrency(wp.ketetapan)}</Text>
-                </View>
-              </TouchableOpacity>
+              </ScalableButton>
             ))}
 
             {hasMore && (
-              <TouchableOpacity 
-                activeOpacity={0.7}
+              <ScalableButton 
                 onPress={loadMore}
                 disabled={loadingMore}
-                className="bg-white border border-slate-100 py-4 rounded-2xl items-center shadow-sm mb-4"
               >
-                {loadingMore ? (
-                  <ActivityIndicator color="#3b82f6" />
-                ) : (
-                  <Text className="text-blue-600 font-black text-[10px] uppercase tracking-widest">Muat Lebih Banyak</Text>
-                )}
-              </TouchableOpacity>
+                <View className="bg-white border border-slate-100 py-4 rounded-2xl items-center shadow-sm mb-4">
+                  {loadingMore ? (
+                    <ActivityIndicator color="#3b82f6" />
+                  ) : (
+                    <Text className="text-blue-600 font-bold text-[10px] uppercase tracking-widest">Muat Lebih Banyak</Text>
+                  )}
+                </View>
+              </ScalableButton>
             )}
           </>
         ) : (
           <View className="py-20 items-center">
             <Ionicons name="documents-outline" size={64} color="#e2e8f0" />
-            <Text className="text-slate-400 font-bold text-sm mt-4">Data tidak ditemukan</Text>
-            <Text className="text-slate-400 text-xs">Coba kata kunci lain atau filter berbeda</Text>
+            <Text className="text-slate-500 font-bold text-sm mt-4">Data tidak ditemukan</Text>
+            <Text className="text-slate-500 text-xs">Coba kata kunci lain atau filter berbeda</Text>
           </View>
         )}
       </ScrollView>

@@ -6,6 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl, formatCurrency } from '../utils/server';
 
+import { ScalableButton } from '../components/ScalableButton';
+
 export default function AdminDashboardScreen({ route, navigation }: ScreenProps<'AdminDashboard'>) {
   const { serverUrl, user, villageName } = route.params;
   const [loading, setLoading] = useState(true);
@@ -78,7 +80,7 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
     return (
       <View className="flex-1 bg-slate-900 items-center justify-center">
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="text-slate-400 font-bold mt-4 uppercase tracking-widest text-xs">Memuat Data Panel...</Text>
+        <Text className="text-slate-500 font-bold mt-4 uppercase tracking-widest text-[10px]">Memuat Data Panel...</Text>
       </View>
     );
   }
@@ -95,32 +97,33 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
         <View className="bg-white pt-16 pb-32 px-6 rounded-b-[40px] shadow-sm border-b border-slate-100">
           <View className="flex-row justify-between items-center mb-6">
             <View>
-              <Text className="text-blue-600 font-black text-[10px] uppercase tracking-[3px] mb-1">PBB Mobile</Text>
+              <Text className="text-blue-600 font-bold text-[10px] uppercase tracking-[3px] mb-1">PBB Mobile</Text>
               <Text className="text-slate-900 text-3xl font-black tracking-tighter">Halo, {firstName}!</Text>
-              <Text className="text-slate-400 text-xs font-bold mt-1">
+              <Text className="text-slate-500 text-xs font-semibold mt-1">
                 {villageName} • Tahun {currentYear}
               </Text>
             </View>
-            <TouchableOpacity 
-              className="w-14 h-14 bg-blue-50 rounded-2xl items-center justify-center border border-blue-100"
+            <ScalableButton 
               onPress={() => navigation.navigate('Notification', { serverUrl, user })}
             >
-               <Ionicons name="notifications-outline" size={28} color="#3b82f6" />
-               {dashboardData?.unreadNotificationsCount > 0 && (
-                 <View className="absolute -top-1 -right-1 bg-rose-500 min-w-[20px] h-[20px] rounded-full items-center justify-center border-2 border-white px-1">
-                   <Text className="text-white text-[10px] font-black">{dashboardData.unreadNotificationsCount}</Text>
-                 </View>
-               )}
-            </TouchableOpacity>
+              <View className="w-14 h-14 bg-blue-50 rounded-2xl items-center justify-center border border-blue-100">
+                <Ionicons name="notifications-outline" size={28} color="#3b82f6" />
+                {dashboardData?.unreadNotificationsCount > 0 && (
+                  <View className="absolute -top-1 -right-1 bg-rose-500 min-w-[20px] h-[20px] rounded-full items-center justify-center border-2 border-white px-1">
+                    <Text className="text-white text-[10px] font-black">{dashboardData.unreadNotificationsCount}</Text>
+                  </View>
+                )}
+              </View>
+            </ScalableButton>
           </View>
 
           {/* Floating Performance Card */}
-          <View className="absolute -bottom-16 left-6 right-6 bg-white rounded-[32px] p-6 shadow-xl shadow-slate-200/50 border border-slate-100">
+          <View className="absolute -bottom-16 left-6 right-6 bg-white rounded-[32px] p-6 shadow-2xl shadow-slate-200/60 border border-slate-100">
              <View className="flex-row justify-between items-end mb-4">
                 <View>
-                   <Text className="text-slate-400 font-black text-[9px] uppercase tracking-widest mb-1">Target Terkumpul</Text>
+                   <Text className="text-slate-500 font-bold text-[11px] uppercase tracking-widest mb-1">Target Terkumpul</Text>
                    <Text className="text-slate-900 text-2xl font-black tracking-tighter">{formatCurrency(stats.totalLunas)}</Text>
-                   <Text className="text-emerald-500 text-[10px] font-bold mt-1 uppercase mb-2">
+                   <Text className="text-emerald-600 text-[12px] font-bold mt-1 uppercase mb-2">
                      {stats.wpLunas} WP Telah Lunas
                    </Text>
                 </View>
@@ -128,7 +131,7 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
                    <View className="bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 mb-2">
                       <Text className="text-blue-600 font-black text-xs">{progressPercent}%</Text>
                    </View>
-                   <Text className="text-slate-400 font-bold text-[9px] uppercase">Dari {formatCurrency(stats.totalTarget)}</Text>
+                   <Text className="text-slate-500 font-bold text-[11px] uppercase">Dari {formatCurrency(stats.totalTarget)}</Text>
                 </View>
              </View>
 
@@ -139,14 +142,14 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
                 />
              </View>
              
-             <View className="flex-row gap-2 mt-4 pt-4 border-t border-slate-50">
+             <View className="flex-row items-center gap-3 mt-4 pt-4 border-t border-slate-50">
                 {stats.wpSengketa > 0 && (
-                   <View className="bg-amber-50 px-2 py-1 rounded-lg border border-amber-100">
-                      <Text className="text-[8px] font-black text-amber-700 uppercase">{stats.wpSengketa} Sengketa</Text>
+                   <View className="bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-100">
+                      <Text className="text-[11px] font-bold text-amber-700 uppercase tracking-tight">{stats.wpSengketa} Sengketa</Text>
                    </View>
                 )}
-                <View className="bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100 flex-1">
-                   <Text className="text-[8px] font-black text-indigo-700 uppercase text-center" numberOfLines={1}>
+                <View className="bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100 flex-1">
+                   <Text className="text-[13px] font-bold text-indigo-700 uppercase text-center tracking-tighter" numberOfLines={1}>
                      Piutang: {formatCurrency(stats.totalTarget - stats.totalLunas)}
                    </Text>
                 </View>
@@ -156,76 +159,76 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
 
         {/* Operational Menu Selection - List Style standardized with Main Service */}
         <View className="mt-24 px-6">
-           <Text className="text-slate-400 font-black text-[10px] uppercase tracking-[2px] mb-5 ml-1">Layanan Operasional</Text>
+           <Text className="text-slate-500 font-bold text-[11px] uppercase tracking-[2px] mb-5 ml-1">Layanan Operasional</Text>
            
-           <View className="flex-col space-y-3">
-              <TouchableOpacity 
-                activeOpacity={0.7}
-                className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm"
+           <View className="flex-col space-y-4">
+              <ScalableButton 
                 onPress={() => navigation.navigate('PaymentCheck', { serverUrl })}
               >
-                 <View className="w-14 h-14 bg-emerald-50 rounded-2xl items-center justify-center border border-emerald-100/50 mr-4">
-                   <Ionicons name="cash-outline" size={26} color="#059669" />
-                 </View>
-                 <View className="flex-1">
-                   <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Terima Setoran</Text>
-                   <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Update Status Pembayaran</Text>
-                 </View>
-                 <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
-                   <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                 </View>
-              </TouchableOpacity>
+                <View className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm">
+                  <View className="w-14 h-14 bg-emerald-50 rounded-2xl items-center justify-center border border-emerald-100/50 mr-4">
+                    <Ionicons name="cash-outline" size={26} color="#059669" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Terima Setoran</Text>
+                    <Text className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest mt-1">Update Status Pembayaran</Text>
+                  </View>
+                  <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
+                    <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                  </View>
+                </View>
+              </ScalableButton>
 
-              <TouchableOpacity 
-                activeOpacity={0.7}
-                className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm mt-3"
+              <ScalableButton 
                 onPress={() => navigation.navigate('GisMap', { serverUrl })}
               >
-                 <View className="w-14 h-14 bg-blue-50 rounded-2xl items-center justify-center border border-blue-100/50 mr-4">
-                   <Ionicons name="map-outline" size={26} color="#2563eb" />
-                 </View>
-                 <View className="flex-1">
-                   <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Peta GIS Wilayah</Text>
-                   <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Peta Sebaran Lunas/Belum</Text>
-                 </View>
-                 <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
-                   <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                 </View>
-              </TouchableOpacity>
+                <View className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm">
+                  <View className="w-14 h-14 bg-blue-50 rounded-2xl items-center justify-center border border-blue-100/50 mr-4">
+                    <Ionicons name="map-outline" size={26} color="#2563eb" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Peta GIS Wilayah</Text>
+                    <Text className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest mt-1">Peta Sebaran Lunas/Belum</Text>
+                  </View>
+                  <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
+                    <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                  </View>
+                </View>
+              </ScalableButton>
 
-              <TouchableOpacity 
-                activeOpacity={0.7}
-                className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm mt-3"
+              <ScalableButton 
                 onPress={() => navigation.navigate('TaxpayerList', { serverUrl, user, tahun: currentYear, villageName, bapendaConfig })}
               >
-                 <View className="w-14 h-14 bg-indigo-50 rounded-2xl items-center justify-center border border-indigo-100/50 mr-4">
-                   <Ionicons name="people-outline" size={26} color="#4f46e5" />
-                 </View>
-                 <View className="flex-1">
-                   <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Data Wajib Pajak</Text>
-                   <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Daftar Wajib Pajak Kelolaan</Text>
-                 </View>
-                 <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
-                   <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                 </View>
-              </TouchableOpacity>
+                <View className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm">
+                  <View className="w-14 h-14 bg-indigo-50 rounded-2xl items-center justify-center border border-indigo-100/50 mr-4">
+                    <Ionicons name="people-outline" size={26} color="#4f46e5" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Data Wajib Pajak</Text>
+                    <Text className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest mt-1">Daftar Wajib Pajak Kelolaan</Text>
+                  </View>
+                  <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
+                    <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                  </View>
+                </View>
+              </ScalableButton>
 
-              <TouchableOpacity 
-                activeOpacity={0.7}
-                className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm mt-3"
+              <ScalableButton 
                 onPress={() => navigation.navigate('BillingHistory', { serverUrl, user, villageName })}
               >
-                 <View className="w-14 h-14 bg-amber-50 rounded-2xl items-center justify-center border border-amber-100/50 mr-4">
-                   <Ionicons name="receipt-outline" size={26} color="#d97706" />
-                 </View>
-                 <View className="flex-1">
-                   <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Riwayat Penagihan</Text>
-                   <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Log Transaksi & Penarikan</Text>
-                 </View>
-                 <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
-                   <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                 </View>
-              </TouchableOpacity>
+                <View className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm">
+                  <View className="w-14 h-14 bg-amber-50 rounded-2xl items-center justify-center border border-amber-100/50 mr-4">
+                    <Ionicons name="receipt-outline" size={26} color="#d97706" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-black text-slate-800 text-base leading-5 tracking-tight">Riwayat Penagihan</Text>
+                    <Text className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest mt-1">Log Transaksi & Penarikan</Text>
+                  </View>
+                  <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center border border-slate-100">
+                    <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                  </View>
+                </View>
+              </ScalableButton>
            </View>
 
            {/* Recent History Section Summary */}

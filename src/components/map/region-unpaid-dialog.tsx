@@ -39,10 +39,14 @@ type RegionUnpaidResponse = {
   totalPiutang: number;
   totalCount: number;
   hasMore: boolean;
-  enableBapendaSync: boolean;
-  enableBapendaPayment: boolean;
-  bapendaPaymentUrl?: string | null;
-  bapendaRegionName?: string | null;
+  villageConfig: {
+    enableBapendaSync: boolean;
+    enableBapendaPayment: boolean;
+    bapendaPaymentUrl?: string | null;
+    bapendaUrl?: string | null;
+    bapendaRegionName?: string | null;
+    isJombangBapenda: boolean;
+  };
 };
 
 export function RegionUnpaidDialog({
@@ -72,7 +76,9 @@ export function RegionUnpaidDialog({
   const [enableBapendaSync, setEnableBapendaSync] = useState(false);
   const [enableBapendaPayment, setEnableBapendaPayment] = useState(true);
   const [bapendaPaymentUrl, setBapendaPaymentUrl] = useState<string | null>(null);
+  const [bapendaUrl, setBapendaUrl] = useState<string | null>(null);
   const [bapendaRegionName, setBapendaRegionName] = useState("Bapenda");
+  const [isJombangBapenda, setIsJombangBapenda] = useState(false);
   
   // State untuk pencarian
   const [search, setSearch] = useState("");
@@ -124,10 +130,16 @@ export function RegionUnpaidDialog({
         setData(json.data);
         setTotalPiutang(json.totalPiutang);
         setTotalCount(json.totalCount);
-        setEnableBapendaSync(!!json.enableBapendaSync);
-        setEnableBapendaPayment(!!json.enableBapendaPayment);
-        setBapendaPaymentUrl(json.bapendaPaymentUrl || null);
-        setBapendaRegionName(json.bapendaRegionName || "Bapenda");
+        
+        const config = json.villageConfig;
+        if (config) {
+          setEnableBapendaSync(!!config.enableBapendaSync);
+          setEnableBapendaPayment(!!config.enableBapendaPayment);
+          setBapendaPaymentUrl(config.bapendaPaymentUrl || null);
+          setBapendaUrl(config.bapendaUrl || null);
+          setBapendaRegionName(config.bapendaRegionName || "Bapenda");
+          setIsJombangBapenda(!!config.isJombangBapenda);
+        }
       } else {
         setData((prev) => [...prev, ...json.data]);
       }
@@ -357,7 +369,7 @@ export function RegionUnpaidDialog({
                         <p className="text-sm font-black text-rose-500 tracking-tighter mb-1">
                           {formatCurrency(wp.ketetapan)}
                         </p>
-                        {enableBapendaSync && (
+                        {enableBapendaSync && isJombangBapenda && (
                           <Button 
                             size="sm"
                             variant="outline"
@@ -377,6 +389,27 @@ export function RegionUnpaidDialog({
                             )}
                             Cek Bapenda
                           </Button>
+                        )}
+
+                        {!isJombangBapenda && enableBapendaPayment && bapendaPaymentUrl && (
+                           <Button 
+                             size="sm"
+                             variant="outline"
+                             onClick={() => {
+                               const cleanNop = wp.nop.replace(/\D/g, "");
+                               const targetUrl = bapendaPaymentUrl.replace(/\{nop\}/gi, cleanNop);
+                               window.open(targetUrl, "_blank");
+                             }}
+                             className={cn(
+                               "h-8 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
+                               isDark 
+                                   ? "bg-blue-950/30 border-blue-500/20 text-blue-400 hover:bg-blue-900/50" 
+                                   : "bg-blue-50 border-blue-500/30 text-blue-600 hover:bg-blue-100"
+                             )}
+                           >
+                             <Search className="w-3 h-3 mr-1.5" />
+                             Bayar Online
+                           </Button>
                         )}
                       </div>
                     </div>
@@ -405,7 +438,10 @@ export function RegionUnpaidDialog({
           isDark={isDark}
           container={container}
           bapendaPaymentUrl={bapendaPaymentUrl}
+          bapendaUrl={bapendaUrl}
           enableBapendaPayment={enableBapendaPayment}
+          enableBapendaSync={enableBapendaSync}
+          isJombangBapenda={isJombangBapenda}
           bapendaRegionName={bapendaRegionName}
         />
       )}

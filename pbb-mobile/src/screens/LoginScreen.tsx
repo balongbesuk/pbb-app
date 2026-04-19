@@ -6,6 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl } from '../utils/server';
 
+import { ScalableButton } from '../components/ScalableButton';
+
 export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>) {
   const { serverUrl, villageName } = route.params || {};
 
@@ -72,25 +74,27 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1 bg-slate-50">
       <View className="flex-1 justify-center p-8">
         
-        <TouchableOpacity 
+        <ScalableButton 
           onPress={() => navigation.goBack()} 
-          className="absolute top-16 left-8 bg-white p-3 rounded-full z-10 w-12 h-12 items-center justify-center border border-slate-100 shadow-sm"
+          style={{ position: 'absolute', top: 64, left: 32, zIndex: 10 }}
         >
-           <Ionicons name="arrow-back" size={24} color="#64748b" />
-        </TouchableOpacity>
+           <View className="bg-white p-3 rounded-full w-12 h-12 items-center justify-center border border-slate-100 shadow-sm">
+             <Ionicons name="arrow-back" size={24} color="#64748b" />
+           </View>
+        </ScalableButton>
 
         <View className="mb-10 mt-12 px-2">
-          <View className="w-16 h-16 bg-blue-600 rounded-[22px] items-center justify-center mb-6 shadow-xl shadow-blue-600/30">
+          <View className="w-16 h-16 bg-blue-600 rounded-[22px] items-center justify-center mb-6 shadow-xl shadow-blue-600/40">
              <Ionicons name="shield-checkmark" size={32} color="white" />
           </View>
           <Text className="text-slate-900 text-4xl font-black mb-2 tracking-tighter uppercase">PBB Mobile</Text>
-          <Text className="text-slate-500 text-sm font-medium leading-relaxed">
+          <Text className="text-slate-600 text-sm font-semibold leading-relaxed">
             Halaman login untuk Petugas / Penarik Lapangan
           </Text>
         </View>
 
         <View className="bg-white p-7 rounded-[32px] border border-slate-100 shadow-2xl shadow-slate-200">
-          <Text className="text-slate-400 text-[10px] font-black uppercase tracking-[2px] mb-3 ml-1">Username / NIP</Text>
+          <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-[2px] mb-3 ml-1">Username / NIP</Text>
           <View className="relative mb-6">
             <View className="absolute left-4 top-4 z-10">
               <Ionicons name="person-outline" size={20} color="#94a3b8" />
@@ -105,7 +109,7 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
             />
           </View>
 
-          <Text className="text-slate-400 text-[10px] font-black uppercase tracking-[2px] mb-3 ml-1">Kata Sandi</Text>
+          <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-[2px] mb-3 ml-1">Kata Sandi</Text>
           <View className="relative mb-4">
             <View className="absolute left-4 top-4 z-10">
               <Ionicons name="lock-closed-outline" size={20} color="#94a3b8" />
@@ -127,24 +131,25 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
             </View>
           ) : null}
 
-          <TouchableOpacity 
-            className={`py-5 mt-2 rounded-[22px] flex-row justify-center items-center shadow-xl ${form.username && form.password ? 'bg-blue-600 shadow-blue-600/30' : 'bg-slate-200'}`}
+          <ScalableButton
             disabled={!form.username || !form.password || loading}
             onPress={handleLogin}
           >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <>
-                <Text className={`font-black uppercase tracking-[2px] text-[11px] ${form.username && form.password ? 'text-white' : 'text-slate-400'}`}>Masuk ke Sistem</Text>
-                <Ionicons name="chevron-forward" size={16} color={form.username && form.password ? "white" : "#94a3b8"} style={{ marginLeft: 8 }} />
-              </>
-            )}
-          </TouchableOpacity>
+            <View className={`py-5 mt-2 rounded-[22px] flex-row justify-center items-center shadow-xl ${form.username && form.password ? 'bg-blue-600 shadow-blue-600/30' : 'bg-slate-200'}`}>
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Text className={`font-black uppercase tracking-[2px] text-[11px] ${form.username && form.password ? 'text-white' : 'text-slate-400'}`}>Masuk ke Sistem</Text>
+                  <Ionicons name="chevron-forward" size={16} color={form.username && form.password ? "white" : "#94a3b8"} style={{ marginLeft: 8 }} />
+                </>
+              )}
+            </View>
+          </ScalableButton>
         </View>
 
         <View className="items-center mt-12">
-           <Text className="text-slate-400 text-[10px] font-black uppercase tracking-[3px]">PBB Mobile Desa {villageName || '...'}</Text>
+           <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-[3px]">PBB Mobile Desa {villageName || '...'}</Text>
         </View>
 
         <StatusBar style="dark" />

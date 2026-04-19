@@ -13,7 +13,10 @@ interface UnpaidBillDialogProps {
   isDark?: boolean;
   container?: HTMLElement | null;
   bapendaPaymentUrl?: string | null;
+  bapendaUrl?: string | null;
   enableBapendaPayment?: boolean;
+  enableBapendaSync?: boolean;
+  isJombangBapenda?: boolean;
   bapendaRegionName?: string | null;
 }
 
@@ -25,14 +28,37 @@ export function UnpaidBillDialog({
   isDark = false,
   container,
   bapendaPaymentUrl,
+  bapendaUrl,
   enableBapendaPayment = true,
+  enableBapendaSync = true,
+  isJombangBapenda = false,
   bapendaRegionName = "Bapenda",
 }: UnpaidBillDialogProps) {
-  const handlePayNow = () => {
-    if (bapendaPaymentUrl) {
-      const cleanNop = nop.replace(/\D/g, "");
-      const targetUrl = bapendaPaymentUrl.replace(/\{nop\}/gi, cleanNop);
-      window.open(targetUrl, "_blank");
+  const handleAction = () => {
+    const configUrl = enableBapendaPayment ? bapendaPaymentUrl : bapendaUrl;
+    if (!configUrl) return;
+
+    const cleanNop = nop.replace(/\D/g, "");
+    let finalUrl = "";
+
+    if (!enableBapendaPayment && isJombangBapenda && cleanNop.length === 18) {
+      const baseUrl = configUrl.split("?")[0];
+      const k = [
+        cleanNop.substring(0, 2),
+        cleanNop.substring(2, 4),
+        cleanNop.substring(4, 7),
+        cleanNop.substring(7, 10),
+        cleanNop.substring(10, 13),
+        cleanNop.substring(13, 17),
+        cleanNop.substring(17, 18),
+      ];
+      finalUrl = `${baseUrl}?module=pbb&kata=${k[0]}&kata1=${k[1]}&kata2=${k[2]}&kata3=${k[3]}&kata4=${k[4]}&kata5=${k[5]}&kata6=${k[6]}&viewpbb=`;
+    } else {
+      finalUrl = configUrl.replace(/\{nop\}/gi, cleanNop);
+    }
+
+    if (finalUrl) {
+      window.open(finalUrl, "_blank");
     }
     onOpenChange(false);
   };
@@ -60,14 +86,16 @@ export function UnpaidBillDialog({
           </DialogDescription>
         </DialogHeader>
         
-        {enableBapendaPayment && bapendaPaymentUrl && (
+        {(enableBapendaPayment || enableBapendaSync) && (enableBapendaPayment ? bapendaPaymentUrl : bapendaUrl) && (
           <div className={cn(
-            "my-4 p-4 rounded-2xl border",
+            "my-4 p-4 rounded-2xl border text-center",
             isDark ? "bg-emerald-500/5 border-emerald-500/20" : "bg-emerald-50 border-emerald-200"
           )}>
-             <p className="text-xs font-bold leading-relaxed flex items-center justify-center gap-2 text-center">
+             <p className="text-xs font-bold leading-relaxed flex items-center justify-center gap-2">
                <Info className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-               Ingin melunasi sekarang secara online? Anda bisa menggunakan layanan resmi {bapendaRegionName}.
+               {enableBapendaPayment 
+                 ? `Ingin melunasi sekarang secara online? Anda bisa menggunakan layanan resmi ${bapendaRegionName}.`
+                 : `Anda dapat mengecek detail tagihan atau melakukan pembayaran melalui portal resmi ${bapendaRegionName}.`}
              </p>
           </div>
         )}
@@ -84,13 +112,16 @@ export function UnpaidBillDialog({
           >
             Tutup
           </Button>
-          {enableBapendaPayment && bapendaPaymentUrl && (
+          {(enableBapendaPayment || enableBapendaSync) && (enableBapendaPayment ? bapendaPaymentUrl : bapendaUrl) && (
             <Button 
-                className="w-full sm:flex-1 h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg shadow-emerald-900/20 border-none group transition-all"
-                onClick={handlePayNow}
+                className={cn(
+                  "w-full sm:flex-1 h-12 rounded-2xl text-white font-black uppercase tracking-widest text-[10px] gap-2 shadow-lg border-none group transition-all",
+                  enableBapendaPayment ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-900/20" : "bg-blue-600 hover:bg-blue-700 shadow-blue-900/20"
+                )}
+                onClick={handleAction}
             >
               <CreditCard className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              Bayar Online
+              {enableBapendaPayment ? 'Bayar Online' : 'Cek Web Bapenda'}
             </Button>
           )}
         </DialogFooter>

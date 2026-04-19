@@ -18,25 +18,40 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400, headers });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404, headers });
+    }
+
+    const isAdmin = user.role === "ADMIN";
+    const whereClause: any = { tahun };
+    if (!isAdmin) {
+      whereClause.penarikId = userId;
+    }
+
     const [all, lunas, sengketa, tdkTerbit, logs, villageConfig, unreadCount] = await Promise.all([
       prisma.taxData.aggregate({
-        where: { penarikId: userId, tahun },
+        where: whereClause,
         _sum: { ketetapan: true },
         _count: true,
       }),
       prisma.taxData.aggregate({
-        where: { penarikId: userId, tahun, paymentStatus: "LUNAS" },
+        where: { ...whereClause, paymentStatus: "LUNAS" },
         _sum: { pembayaran: true },
         _count: true,
       }),
       prisma.taxData.count({
-        where: { penarikId: userId, tahun, paymentStatus: "SUSPEND" }
+        where: { ...whereClause, paymentStatus: "SUSPEND" }
       }),
       prisma.taxData.count({
-        where: { penarikId: userId, tahun, paymentStatus: "TIDAK_TERBIT" }
+        where: { ...whereClause, paymentStatus: "TIDAK_TERBIT" }
       }),
       prisma.auditLog.findMany({
-        where: { userId },
+        where: isAdmin ? {} : { userId },
         orderBy: { createdAt: "desc" },
         take: 5
       }),

@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl, formatCurrency } from '../utils/server';
 
+import { ScalableButton } from '../components/ScalableButton';
+
 export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<'TaxpayerDetail'>) {
   const { serverUrl, taxpayer: initialTaxpayer, user, villageName, bapendaConfig: initialConfig } = route.params;
   const [taxpayer, setTaxpayer] = useState(initialTaxpayer);
@@ -87,8 +89,6 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
     }
   };
 
-  // Payment state (legacy removed)
-
   const handlePaymentCheck = async () => {
     setUpdating(true);
     try {
@@ -114,14 +114,12 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
       }
 
       if (data?.isPaid) {
-        // Force refresh from server to get all updated fields
         try {
           const refreshUrl = `${joinServerUrl(serverUrl, '/api/mobile/tax')}?nop=${encodeURIComponent(taxpayer.nop)}`;
           const refreshRes = await fetch(refreshUrl);
           const refreshData = await refreshRes.json();
           if (refreshData.success && refreshData.data?.[0]) {
              const refreshed = refreshData.data[0];
-             // map 'status' to 'paymentStatus' for compatibility
              if (refreshed.status && !refreshed.paymentStatus) {
                 refreshed.paymentStatus = refreshed.status;
              }
@@ -201,7 +199,7 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
         <Ionicons name={icon} size={18} color={color} />
       </View>
       <View className="ml-4 flex-1">
-        <Text className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-0.5">{label}</Text>
+        <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-0.5">{label}</Text>
         <Text className="text-slate-900 font-bold text-sm tracking-tight">{value || '-'}</Text>
       </View>
     </View>
@@ -211,14 +209,15 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
     <View className="flex-1 bg-slate-50">
       {/* Sticky Header Bar */}
       <View className="absolute top-0 left-0 right-0 pt-16 pb-4 px-6 z-50 flex-row items-center justify-between bg-slate-900 shadow-md">
-        <TouchableOpacity 
+        <ScalableButton 
           onPress={() => navigation.goBack()}
-          className="w-11 h-11 bg-white/10 rounded-2xl items-center justify-center border border-white/10"
         >
-          <Ionicons name="arrow-back" size={20} color="white" />
-        </TouchableOpacity>
+          <View className="w-11 h-11 bg-white/10 rounded-2xl items-center justify-center border border-white/10">
+            <Ionicons name="arrow-back" size={20} color="white" />
+          </View>
+        </ScalableButton>
         <View className="bg-white/10 px-4 py-2 rounded-full border border-white/10">
-          <Text className="text-white text-[10px] font-black uppercase tracking-widest">Detail Wajib Pajak</Text>
+          <Text className="text-white text-[10px] font-bold uppercase tracking-widest">Detail Wajib Pajak</Text>
         </View>
         <View className="w-11" />
       </View>
@@ -228,13 +227,13 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
         <View className="bg-slate-900 pt-36 pb-20 px-6 rounded-b-[40px] shadow-lg relative">
 
           <View className="items-center">
-            <View className={`px-4 py-1 rounded-full mb-3 border ${
+            <View className={`px-4 py-1.5 rounded-full mb-4 border ${
               taxpayer.paymentStatus === 'LUNAS' ? 'bg-emerald-500/20 border-emerald-500/30' : 
               taxpayer.paymentStatus === 'SUSPEND' ? 'bg-amber-500/20 border-amber-500/30' :
               taxpayer.paymentStatus === 'TIDAK_TERBIT' ? 'bg-slate-500/20 border-slate-500/30' :
               'bg-rose-500/20 border-rose-500/30'
             }`}>
-               <Text className={`text-[10px] font-black uppercase tracking-[2px] ${
+               <Text className={`text-[10px] font-bold uppercase tracking-[2.5px] ${
                  taxpayer.paymentStatus === 'LUNAS' ? 'text-emerald-400' : 
                  taxpayer.paymentStatus === 'SUSPEND' ? 'text-amber-400' :
                  taxpayer.paymentStatus === 'TIDAK_TERBIT' ? 'text-slate-400' :
@@ -257,29 +256,29 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
 
         {/* Info Content */}
         <View className="px-6 -mt-10">
-          <View className="bg-white rounded-[32px] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
+          <View className="bg-white rounded-[32px] p-8 shadow-2xl shadow-slate-200/60 border border-slate-100">
             <Text className="text-slate-900 font-black text-lg mb-6 tracking-tight">Informasi Objek Pajak</Text>
             
             <InfoRow label="Alamat Objek" value={taxpayer.alamatObjek || `Wilayah ${villageName}`} icon="location" color="#3b82f6" />
             
             <View className="flex-row mb-6">
               <View className="flex-1 mr-2">
-                <Text className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Dusun</Text>
+                <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Dusun</Text>
                 <View className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                    <Text className="text-slate-900 font-bold text-sm">{taxpayer.dusun || '-'}</Text>
                 </View>
               </View>
               <View className="flex-1 ml-2">
-                <Text className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">RT / RW</Text>
+                <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">RT / RW</Text>
                 <View className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                    <Text className="text-slate-900 font-bold text-sm">{taxpayer.rt || '0'} / {taxpayer.rw || '0'}</Text>
                 </View>
               </View>
             </View>
 
-            <View className="bg-slate-900 p-6 rounded-[24px] mt-2 shadow-lg shadow-slate-900/20">
+            <View className="bg-slate-900 p-6 rounded-[24px] mt-2 shadow-xl shadow-slate-900/30">
                <View className="flex-row justify-between items-center mb-1">
-                 <Text className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Ketetapan Pajak</Text>
+                 <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Ketetapan Pajak</Text>
                  <Ionicons name="card-outline" size={16} color="#94a3b8" />
                </View>
                <Text className="text-white text-3xl font-black tracking-tighter">
@@ -290,8 +289,7 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
           </View>
 
           {/* Transfer Button - Only for Admin or current Penarik */}
-          <TouchableOpacity 
-            activeOpacity={0.8}
+          <ScalableButton 
             onPress={() => navigation.navigate('SelectOfficer', { 
               serverUrl, 
               senderId: user.id, 
@@ -299,37 +297,38 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
               taxId: taxpayer.id,
               taxName: taxpayer.namaWp
             })}
-            className="bg-white border border-blue-100 mt-6 p-6 rounded-[32px] flex-row items-center shadow-sm"
           >
-            <View className="w-12 h-12 bg-blue-50 rounded-2xl items-center justify-center">
-              <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
-            </View>
-            <View className="flex-1 ml-4">
-              <Text className="text-slate-900 font-black text-base tracking-tight">Pindahkan Alokasi</Text>
-              <Text className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-0.5">Re-alokasi ke petugas lain</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-          </TouchableOpacity>
-
-          {!isLunas && bapendaConfig?.enableBapendaSync && bapendaConfig?.isJombangBapenda && (
-            <TouchableOpacity 
-              activeOpacity={0.8}
-              onPress={handlePaymentCheck}
-              className={`${bapendaConfig.enableBapendaPayment ? 'bg-emerald-600 shadow-emerald-600/30' : 'bg-slate-700 shadow-slate-700/30'} mt-4 p-6 rounded-[32px] flex-row items-center shadow-lg`}
-            >
-              <View className="w-12 h-12 bg-white/20 rounded-2xl items-center justify-center">
-                <Ionicons name={bapendaConfig.enableBapendaPayment ? "cash-outline" : "information-circle-outline"} size={24} color="white" />
+            <View className="bg-white border border-blue-100 mt-6 p-6 rounded-[32px] flex-row items-center shadow-md">
+              <View className="w-12 h-12 bg-blue-50 rounded-2xl items-center justify-center">
+                <Ionicons name="swap-horizontal" size={24} color="#3b82f6" />
               </View>
               <View className="flex-1 ml-4">
-                <Text className="text-white font-black text-base tracking-tight">
-                   {bapendaConfig.enableBapendaPayment ? 'Bayar Online Sekarang' : 'Cek Status Bapenda'}
-                </Text>
-                <Text className="text-white/60 text-[10px] font-black uppercase tracking-widest mt-0.5">
-                   {bapendaConfig.enableBapendaPayment ? 'E-Pay Bapenda Jombang' : 'Sinkronisasi Data Pusat'}
-                </Text>
+                <Text className="text-slate-900 font-black text-base tracking-tight">Pindahkan Alokasi</Text>
+                <Text className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">Re-alokasi ke petugas lain</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="white" />
-            </TouchableOpacity>
+              <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+            </View>
+          </ScalableButton>
+
+          {!isLunas && bapendaConfig?.enableBapendaSync && bapendaConfig?.isJombangBapenda && (
+            <ScalableButton 
+              onPress={handlePaymentCheck}
+            >
+              <View className={`${bapendaConfig.enableBapendaPayment ? 'bg-emerald-600 shadow-emerald-600/30' : 'bg-slate-700 shadow-slate-700/30'} mt-4 p-6 rounded-[32px] flex-row items-center shadow-lg`}>
+                <View className="w-12 h-12 bg-white/20 rounded-2xl items-center justify-center">
+                  <Ionicons name={bapendaConfig.enableBapendaPayment ? "cash-outline" : "information-circle-outline"} size={24} color="white" />
+                </View>
+                <View className="flex-1 ml-4">
+                  <Text className="text-white font-black text-base tracking-tight">
+                    {bapendaConfig.enableBapendaPayment ? 'Bayar Online Sekarang' : 'Cek Status Bapenda'}
+                  </Text>
+                  <Text className="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+                    {bapendaConfig.enableBapendaPayment ? 'E-Pay Bapenda Jombang' : 'Sinkronisasi Data Pusat'}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="white" />
+              </View>
+            </ScalableButton>
           )}
         </View>
       </ScrollView>
@@ -338,42 +337,48 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
       <View 
         style={{
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
-          elevation: 20
+          shadowOffset: { width: 0, height: -6 },
+          shadowOpacity: 0.12,
+          shadowRadius: 12,
+          elevation: 24
         }}
         className="absolute bottom-0 left-0 right-0 bg-white px-6 pt-5 pb-10 border-t border-slate-50"
       >
          <View className="flex-row gap-3">
-            <TouchableOpacity 
+            <ScalableButton 
               disabled={updating}
               onPress={() => handleStatusUpdate('SUSPEND')}
-              className="flex-1 bg-rose-600 rounded-[20px] items-center justify-center py-4 shadow-md shadow-rose-600/20"
+              style={{ flex: 1 }}
             >
-               <Ionicons name="shield-outline" size={20} color="white" />
-               <Text className="text-white font-black text-[9px] uppercase tracking-widest mt-1">Sengketa</Text>
-            </TouchableOpacity>
+              <View className="bg-rose-600 rounded-[20px] items-center justify-center py-4 shadow-lg shadow-rose-600/30 h-full">
+                 <Ionicons name="shield-outline" size={20} color="white" />
+                 <Text className="text-white font-bold text-[9px] uppercase tracking-widest mt-1">Sengketa</Text>
+              </View>
+            </ScalableButton>
 
-            <TouchableOpacity 
+            <ScalableButton 
               disabled={updating}
               onPress={() => handleStatusUpdate('TIDAK_TERBIT')}
-              className="flex-1 bg-white border border-slate-200 rounded-[20px] items-center justify-center py-4 shadow-sm"
+              style={{ flex: 1 }}
             >
-               <Ionicons name="document-text-outline" size={20} color="#64748b" />
-               <Text className="text-slate-500 font-black text-[9px] uppercase tracking-widest mt-1 text-center">Tdk Terbit</Text>
-            </TouchableOpacity>
+              <View className="bg-white border border-slate-200 rounded-[20px] items-center justify-center py-4 shadow-sm h-full">
+                 <Ionicons name="document-text-outline" size={20} color="#64748b" />
+                 <Text className="text-slate-600 font-bold text-[9px] uppercase tracking-widest mt-1 text-center">Tdk Terbit</Text>
+              </View>
+            </ScalableButton>
 
-            <TouchableOpacity 
+            <ScalableButton 
               disabled={updating}
               onPress={() => handleStatusUpdate(isLunas ? 'BELUM_LUNAS' : 'LUNAS')}
-              className={`flex-1 ${isLunas ? 'bg-amber-500 shadow-amber-500/20' : 'bg-emerald-600 shadow-emerald-600/20'} rounded-[20px] items-center justify-center py-4 shadow-md`}
+              style={{ flex: 1 }}
             >
-               <Ionicons name={isLunas ? "refresh-outline" : "checkmark-circle-outline"} size={20} color="white" />
-               <Text className="text-white font-black text-[9px] uppercase tracking-widest mt-1">
-                 {isLunas ? 'Batal Lunas' : 'Tandai Lunas'}
-               </Text>
-            </TouchableOpacity>
+              <View className={`h-full ${isLunas ? 'bg-amber-500 shadow-amber-500/30' : 'bg-emerald-600 shadow-emerald-600/30'} rounded-[20px] items-center justify-center py-4 shadow-lg`}>
+                 <Ionicons name={isLunas ? "refresh-outline" : "checkmark-circle-outline"} size={20} color="white" />
+                 <Text className="text-white font-bold text-[9px] uppercase tracking-widest mt-1">
+                   {isLunas ? 'Batal Lunas' : 'Tandai Lunas'}
+                 </Text>
+              </View>
+            </ScalableButton>
          </View>
       </View>
 
