@@ -116,6 +116,9 @@ export const getVillageConfig = cache(async () => {
         tahunPajak: 2026,
         jatuhTempo: "31 Agustus",
         bapendaUrl: null,
+        bapendaPaymentUrl: null,
+        bapendaRegionName: "Bapenda",
+        enableBapendaPayment: true,
         isJombangBapenda: true,
         enableBapendaSync: true,
         showNominalPajak: false,
@@ -140,6 +143,9 @@ export const getVillageConfig = cache(async () => {
       tahunPajak: 2026, 
       jatuhTempo: "31 Agustus", 
       bapendaUrl: null, 
+      bapendaPaymentUrl: null,
+      enableBapendaPayment: true,
+      bapendaRegionName: "Bapenda",
       isJombangBapenda: true, 
       enableBapendaSync: true,
       logoUrl: null, 
@@ -178,6 +184,18 @@ export async function updateVillageConfig(raw: VillageConfigInput) {
 
     if (data.bapendaUrl !== undefined) {
       updateData.bapendaUrl = data.bapendaUrl;
+    }
+    
+    if (data.bapendaPaymentUrl !== undefined) {
+      updateData.bapendaPaymentUrl = data.bapendaPaymentUrl;
+    }
+
+    if (data.enableBapendaPayment !== undefined) {
+      updateData.enableBapendaPayment = data.enableBapendaPayment;
+    }
+
+    if (data.bapendaRegionName !== undefined) {
+      updateData.bapendaRegionName = data.bapendaRegionName;
     }
 
     if (data.isJombangBapenda !== undefined) {

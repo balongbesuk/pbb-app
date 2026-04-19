@@ -163,6 +163,9 @@ model VillageConfig {
   tahunPajak        Int     @default(2026)
   jatuhTempo        String  @default("31 Agustus")
   bapendaUrl        String?
+  bapendaPaymentUrl String?
+  enableBapendaPayment Boolean @default(true)
+  bapendaRegionName String? @default("Bapenda")
   isJombangBapenda  Boolean @default(false)
   enableBapendaSync Boolean @default(false)
   logoUrl           String?

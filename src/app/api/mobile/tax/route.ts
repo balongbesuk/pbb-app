@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+export const dynamic = "force-dynamic";
 import { prisma } from '@/lib/prisma';
 import { isPbbMobileEnabled } from '@/lib/mobile-access';
 
@@ -55,8 +56,21 @@ export async function GET(request: Request) {
       });
     }
 
+    const bapendaConfig = {
+      bapendaUrl: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.bapendaUrl,
+      bapendaPaymentUrl: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.bapendaPaymentUrl,
+      enableBapendaPayment: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.enableBapendaPayment ?? true,
+      bapendaRegionName: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.bapendaRegionName || "Bapenda",
+      isJombangBapenda: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.isJombangBapenda ?? false,
+      enableBapendaSync: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.enableBapendaSync ?? false,
+    };
+
     if (taxes.length === 0) {
-      return NextResponse.json({ success: false, error: 'Data Wajib Pajak atau NOP tidak ditemukan' }, { status: 404, headers });
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Data Wajib Pajak atau NOP tidak ditemukan',
+        villageConfig: bapendaConfig
+      }, { status: 404, headers });
     }
 
     return NextResponse.json({
@@ -71,7 +85,8 @@ export async function GET(request: Request) {
         status: tax.paymentStatus,
         luasTanah: tax.luasTanah,
         luasBangunan: tax.luasBangunan,
-      }))
+      })),
+      villageConfig: bapendaConfig
     }, { headers });
   } catch (error) {
     console.error('API Mobile Tax Error:', error);

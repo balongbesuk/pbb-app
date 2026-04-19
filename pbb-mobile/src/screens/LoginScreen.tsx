@@ -47,6 +47,9 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
           await AsyncStorage.setItem('@admin_magic_token', data.magicToken);
         }
 
+        // Simpan sesi user agar bisa login otomatis
+        await AsyncStorage.setItem('@auth_user', JSON.stringify(data.user));
+
         // Arahkan ke Layar Admin
         navigation.navigate('AdminDashboard', { 
             serverUrl, 

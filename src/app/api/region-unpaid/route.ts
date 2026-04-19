@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getNopVariations } from "@/lib/utils";
@@ -37,11 +38,24 @@ export async function GET(req: Request) {
     }
 
     // Aggregate total sum and count for the whole region
-    const aggregate = await prisma.taxData.aggregate({
-      where,
-      _sum: { ketetapan: true },
-      _count: { id: true },
-    });
+    const [aggregate, config] = await Promise.all([
+      prisma.taxData.aggregate({
+        where,
+        _sum: { ketetapan: true },
+        _count: { id: true },
+      }),
+      prisma.villageConfig.findFirst({
+        where: { id: 1 },
+        select: { 
+          enableBapendaSync: true,
+          enableBapendaPayment: true,
+          bapendaUrl: true,
+          bapendaPaymentUrl: true,
+          bapendaRegionName: true,
+          isJombangBapenda: true,
+        }
+      })
+    ]);
 
     const totalPiutang = aggregate._sum.ketetapan || 0;
     const totalCount = aggregate._count.id || 0;
@@ -68,6 +82,14 @@ export async function GET(req: Request) {
       totalPiutang,
       totalCount,
       hasMore: skip + unpaidWP.length < totalCount,
+      villageConfig: {
+        enableBapendaSync: config?.enableBapendaSync ?? false,
+        enableBapendaPayment: config?.enableBapendaPayment ?? true,
+        bapendaUrl: config?.bapendaUrl || null,
+        bapendaPaymentUrl: config?.bapendaPaymentUrl || null,
+        bapendaRegionName: config?.bapendaRegionName || "Bapenda",
+        isJombangBapenda: config?.isJombangBapenda ?? false,
+      }
     });
   } catch (error) {
     console.error("Gagal mengambil data WP belum bayar:", error);

@@ -70,8 +70,11 @@ export function PublicSearch({
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [jatuhTempo, setJatuhTempo] = useState("31 Agustus");
   const [bapendaUrl, setBapendaUrl] = useState<string | null>(null);
+  const [bapendaPaymentUrl, setBapendaPaymentUrl] = useState<string | null>(null);
+  const [bapendaRegionName, setBapendaRegionName] = useState<string | null>("Bapenda");
   const [isJombangBapenda, setIsJombangBapenda] = useState(true);
-  const [enableBapendaSync, setEnableBapendaSync] = useState(true);
+  const [enableBapendaSync, setEnableBapendaSync] = useState(false);
+  const [enableBapendaPayment, setEnableBapendaPayment] = useState(true);
   const { theme } = usePublicThemeContext();
   const [openPdfMap, setOpenPdfMap] = useState<Record<string, boolean>>({});
   const [isCheckingAuto, setIsCheckingAuto] = useState<Record<string, boolean>>({});
@@ -126,10 +129,15 @@ export function PublicSearch({
       }
       if (successRes.bapendaUrl) {
         setBapendaUrl(successRes.bapendaUrl);
+        setBapendaPaymentUrl(successRes.bapendaPaymentUrl || null);
+        setBapendaRegionName(successRes.bapendaRegionName || "Bapenda");
         setIsJombangBapenda(!!successRes.isJombangBapenda);
         setEnableBapendaSync(!!successRes.enableBapendaSync);
+        setEnableBapendaPayment(!!successRes.enableBapendaPayment);
       } else {
         setBapendaUrl(null);
+        setBapendaPaymentUrl(null);
+        setBapendaRegionName("Bapenda");
       }
     } else {
       const errorRes = res as PublicSearchResponse;
@@ -203,8 +211,11 @@ export function PublicSearch({
       if (successRes.jatuhTempo) setJatuhTempo(successRes.jatuhTempo);
       if (successRes.bapendaUrl) {
          setBapendaUrl(successRes.bapendaUrl);
+         setBapendaPaymentUrl(successRes.bapendaPaymentUrl || null);
+         setBapendaRegionName(successRes.bapendaRegionName || "Bapenda");
          setIsJombangBapenda(!!successRes.isJombangBapenda);
          setEnableBapendaSync(!!successRes.enableBapendaSync);
+         setEnableBapendaPayment(!!successRes.enableBapendaPayment);
       }
     } else {
       setResults([]);
@@ -561,7 +572,7 @@ export function PublicSearch({
                           )}
                         >
                           {isCheckingAuto[item.nop] ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wallet className="w-5 h-5" />}
-                          Bayar Online
+                          {enableBapendaPayment ? "Bayar Online" : "Cek Bapenda"}
                         </Button>
                       )}
 
@@ -744,6 +755,9 @@ export function PublicSearch({
         nop={showPayRedirect?.nop || ""}
         namaWp={showPayRedirect?.namaWp || ""}
         isDark={isDark}
+        bapendaPaymentUrl={bapendaPaymentUrl}
+        enableBapendaPayment={enableBapendaPayment}
+        bapendaRegionName={bapendaRegionName}
       />
 
       {mutationItem && (

@@ -39,6 +39,10 @@ type RegionUnpaidResponse = {
   totalPiutang: number;
   totalCount: number;
   hasMore: boolean;
+  enableBapendaSync: boolean;
+  enableBapendaPayment: boolean;
+  bapendaPaymentUrl?: string | null;
+  bapendaRegionName?: string | null;
 };
 
 export function RegionUnpaidDialog({
@@ -65,6 +69,10 @@ export function RegionUnpaidDialog({
   const [checkingBapendaId, setCheckingBapendaId] = useState<string | null>(null);
   const [unpaidBillItem, setUnpaidBillItem] = useState<{ nop: string, namaWp: string } | null>(null);
   const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
+  const [enableBapendaSync, setEnableBapendaSync] = useState(false);
+  const [enableBapendaPayment, setEnableBapendaPayment] = useState(true);
+  const [bapendaPaymentUrl, setBapendaPaymentUrl] = useState<string | null>(null);
+  const [bapendaRegionName, setBapendaRegionName] = useState("Bapenda");
   
   // State untuk pencarian
   const [search, setSearch] = useState("");
@@ -116,6 +124,10 @@ export function RegionUnpaidDialog({
         setData(json.data);
         setTotalPiutang(json.totalPiutang);
         setTotalCount(json.totalCount);
+        setEnableBapendaSync(!!json.enableBapendaSync);
+        setEnableBapendaPayment(!!json.enableBapendaPayment);
+        setBapendaPaymentUrl(json.bapendaPaymentUrl || null);
+        setBapendaRegionName(json.bapendaRegionName || "Bapenda");
       } else {
         setData((prev) => [...prev, ...json.data]);
       }
@@ -345,25 +357,27 @@ export function RegionUnpaidDialog({
                         <p className="text-sm font-black text-rose-500 tracking-tighter mb-1">
                           {formatCurrency(wp.ketetapan)}
                         </p>
+                        {enableBapendaSync && (
                           <Button 
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleCheckBapenda(wp)}
-                          disabled={checkingBapendaId === wp.id}
-                          className={cn(
-                            "h-8 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
-                            isDark 
-                                ? "bg-emerald-950/30 border-emerald-500/20 text-emerald-400 hover:bg-emerald-900/50" 
-                                : "bg-emerald-50 border-emerald-500/30 text-emerald-600 hover:bg-emerald-100"
-                          )}
-                        >
-                          {checkingBapendaId === wp.id ? (
-                            <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
-                          ) : (
-                            <RefreshCcw className="w-3 h-3 mr-1.5" />
-                          )}
-                          Cek Bapenda
-                        </Button>
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleCheckBapenda(wp)}
+                            disabled={checkingBapendaId === wp.id}
+                            className={cn(
+                              "h-8 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
+                              isDark 
+                                  ? "bg-emerald-950/30 border-emerald-500/20 text-emerald-400 hover:bg-emerald-900/50" 
+                                  : "bg-emerald-50 border-emerald-500/30 text-emerald-600 hover:bg-emerald-100"
+                            )}
+                          >
+                            {checkingBapendaId === wp.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
+                            ) : (
+                              <RefreshCcw className="w-3 h-3 mr-1.5" />
+                            )}
+                            Cek Bapenda
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -390,6 +404,9 @@ export function RegionUnpaidDialog({
           namaWp={unpaidBillItem.namaWp}
           isDark={isDark}
           container={container}
+          bapendaPaymentUrl={bapendaPaymentUrl}
+          enableBapendaPayment={enableBapendaPayment}
+          bapendaRegionName={bapendaRegionName}
         />
       )}
     </>

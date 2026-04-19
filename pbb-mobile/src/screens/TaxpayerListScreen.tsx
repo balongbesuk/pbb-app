@@ -6,7 +6,7 @@ import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl, formatCurrency } from '../utils/server';
 
 export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'TaxpayerList'>) {
-  const { serverUrl, user, tahun, villageName } = route.params;
+  const { serverUrl, user, tahun, villageName, bapendaConfig } = route.params;
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [taxpayers, setTaxpayers] = useState<any[]>([]);
@@ -124,7 +124,11 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
                   serverUrl, 
                   taxpayer: wp, 
                   user, 
-                  villageName 
+                  villageName,
+                  bapendaConfig,
+                  onUpdate: (updatedWp: any) => {
+                    setTaxpayers(prev => prev.map(t => t.id === updatedWp.id ? updatedWp : t));
+                  }
                 })}
               >
                 <View className="flex-row justify-between items-start mb-3">

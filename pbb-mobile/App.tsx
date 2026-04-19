@@ -34,13 +34,31 @@ export default function App() {
 
   const loadInitialSession = async () => {
     try {
-      const [serverUrl, villageName, villageLogo] = await Promise.all([
+      const [serverUrl, villageName, villageLogo, authUser] = await Promise.all([
         AsyncStorage.getItem('serverUrl'),
         AsyncStorage.getItem('villageName'),
         AsyncStorage.getItem('villageLogo'),
+        AsyncStorage.getItem('@auth_user'),
       ]);
 
       if (serverUrl && villageName) {
+        if (authUser) {
+          try {
+            const user = JSON.parse(authUser);
+            setInitialParams({
+              serverUrl,
+              user,
+              isAdmin: true,
+              villageName: user.dusun || 'Hak Akses Admin',
+              stats: { totalSppt: 0, lunasSppt: 0 }
+            } as any);
+            setInitialRoute('AdminDashboard');
+            return;
+          } catch (e) {
+            console.error('Failed to parse auth user:', e);
+          }
+        }
+
         setInitialParams({
           serverUrl,
           villageName,
@@ -73,7 +91,7 @@ export default function App() {
         <Stack.Screen name="PaymentCheck" component={PaymentCheckScreen} />
 
         <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+        <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} initialParams={initialParams as any} />
         <Stack.Screen name="GisMap" component={GisMapScreen} />
         <Stack.Screen name="TaxpayerList" component={TaxpayerListScreen} />
         <Stack.Screen name="BillingHistory" component={BillingHistoryScreen} />

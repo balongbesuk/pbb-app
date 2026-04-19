@@ -63,7 +63,10 @@ export function TaxDetailDialog({
   const [archiveFile, setArchiveFile] = useState<string | null>(null);
   const [isCheckingBapenda, setIsCheckingBapenda] = useState(false);
   const [showPayRedirect, setShowPayRedirect] = useState(false);
-  const [enableBapendaSync, setEnableBapendaSync] = useState(true);
+  const [enableBapendaSync, setEnableBapendaSync] = useState(false);
+  const [enableBapendaPayment, setEnableBapendaPayment] = useState(true);
+  const [bapendaPaymentUrl, setBapendaPaymentUrl] = useState<string | null>(null);
+  const [bapendaRegionName, setBapendaRegionName] = useState("Bapenda");
   const [lastCheckTime, setLastCheckTime] = useState(0);
   const [copiedNop, setCopiedNop] = useState(false);
   const [isArchiveLoading, setIsArchiveLoading] = useState(false);
@@ -98,6 +101,9 @@ export function TaxDetailDialog({
 
       fetchConfig().then(config => {
         setEnableBapendaSync(config.enableBapendaSync ?? true);
+        setEnableBapendaPayment(config.enableBapendaPayment ?? true);
+        setBapendaPaymentUrl(config.bapendaPaymentUrl || null);
+        setBapendaRegionName(config.bapendaRegionName || "Bapenda");
       });
 
       setIsFullEditing(false);
@@ -523,7 +529,16 @@ export function TaxDetailDialog({
         </DialogContent>
       </Dialog>
 
-      <UnpaidBillDialog open={showPayRedirect} onOpenChange={setShowPayRedirect} nop={item?.nop || ""} namaWp={item?.namaWp || ""} isDark={resolvedTheme === "dark"} />
+      <UnpaidBillDialog 
+        open={showPayRedirect} 
+        onOpenChange={setShowPayRedirect} 
+        nop={item?.nop || ""} 
+        namaWp={item?.namaWp || ""} 
+        isDark={resolvedTheme === "dark"} 
+        bapendaPaymentUrl={bapendaPaymentUrl}
+        enableBapendaPayment={enableBapendaPayment}
+        bapendaRegionName={bapendaRegionName}
+      />
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-md rounded-3xl p-8 bg-white dark:bg-zinc-950 text-center">

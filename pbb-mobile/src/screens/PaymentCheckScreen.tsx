@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Linking, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Linking, Alert, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -12,8 +12,20 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
-  const [showUnpaidModal, setShowUnpaidModal] = useState<any>(null);
   const [pinnedList, setPinnedList] = useState<{nop: string, name: string, status?: string}[]>([]);
+  const [bapendaConfig, setBapendaConfig] = useState<any>(null);
+  
+  // Unified Sync Result Modal State
+  const [syncModal, setSyncModal] = useState<{
+    visible: boolean;
+    type: 'success' | 'unpaid' | 'error';
+    message: string;
+    wpData?: any;
+  }>({
+    visible: false,
+    type: 'success',
+    message: '',
+  });
 
   useEffect(() => {
     loadPinnedNopes();
@@ -60,6 +72,10 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
         if (updatedList.length > 0) {
            setPinnedList(updatedList);
            AsyncStorage.setItem('@pinned_nops_v2', JSON.stringify(updatedList));
+        }
+
+        if (data.villageConfig) {
+           setBapendaConfig(data.villageConfig);
         }
       } else {
         setErrorMsg(data.error || 'Terjadi kesalahan sistem');
@@ -190,9 +206,9 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
                       {item.status === 'LUNAS' && <View className="w-8 h-8 bg-emerald-500 rounded-full items-center justify-center"><Text className="text-white font-bold">✓</Text></View>}
                    </View>
 
-                   {item.status !== 'LUNAS' && (
+                   {item.status !== 'LUNAS' && bapendaConfig?.isJombangBapenda && (bapendaConfig?.enableBapendaPayment ? bapendaConfig?.bapendaPaymentUrl : (bapendaConfig?.enableBapendaSync && bapendaConfig?.bapendaUrl)) && (
                      <TouchableOpacity 
-                        className="mt-4 bg-emerald-700 py-4 rounded-2xl items-center shadow-lg shadow-emerald-900/20"
+                        className={`mt-4 ${bapendaConfig?.enableBapendaPayment ? 'bg-emerald-700' : 'bg-slate-700'} py-4 rounded-2xl items-center shadow-lg shadow-slate-900/20`}
                         onPress={async () => {
                            try {
                              setLoading(true);
@@ -203,20 +219,37 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
                              });
                              const data = await res.json();
                              if (res.ok && data?.isPaid) {
-                               Alert.alert('Sukses', 'Pembayaran terdeteksi lunas!');
                                fetchTaxData(item.nop);
+                               setSyncModal({
+                                 visible: true,
+                                 type: 'success',
+                                 message: 'Pembayaran terdeteksi lunas di server pusat!',
+                                 wpData: item
+                               });
                              } else {
-                               setShowUnpaidModal(item);
+                               setSyncModal({
+                                 visible: true,
+                                 type: 'unpaid',
+                                 message: `Tagihan atas nama ${item.namaWp} masih tercatat BELUM LUNAS.`,
+                                 wpData: item
+                               });
                                setLoading(false);
                              }
-                           } catch (e) { Alert.alert('Error', 'Gagal sinkron server.'); setLoading(false); }
+                           } catch (e) { 
+                             setSyncModal({
+                               visible: true,
+                               type: 'error',
+                               message: 'Gagal menghubungkan ke server Bapenda. Pastikan koneksi internet Anda stabil.',
+                             });
+                             setLoading(false); 
+                           }
                         }}
                      >
-                       <Text className="text-white font-black text-[10px] uppercase tracking-widest">Bayar Online Sekarang</Text>
+                       <Text className="text-white font-black text-[10px] uppercase tracking-widest">
+                          {bapendaConfig?.enableBapendaPayment ? 'Bayar Online Sekarang' : 'Cek Status Bapenda'}
+                       </Text>
                      </TouchableOpacity>
                    )}
-
-
                 </View>
               </Animated.View>
             ))}
@@ -224,34 +257,100 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
         )}
       </View>
 
-      {/* Unpaid Modal */}
-      {showUnpaidModal && (
-        <View className="absolute inset-0 bg-slate-900/60 justify-center items-center p-6 z-[100]">
-           <View className="bg-white w-full rounded-[40px] p-8 items-center shadow-2xl">
-              <View className="w-16 h-16 bg-rose-50 rounded-3xl items-center justify-center mb-4">
-                 <Text className="text-3xl">💳</Text>
-              </View>
-              <Text className="text-xl font-black text-slate-900 mb-2">BELUM TERBAYAR</Text>
-              <Text className="text-center text-slate-500 text-xs font-bold leading-relaxed mb-8">
-                 Tagihan atas nama <Text className="text-emerald-600">{showUnpaidModal.namaWp}</Text> masih tercatat <Text className="text-rose-600">BELUM LUNAS</Text> di server pusat.
-              </Text>
+      {/* Premium Unified Sync Result Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={syncModal.visible}
+        onRequestClose={() => setSyncModal({ ...syncModal, visible: false })}
+      >
+        <View className="flex-1 bg-slate-900/60 justify-center items-center p-8">
+           <View className="bg-white w-full rounded-[40px] p-8 items-center shadow-2xl relative">
               <TouchableOpacity 
-                 className="w-full bg-emerald-700 py-4 rounded-2xl items-center mb-3"
-                 onPress={async () => {
-                    setShowUnpaidModal(null);
-                    try {
-                      await Linking.openURL(`https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=${encodeURIComponent(showUnpaidModal.nop)}`);
-                    } catch (e) {
-                      Alert.alert('Error', 'Gagal membuka halaman pembayaran.');
-                    }
-                 }}
+                onPress={() => setSyncModal({ ...syncModal, visible: false })}
+                className="absolute top-6 right-6 w-8 h-8 items-center justify-center bg-slate-50 rounded-full z-10"
               >
-                 <Text className="text-white font-black text-[11px] uppercase tracking-widest">Lanjut ke EPAY JOMBANG</Text>
+                <Text className="text-slate-400 font-bold">×</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setShowUnpaidModal(null)} className="py-2"><Text className="text-slate-400 font-bold text-[10px] uppercase">Tutup</Text></TouchableOpacity>
+
+              <View className={`w-20 h-20 ${
+                syncModal.type === 'success' ? 'bg-emerald-50' : 
+                syncModal.type === 'unpaid' ? 'bg-rose-50' : 'bg-amber-50'
+              } rounded-[28px] items-center justify-center mb-6`}>
+                 <Text style={{ fontSize: 32 }}>
+                   {syncModal.type === 'success' ? '✅' : syncModal.type === 'unpaid' ? '💳' : '⚠️'}
+                 </Text>
+              </View>
+              
+              <Text className="text-xl font-black text-slate-900 mb-1 text-center uppercase tracking-tighter">
+                {syncModal.type === 'success' ? 'Pembayaran Lunas' : syncModal.type === 'unpaid' ? 'Belum Terbayar' : 'Gangguan Sistem'}
+              </Text>
+              <Text className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] mb-6">Status Bapenda</Text>
+              
+              <View className="bg-slate-50 p-6 rounded-3xl w-full mb-8 border border-slate-100">
+                <Text className="text-center text-slate-600 text-xs font-bold leading-relaxed">
+                  {syncModal.message}
+                </Text>
+                {syncModal.wpData && (
+                  <View className="mt-4 pt-4 border-t border-slate-200/50">
+                    <Text className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center mb-1">Objek Pajak</Text>
+                    <Text className="text-center text-slate-900 font-black text-sm uppercase">{syncModal.wpData.namaWp}</Text>
+                    <Text className="text-center text-slate-400 font-mono text-[10px] mt-0.5">{syncModal.wpData.nop}</Text>
+                  </View>
+                )}
+              </View>
+
+              <View className="w-full space-y-3">
+                {syncModal.type === 'unpaid' && bapendaConfig?.isJombangBapenda && (bapendaConfig?.enableBapendaPayment ? bapendaConfig?.bapendaPaymentUrl : (bapendaConfig?.enableBapendaSync && bapendaConfig?.bapendaUrl)) && (
+                  <TouchableOpacity 
+                     className={`w-full ${bapendaConfig?.enableBapendaPayment ? 'bg-emerald-700 shadow-emerald-700/20' : 'bg-slate-700 shadow-slate-700/20'} py-5 rounded-[22px] items-center shadow-lg flex-row justify-center`}
+                     onPress={async () => {
+                        setSyncModal({ ...syncModal, visible: false });
+                        try {
+                          const cleanNop = syncModal.wpData.nop.replace(/\D/g, '');
+                          const isPayment = bapendaConfig.enableBapendaPayment;
+                          const configUrl = isPayment ? bapendaConfig.bapendaPaymentUrl : bapendaConfig.bapendaUrl;
+                          
+                          let targetUrl = configUrl;
+                          if (!isPayment && bapendaConfig.isJombangBapenda && cleanNop.length === 18) {
+                            const k0 = cleanNop.substring(0, 2);
+                            const k1 = cleanNop.substring(2, 4);
+                            const k2 = cleanNop.substring(4, 7);
+                            const k3 = cleanNop.substring(7, 10);
+                            const k4 = cleanNop.substring(10, 13);
+                            const k5 = cleanNop.substring(13, 17);
+                            const k6 = cleanNop.substring(17, 18);
+                            const baseUrl = configUrl.split("?")[0];
+                            targetUrl = `${baseUrl}?module=pbb&kata=${k0}&kata1=${k1}&kata2=${k2}&kata3=${k3}&kata4=${k4}&kata5=${k5}&kata6=${k6}&viewpbb=`;
+                          } else {
+                            targetUrl = configUrl.replace(/\{nop\}/gi, cleanNop);
+                          }
+                          
+                          await Linking.openURL(targetUrl);
+                        } catch (e) {
+                          Alert.alert('Error', 'Gagal membuka halaman Bapenda.');
+                        }
+                     }}
+                  >
+                     <Text className="text-white font-black text-[11px] uppercase tracking-widest">
+                        {bapendaConfig?.enableBapendaPayment 
+                          ? `Lanjut ke ${bapendaConfig.bapendaRegionName || "EPAY"}` 
+                          : "Cek Website Bapenda"}
+                     </Text>
+                     <Text style={{ marginLeft: 8 }}>→</Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity 
+                   onPress={() => setSyncModal({ ...syncModal, visible: false })} 
+                   className="w-full py-5 rounded-[22px] bg-slate-100 items-center"
+                >
+                  <Text className="text-slate-500 font-black text-[10px] uppercase tracking-widest">Tutup</Text>
+                </TouchableOpacity>
+              </View>
            </View>
         </View>
-      )}
+      </Modal>
 
       <StatusBar style="dark" />
     </KeyboardAvoidingView>

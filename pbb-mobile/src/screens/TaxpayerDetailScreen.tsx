@@ -1,20 +1,47 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Modal, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Modal, ActivityIndicator, Linking, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl, formatCurrency } from '../utils/server';
 
 export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<'TaxpayerDetail'>) {
-  const { serverUrl, taxpayer: initialTaxpayer, user, villageName } = route.params;
+  const { serverUrl, taxpayer: initialTaxpayer, user, villageName, bapendaConfig: initialConfig } = route.params;
   const [taxpayer, setTaxpayer] = useState(initialTaxpayer);
   const [updating, setUpdating] = useState(false);
+  const [bapendaConfig, setBapendaConfig] = useState(initialConfig || null);
+
+  useEffect(() => {
+    fetchLatestConfig();
+  }, []);
+
+  const fetchLatestConfig = async () => {
+    try {
+      const url = joinServerUrl(serverUrl, `/api/mobile/tax?nop=${encodeURIComponent(taxpayer.nop)}`); 
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.success && data.villageConfig) {
+        setBapendaConfig(data.villageConfig);
+      }
+    } catch (e) { console.log('Fetch config error:', e); }
+  };
 
   // Status Modal State
   const [statusModal, setStatusModal] = useState({
     visible: false,
     type: 'success' as 'success' | 'error',
     message: ''
+  });
+
+  // Unified Sync Result Modal State
+  const [syncModal, setSyncModal] = useState<{
+    visible: boolean;
+    type: 'success' | 'unpaid' | 'error';
+    message: string;
+  }>({
+    visible: false,
+    type: 'success',
+    message: '',
   });
 
   const isLunas = taxpayer.paymentStatus === 'LUNAS';
@@ -36,6 +63,7 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
       
       if (data.success) {
         setTaxpayer(data.data);
+        if (route.params.onUpdate) route.params.onUpdate(data.data);
         setStatusModal({
           visible: true,
           type: 'success',
@@ -59,8 +87,7 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
     }
   };
 
-  // Payment state
-  const [showUnpaidModal, setShowUnpaidModal] = useState(false);
+  // Payment state (legacy removed)
 
   const handlePaymentCheck = async () => {
     setUpdating(true);
@@ -69,26 +96,66 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nop: taxpayer.nop, tahun: taxpayer.tahun })
+        body: JSON.stringify({ 
+          nop: taxpayer.nop, 
+          tahun: taxpayer.tahun || bapendaConfig?.tahunPajak || 2026
+        })
       });
+
       const data = await res.json();
       
-      if (res.ok && data?.isPaid) {
-        // Update local status if it was changed to paid on central
-        setTaxpayer({ ...taxpayer, paymentStatus: 'LUNAS' });
-        setStatusModal({
+      if (!res.ok) {
+        setSyncModal({
+          visible: true,
+          type: 'error',
+          message: data?.error || 'Gagal sinkronisasi dengan server Bapenda.'
+        });
+        return;
+      }
+
+      if (data?.isPaid) {
+        // Force refresh from server to get all updated fields
+        try {
+          const refreshUrl = `${joinServerUrl(serverUrl, '/api/mobile/tax')}?nop=${encodeURIComponent(taxpayer.nop)}`;
+          const refreshRes = await fetch(refreshUrl);
+          const refreshData = await refreshRes.json();
+          if (refreshData.success && refreshData.data?.[0]) {
+             const refreshed = refreshData.data[0];
+             // map 'status' to 'paymentStatus' for compatibility
+             if (refreshed.status && !refreshed.paymentStatus) {
+                refreshed.paymentStatus = refreshed.status;
+             }
+             const mergedTaxpayer = { ...taxpayer, ...refreshed };
+             setTaxpayer(mergedTaxpayer);
+             if (route.params.onUpdate) route.params.onUpdate(mergedTaxpayer);
+          } else {
+             const updatedTaxpayer = { ...taxpayer, paymentStatus: 'LUNAS' };
+             setTaxpayer(updatedTaxpayer);
+             if (route.params.onUpdate) route.params.onUpdate(updatedTaxpayer);
+          }
+        } catch (e) {
+          const updatedTaxpayer = { ...taxpayer, paymentStatus: 'LUNAS' };
+          setTaxpayer(updatedTaxpayer);
+          if (route.params.onUpdate) route.params.onUpdate(updatedTaxpayer);
+        }
+
+        setSyncModal({
           visible: true,
           type: 'success',
-          message: 'Pembayaran terdeteksi lunas di server pusat!'
+          message: `Berhasil Sinkron! Tagihan atas nama ${taxpayer.namaWp} telah terdeteksi LUNAS di server Bapenda.`
         });
       } else {
-        setShowUnpaidModal(true);
+        setSyncModal({
+          visible: true,
+          type: 'unpaid',
+          message: `Tagihan atas nama ${taxpayer.namaWp} masih tercatat BELUM LUNAS.`
+        });
       }
     } catch (err) {
-      setStatusModal({
+      setSyncModal({
         visible: true,
         type: 'error',
-        message: 'Gagal sinkron server Bapenda'
+        message: 'Gagal menghubungkan ke server Bapenda. Pastikan koneksi internet Anda stabil.'
       });
     } finally {
       setUpdating(false);
@@ -96,17 +163,36 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
   };
 
   const handleGoToPortal = async () => {
-    setShowUnpaidModal(false);
-    const portalUrl = `https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=${encodeURIComponent(taxpayer.nop)}`;
+    setSyncModal({ ...syncModal, visible: false });
     try {
-      const { Linking, Alert } = require('react-native');
-      const supported = await Linking.canOpenURL(portalUrl);
-      if (supported) {
-        await Linking.openURL(portalUrl);
-      } else {
-        Alert.alert('Error', 'Gagal membuka halaman pembayaran.');
+      const cleanNop = taxpayer.nop.replace(/\D/g, '');
+      const isPayment = bapendaConfig?.enableBapendaPayment;
+      const configUrl = isPayment ? bapendaConfig?.bapendaPaymentUrl : bapendaConfig?.bapendaUrl;
+      
+      if (!configUrl) {
+        Alert.alert('Error', 'Konfigurasi portal Bapenda tidak ditemukan.');
+        return;
       }
-    } catch (e) {}
+      
+      let targetUrl = configUrl;
+      const baseUrl = configUrl.split("?")[0];
+      if (!isPayment && bapendaConfig?.isJombangBapenda && cleanNop.length === 18) {
+        const k0 = cleanNop.substring(0, 2);
+        const k1 = cleanNop.substring(2, 4);
+        const k2 = cleanNop.substring(4, 7);
+        const k3 = cleanNop.substring(7, 10);
+        const k4 = cleanNop.substring(10, 13);
+        const k5 = cleanNop.substring(13, 17);
+        const k6 = cleanNop.substring(17, 18);
+        targetUrl = `${baseUrl}?module=pbb&kata=${k0}&kata1=${k1}&kata2=${k2}&kata3=${k3}&kata4=${k4}&kata5=${k5}&kata6=${k6}&viewpbb=`;
+      } else {
+        targetUrl = configUrl.replace(/\{nop\}/gi, cleanNop);
+      }
+      
+      await Linking.openURL(targetUrl);
+    } catch (e) {
+      Alert.alert('Error', 'Gagal membuka halaman Bapenda.');
+    }
   };
 
   const InfoRow = ({ label, value, icon, color = "#64748b" }: { label: string, value: string, icon: any, color?: string }) => (
@@ -123,21 +209,23 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
 
   return (
     <View className="flex-1 bg-slate-50">
+      {/* Sticky Header Bar */}
+      <View className="absolute top-0 left-0 right-0 pt-16 pb-4 px-6 z-50 flex-row items-center justify-between bg-slate-900 shadow-md">
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()}
+          className="w-11 h-11 bg-white/10 rounded-2xl items-center justify-center border border-white/10"
+        >
+          <Ionicons name="arrow-back" size={20} color="white" />
+        </TouchableOpacity>
+        <View className="bg-white/10 px-4 py-2 rounded-full border border-white/10">
+          <Text className="text-white text-[10px] font-black uppercase tracking-widest">Detail Wajib Pajak</Text>
+        </View>
+        <View className="w-11" />
+      </View>
+
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 220 }}>
         {/* Header Section */}
-        <View className="bg-slate-900 pt-16 pb-20 px-6 rounded-b-[40px] shadow-lg relative">
-          <View className="flex-row items-center justify-between mb-8">
-            <TouchableOpacity 
-              onPress={() => navigation.goBack()}
-              className="w-11 h-11 bg-white/10 rounded-2xl items-center justify-center border border-white/10"
-            >
-              <Ionicons name="arrow-back" size={20} color="white" />
-            </TouchableOpacity>
-            <View className="bg-white/10 px-4 py-2 rounded-full border border-white/10">
-              <Text className="text-white text-[10px] font-black uppercase tracking-widest">Detail Wajib Pajak</Text>
-            </View>
-            <View className="w-11" />
-          </View>
+        <View className="bg-slate-900 pt-36 pb-20 px-6 rounded-b-[40px] shadow-lg relative">
 
           <View className="items-center">
             <View className={`px-4 py-1 rounded-full mb-3 border ${
@@ -223,18 +311,22 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
             <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
           </TouchableOpacity>
 
-          {!isLunas && (
+          {!isLunas && bapendaConfig?.enableBapendaSync && bapendaConfig?.isJombangBapenda && (
             <TouchableOpacity 
               activeOpacity={0.8}
               onPress={handlePaymentCheck}
-              className="bg-emerald-600 mt-4 p-6 rounded-[32px] flex-row items-center shadow-lg shadow-emerald-600/30"
+              className={`${bapendaConfig.enableBapendaPayment ? 'bg-emerald-600 shadow-emerald-600/30' : 'bg-slate-700 shadow-slate-700/30'} mt-4 p-6 rounded-[32px] flex-row items-center shadow-lg`}
             >
               <View className="w-12 h-12 bg-white/20 rounded-2xl items-center justify-center">
-                <Ionicons name="cash-outline" size={24} color="white" />
+                <Ionicons name={bapendaConfig.enableBapendaPayment ? "cash-outline" : "information-circle-outline"} size={24} color="white" />
               </View>
               <View className="flex-1 ml-4">
-                <Text className="text-white font-black text-base tracking-tight">Bayar Online</Text>
-                <Text className="text-emerald-100 text-[10px] font-black uppercase tracking-widest mt-0.5">Proses pelunasan via portal</Text>
+                <Text className="text-white font-black text-base tracking-tight">
+                   {bapendaConfig.enableBapendaPayment ? 'Bayar Online Sekarang' : 'Cek Status Bapenda'}
+                </Text>
+                <Text className="text-white/60 text-[10px] font-black uppercase tracking-widest mt-0.5">
+                   {bapendaConfig.enableBapendaPayment ? 'E-Pay Bapenda Jombang' : 'Sinkronisasi Data Pusat'}
+                </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="white" />
             </TouchableOpacity>
@@ -292,31 +384,64 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
         </View>
       )}
 
-      {/* Unpaid Portal Modal */}
+      {/* Premium Unified Sync Result Modal */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
-        visible={showUnpaidModal}
-        onRequestClose={() => setShowUnpaidModal(false)}
+        visible={syncModal.visible}
+        onRequestClose={() => setSyncModal({ ...syncModal, visible: false })}
       >
-        <View className="flex-1 bg-slate-900/60 justify-center items-center p-6">
-           <View className="bg-white w-full rounded-[40px] p-8 items-center shadow-2xl">
-              <View className="w-16 h-16 bg-rose-50 rounded-3xl items-center justify-center mb-4">
-                 <Ionicons name="card" size={32} color="#f43f5e" />
-              </View>
-              <Text className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tighter">Belum Terbayar</Text>
-              <Text className="text-center text-slate-500 text-xs font-bold leading-relaxed mb-8">
-                 Tagihan atas nama <Text className="text-emerald-600">{taxpayer.namaWp}</Text> masih tercatat <Text className="text-rose-600">BELUM LUNAS</Text> di server pusat.
-              </Text>
+        <View className="flex-1 bg-slate-900/60 justify-center items-center p-8">
+           <View className="bg-white w-full rounded-[40px] p-8 items-center shadow-2xl relative">
               <TouchableOpacity 
-                 className="w-full bg-emerald-700 py-5 rounded-[22px] items-center mb-3 shadow-lg shadow-emerald-700/20"
-                 onPress={handleGoToPortal}
+                onPress={() => setSyncModal({ ...syncModal, visible: false })}
+                className="absolute top-6 right-6 w-8 h-8 items-center justify-center bg-slate-50 rounded-full z-10"
               >
-                 <Text className="text-white font-black text-xs uppercase tracking-[2px]">Lanjut ke EPAY JOMBANG</Text>
+                <Text className="text-slate-400 font-bold">×</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setShowUnpaidModal(false)} className="py-2">
-                <Text className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Tutup</Text>
-              </TouchableOpacity>
+              <View className="mb-6 items-center">
+                <View className={`w-20 h-20 items-center justify-center rounded-full mb-4 ${syncModal.type === 'success' ? 'bg-emerald-100' : (syncModal.type === 'unpaid' ? 'bg-rose-100' : 'bg-emerald-500/10')}`}>
+                  <Ionicons 
+                    name={syncModal.type === 'success' ? "checkmark-circle" : (syncModal.type === 'unpaid' ? "wallet-outline" : "alert-circle")} 
+                    size={48} 
+                    color={syncModal.type === 'success' ? "#10b981" : (syncModal.type === 'unpaid' ? "#e11d48" : "#10b981")} 
+                  />
+                </View>
+                <Text className="text-slate-900 font-black text-2xl uppercase tracking-tighter text-center">
+                  {syncModal.type === 'success' ? 'Pembayaran Lunas' : (syncModal.type === 'unpaid' ? 'Tagihan Belum Lunas' : 'Gangguan Sistem')}
+                </Text>
+                <Text className="text-slate-500 text-center mt-3 leading-relaxed px-4">
+                  {syncModal.type === 'unpaid' 
+                    ? `Sistem telah mengecek ke Bapenda. Tagihan atas nama ${taxpayer.namaWp} masih tercatat BELUM LUNAS.`
+                    : syncModal.message}
+                </Text>
+              </View>
+
+              <View className="w-full space-y-3">
+                 {syncModal.type === 'unpaid' && (
+                  <TouchableOpacity 
+                     className="w-full h-14 bg-emerald-600 rounded-2xl items-center justify-center shadow-lg shadow-emerald-600/20 flex-row"
+                     onPress={handleGoToPortal}
+                  >
+                     <Ionicons 
+                       name={bapendaConfig?.enableBapendaPayment ? "card-outline" : "globe-outline"} 
+                       size={20} 
+                       color="white" 
+                       style={{ marginRight: 8 }} 
+                     />
+                     <Text className="text-white font-black text-xs uppercase tracking-widest">
+                        {bapendaConfig?.enableBapendaPayment ? 'Lanjut Bayar Bapenda' : 'Cek Website Bapenda'}
+                     </Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity 
+                   onPress={() => setSyncModal({ ...syncModal, visible: false })} 
+                   className="w-full h-14 bg-slate-100 rounded-2xl items-center justify-center"
+                >
+                  <Text className="text-slate-500 font-black text-xs uppercase tracking-widest">Tutup</Text>
+                </TouchableOpacity>
+              </View>
            </View>
         </View>
       </Modal>

@@ -210,6 +210,58 @@
       color: #94a3b8;
       pointer-events: none;
     }
+
+    /* Premium Sync Modal Styles */
+    #sync-modal-overlay {
+      position: fixed; inset: 0; z-index: 3000;
+      background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center; padding: 24px;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    #sync-modal-overlay.visible { display: flex; opacity: 1; }
+    
+    #sync-modal {
+      background: white; width: 100%; max-width: 400px;
+      border-radius: 40px; padding: 32px;
+      transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex; flex-direction: column; align-items: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    #sync-modal-overlay.visible #sync-modal { transform: scale(1); }
+
+    .sm-icon-container {
+      width: 80px; height: 80px; border-radius: 28px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 24px; font-size: 32px;
+    }
+    .sm-icon-success { background: #ecfdf5; color: #10b981; }
+    .sm-icon-unpaid { background: #fff1f2; color: #f43f5e; }
+    .sm-icon-error { background: #fffbeb; color: #f59e0b; }
+
+    .sm-title { font-size: 20px; font-weight: 900; color: #0f172a; margin-bottom: 4px; text-transform: uppercase; letter-spacing: -0.5px; }
+    .sm-subtitle { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 24px; }
+    
+    .sm-box {
+      width: 100%; background: #f8fafc; border: 1px solid #f1f5f9;
+      border-radius: 24px; padding: 24px; margin-bottom: 32px;
+    }
+    .sm-message { font-size: 13px; color: #475569; text-align: center; font-weight: 600; line-height: 1.6; }
+    .sm-divider { height: 1px; background: rgba(226, 232, 240, 0.6); margin: 16px 0; }
+    .sm-wp-info { text-align: center; }
+    .sm-wp-label { font-size: 9px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .sm-wp-name { font-size: 14px; font-weight: 900; color: #0f172a; text-transform: uppercase; }
+    .sm-wp-nop { font-size: 11px; font-family: monospace; color: #64748b; font-weight: 600; margin-top: 2px; }
+
+    .sm-actions { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+    .sm-btn {
+      width: 100%; padding: 18px; border-radius: 22px; font-size: 11px;
+      font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px;
+      cursor: pointer; text-align: center; border: none; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sm-btn-primary { background: #065f46; color: white; box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.2); }
+    .sm-btn-secondary { background: #f1f5f9; color: #64748b; }
+    .sm-btn:active { transform: translateY(2px); }
   </style>
 </head>
 <body>
@@ -253,6 +305,32 @@
       </div>
     </div>
     <div class="wp-list" id="wp-list"></div>
+  </div>
+
+  <!-- Premium Sync Result Modal (App Style) -->
+  <div id="sync-modal-overlay">
+    <div id="sync-modal">
+       <div id="sm-icon-box" class="sm-icon-container"></div>
+       <div id="sm-title" class="sm-title"></div>
+       <div class="sm-subtitle" id="sm-subtitle">Status Bapenda</div>
+       
+       <div class="sm-box">
+          <div id="sm-message" class="sm-message"></div>
+          <div id="sm-wp-section">
+             <div class="sm-divider"></div>
+             <div class="sm-wp-info">
+                <div class="sm-wp-label">Informasi Objek</div>
+                <div id="sm-wp-name" class="sm-wp-name"></div>
+                <div id="sm-wp-nop" class="sm-wp-nop"></div>
+             </div>
+          </div>
+       </div>
+
+       <div class="sm-actions">
+          <button id="sm-btn-pay" class="sm-btn sm-btn-primary">Lanjut ke Portal <span style="margin-left:8px">→</span></button>
+          <button onclick="closeSyncModal()" class="sm-btn sm-btn-secondary">Tutup</button>
+       </div>
+    </div>
   </div>
 
   <script>
@@ -355,7 +433,7 @@
         if (wpPanelParams.dusun) params.set('dusun', wpPanelParams.dusun);
         if (wpPanelSearch) params.set('search', wpPanelSearch);
 
-        var res = await fetch('/api/region-unpaid?' + params.toString());
+        var res = await fetch('/api/region-unpaid?' + params.toString() + '&_t=' + Date.now());
         var json = await res.json();
 
         wpPanelPage = page;
@@ -364,6 +442,10 @@
         document.getElementById('wp-panel-subtitle').textContent = 
           json.totalCount + ' Wajib Pajak belum lunas (Tahun ' + currentTahun + ')';
         document.getElementById('wp-panel-piutang').textContent = formatRupiah(json.totalPiutang);
+
+        // Store config globally for later use
+        if (json.villageConfig) window.currentBapendaConfig = json.villageConfig;
+        var bapendaConfig = window.currentBapendaConfig || {};
 
         var listEl = document.getElementById('wp-list');
 
@@ -382,8 +464,22 @@
 
         json.data.forEach(function(wp) {
           var cleanNop = (wp.nop || '').replace(/\D/g, '');
-          var payUrl = 'https://bapenda.jombangkab.go.id/epay/epaypbb.php?orc=dataGIS&nopGIS=' + cleanNop;
           var cardId = 'wp-card-' + wp.id;
+          var actionsHtml = '';
+          var isPaymentEnabled = !!bapendaConfig.enableBapendaPayment;
+          var isSyncEnabled = !!bapendaConfig.enableBapendaSync;
+          var isJombang = !!bapendaConfig.isJombangBapenda;
+          var hasPaymentUrl = !!bapendaConfig.bapendaPaymentUrl;
+          var hasInfoUrl = !!bapendaConfig.bapendaUrl;
+          
+          if (isJombang && isPaymentEnabled && hasPaymentUrl) {
+            actionsHtml = '<button class="wp-btn-pay wp-btn-check" data-nop="' + escapeHtml(wp.nop) + '" data-name="' + escapeHtml(wp.namaWp) + '" data-id="' + wp.id + '" data-ketetapan="' + wp.ketetapan + '">🔍 Cek & Bayar Online</button>';
+          } else if (isJombang && isSyncEnabled && hasInfoUrl) {
+            actionsHtml = '<button class="wp-btn-pay wp-btn-check" style="background:#334155" data-nop="' + escapeHtml(wp.nop) + '" data-name="' + escapeHtml(wp.namaWp) + '" data-id="' + wp.id + '" data-ketetapan="' + wp.ketetapan + '">🔍 Sinkron Bapenda</button>';
+          } else {
+            actionsHtml = ''; // Sembunyikan jika tidak ada fitur online aktif atau sistem jombang off
+          }
+
           var card = document.createElement('div');
           card.className = 'wp-card';
           card.id = cardId;
@@ -392,9 +488,7 @@
             '<div class="wp-nop">' + escapeHtml(wp.nop) + '</div>' +
             '<div class="wp-region">RT ' + (wp.rt || '-') + ' / RW ' + (wp.rw || '-') + '</div>' +
             '<div class="wp-amount">' + formatRupiah(wp.ketetapan) + '</div>' +
-            '<div class="wp-actions">' +
-              '<button class="wp-btn-pay wp-btn-check" data-nop="' + escapeHtml(wp.nop) + '" data-name="' + escapeHtml(wp.namaWp) + '" data-id="' + wp.id + '" data-pay-url="' + payUrl + '" data-ketetapan="' + wp.ketetapan + '">🔍 Cek & Bayar Online</button>' +
-            '</div>';
+            '<div class="wp-actions">' + actionsHtml + '</div>';
           listEl.appendChild(card);
         });
 
@@ -420,14 +514,102 @@
       return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // ========== Check & Pay ==========
+    // ========== Check & Pay & Premium Modal ==========
     var checkCooldowns = {};
+
+    function showSyncModal(type, title, message, wp, payUrl) {
+      var overlay = document.getElementById('sync-modal-overlay');
+      var iconBox = document.getElementById('sm-icon-box');
+      var titleEl = document.getElementById('sm-title');
+      var messageEl = document.getElementById('sm-message');
+      var wpNameEl = document.getElementById('sm-wp-name');
+      var wpNopEl = document.getElementById('sm-wp-nop');
+      var btnPay = document.getElementById('sm-btn-pay');
+      var wpSection = document.getElementById('sm-wp-section');
+
+      // Set Icon & Theme
+      iconBox.className = 'sm-icon-container ' + (type === 'success' ? 'sm-icon-success' : (type === 'unpaid' ? 'sm-icon-unpaid' : 'sm-icon-error'));
+      iconBox.innerHTML = type === 'success' ? '✅' : (type === 'unpaid' ? '💳' : '⚠️');
+      
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+
+      if (wp) {
+        wpSection.style.display = 'block';
+        wpNameEl.textContent = wp.namaWp;
+        wpNopEl.textContent = wp.nop;
+      } else {
+        wpSection.style.display = 'none';
+      }
+
+      var isPaymentEnabled = (window.currentBapendaConfig && window.currentBapendaConfig.enableBapendaPayment);
+      var isSyncEnabled = (window.currentBapendaConfig && window.currentBapendaConfig.enableBapendaSync);
+      var isJombang = (window.currentBapendaConfig && window.currentBapendaConfig.isJombangBapenda);
+      var bapendaName = (window.currentBapendaConfig && window.currentBapendaConfig.bapendaRegionName) || "EPAY";
+      
+      var configUrl = null;
+      var showAdditionalButton = false;
+      
+      // Master Guard: Only show if Jombang system is enabled
+      if (isJombang) {
+        if (isPaymentEnabled && window.currentBapendaConfig.bapendaPaymentUrl) {
+          configUrl = window.currentBapendaConfig.bapendaPaymentUrl;
+          showAdditionalButton = true;
+        } else if (isSyncEnabled && window.currentBapendaConfig.bapendaUrl) {
+          configUrl = window.currentBapendaConfig.bapendaUrl;
+          showAdditionalButton = true;
+        }
+      }
+
+      if (showAdditionalButton && configUrl) {
+        btnPay.style.display = 'flex';
+        
+        if (isPaymentEnabled) {
+          btnPay.className = 'sm-btn sm-btn-primary';
+          btnPay.innerHTML = 'Lanjut ke ' + bapendaName + ' <span style="margin-left:8px">→</span>';
+        } else {
+          btnPay.className = 'sm-btn sm-btn-secondary';
+          btnPay.style.background = '#334155'; // Dark Slate
+          btnPay.style.color = '#fff';
+          btnPay.innerHTML = 'Cek Website Bapenda <span style="margin-left:8px">→</span>';
+        }
+
+        btnPay.onclick = function() {
+          var cleanNop = wp.nop.replace(/\D/g, '');
+          var targetUrl = configUrl;
+          
+          if (!isPaymentEnabled && (window.currentBapendaConfig && window.currentBapendaConfig.isJombangBapenda) && cleanNop.length === 18) {
+            var k0 = cleanNop.substring(0, 2);
+            var k1 = cleanNop.substring(2, 4);
+            var k2 = cleanNop.substring(4, 7);
+            var k3 = cleanNop.substring(7, 10);
+            var k4 = cleanNop.substring(10, 13);
+            var k5 = cleanNop.substring(13, 17);
+            var k6 = cleanNop.substring(17, 18);
+            var baseUrl = configUrl.split("?")[0];
+            targetUrl = baseUrl + "?module=pbb&kata=" + k0 + "&kata1=" + k1 + "&kata2=" + k2 + "&kata3=" + k3 + "&kata4=" + k4 + "&kata5=" + k5 + "&kata6=" + k6 + "&viewpbb=";
+          } else {
+            targetUrl = configUrl.replace(/\{nop\}/gi, cleanNop);
+          }
+          
+          window.open(targetUrl, '_blank');
+          closeSyncModal();
+        };
+      } else {
+        btnPay.style.display = 'none';
+      }
+
+      overlay.classList.add('visible');
+    }
+
+    function closeSyncModal() {
+      document.getElementById('sync-modal-overlay').classList.remove('visible');
+    }
 
     async function checkAndPay(btn) {
       var nop = btn.getAttribute('data-nop');
       var name = btn.getAttribute('data-name');
       var wpId = btn.getAttribute('data-id');
-      var payUrl = btn.getAttribute('data-pay-url');
       var ketetapan = parseInt(btn.getAttribute('data-ketetapan') || '0');
 
       // Cooldown check (15s)
@@ -450,7 +632,7 @@
         var res = await fetch('/api/check-bapenda', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nop: nop, tahun: currentTahun })
+          body: JSON.stringify({ nop: nop, tahun: currentTahun, _t: Date.now() })
         });
         var data = await res.json();
 
@@ -459,8 +641,9 @@
         }
 
         if (data.isPaid) {
-          // Already paid! Show success and remove card
-          showToast('✅ ' + name + ' sudah LUNAS!', '#10b981');
+          // Already paid! Show Modal
+          showSyncModal('success', 'Pembayaran Lunas', 'Pembayaran terdeteksi lunas di server pusat!', { namaWp: name, nop: nop }, null);
+          
           var cardEl = document.getElementById('wp-card-' + wpId);
           if (cardEl) {
             cardEl.style.transition = 'all 0.4s';
@@ -470,27 +653,20 @@
           }
           // Update counters
           var subtitleEl = document.getElementById('wp-panel-subtitle');
-          var piutangEl = document.getElementById('wp-panel-piutang');
           var currentCount = parseInt(subtitleEl.textContent) || 0;
           if (currentCount > 0) {
             subtitleEl.textContent = (currentCount - 1) + ' Wajib Pajak belum lunas (Tahun ' + currentTahun + ')';
           }
         } else {
-          // Not paid - redirect to EPAY
-          showToast('⚠️ Belum lunas. Membuka halaman pembayaran...', '#f59e0b');
-          setTimeout(function() {
-            window.open(payUrl, '_blank');
-          }, 800);
-
-          // Restore button
-          btn.disabled = false;
-          btn.innerHTML = origText;
-          btn.style.opacity = '1';
+          // Not paid - show Modal
+          showSyncModal('unpaid', 'Belum Terbayar', 'Tagihan masih tercatat BELUM LUNAS di server pusat.', { namaWp: name, nop: nop });
         }
 
       } catch (err) {
         console.error('Check Bapenda error:', err);
-        showToast('❌ ' + err.message, '#ef4444');
+        showSyncModal('error', 'Gangguan Sistem', 'Gagal menghubungkan ke server Bapenda. Pastikan koneksi internet Anda stabil.', null, null);
+      } finally {
+        // Restore button
         btn.disabled = false;
         btn.innerHTML = origText;
         btn.style.opacity = '1';
@@ -535,10 +711,11 @@
       try {
         // Step 1: Load village config
         setStatus('Memuat Konfigurasi...');
-        var configRes = await fetch('/api/village-config');
+        var configRes = await fetch('/api/village-config?_t=' + Date.now());
         var config = {};
         if (configRes.ok) {
           config = await configRes.json();
+          window.currentBapendaConfig = config;
           if (config.tahunPajak) currentTahun = config.tahunPajak;
         }
         var centerLat = config.mapCenterLat || -7.5744;

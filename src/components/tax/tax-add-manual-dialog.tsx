@@ -37,7 +37,8 @@ export function TaxAddManualDialog({
   const [rw, setRw] = useState<string>("");
   const [rt, setRt] = useState<string>("");
 
-  const [checkingBapenda, setCheckingBapenda] = useState(false);
+  const [enableBapendaSync, setEnableBapendaSync] = useState(false);
+  const [bapendaRegionName, setBapendaRegionName] = useState("Bapenda");
 
   const resetForm = () => {
     setNop("");
@@ -54,7 +55,17 @@ export function TaxAddManualDialog({
   };
 
   const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) resetForm();
+    if (!newOpen) {
+      resetForm();
+    } else {
+      // Fetch config when opening
+      import("@/app/actions/settings-actions").then(({ getVillageConfig }) => {
+        getVillageConfig().then(config => {
+          setEnableBapendaSync(!!config.enableBapendaSync);
+          setBapendaRegionName(config.bapendaRegionName || "Bapenda");
+        });
+      });
+    }
     setOpen(newOpen);
   };
 
@@ -145,15 +156,17 @@ export function TaxAddManualDialog({
                   maxLength={30}
                   required
                 />
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  title="Sinkronisasi Bapenda Jombang"
-                  disabled={checkingBapenda || !nop}
-                  onClick={handleCheckBapenda}
-                >
-                  {checkingBapenda ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                </Button>
+                {enableBapendaSync && (
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    title={`Sinkronisasi ${bapendaRegionName}`}
+                    disabled={checkingBapenda || !nop}
+                    onClick={handleCheckBapenda}
+                  >
+                    {checkingBapenda ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  </Button>
+                )}
               </div>
             </div>
             <div className="space-y-2">

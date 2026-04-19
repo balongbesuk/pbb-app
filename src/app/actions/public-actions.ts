@@ -20,8 +20,11 @@ const PUBLIC_SEARCH_RATE_LIMIT = {
 type PublicVillageConfig = {
   jatuhTempo: string | null;
   bapendaUrl: string | null;
+  bapendaPaymentUrl: string | null;
+  bapendaRegionName: string | null;
   isJombangBapenda: boolean | null;
   enableBapendaSync: boolean | null;
+  enableBapendaPayment: boolean | null;
   enableDigitalArchive: boolean | null;
   archiveOnlyLunas: boolean | null;
   alamatKantor: string | null;
@@ -114,6 +117,9 @@ export async function searchPublicTaxData(query: string, tahunPajak: number, pag
       select: {
         jatuhTempo: true,
         bapendaUrl: true,
+        bapendaPaymentUrl: true,
+        enableBapendaPayment: true,
+        bapendaRegionName: true,
         isJombangBapenda: true,
         enableBapendaSync: true,
         enableDigitalArchive: true,
@@ -184,8 +190,11 @@ export async function searchPublicTaxData(query: string, tahunPajak: number, pag
       hasMore,
       jatuhTempo: jatuhTempoStr,
       bapendaUrl,
+      bapendaPaymentUrl: config?.bapendaPaymentUrl || null,
+      enableBapendaPayment: config?.enableBapendaPayment ?? true,
+      bapendaRegionName: config?.bapendaRegionName || "Bapenda",
       isJombangBapenda,
-      enableBapendaSync: config?.enableBapendaSync ?? true,
+      enableBapendaSync: config?.enableBapendaSync ?? false,
       alamatKantor: config?.alamatKantor || "",
       email: config?.email || "",
       kodePos: config?.kodePos || "",

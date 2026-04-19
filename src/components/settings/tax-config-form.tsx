@@ -16,6 +16,9 @@ export function TaxConfigForm() {
   const [tahun, setTahun] = useState(2026);
   const [jatuhTempo, setJatuhTempo] = useState("31 Agustus");
   const [bapendaUrl, setBapendaUrl] = useState("");
+  const [bapendaPaymentUrl, setBapendaPaymentUrl] = useState("");
+  const [enableBapendaPayment, setEnableBapendaPayment] = useState(true);
+  const [bapendaRegionName, setBapendaRegionName] = useState("Bapenda");
   const [isJombangBapenda, setIsJombangBapenda] = useState(false);
   const [enableBapendaSync, setEnableBapendaSync] = useState(false);
   const [showNominal, setShowNominal] = useState(false);
@@ -33,6 +36,9 @@ export function TaxConfigForm() {
       setTahun(data.tahunPajak);
       setJatuhTempo(data.jatuhTempo || "31 Agustus");
       setBapendaUrl(data.bapendaUrl || "");
+      setBapendaPaymentUrl(data.bapendaPaymentUrl || "");
+      setEnableBapendaPayment(data.enableBapendaPayment ?? true);
+      setBapendaRegionName(data.bapendaRegionName || "Bapenda");
       setIsJombangBapenda(data.isJombangBapenda ?? false);
       setEnableBapendaSync(data.enableBapendaSync ?? false);
       setShowNominal(!!data.showNominalPajak);
@@ -58,6 +64,9 @@ export function TaxConfigForm() {
       tahunPajak: tahun,
       jatuhTempo: jatuhTempo,
       bapendaUrl: bapendaUrl,
+      bapendaPaymentUrl: bapendaPaymentUrl,
+      enableBapendaPayment: enableBapendaPayment,
+      bapendaRegionName: bapendaRegionName,
       isJombangBapenda: isJombangBapenda,
       enableBapendaSync: enableBapendaSync,
       showNominalPajak: !!showNominal,
@@ -137,8 +146,22 @@ export function TaxConfigForm() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="bapenda-region">Nama Daerah Bapenda</Label>
+              <Input
+                id="bapenda-region"
+                placeholder="Misal: Jombang, Surabaya, dsb"
+                value={bapendaRegionName}
+                onChange={(e) => setBapendaRegionName(e.target.value)}
+                className="bg-white/50 dark:bg-[#111827]/50"
+              />
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                Digunakan untuk label teks pada popup info pajak.
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="bapenda-url">URL Website Bapenda</Label>
+                <Label htmlFor="bapenda-url">URL Website Cek NOP</Label>
                 {isJombangBapenda && (
                   <Button 
                     type="button" 
@@ -162,7 +185,36 @@ export function TaxConfigForm() {
               <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
                 {isJombangBapenda 
                   ? "Sistem akan otomatis membedah NOP untuk website Jombang." 
-                  : "Link akan dibuka langsung tanpa auto-fill NOP (atau manual)."}
+                  : "Halaman eksternal untuk pengecekan manual."}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-primary/10 pt-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="enable-payment">Aktifkan Fitur Pembayaran Online (EPAY)</Label>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest leading-relaxed">
+                  Munculkan tombol bayar di popup info pajak dan peta GIS.
+                </p>
+              </div>
+              <Checkbox 
+                id="enable-payment" 
+                checked={enableBapendaPayment} 
+                onCheckedChange={(checked) => setEnableBapendaPayment(!!checked)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="payment-url">URL Direct Pembayaran Online (EPAY)</Label>
+              <Input
+                id="payment-url"
+                type="url"
+                placeholder="https://bapenda.go.id/pay?nop={nop}"
+                value={bapendaPaymentUrl}
+                onChange={(e) => setBapendaPaymentUrl(e.target.value)}
+                className="bg-white/50 dark:bg-[#111827]/50"
+              />
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest leading-relaxed">
+                Gunakan tag <span className="text-primary font-black">{`{nop}`}</span> untuk memasukkan NOP secara otomatis ke dalam URL pembayaran daerah Anda.
               </p>
             </div>
           </div>

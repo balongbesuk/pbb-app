@@ -11,6 +11,7 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dashboardData, setDashboardData] = useState<any>(null);
+  const [bapendaConfig, setBapendaConfig] = useState<any>(null);
   
   const firstName = user?.name?.trim()?.split(/\s+/)[0] || 'Petugas';
   const currentYear = dashboardData?.tahunPajak || new Date().getFullYear();
@@ -26,6 +27,9 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
       const data = await res.json();
       if (data.success) {
         setDashboardData(data);
+        if (data.villageConfig) {
+          setBapendaConfig(data.villageConfig);
+        }
       }
     } catch (err) {
       console.error('Fetch Dashboard Error:', err);
@@ -47,6 +51,7 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
     setLogoutModalVisible(false);
     try {
       await AsyncStorage.removeItem('@admin_magic_token');
+      await AsyncStorage.removeItem('@auth_user');
       navigation.replace('Dashboard', { 
         serverUrl, 
         villageName,
@@ -191,7 +196,7 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
               <TouchableOpacity 
                 activeOpacity={0.7}
                 className="w-full bg-white p-4 rounded-[24px] flex-row items-center border border-slate-100 shadow-sm mt-3"
-                onPress={() => navigation.navigate('TaxpayerList', { serverUrl, user, tahun: currentYear, villageName })}
+                onPress={() => navigation.navigate('TaxpayerList', { serverUrl, user, tahun: currentYear, villageName, bapendaConfig })}
               >
                  <View className="w-14 h-14 bg-indigo-50 rounded-2xl items-center justify-center border border-indigo-100/50 mr-4">
                    <Ionicons name="people-outline" size={26} color="#4f46e5" />

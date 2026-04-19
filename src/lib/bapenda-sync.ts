@@ -105,10 +105,20 @@ export async function syncBapendaStatus({
     };
   }
 
+  // Bangun format NOP bertitik (karena di DB Jombang tersimpan "35.17.040.019.006-0093.0")
+  const dp1 = cleanNop.substring(0, 2);
+  const dp2 = cleanNop.substring(2, 4);
+  const dp3 = cleanNop.substring(4, 7);
+  const dp4 = cleanNop.substring(7, 10);
+  const dp5 = cleanNop.substring(10, 13);
+  const dp6 = cleanNop.substring(13, 17);
+  const dp7 = cleanNop.substring(17, 18);
+  const dottedNop = `${dp1}.${dp2}.${dp3}.${dp4}.${dp5}-${dp6}.${dp7}`;
+
   const taxRecords = await prisma.taxData.findMany({
     where: {
       tahun,
-      OR: [{ nop }, { nop: cleanNop }],
+      OR: [{ nop }, { nop: cleanNop }, { nop: dottedNop }],
     },
     select: {
       id: true,
@@ -173,12 +183,13 @@ export async function syncBapendaStatus({
     if (tds.length >= 10) {
       const yearStr = $(tds[0]).text().trim();
       if (yearStr === tahun.toString()) {
-        const tagihanTotal = $(tds[4]).text().trim().replace(/,/g, "");
+        const tagihanTotal = $(tds[4]).text().trim().replace(/\./g, "").replace(/,/g, ".");
         const tglBayar = $(tds[9]).text().trim();
 
+        const numTagihanTotal = parseFloat(tagihanTotal) || 0;
+
         if (
-          tagihanTotal === "0" ||
-          tagihanTotal === "0.00" ||
+          numTagihanTotal <= 0 ||
           (tglBayar && tglBayar.length >= 8 && tglBayar !== "-")
         ) {
           isLunas = true;
