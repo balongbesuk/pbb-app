@@ -61,45 +61,49 @@
     /* Legend */
     .legend {
       position: fixed; top: 16px; right: 16px; z-index: 1000;
-      background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
-      border-radius: 16px; padding: 14px 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      background: rgba(255,255,255,0.85); backdrop-filter: blur(20px);
+      border-radius: 20px; padding: 14px 18px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.4);
       font-size: 10px;
     }
     .legend-title {
-      font-weight: 900; color: #64748b;
-      text-transform: uppercase; letter-spacing: 1px;
-      margin-bottom: 8px; font-size: 9px;
+      font-weight: 900; color: #1e293b;
+      text-transform: uppercase; letter-spacing: 1.2px;
+      margin-bottom: 8px; font-size: 8.5px;
     }
-    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-    .legend-color { width: 18px; height: 4px; border-radius: 4px; }
-    .legend-label { font-weight: 600; color: #475569; }
+    .legend-item { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .legend-color { width: 22px; height: 5px; border-radius: 10px; }
+    .legend-label { font-weight: 700; color: #475569; }
 
     /* Popup styling */
     .leaflet-popup-content-wrapper {
-      border-radius: 16px !important;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.15) !important;
-      border: 1px solid rgba(0,0,0,0.06) !important;
+      border-radius: 24px !important;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.15) !important;
+      border: 1px solid rgba(255,255,255,0.5) !important;
+      backdrop-filter: blur(15px);
+      background: rgba(255,255,255,0.95) !important;
     }
-    .leaflet-popup-tip { background: white !important; }
-    .popup-title { font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
-    .popup-stat { background: #f8fafc; border-radius: 10px; padding: 10px; border: 1px solid #f1f5f9; }
-    .popup-pct { font-size: 22px; font-weight: 900; color: #0f172a; }
-    .popup-bar { width: 100%; height: 5px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin: 6px 0; }
+    .leaflet-popup-tip { background: rgba(255,255,255,0.95) !important; }
+    .popup-title { font-size: 14px; font-weight: 900; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.3px; }
+    .popup-stat { background: #f1f5f9; border-radius: 16px; padding: 14px; border: 1px solid #e2e8f0; }
+    .popup-pct { font-size: 26px; font-weight: 900; color: #10b981; letter-spacing: -1px; }
+    .popup-bar { width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin: 8px 0; }
     .popup-bar-fill { height: 100%; border-radius: 10px; }
-    .popup-detail { display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #64748b; }
+    .popup-detail { display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
     .detail-wp-btn {
-      width: 100%; margin-top: 10px; padding: 9px 12px;
-      background: #0f172a; color: white; border: none; border-radius: 10px;
-      font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
-      cursor: pointer; transition: background 0.2s;
+      width: 100%; margin-top: 12px; padding: 12px;
+      background: #10b981; color: white; border: none; border-radius: 14px;
+      font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+      cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
     }
-    .detail-wp-btn:active { background: #334155; }
+    .detail-wp-btn:active { transform: scale(0.97); background: #059669; }
 
     /* WP Panel (slide-up) */
     #wp-panel-backdrop {
       position: fixed; inset: 0; z-index: 2000;
-      background: rgba(0,0,0,0.5);
+      background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
       display: none; opacity: 0;
       transition: opacity 0.3s;
     }
@@ -107,106 +111,114 @@
 
     #wp-panel {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 2001;
-      background: white; border-radius: 24px 24px 0 0;
-      max-height: 80vh; display: none;
+      background: rgba(255,255,255,0.9); backdrop-filter: blur(25px);
+      border-radius: 36px 36px 0 0;
+      max-height: 85vh; display: none;
       transform: translateY(100%);
-      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
       flex-direction: column;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.08);
+      border: 1px solid rgba(255,255,255,0.5);
     }
     #wp-panel.visible { display: flex; transform: translateY(0); }
 
     .wp-panel-header {
-      padding: 20px 20px 16px; border-bottom: 1px solid #f1f5f9;
-      position: sticky; top: 0; background: white; z-index: 1;
-      border-radius: 24px 24px 0 0;
+      padding: 24px 24px 20px; border-bottom: 1px solid rgba(0,0,0,0.05);
+      position: sticky; top: 0; z-index: 1;
+      border-radius: 36px 36px 0 0;
     }
     .wp-panel-handle {
-      width: 40px; height: 4px; background: #e2e8f0;
-      border-radius: 4px; margin: 0 auto 14px;
+      width: 48px; height: 5px; background: rgba(0,0,0,0.1);
+      border-radius: 10px; margin: 0 auto 18px;
     }
-    .wp-panel-title { font-size: 16px; font-weight: 900; color: #0f172a; margin-bottom: 4px; }
-    .wp-panel-subtitle { font-size: 11px; color: #64748b; font-weight: 600; }
+    .wp-panel-title { font-size: 20px; font-weight: 900; color: #0f172a; margin-bottom: 6px; letter-spacing: -0.5px; }
+    .wp-panel-subtitle { font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .wp-panel-piutang { 
-      font-size: 18px; font-weight: 900; color: #ef4444; 
-      margin-top: 8px; letter-spacing: -0.5px;
+      font-size: 22px; font-weight: 900; color: #ef4444; 
+      margin-top: 10px; letter-spacing: -1px;
     }
     .wp-panel-close {
-      position: absolute; top: 18px; right: 18px;
-      width: 32px; height: 32px; border-radius: 50%;
-      background: #f1f5f9; border: none; cursor: pointer;
-      font-size: 16px; color: #64748b; font-weight: bold;
+      position: absolute; top: 24px; right: 24px;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(0,0,0,0.05); border: none; cursor: pointer;
+      font-size: 14px; color: #475569; font-weight: bold;
       display: flex; align-items: center; justify-content: center;
     }
 
     .wp-list {
-      overflow-y: auto; flex: 1; padding: 12px 16px 40px;
+      overflow-y: auto; flex: 1; padding: 16px 20px 40px;
       -webkit-overflow-scrolling: touch;
     }
     .wp-card {
-      padding: 14px; border: 1px solid #f1f5f9; border-radius: 16px;
-      margin-bottom: 10px; background: white;
+      padding: 20px; border: 1px solid rgba(0,0,0,0.04); border-radius: 24px;
+      margin-bottom: 14px; background: white;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
     }
-    .wp-name { font-size: 13px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-bottom: 4px; }
-    .wp-nop { font-size: 10px; font-family: monospace; color: #94a3b8; font-weight: 600; margin-bottom: 3px; }
-    .wp-region { font-size: 9px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .wp-amount { font-size: 14px; font-weight: 900; color: #ef4444; margin-top: 6px; letter-spacing: -0.3px; }
-    .wp-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .wp-name { font-size: 14px; font-weight: 900; color: #1e293b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: -0.3px; }
+    .wp-nop { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #64748b; font-weight: 600; margin-bottom: 6px; }
+    .wp-region { 
+      font-size: 9px; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; 
+      background: #f8fafc; padding: 4px 8px; border-radius: 6px; display: inline-block;
+    }
+    .wp-amount { font-size: 18px; font-weight: 900; color: #ef4444; margin-top: 12px; letter-spacing: -0.8px; }
+    .wp-actions { display: flex; gap: 10px; margin-top: 16px; }
     .wp-btn-pay {
-      flex: 1; padding: 10px 12px; border: none; border-radius: 12px;
-      font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
-      cursor: pointer; text-align: center; text-decoration: none; display: block;
-      background: #059669; color: white; transition: background 0.2s;
+      flex: 1; padding: 14px 16px; border: none; border-radius: 16px;
+      font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+      cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center;
+      background: #10b981; color: white; transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15);
     }
-    .wp-btn-pay:active { background: #047857; }
+    .wp-btn-pay:active { transform: scale(0.96); background: #059669; }
     
     .wp-empty {
-      text-align: center; padding: 40px 20px; color: #64748b;
+      text-align: center; padding: 60px 20px; color: #64748b;
     }
-    .wp-empty-icon { font-size: 32px; margin-bottom: 8px; }
-    .wp-empty-text { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .wp-empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .wp-empty-text { font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; }
 
     .wp-loading {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 40px; gap: 12px;
+      padding: 60px; gap: 16px;
     }
-    .wp-loading-text { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+    .wp-loading-text { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; }
     
     .wp-load-more {
-      text-align: center; padding: 12px;
-      color: #3b82f6; font-size: 11px; font-weight: 800;
-      text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
-      border: 1px dashed #bfdbfe; border-radius: 12px; margin-top: 4px;
+      text-align: center; padding: 16px;
+      color: #3b82f6; font-size: 11px; font-weight: 900;
+      text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+      border: 1px dashed #bfdbfe; border-radius: 16px; margin-top: 8px;
     }
     .wp-load-more:active { background: #eff6ff; }
 
     /* New Search Styling */
     .wp-search-container {
-      margin-top: 16px;
+      margin-top: 20px;
       position: relative;
     }
     .wp-search-input {
       width: 100%;
-      background: #f8fafc;
+      background: #f1f5f9;
       border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 12px 16px 12px 40px;
-      font-size: 13px;
-      font-weight: 600;
+      border-radius: 16px;
+      padding: 16px 16px 16px 44px;
+      font-size: 14px;
+      font-weight: 700;
       color: #0f172a;
       outline: none;
       transition: all 0.2s;
     }
     .wp-search-input:focus {
-      border-color: #3b82f6;
+      border-color: #10b981;
       background: white;
-      box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
     }
     .wp-search-icon {
       position: absolute;
-      left: 14px;
+      left: 16px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 14px;
+      font-size: 16px;
       color: #94a3b8;
       pointer-events: none;
     }

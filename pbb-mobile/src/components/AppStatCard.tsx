@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import { appTheme } from '../theme/app-theme';
 
 type AppStatCardProps = {
   label: string;
@@ -14,18 +15,17 @@ export function AppStatCard({ label, value, tone = 'light', compact = false }: A
       <View
         style={{
           flex: 1,
-          backgroundColor: 'rgba(255,255,255,0.12)',
-          borderRadius: compact ? 18 : 20,
-          padding: compact ? 14 : 16,
+          backgroundColor: 'rgba(255,255,255,0.18)',
+          borderRadius: compact ? 16 : 18,
+          padding: compact ? 13 : 15,
           borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.1)',
+          borderColor: 'rgba(255,255,255,0.15)',
         }}
       >
-        <Text style={{ color: 'rgba(255,244,232,0.72)', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 }}>{label}</Text>
-        <Text style={{ color: 'white', fontSize: compact ? 15 : 20, fontWeight: '900', marginTop: 4 }}>{value}</Text>
+        <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, fontWeight: '600', letterSpacing: 0.3 }}>{label}</Text>
+        <Text style={{ color: 'white', fontSize: compact ? 15 : 20, fontWeight: '800', marginTop: 4 }}>{value}</Text>
       </View>
     );
   }
-
   return null;
 }

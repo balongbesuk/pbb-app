@@ -55,7 +55,7 @@ export const ScalableButton: React.FC<ScalableButtonProps> = ({
       onPressOut={handlePressOut}
       disabled={disabled}
       style={[style, animatedStyle]}
-      android_ripple={{ color: 'rgba(255,255,255,0.08)', borderless: false }}
+      android_ripple={{ color: 'rgba(59,91,219,0.08)', borderless: false }}
     >
       {children}
     </AnimatedPressable>

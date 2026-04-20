@@ -11,25 +11,22 @@ type AppEmptyStateProps = {
 
 export function AppEmptyState({ icon, title, description }: AppEmptyStateProps) {
   return (
-    <View style={{ paddingVertical: 72, alignItems: 'center', paddingHorizontal: 18 }}>
+    <View style={{ paddingVertical: 64, alignItems: 'center', paddingHorizontal: 18 }}>
       <View
         style={{
-          width: 84,
-          height: 84,
-          borderRadius: 28,
-          backgroundColor: appTheme.colors.surface,
-          borderWidth: 1,
-          borderColor: appTheme.colors.border,
+          width: 80,
+          height: 80,
+          borderRadius: 26,
+          backgroundColor: appTheme.colors.surfaceMuted,
           alignItems: 'center',
           justifyContent: 'center',
-          ...appTheme.shadow.card,
         }}
       >
-        <Ionicons name={icon} size={34} color={appTheme.colors.textSoft} />
+        <Ionicons name={icon} size={32} color={appTheme.colors.textSoft} />
       </View>
-      <Text style={{ color: appTheme.colors.text, fontSize: 16, fontWeight: '800', marginTop: 14 }}>{title}</Text>
+      <Text style={{ color: appTheme.colors.text, fontSize: 16, fontWeight: '700', marginTop: 16 }}>{title}</Text>
       {description ? (
-        <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, marginTop: 6, textAlign: 'center', lineHeight: 19 }}>{description}</Text>
+        <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, fontWeight: '500', marginTop: 6, textAlign: 'center', lineHeight: 19 }}>{description}</Text>
       ) : null}
     </View>
   );

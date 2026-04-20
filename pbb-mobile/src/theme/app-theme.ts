@@ -1,33 +1,57 @@
 export const appTheme = {
   colors: {
-    bg: '#f6efe6',
-    surface: '#fffaf4',
-    surfaceMuted: '#f1e7da',
-    surfaceStrong: '#e7dac9',
-    text: '#1d2b24',
-    textMuted: '#647267',
-    textSoft: '#95a094',
-    primary: '#1c5a45',
-    primaryDark: '#102f25',
-    primarySoft: '#dceee5',
-    accent: '#ee8a5b',
-    accentSoft: '#fde1d3',
-    info: '#3f67d6',
-    infoSoft: '#dfe7ff',
-    danger: '#d75d5d',
-    dangerSoft: '#f9dddd',
-    success: '#21986a',
-    successSoft: '#d8f2e6',
-    border: '#e4d7c6',
-    overlay: 'rgba(10, 23, 18, 0.7)',
-    dark: '#102f25',
-    glow: '#ffe7b8',
+    // Core backgrounds
+    bg: '#f8fafc', // Slate 50
+    surface: '#ffffff',
+    surfaceMuted: '#f1f5f9', // Slate 100
+    surfaceStrong: '#e2e8f0', // Slate 200
+
+    // Text hierarchy
+    text: '#0f172a', // Slate 900
+    textMuted: '#475569', // Slate 600
+    textSoft: '#94a3b8', // Slate 400
+
+    // Primary — Premium Emerald Green
+    primary: '#059669', // Emerald 600
+    primaryDark: '#047857', // Emerald 700
+    primarySoft: 'rgba(16, 185, 129, 0.08)',
+    primaryLight: '#ecfdf5', // Emerald 50
+
+    // Accent — Indigo
+    accent: '#4f46e5',
+    accentSoft: 'rgba(79, 70, 229, 0.08)',
+
+    // Semantic
+    info: '#0ea5e9',
+    infoSoft: 'rgba(14, 165, 233, 0.08)',
+    danger: '#ef4444',
+    dangerSoft: 'rgba(239, 68, 68, 0.06)',
+    success: '#10b981',
+    successSoft: 'rgba(16, 185, 129, 0.12)',
+    warning: '#f59e0b',
+    warningSoft: 'rgba(245, 158, 11, 0.06)',
+
+    // Borders & overlays
+    border: '#e2e8f0',
+    borderLight: '#f1f5f9',
+    overlay: 'rgba(15, 23, 42, 0.5)',
+
+    // Header gradient (Modern Deep Slate to Primary)
+    headerStart: '#0f172a',
+    headerEnd: '#1e293b',
+
+    // Glass effects (Requires Blur on native, opacity fallback)
+    glass: 'rgba(255, 255, 255, 0.72)',
+    glassStrong: 'rgba(255, 255, 255, 0.88)',
+    glassDark: 'rgba(15, 23, 42, 0.65)',
   },
   radius: {
-    sm: 14,
-    md: 20,
-    lg: 28,
-    xl: 36,
+    xs: 8,
+    sm: 12,
+    md: 18,
+    lg: 24,
+    xl: 32,
+    xxl: 40,
   },
   spacing: {
     xs: 4,
@@ -36,31 +60,57 @@ export const appTheme = {
     lg: 16,
     xl: 24,
     xxl: 32,
+    xxxl: 48,
     screen: 24,
   },
   sizing: {
-    headerTop: 58,
-    headerBottom: 26,
-    headerRadius: 34,
+    headerTop: 62,
+    headerBottom: 28,
+    headerRadius: 36,
     backButton: 46,
     iconTile: 52,
     modalIcon: 72,
   },
   shadow: {
     card: {
-      shadowColor: '#24170c',
-      shadowOffset: { width: 0, height: 14 },
-      shadowOpacity: 0.09,
-      shadowRadius: 24,
-      elevation: 10,
+      shadowColor: '#334155',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.08,
+      shadowRadius: 18,
+      elevation: 6,
+    },
+    soft: {
+      shadowColor: '#475569',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.04,
+      shadowRadius: 10,
+      elevation: 3,
     },
     floating: {
-      shadowColor: '#24170c',
-      shadowOffset: { width: 0, height: 18 },
-      shadowOpacity: 0.16,
-      shadowRadius: 32,
-      elevation: 16,
+      shadowColor: '#059669',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.2,
+      shadowRadius: 24,
+      elevation: 14,
     },
+    header: {
+      shadowColor: '#0f172a',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.25,
+      shadowRadius: 24,
+      elevation: 15,
+    },
+  },
+  typo: {
+    hero: { fontSize: 32, fontWeight: '800' as const, lineHeight: 40, letterSpacing: -0.6 },
+    heading: { fontSize: 24, fontWeight: '700' as const, lineHeight: 32, letterSpacing: -0.4 },
+    title: { fontSize: 18, fontWeight: '700' as const, lineHeight: 24, letterSpacing: -0.2 },
+    body: { fontSize: 14, fontWeight: '500' as const, lineHeight: 22 },
+    bodyBold: { fontSize: 14, fontWeight: '700' as const, lineHeight: 22 },
+    caption: { fontSize: 12, fontWeight: '600' as const, lineHeight: 18 },
+    label: { fontSize: 11, fontWeight: '800' as const, letterSpacing: 0.8 },
+    badge: { fontSize: 10, fontWeight: '900' as const, letterSpacing: 0.6 },
+    mono: { fontSize: 13, fontWeight: '600' as const, letterSpacing: 0.4 },
   },
 };
 
@@ -71,28 +121,33 @@ export const appLayout = {
     paddingBottom: appTheme.sizing.headerBottom,
     radius: appTheme.sizing.headerRadius,
   },
-  cardPadding: 18,
+  cardPadding: 20,
 };
 
 export const statusTone = {
   LUNAS: {
-    bg: appTheme.colors.successSoft,
-    text: appTheme.colors.success,
+    bg: appTheme.colors.primaryLight,
+    text: appTheme.colors.primary,
+    label: 'Lunas',
   },
   BELUM_LUNAS: {
     bg: appTheme.colors.dangerSoft,
     text: appTheme.colors.danger,
+    label: 'Belum Lunas',
   },
   PIUTANG: {
-    bg: appTheme.colors.dangerSoft,
-    text: appTheme.colors.danger,
+    bg: 'rgba(245, 158, 11, 0.08)',
+    text: '#d97706',
+    label: 'Belum Lunas',
   },
   SUSPEND: {
-    bg: appTheme.colors.accentSoft,
-    text: appTheme.colors.accent,
+    bg: appTheme.colors.warningSoft,
+    text: appTheme.colors.warning,
+    label: 'Sengketa',
   },
   TIDAK_TERBIT: {
-    bg: '#e8ece8',
-    text: '#637068',
+    bg: appTheme.colors.surfaceMuted,
+    text: appTheme.colors.textSoft,
+    label: 'Tidak terbit',
   },
 };
