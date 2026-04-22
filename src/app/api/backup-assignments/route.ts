@@ -16,66 +16,52 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const tahun = parseInt(searchParams.get("tahun") || new Date().getFullYear().toString());
 
-    // Fetch all users with role PENARIK and their assigned tax data for the year
-    const penariks = await prisma.user.findMany({
-      where: { role: "PENARIK" },
+    // Fetch all tax data for the year, including their assigned penarik
+    const allTaxData = await prisma.taxData.findMany({
+      where: { tahun },
       include: {
-        taxData: {
-          where: { tahun },
+        penarik: {
           select: {
-            nop: true,
-            dusun: true,
-            rt: true,
-            rw: true,
+            name: true,
+            username: true,
           },
-          orderBy: [{ dusun: "asc" }, { rw: "asc" }, { rt: "asc" }],
         },
       },
-      orderBy: { name: "asc" },
+      orderBy: [
+        { dusun: "asc" },
+        { rw: "asc" },
+        { rt: "asc" },
+        { nop: "asc" },
+      ],
     });
 
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet(`Backup Penarik ${tahun}`);
+    const sheet = workbook.addWorksheet(`Penugasan PBB ${tahun}`);
 
     sheet.columns = [
-      { header: "Nama Penarik", key: "penarikName", width: 25 },
-      { header: "Username", key: "username", width: 20 },
-      { header: "Area Tugas", key: "area", width: 30 },
-      { header: "NOP (Wajib Ada)", key: "nop", width: 25 },
+      { header: "NOP", key: "nop", width: 25 },
+      { header: "Nama WP", key: "namaWp", width: 30 },
       { header: "Dusun", key: "dusun", width: 15 },
       { header: "RT", key: "rt", width: 5 },
       { header: "RW", key: "rw", width: 5 },
+      { header: "Nama Penarik (Edit di Sini)", key: "penarikName", width: 25 },
+      { header: "Username Penarik", key: "username", width: 20 },
     ];
 
     // Style Header
     sheet.getRow(1).font = { bold: true };
     sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD3D3D3" } };
 
-    penariks.forEach((p) => {
-      const areaInfo = `${p.dusun || "Semua"} / RT ${p.rt || "Semua"} / RW ${p.rw || "Semua"}`;
-
-      if (p.taxData.length === 0) {
-        sheet.addRow({
-          penarikName: p.name,
-          username: p.username,
-          area: areaInfo,
-          nop: "-",
-        });
-      } else {
-        p.taxData.forEach((tax, idx) => {
-          sheet.addRow({
-            penarikName: idx === 0 ? p.name : "",
-            username: idx === 0 ? p.username : "",
-            area: idx === 0 ? areaInfo : "",
-            nop: tax.nop,
-            dusun: tax.dusun,
-            rt: tax.rt,
-            rw: tax.rw,
-          });
-        });
-      }
-      // Add empty row between penariks
-      sheet.addRow({});
+    allTaxData.forEach((tax) => {
+      sheet.addRow({
+        nop: tax.nop,
+        namaWp: tax.namaWp,
+        dusun: tax.dusun || "-",
+        rt: tax.rt || "00",
+        rw: tax.rw || "00",
+        penarikName: tax.penarik?.name || "",
+        username: tax.penarik?.username || "",
+      });
     });
 
     const buffer = await workbook.xlsx.writeBuffer();

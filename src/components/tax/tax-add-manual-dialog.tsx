@@ -23,6 +23,7 @@ export function TaxAddManualDialog({
   const paymentStatusOptions: PaymentStatus[] = ["BELUM_LUNAS", "LUNAS", "SUSPEND", "TIDAK_TERBIT"];
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingBapenda, setCheckingBapenda] = useState(false);
 
   // Form states
   const [nop, setNop] = useState("");

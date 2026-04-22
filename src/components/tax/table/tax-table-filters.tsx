@@ -125,7 +125,7 @@ export function TaxTableFilters({
 
   const paymentStatusLabel = filterPaymentStatus === "all" ? "Semua Status"
     : filterPaymentStatus === "LUNAS" ? "✅ Lunas"
-    : filterPaymentStatus === "BELUM_LUNAS" ? "⏳ Blm Lunas"
+    : filterPaymentStatus === "BELUM_LUNAS" ? "⏳ Belum Lunas"
     : filterPaymentStatus === "SUSPEND" ? "🚫 Sengketa"
     : "📄 Tdk Terbit";
 
@@ -208,7 +208,7 @@ export function TaxTableFilters({
             )}
           >
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
-            {filterPaymentStatus === "BELUM_LUNAS" ? "Blm Lunas ✓" : "Blm Lunas"}
+            {filterPaymentStatus === "BELUM_LUNAS" ? "Belum Lunas ✓" : "Belum Lunas"}
           </button>
 
           <button

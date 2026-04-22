@@ -269,51 +269,78 @@ export async function processBackupAssignments(
   const worksheet = workbook.Sheets[firstSheetName];
   const rows = XLSX.utils.sheet_to_json<ExcelSheetRow>(worksheet, { header: 1 });
 
-  const assignments: { username: string; nop: string; dusun: string; rt: string; rw: string }[] =
+  const assignments: { identifier: string; nop: string; dusun: string; rt: string; rw: string }[] =
     [];
-  let currentUsername = "";
+  let currentIdentifier = "";
 
   const getColVal = (row: ExcelSheetRow, colIdx: number): string => {
+    if (colIdx === -1) return "";
     const v = row[colIdx];
     return v === undefined || v === null ? "" : String(v).trim();
   };
 
-  let usernameCol = 1; // Col B
-  let nopCol = 3;      // Col D
-  let dusunCol = 4;    // Col E
-  let rtCol = 5;       // Col F
-  let rwCol = 6;       // Col G
+  let usernameCol = -1;
+  let nameCol = -1;
+  let nopCol = -1;
+  let dusunCol = -1;
+  let rtCol = -1;
+  let rwCol = -1;
 
-  // Detect headers
+  // Detect headers with more flexibility
   if (rows.length > 0) {
     const firstRow = rows[0];
     for (let j = 0; j < firstRow.length; j++) {
       const val = String(firstRow[j] || "").toLowerCase();
-      if (val.includes("username")) usernameCol = j;
-      else if (val.includes("nop")) nopCol = j;
-      else if (val === "dusun") dusunCol = j;
-      else if (val === "rt") rtCol = j;
-      else if (val === "rw") rwCol = j;
+      if (
+        val.includes("username") ||
+        val.includes("user id") ||
+        (val.includes("user") && !val.includes("name"))
+      ) {
+        usernameCol = j;
+      } else if (
+        val.includes("nama") ||
+        val.includes("penarik") ||
+        val.includes("petugas") ||
+        val.includes("collector")
+      ) {
+        nameCol = j;
+      } else if (val.includes("nop") || val.includes("nomor objek")) {
+        nopCol = j;
+      } else if (val.includes("dusun")) {
+        dusunCol = j;
+      } else if (val.includes("rt")) {
+        rtCol = j;
+      } else if (val.includes("rw")) {
+        rwCol = j;
+      }
     }
   }
+
+  // Fallback defaults if headers not detected
+  if (nopCol === -1) nopCol = 0;
+  if (usernameCol === -1 && nameCol === -1) usernameCol = 1;
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (!row || row.length === 0) continue;
 
     const username = getColVal(row, usernameCol);
+    const name = getColVal(row, nameCol);
     const nop = getColVal(row, nopCol);
     const dusun = getColVal(row, dusunCol);
     const rt = getColVal(row, rtCol);
     const rw = getColVal(row, rwCol);
 
-    if (username) {
-      currentUsername = username;
+    // Prioritize username, then name
+    const identifier = username || name;
+
+    if (identifier) {
+      currentIdentifier = identifier;
     }
 
-    if (currentUsername && nop && nop !== "-" && nop.trim() !== "") {
+    if (currentIdentifier && nop && nop !== "-" && nop.trim() !== "") {
       assignments.push({
-        username: currentUsername,
+        identifier: currentIdentifier,
         nop: nop.trim(),
         dusun: dusun,
         rt: rt ? parseInt(rt, 10).toString().padStart(2, "0") : "",
@@ -330,23 +357,27 @@ export async function processBackupAssignments(
   // Get all users
   const users = await prisma.user.findMany({
     where: { role: "PENARIK" },
-    select: { id: true, username: true },
+    select: { id: true, username: true, name: true },
   });
 
-  const userMap = new Map(users.map((u) => [u.username.toLowerCase(), u.id]));
+  const usernameMap = new Map(users.map((u) => [u.username.toLowerCase(), u.id]));
+  const nameMap = new Map(users.map((u) => [u.name?.toLowerCase() || "", u.id]));
+
   let updatedCount = 0;
 
   // Group by user for efficiency
   const grouped = new Map<string, typeof assignments>();
   for (const item of assignments) {
-    const userId = userMap.get(item.username.toLowerCase());
+    const idLower = item.identifier.toLowerCase();
+    const userId = usernameMap.get(idLower) || nameMap.get(idLower);
+
     if (userId) {
       if (!grouped.has(userId)) grouped.set(userId, []);
       grouped.get(userId)!.push(item);
     }
   }
 
-  // Fetch all existing NOPs for this year to do a flexible matching
+  // Fetch all existing NOPs for this year
   const existingTaxData = await prisma.taxData.findMany({
     where: { tahun },
     select: { id: true, nop: true },
@@ -369,14 +400,14 @@ export async function processBackupAssignments(
         idsToUpdate.push(dbId);
       }
 
-      // Deduplicate by NOP - last one wins or first one wins? Let's keep the mapping
+      // Deduplicate by NOP
       if (!allNopsToMap.has(item.nop)) {
         allNopsToMap.set(item.nop, {
           nop: item.nop,
           penarikId: userId,
           dusun: item.dusun || "",
-          rt: item.rt ? parseInt(item.rt, 10).toString().padStart(2, "0") : "",
-          rw: item.rw ? parseInt(item.rw, 10).toString().padStart(2, "0") : "",
+          rt: item.rt || "",
+          rw: item.rw || "",
         });
       }
     }
@@ -390,7 +421,7 @@ export async function processBackupAssignments(
     }
   }
 
-  // 2. Optimized TaxMapping Sync (Delete then CreateMany)
+  // Optimized TaxMapping Sync
   const uniqueMappings = Array.from(allNopsToMap.values());
   if (uniqueMappings.length > 0) {
     const nops = uniqueMappings.map((a) => a.nop);
@@ -406,7 +437,6 @@ export async function processBackupAssignments(
       ]);
     } catch (txError) {
       console.error("Mapping sync failed, falling back to individual upserts:", txError);
-      // Fallback to individual upserts if createMany fails for some reason
       for (const mapItem of uniqueMappings) {
         await prisma.taxMapping.upsert({
           where: { nop: mapItem.nop },

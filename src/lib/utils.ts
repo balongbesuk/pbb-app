@@ -71,12 +71,18 @@ export function getPaymentStatusColor(status: string | null) {
     case "LUNAS":
       return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border-emerald-500/20";
     case "BELUM_LUNAS":
+    case "PIUTANG":
+    case "PELUNASAN":
       return "bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-500/20";
     case "SUSPEND":
+    case "SENGKETA":
       return "bg-rose-500/10 text-rose-600 dark:text-rose-500 border-rose-500/20";
     case "TIDAK_TERBIT":
       return "bg-zinc-500/10 text-zinc-600 dark:text-zinc-500 border-zinc-500/20";
     default:
+      if (status?.toUpperCase() === "PIUTANG" || status?.toUpperCase() === "PELUNASAN" || status?.toUpperCase() === "BELUM_LUNAS") {
+        return "bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-500/20";
+      }
       return "bg-muted text-muted-foreground border-border";
   }
 }
@@ -87,13 +93,20 @@ export function getPaymentStatusLabel(status: string | null) {
     case "LUNAS":
       return "Lunas";
     case "BELUM_LUNAS":
-      return "Blm Lunas";
+    case "PIUTANG":
+    case "PELUNASAN":
+      return "Belum Lunas";
     case "SUSPEND":
+    case "SENGKETA":
       return "Sengketa";
     case "TIDAK_TERBIT":
       return "Tdk Terbit";
     default:
-      return "Status " + (status || "-");
+      const s = status?.toUpperCase();
+      if (s === "PIUTANG" || s === "PELUNASAN") return "Belum Lunas";
+      if (!status) return "-";
+      // Title case fallback for raw string status if not matched
+      return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   }
 }
 
