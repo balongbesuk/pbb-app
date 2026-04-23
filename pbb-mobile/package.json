@@ -43,7 +43,7 @@
   "overrides": {
     "glob": "10.5.0",
     "xmldom": "npm:@xmldom/xmldom@0.9.10",
-    "uuid": "9.0.1"
+    "uuid": "10.0.0"
   },
   "private": true
 }
