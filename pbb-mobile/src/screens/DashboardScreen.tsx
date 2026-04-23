@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableWithoutFeedback, ImageBackground, Platform } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableWithoutFeedback, ImageBackground, Platform, RefreshControl } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,8 +15,59 @@ import { appTheme } from '../theme/app-theme';
 export default function DashboardScreen({ route, navigation }: ScreenProps<'Dashboard'>) {
   const { villageName, serverUrl, stats = {}, villageLogo } = route.params || {};
   const [menuVisible, setMenuVisible] = useState(false);
-  const totalSppt = stats.totalSppt || 0;
-  const lunasSppt = stats.lunasSppt || 0;
+  const [authType, setAuthType] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [personalStats, setPersonalStats] = useState({ total: 0, lunas: 0 });
+  const [refreshing, setRefreshing] = useState(false);
+  const [displayStats, setDisplayStats] = useState(stats);
+
+  React.useEffect(() => {
+    AsyncStorage.getItem('@auth_type').then(setAuthType);
+    AsyncStorage.getItem('@auth_user').then((val) => setIsAdmin(!!val));
+    loadPersonalStats();
+  }, []);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // 1. Reload Personal Stats
+      await loadPersonalStats();
+      
+      // 2. Reload Village Stats from Server
+      if (serverUrl) {
+        const response = await fetch(joinServerUrl(serverUrl, '/api/mobile/connect'));
+        const data = await response.json();
+        if (data.success && data.stats) {
+          setDisplayStats(data.stats);
+        }
+      }
+      
+      // 3. Update Auth & Admin Status
+      const type = await AsyncStorage.getItem('@auth_type');
+      const authUser = await AsyncStorage.getItem('@auth_user');
+      setAuthType(type);
+      setIsAdmin(!!authUser);
+    } catch (e) {
+      console.error('Refresh failed:', e);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [serverUrl]);
+
+  const loadPersonalStats = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('@pinned_nops_v2');
+      if (saved) {
+        const list = JSON.parse(saved);
+        const total = list.length;
+        const lunas = list.filter((item: any) => item.status === 'LUNAS').length;
+        setPersonalStats({ total, lunas });
+      }
+    } catch (e) {}
+  };
+
+  const totalSppt = isAdmin ? (displayStats.totalSppt || 0) : personalStats.total;
+  const lunasSppt = isAdmin ? (displayStats.lunasSppt || 0) : personalStats.lunas;
 
   const getLogoSource = () => {
     if (villageLogo) return villageLogo.startsWith('http') ? { uri: villageLogo } : { uri: joinServerUrl(serverUrl, villageLogo) };
@@ -29,7 +81,18 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
 
   return (
     <View style={{ flex: 1, backgroundColor: appTheme.colors.bg }}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            colors={[appTheme.colors.primary]} 
+            tintColor={appTheme.colors.primary}
+          />
+        }
+      >
         {/* Immersive Header */}
         <Animated.View entering={FadeInUp.duration(600)}>
           <ImageBackground source={require('../../assets/village-bg.png')}
@@ -59,14 +122,15 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
                 <Text style={{ color: 'white', fontSize: 24, fontWeight: '900', lineHeight: 32, letterSpacing: -0.5 }}>Layanan PBB{'\n'}Untuk Warga Desa</Text>
                 <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '500', marginTop: 4 }}>Cari data berdasarkan NOP atau nama wajib pajak</Text>
 
+                {/* Stats Row - Shows personal stats for taxpayers, or village stats for admin */}
                 <View style={{ flexDirection: 'row', marginTop: 24 }}>
                   <View style={{ flex: 1, marginRight: 10, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' }}>
-                    <Text style={{ color: 'rgba(255,255,255,0.5)', ...appTheme.typo.badge }}>TOTAL SPPT</Text>
+                    <Text style={{ color: 'rgba(255,255,255,0.5)', ...appTheme.typo.badge }}>{isAdmin ? 'TOTAL SPPT DESA' : 'NOP TERSIMPAN'}</Text>
                     <Text style={{ color: 'white', ...appTheme.typo.heading, marginTop: 4 }}>{totalSppt}</Text>
                   </View>
-                  <View style={{ flex: 1, marginLeft: 10, backgroundColor: 'rgba(16, 185, 129, 0.12)', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.2)' }}>
-                    <Text style={{ color: '#6ee7b7', ...appTheme.typo.badge }}>SUDAH LUNAS</Text>
-                    <Text style={{ color: '#10b981', ...appTheme.typo.heading, marginTop: 4 }}>{lunasSppt}</Text>
+                  <View style={{ flex: 1, marginLeft: 10, backgroundColor: lunasSppt > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255,255,255,0.05)', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: lunasSppt > 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.05)' }}>
+                    <Text style={{ color: lunasSppt > 0 ? '#6ee7b7' : 'rgba(255,255,255,0.5)', ...appTheme.typo.badge }}>SUDAH LUNAS</Text>
+                    <Text style={{ color: lunasSppt > 0 ? '#10b981' : 'rgba(255,255,255,0.3)', ...appTheme.typo.heading, marginTop: 4 }}>{lunasSppt}</Text>
                   </View>
                 </View>
               </BlurView>
@@ -125,7 +189,7 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
                   </View>
                 </ScalableButton>
 
-                <ScalableButton onPress={() => { setMenuVisible(false); navigation.replace('Onboarding'); }}>
+                <ScalableButton onPress={() => { setMenuVisible(false); navigation.replace('Onboarding'); }} style={{ marginBottom: 12 }}>
                   <View style={{ backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 24, padding: 20, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: appTheme.colors.borderLight }}>
                     <View style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: appTheme.colors.infoSoft, alignItems: 'center', justifyContent: 'center' }}>
                       <Ionicons name="swap-horizontal" size={24} color={appTheme.colors.info} />
@@ -133,6 +197,19 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
                     <View style={{ flex: 1, marginLeft: 16 }}>
                       <Text style={{ color: appTheme.colors.text, ...appTheme.typo.bodyBold }}>Ganti koneksi desa</Text>
                       <Text style={{ color: appTheme.colors.textSoft, ...appTheme.typo.caption, marginTop: 2 }}>Sambungkan ke server pusat lain</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={appTheme.colors.textSoft} />
+                  </View>
+                </ScalableButton>
+
+                <ScalableButton onPress={() => { setMenuVisible(false); navigation.navigate('UserAuth', { serverUrl, villageName, villageLogo }); }}>
+                  <View style={{ backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 24, padding: 20, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: appTheme.colors.borderLight }}>
+                    <View style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: authType === 'email' ? appTheme.colors.successSoft : 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name={authType === 'email' ? 'sync' : 'cloud-offline-outline'} size={24} color={authType === 'email' ? appTheme.colors.success : appTheme.colors.textSoft} />
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 16 }}>
+                      <Text style={{ color: appTheme.colors.text, ...appTheme.typo.bodyBold }}>Mode: {authType === 'email' ? 'Email (Sinkron)' : 'Tamu (Lokal)'}</Text>
+                      <Text style={{ color: appTheme.colors.textSoft, ...appTheme.typo.caption, marginTop: 2 }}>Ubah metode penyimpanan data</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color={appTheme.colors.textSoft} />
                   </View>

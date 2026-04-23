@@ -14,6 +14,11 @@ export type AdminUser = {
 
 export type RootStackParamList = {
   Onboarding: undefined;
+  UserAuth: {
+    serverUrl: string;
+    villageName: string;
+    villageLogo?: string | null;
+  };
   Dashboard: {
     villageName: string;
     serverUrl: string;

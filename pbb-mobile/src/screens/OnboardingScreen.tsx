@@ -84,7 +84,7 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
     if (villageLogo) await AsyncStorage.setItem('villageLogo', villageLogo);
     const nextRecent = [fullUrl, ...recentServers.filter((i) => i !== fullUrl)].slice(0, 5);
     await AsyncStorage.setItem('recentServerUrls', JSON.stringify(nextRecent));
-    navigation.replace('Dashboard', { villageName, serverUrl: fullUrl, stats: data.stats, villageLogo });
+    navigation.replace('UserAuth', { villageName, serverUrl: fullUrl, villageLogo });
   };
 
   const animatedProgressStyle = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));

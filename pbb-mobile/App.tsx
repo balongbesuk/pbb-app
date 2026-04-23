@@ -20,6 +20,7 @@ import BillingHistoryScreen from './src/screens/BillingHistoryScreen';
 import NotificationScreen from './src/screens/NotificationScreen';
 import TaxpayerDetailScreen from './src/screens/TaxpayerDetailScreen';
 import SelectOfficerScreen from './src/screens/SelectOfficerScreen';
+import UserAuthScreen from './src/screens/UserAuthScreen';
 import type { RootStackParamList } from './src/types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -42,6 +43,8 @@ export default function App() {
       ]);
 
       if (serverUrl && villageName) {
+        const authType = await AsyncStorage.getItem('@auth_type');
+        
         if (authUser) {
           try {
             const user = JSON.parse(authUser);
@@ -57,6 +60,12 @@ export default function App() {
           } catch (e) {
             console.error('Failed to parse auth user:', e);
           }
+        }
+
+        if (!authType) {
+          setInitialParams({ serverUrl, villageName, villageLogo } as any);
+          setInitialRoute('UserAuth');
+          return;
         }
 
         setInitialParams({
@@ -98,6 +107,7 @@ export default function App() {
         <Stack.Screen name="Notification" component={NotificationScreen} />
         <Stack.Screen name="TaxpayerDetail" component={TaxpayerDetailScreen} />
         <Stack.Screen name="SelectOfficer" component={SelectOfficerScreen} />
+        <Stack.Screen name="UserAuth" component={UserAuthScreen} initialParams={initialParams as any} />
 
 
       </Stack.Navigator>
