@@ -70,7 +70,10 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
   const lunasSppt = isAdmin ? (displayStats.lunasSppt || 0) : personalStats.lunas;
 
   const getLogoSource = () => {
-    if (villageLogo) return villageLogo.startsWith('http') ? { uri: villageLogo } : { uri: joinServerUrl(serverUrl, villageLogo) };
+    if (villageLogo) {
+      if (villageLogo.startsWith('http')) return { uri: villageLogo };
+      if (serverUrl) return { uri: joinServerUrl(serverUrl, villageLogo) };
+    }
     return require('../../assets/icon.png');
   };
 
@@ -202,18 +205,7 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
                   </View>
                 </ScalableButton>
 
-                <ScalableButton onPress={() => { setMenuVisible(false); navigation.navigate('UserAuth', { serverUrl, villageName, villageLogo }); }}>
-                  <View style={{ backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 24, padding: 20, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: appTheme.colors.borderLight }}>
-                    <View style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: authType === 'email' ? appTheme.colors.successSoft : 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' }}>
-                      <Ionicons name={authType === 'email' ? 'sync' : 'cloud-offline-outline'} size={24} color={authType === 'email' ? appTheme.colors.success : appTheme.colors.textSoft} />
-                    </View>
-                    <View style={{ flex: 1, marginLeft: 16 }}>
-                      <Text style={{ color: appTheme.colors.text, ...appTheme.typo.bodyBold }}>Mode: {authType === 'email' ? 'Email (Sinkron)' : 'Tamu (Lokal)'}</Text>
-                      <Text style={{ color: appTheme.colors.textSoft, ...appTheme.typo.caption, marginTop: 2 }}>Ubah metode penyimpanan data</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={appTheme.colors.textSoft} />
-                  </View>
-                </ScalableButton>
+
               </Animated.View>
             </TouchableWithoutFeedback>
           </View>

@@ -16,23 +16,23 @@ export default function UserAuthScreen({ route, navigation }: ScreenProps<'UserA
   const handleModeSelection = async (mode: 'guest' | 'email') => {
     setLoading(mode);
     try {
-      await AsyncStorage.setItem('@auth_type', mode);
+      // Run storage operations in parallel for better performance
+      await Promise.all([
+        AsyncStorage.setItem('@auth_type', mode),
+        serverUrl ? AsyncStorage.setItem('serverUrl', serverUrl) : Promise.resolve(),
+        villageName ? AsyncStorage.setItem('villageName', villageName) : Promise.resolve(),
+        villageLogo ? AsyncStorage.setItem('villageLogo', villageLogo) : Promise.resolve(),
+      ]);
       
-      if (mode === 'email') {
-        // Simulated email login delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        // In a real app, we would trigger Google/Email Auth here
-      }
-
+      // Navigate immediately to Dashboard
       navigation.replace('Dashboard', { 
         serverUrl, 
         villageName, 
-        villageLogo,
+        villageLogo, 
         stats: {} 
       });
     } catch (e) {
-      console.error(e);
-    } finally {
+      console.error('Failed to save session:', e);
       setLoading(null);
     }
   };
@@ -50,87 +50,39 @@ export default function UserAuthScreen({ route, navigation }: ScreenProps<'UserA
               <Ionicons name="person-circle" size={48} color={appTheme.colors.primary} />
             )}
           </View>
-          <Text style={{ color: appTheme.colors.text, ...appTheme.typo.heading, textAlign: 'center' }}>Pilih Metode Akses</Text>
+          <Text style={{ color: appTheme.colors.text, ...appTheme.typo.heading, textAlign: 'center' }}>Konfirmasi Akses</Text>
           <Text style={{ color: appTheme.colors.textMuted, ...appTheme.typo.body, textAlign: 'center', marginTop: 8, paddingHorizontal: 20 }}>
-            Tentukan bagaimana Anda ingin menyimpan data SPPT dan riwayat pencarian Anda.
+            Silakan klik tombol di bawah untuk mulai mengakses layanan PBB Desa {villageName || ''}.
           </Text>
         </Animated.View>
 
         {/* Options */}
         <View>
-          {/* Email Option */}
-          <Animated.View entering={FadeInDown.delay(100).duration(600)}>
-            <ScalableButton onPress={() => handleModeSelection('email')} disabled={!!loading}>
-              <View style={{ 
-                backgroundColor: appTheme.colors.surface, 
-                borderRadius: 28, 
-                padding: 24, 
-                borderWidth: 2, 
-                borderColor: loading === 'email' ? appTheme.colors.primary : appTheme.colors.borderLight,
-                ...appTheme.shadow.card,
-                marginBottom: 20
-              }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                  <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: appTheme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="mail-outline" size={22} color={appTheme.colors.primary} />
-                  </View>
-                  <View style={{ flex: 1, marginLeft: 16 }}>
-                    <Text style={{ color: appTheme.colors.text, ...appTheme.typo.title }}>Masuk dengan Email</Text>
-                    <Text style={{ color: appTheme.colors.success, ...appTheme.typo.badge, marginTop: 2 }}>DIREKOMENDASIKAN</Text>
-                  </View>
-                </View>
-                <Text style={{ color: appTheme.colors.textMuted, ...appTheme.typo.body, fontSize: 13, lineHeight: 18 }}>
-                  Data Anda akan disinkronkan ke cloud. Anda dapat mengakses data SPPT yang tersimpan dari perangkat mana saja.
-                </Text>
-                
-                <View style={{ marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
-                  {loading === 'email' ? (
-                    <ActivityIndicator color={appTheme.colors.primary} />
-                  ) : (
-                    <>
-                      <Text style={{ color: appTheme.colors.primary, ...appTheme.typo.bodyBold, marginRight: 8 }}>Pilih & Lanjut</Text>
-                      <Ionicons name="arrow-forward" size={18} color={appTheme.colors.primary} />
-                    </>
-                  )}
-                </View>
-              </View>
-            </ScalableButton>
-          </Animated.View>
-
-          {/* Guest Option */}
-          <Animated.View entering={FadeInDown.delay(200).duration(600)}>
+          <Animated.View entering={FadeInDown.duration(600)}>
             <ScalableButton onPress={() => handleModeSelection('guest')} disabled={!!loading}>
-              <View style={{ 
-                backgroundColor: appTheme.colors.surfaceMuted, 
-                borderRadius: 28, 
-                padding: 24, 
-                borderWidth: 1, 
-                borderColor: appTheme.colors.borderLight,
-                marginBottom: 40
-              }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                  <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="phone-portrait-outline" size={22} color={appTheme.colors.textSoft} />
-                  </View>
-                  <View style={{ flex: 1, marginLeft: 16 }}>
-                    <Text style={{ color: appTheme.colors.text, ...appTheme.typo.title }}>Gunakan Mode Tamu</Text>
-                  </View>
-                </View>
-                <Text style={{ color: appTheme.colors.textMuted, ...appTheme.typo.body, fontSize: 13, lineHeight: 18 }}>
-                  Data hanya disimpan di memori HP ini. Data akan hilang jika aplikasi dihapus atau Anda berganti perangkat.
-                </Text>
-                
-                <View style={{ marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
-                  {loading === 'guest' ? (
-                    <ActivityIndicator color={appTheme.colors.textSoft} />
-                  ) : (
-                    <>
-                      <Text style={{ color: appTheme.colors.textSoft, ...appTheme.typo.bodyBold, marginRight: 8 }}>Gunakan Lokal</Text>
-                      <Ionicons name="chevron-forward" size={18} color={appTheme.colors.textSoft} />
-                    </>
-                  )}
-                </View>
-              </View>
+              <LinearGradient 
+                colors={[appTheme.colors.primary, appTheme.colors.primaryDark]} 
+                start={{ x: 0, y: 0 }} 
+                end={{ x: 1, y: 0 }}
+                style={{ 
+                  borderRadius: 24, 
+                  paddingVertical: 20, 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  ...appTheme.shadow.floating,
+                  marginBottom: 32
+                }}
+              >
+                {loading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <>
+                    <Text style={{ color: 'white', ...appTheme.typo.bodyBold, fontSize: 16, marginRight: 8 }}>Masuk ke Dashboard</Text>
+                    <Ionicons name="arrow-forward" size={20} color="white" />
+                  </>
+                )}
+              </LinearGradient>
             </ScalableButton>
           </Animated.View>
         </View>

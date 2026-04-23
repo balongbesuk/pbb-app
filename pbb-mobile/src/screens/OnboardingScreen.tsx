@@ -74,17 +74,29 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
   };
 
   const finishSync = async (data: any) => {
-    if (!data?.success) { setSyncing(false); setErrorMsg('Sinkronisasi gagal.'); return; }
-    const villageName = data.village?.namaDesa || 'Balongbesuk';
-    const villageLogo = data.village?.logoUrl || null;
-    const fullUrl = getResolvedServerUrl();
-    if (!fullUrl) { setSyncing(false); setErrorMsg('Alamat server tidak valid.'); return; }
-    await AsyncStorage.setItem('serverUrl', fullUrl);
-    await AsyncStorage.setItem('villageName', villageName);
-    if (villageLogo) await AsyncStorage.setItem('villageLogo', villageLogo);
-    const nextRecent = [fullUrl, ...recentServers.filter((i) => i !== fullUrl)].slice(0, 5);
-    await AsyncStorage.setItem('recentServerUrls', JSON.stringify(nextRecent));
-    navigation.replace('UserAuth', { villageName, serverUrl: fullUrl, villageLogo });
+    try {
+      if (!data?.success) { setSyncing(false); setErrorMsg('Sinkronisasi gagal.'); return; }
+      const villageName = data.village?.namaDesa || 'Balongbesuk';
+      const villageLogo = data.village?.logoUrl || null;
+      const fullUrl = getResolvedServerUrl();
+      if (!fullUrl) { setSyncing(false); setErrorMsg('Alamat server tidak valid.'); return; }
+
+      await Promise.all([
+        AsyncStorage.setItem('serverUrl', fullUrl),
+        AsyncStorage.setItem('villageName', villageName),
+        AsyncStorage.setItem('@auth_type', 'guest'),
+        villageLogo ? AsyncStorage.setItem('villageLogo', villageLogo) : Promise.resolve(),
+      ]);
+
+      const nextRecent = [fullUrl, ...recentServers.filter((i) => i !== fullUrl)].slice(0, 5);
+      await AsyncStorage.setItem('recentServerUrls', JSON.stringify(nextRecent));
+      
+      navigation.replace('Dashboard', { villageName, serverUrl: fullUrl, villageLogo, stats: {} });
+    } catch (err) {
+      console.error('Finish sync failed:', err);
+      setSyncing(false);
+      setErrorMsg('Gagal menyimpan konfigurasi desa.');
+    }
   };
 
   const animatedProgressStyle = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));

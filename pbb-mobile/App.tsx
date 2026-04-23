@@ -43,8 +43,6 @@ export default function App() {
       ]);
 
       if (serverUrl && villageName) {
-        const authType = await AsyncStorage.getItem('@auth_type');
-        
         if (authUser) {
           try {
             const user = JSON.parse(authUser);
@@ -60,12 +58,6 @@ export default function App() {
           } catch (e) {
             console.error('Failed to parse auth user:', e);
           }
-        }
-
-        if (!authType) {
-          setInitialParams({ serverUrl, villageName, villageLogo } as any);
-          setInitialRoute('UserAuth');
-          return;
         }
 
         setInitialParams({
