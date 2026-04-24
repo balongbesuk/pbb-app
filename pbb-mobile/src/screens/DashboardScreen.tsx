@@ -20,7 +20,8 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
   const [isAdmin, setIsAdmin] = useState(false);
   const [personalStats, setPersonalStats] = useState({ total: 0, lunas: 0 });
   const [refreshing, setRefreshing] = useState(false);
-  const [displayStats, setDisplayStats] = useState(stats);
+  const [currentVillageName, setCurrentVillageName] = useState(villageName);
+  const [currentVillageLogo, setCurrentVillageLogo] = useState(villageLogo);
   const { health, checkHealth } = useServerHealth(serverUrl);
 
   React.useEffect(() => {
@@ -40,8 +41,12 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
         const response = await fetch(joinServerUrl(serverUrl, '/api/mobile/connect'));
         if (response.ok) {
           const data = await response.json();
-          if (data.success && data.stats) {
-            setDisplayStats(data.stats);
+          if (data.success) {
+            if (data.stats) setDisplayStats(data.stats);
+            if (data.village) {
+              setCurrentVillageName(data.village.namaDesa);
+              setCurrentVillageLogo(data.village.logoUrl);
+            }
           }
         }
       }
@@ -77,9 +82,9 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
   const lunasSppt = isAdmin ? (displayStats.lunasSppt || 0) : personalStats.lunas;
 
   const getLogoSource = () => {
-    if (villageLogo) {
-      if (villageLogo.startsWith('http')) return { uri: villageLogo };
-      if (serverUrl) return { uri: joinServerUrl(serverUrl, villageLogo) };
+    if (currentVillageLogo) {
+      if (currentVillageLogo.startsWith('http')) return { uri: currentVillageLogo };
+      if (serverUrl) return { uri: joinServerUrl(serverUrl, currentVillageLogo) };
     }
     return require('../../assets/icon.png');
   };
@@ -113,13 +118,18 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                   <View style={{ width: 56, height: 56, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', padding: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
-                    <Image source={getLogoSource()} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                    <Image 
+                      key={`logo-${currentVillageLogo}-${health.server}`}
+                      source={getLogoSource()} 
+                      style={{ width: '100%', height: '100%' }} 
+                      resizeMode="contain" 
+                    />
                   </View>
                   <View style={{ marginLeft: 16, flex: 1 }}>
                     <Text style={{ color: 'white', fontSize: 20, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.5 }}>PBB Mobile</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
                       <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: health.server ? appTheme.colors.success : appTheme.colors.danger, marginRight: 6 }} />
-                      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '600' }} numberOfLines={1}>Desa {villageName || 'Nama Desa'}</Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '600' }} numberOfLines={1}>Desa {currentVillageName || 'Nama Desa'}</Text>
                     </View>
                   </View>
                 </View>
