@@ -16,6 +16,7 @@ import { AppSectionTitle } from '../components/AppSectionTitle';
 import { AppStatCard } from '../components/AppStatCard';
 import { AppEmptyState } from '../components/AppEmptyState';
 import { AppSkeletonCard } from '../components/AppSkeletonCard';
+import { useServerHealth } from '../utils/hooks';
 import { appTheme } from '../theme/app-theme';
 
 export default function AdminDashboardScreen({ route, navigation }: ScreenProps<'AdminDashboard'>) {
@@ -25,6 +26,8 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [bapendaConfig, setBapendaConfig] = useState<any>(null);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
+  const { health } = useServerHealth(serverUrl);
 
   const firstName = user?.name?.trim()?.split(/\s+/)[0] || 'Petugas';
   const currentYear = dashboardData?.tahunPajak || new Date().getFullYear();
