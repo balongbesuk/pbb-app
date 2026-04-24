@@ -20,6 +20,7 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
   const [isAdmin, setIsAdmin] = useState(false);
   const [personalStats, setPersonalStats] = useState({ total: 0, lunas: 0 });
   const [refreshing, setRefreshing] = useState(false);
+  const [displayStats, setDisplayStats] = useState(stats);
   const [currentVillageName, setCurrentVillageName] = useState(villageName);
   const [currentVillageLogo, setCurrentVillageLogo] = useState(villageLogo);
   const { health, checkHealth } = useServerHealth(serverUrl);
