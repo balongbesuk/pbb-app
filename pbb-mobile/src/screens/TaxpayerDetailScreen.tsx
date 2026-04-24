@@ -11,6 +11,7 @@ import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppActionCard } from '../components/AppActionCard';
 import { AppModalCard } from '../components/AppModalCard';
+import { useServerHealth } from '../utils/hooks';
 import { appTheme, statusTone } from '../theme/app-theme';
 
 export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<'TaxpayerDetail'>) {
@@ -32,6 +33,8 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
   const [statusModal, setStatusModal] = useState({ visible: false, type: 'success' as 'success' | 'error', message: '' });
   const [syncModal, setSyncModal] = useState<{ visible: boolean; type: 'success' | 'unpaid' | 'error'; message: string }>({ visible: false, type: 'success', message: '' });
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
+  
+  const { health, checkHealth } = useServerHealth(serverUrl);
 
   useEffect(() => { fetchConfig(); }, []);
   const fetchConfig = async () => { try { const r = await fetch(joinServerUrl(serverUrl, `/api/mobile/tax?nop=${encodeURIComponent(taxpayer.nop)}`)); const d = await r.json(); if (d.success && d.villageConfig) setBapendaConfig(d.villageConfig); } catch (e) { } };
@@ -194,6 +197,12 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
 
           {!isLunas && bapendaConfig?.enableBapendaSync && bapendaConfig?.isJombangBapenda && (
             <Animated.View entering={FadeInDown.delay(400)} style={{ marginTop: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, paddingHorizontal: 4 }}>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: health.bapenda ? appTheme.colors.success : appTheme.colors.danger, marginRight: 6 }} />
+                <Text style={{ color: appTheme.colors.textMuted, fontSize: 10, fontWeight: '700', textTransform: 'uppercase' }}>
+                  Status Sumber Data: {health.bapenda ? 'Online' : 'Gangguan'}
+                </Text>
+              </View>
               <ScalableButton onPress={handlePaymentCheck}>
                 <LinearGradient colors={bapendaConfig.enableBapendaPayment ? [appTheme.colors.primary, appTheme.colors.primaryDark] : [appTheme.colors.accent, '#4338ca']}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}

@@ -9,6 +9,7 @@ import { joinServerUrl } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppModalCard } from '../components/AppModalCard';
+import { useServerHealth } from '../utils/hooks';
 import { appTheme, statusTone } from '../theme/app-theme';
 
 export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'PaymentCheck'>) {
@@ -20,6 +21,8 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
   const [pinnedList, setPinnedList] = useState<{ nop: string; name: string; status?: string }[]>([]);
   const [bapendaConfig, setBapendaConfig] = useState<any>(null);
   const [syncModal, setSyncModal] = useState<{ visible: boolean; type: 'success' | 'unpaid' | 'error'; message: string; wpData?: any }>({ visible: false, type: 'success', message: '' });
+  
+  const { health, checkHealth } = useServerHealth(serverUrl);
 
   useEffect(() => { loadPinnedNopes(); }, []);
 
@@ -45,6 +48,9 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
         if (updated.length > 0) { setPinnedList(updated); AsyncStorage.setItem('@pinned_nops_v2', JSON.stringify(updated)); }
         if (data.villageConfig) setBapendaConfig(data.villageConfig);
       } else { setErrorMsg(data.error || 'Terjadi kesalahan.'); }
+      
+      // Also refresh health on search
+      checkHealth();
     } catch (err) { setErrorMsg('Gagal mengambil data.'); } finally { setLoading(false); }
   };
 
@@ -68,6 +74,13 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
           <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '500', lineHeight: 20, marginTop: 6 }}>
             Cari berdasarkan NOP atau nama wajib pajak.
           </Text>
+          
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: health.bapenda ? appTheme.colors.success : appTheme.colors.danger, marginRight: 8 }} />
+            <Text style={{ color: 'white', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Sumber Data: {health.bapenda ? 'Terhubung (Online)' : 'Down (Offline)'}
+            </Text>
+          </View>
           <View style={{ marginTop: 18, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
             <TextInput
               style={{ backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 18, paddingHorizontal: 18, paddingVertical: 16, fontSize: 15, color: appTheme.colors.text, fontWeight: '600', marginBottom: 12 }}

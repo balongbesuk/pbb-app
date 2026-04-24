@@ -10,6 +10,7 @@ import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { AppActionCard } from '../components/AppActionCard';
+import { useServerHealth } from '../utils/hooks';
 import { appTheme } from '../theme/app-theme';
 
 export default function DashboardScreen({ route, navigation }: ScreenProps<'Dashboard'>) {
@@ -20,6 +21,7 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
   const [personalStats, setPersonalStats] = useState({ total: 0, lunas: 0 });
   const [refreshing, setRefreshing] = useState(false);
   const [displayStats, setDisplayStats] = useState(stats);
+  const { health, checkHealth } = useServerHealth(serverUrl);
 
   React.useEffect(() => {
     AsyncStorage.getItem('@auth_type').then(setAuthType);
@@ -47,12 +49,15 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
       const authUser = await AsyncStorage.getItem('@auth_user');
       setAuthType(type);
       setIsAdmin(!!authUser);
+
+      // 4. Refresh Health
+      await checkHealth();
     } catch (e) {
       console.error('Refresh failed:', e);
     } finally {
       setRefreshing(false);
     }
-  }, [serverUrl]);
+  }, [serverUrl, checkHealth]);
 
   const loadPersonalStats = async () => {
     try {
@@ -110,7 +115,10 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
                   </View>
                   <View style={{ marginLeft: 16, flex: 1 }}>
                     <Text style={{ color: 'white', fontSize: 20, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.5 }}>PBB Mobile</Text>
-                    <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: '600', marginTop: 2 }} numberOfLines={1}>Desa {villageName || 'Nama Desa'}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: health.server ? appTheme.colors.success : appTheme.colors.danger, marginRight: 6 }} />
+                      <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '600' }} numberOfLines={1}>Desa {villageName || 'Nama Desa'}</Text>
+                    </View>
                   </View>
                 </View>
                 <ScalableButton onPress={() => setMenuVisible(true)}>
@@ -119,6 +127,25 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
                   </BlurView>
                 </ScalableButton>
               </View>
+
+              {/* Server/Data Source Status Banner */}
+              {(!health.server || !health.bapenda) && (
+                <Animated.View entering={FadeInUp} style={{ marginBottom: 16 }}>
+                  <BlurView intensity={40} tint="dark" style={{ borderRadius: 20, padding: 12, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: health.server ? 'rgba(245, 158, 11, 0.3)' : 'rgba(239, 68, 68, 0.3)', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                    <View style={{ width: 32, height: 32, borderRadius: 12, backgroundColor: health.server ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                      <Ionicons name="cloud-offline" size={16} color={health.server ? '#f59e0b' : '#ef4444'} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: 'white', fontSize: 12, fontWeight: '800' }}>
+                        {!health.server ? 'Koneksi Server Terputus' : 'Sumber Data Bapenda Down'}
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, fontWeight: '500' }}>
+                        {!health.server ? 'Pastikan koneksi internet Anda stabil atau server desa sedang aktif.' : 'Beberapa fitur sinkronisasi data pusat mungkin tidak tersedia.'}
+                      </Text>
+                    </View>
+                  </BlurView>
+                </Animated.View>
+              )}
 
               {/* Glass Hero Card */}
               <BlurView intensity={50} tint="dark" style={{ borderRadius: 32, padding: 24, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }}>
