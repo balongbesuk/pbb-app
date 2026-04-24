@@ -112,11 +112,30 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
 
           <Text style={{ color: 'rgba(255,255,255,0.6)', ...appTheme.typo.label, marginTop: 8 }}>{villageName} • TAHUN {currentYear}</Text>
           
+          {/* Server/Data Source Status Banner */}
+          {(!health.server || !health.bapenda) && (
+            <Animated.View entering={FadeInUp} style={{ marginTop: 16, marginBottom: -8 }}>
+              <BlurView intensity={40} tint="dark" style={{ borderRadius: 20, padding: 12, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: health.server ? 'rgba(245, 158, 11, 0.3)' : 'rgba(239, 68, 68, 0.3)', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                <View style={{ width: 32, height: 32, borderRadius: 12, backgroundColor: health.server ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                  <Ionicons name="cloud-offline" size={16} color={health.server ? '#f59e0b' : '#ef4444'} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: '800' }}>
+                    {!health.server ? 'Koneksi Server Terputus' : 'Sumber Data Bapenda Down'}
+                  </Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, fontWeight: '500' }}>
+                    {!health.server ? 'Pastikan koneksi internet Anda stabil atau server desa sedang aktif.' : 'Sinkronisasi data Bapenda mungkin tidak akurat sementara.'}
+                  </Text>
+                </View>
+              </BlurView>
+            </Animated.View>
+          )}
+
           {/* Pro Command Center Card */}
           <Animated.View entering={FadeInUp.delay(100)} style={{ marginTop: 24, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 32, padding: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981', marginRight: 8 }} />
+                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: health.server ? '#10b981' : appTheme.colors.danger, marginRight: 8 }} />
                 <Text style={{ color: 'rgba(255,255,255,0.9)', ...appTheme.typo.badge }}>LIVE COMMAND CENTER</Text>
               </View>
               <View style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(16, 185, 129, 0.15)' }}>
