@@ -72,8 +72,8 @@ export function TaxDataTable({
     sortBy, sortOrder, setSort,
   } = useTaxFilters();
 
-  // Derive the initial filter state from URL params to detect if we're on the default view
-  const isDefaultFilter = !q && page === 1 && (!dusun || dusun === "all") && (!rw || rw === "all") && (!rt || rt === "all") && (!penarik || penarik === "all") && (!regionStatus || regionStatus === "all") && (!paymentStatus || paymentStatus === "all");
+  const isPenarik = currentUser?.role === "PENARIK";
+  const ownPenarikFilterActive = !isPenarik || penarik === currentUser?.id;
 
   const {
     data: queryData,
@@ -100,18 +100,15 @@ export function TaxDataTable({
       if (!res.ok) throw new Error("Gagal mengambil data");
       return res.json();
     },
-    // Only use server-rendered initialData when on the default (unfiltered) view
-    // so that changing a filter always triggers a fresh fetch
-    initialData: isDefaultFilter ? { data: initialData, total: total, page: 1, pageSize } : undefined,
-    staleTime: 0, // Always refetch when filters change
-    placeholderData: (prev) => prev, // Keep previous data while fetching (smooth UX)
+    // Gunakan data dari server (SSR) sebagai data awal untuk setiap perubahan URL.
+    // Ini mencegah fetch ulang instan di sisi client yang memberatkan server.
+    initialData: { data: initialData, total: total, page: page, pageSize },
+    staleTime: 5000, 
+    placeholderData: (prev) => prev,
   });
 
   const displayData = queryData?.data || [];
   const displayTotal = queryData?.total || 0;
-
-  const isPenarik = currentUser?.role === "PENARIK";
-  const ownPenarikFilterActive = !isPenarik || penarik === currentUser?.id;
 
   const switchToOwnAssignments = () => {
     if (!isPenarik || !currentUser?.id) return;

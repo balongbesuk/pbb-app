@@ -16,9 +16,17 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
   const [refreshing, setRefreshing] = useState(false);
   const [taxpayers, setTaxpayers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const [tempSearch, setTempSearch] = useState('');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearch(tempSearch);
+    }, 600);
+    return () => clearTimeout(handler);
+  }, [tempSearch]);
 
   useEffect(() => { setPage(1); fetchTaxpayers(1, search); }, [search]);
 
@@ -36,15 +44,16 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
   const onRefresh = () => { setRefreshing(true); setPage(1); fetchTaxpayers(1, search); };
   const loadMore = () => { if (hasMore && !loadingMore) { const n = page + 1; setPage(n); fetchTaxpayers(n, search); } };
 
-  const renderHeader = () => (
+  const renderHeader = React.useMemo(() => (
     <AppScreenHeader title="Data wajib pajak" subtitle={villageName} onBack={() => navigation.goBack()}>
       <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '500', lineHeight: 20, marginTop: 6 }}>Daftar objek pajak, status pembayaran, dan detail lanjutan.</Text>
       <View style={{ marginTop: 16, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 20, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 }}>
         <Ionicons name="search-outline" size={18} color="rgba(255,255,255,0.6)" />
-        <TextInput style={{ flex: 1, paddingVertical: 15, paddingLeft: 12, color: 'white', fontSize: 15, fontWeight: '600' }} placeholder="Cari nama atau NOP" placeholderTextColor="rgba(255,255,255,0.4)" value={search} onChangeText={setSearch} />
+        <TextInput style={{ flex: 1, paddingVertical: 15, paddingLeft: 12, color: 'white', fontSize: 15, fontWeight: '600' }} placeholder="Cari nama atau NOP" placeholderTextColor="rgba(255,255,255,0.4)" value={tempSearch} onChangeText={setTempSearch} />
+        {loading && <ActivityIndicator color="white" size="small" style={{ marginLeft: 8 }} />}
       </View>
     </AppScreenHeader>
-  );
+  ), [villageName, tempSearch, loading]);
 
   const renderItem = ({ item: wp }: { item: any }) => {
     const t = wp.paymentStatus === 'LUNAS' ? statusTone.LUNAS : statusTone.PIUTANG;
@@ -81,9 +90,9 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
 
   return (
     <View style={{ flex: 1, backgroundColor: appTheme.colors.bg }}>
-      <FlatList data={loading && page === 1 ? [] : taxpayers} keyExtractor={(i) => String(i.id)} renderItem={renderItem}
+      <FlatList data={taxpayers} keyExtractor={(i) => String(i.id)} renderItem={renderItem}
         ListHeaderComponent={renderHeader} ListHeaderComponentStyle={{ marginBottom: 18 }}
-        ListEmptyComponent={loading ? <View style={{ paddingHorizontal: 24 }}><AppSkeletonCard lines={3} /><AppSkeletonCard lines={3} /></View> : <View style={{ paddingHorizontal: 24 }}><AppEmptyState icon="documents-outline" title="Tidak ditemukan" description="Coba kata kunci lain." /></View>}
+        ListEmptyComponent={loading ? <View style={{ paddingHorizontal: 24 }}><AppSkeletonCard lines={3} /><AppSkeletonCard lines={3} /></View> : (tempSearch.length > 0 ? <View style={{ paddingHorizontal: 24 }}><AppEmptyState icon="documents-outline" title="Tidak ditemukan" description="Coba kata kunci lain." /></View> : null)}
         ListFooterComponent={<View style={{ paddingHorizontal: 24, paddingBottom: 60 }}>
           {taxpayers.length > 0 && hasMore && <ScalableButton onPress={loadMore}><View style={{ backgroundColor: appTheme.colors.surface, borderRadius: 18, paddingVertical: 15, alignItems: 'center', ...appTheme.shadow.soft }}><Text style={{ color: appTheme.colors.primary, fontSize: 13, fontWeight: '700' }}>Muat lebih banyak</Text></View></ScalableButton>}
           {loadingMore && <ActivityIndicator color={appTheme.colors.primary} style={{ marginTop: 14 }} />}

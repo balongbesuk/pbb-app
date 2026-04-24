@@ -79,21 +79,22 @@ export function TaxTableFilters({
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (localSearch.length >= 2 || localSearch.length === 0) {
-        if (localSearch !== search) {
-          onSearchChange(localSearch);
+      const trimmed = localSearch.trim();
+      // Only search if 3+ chars or empty (reset)
+      if (trimmed.length >= 3 || trimmed.length === 0) {
+        if (trimmed !== search) {
+          onSearchChange(trimmed);
         }
       }
-    }, 600); // 600ms debounce - prevents excessive queries while typing
+    }, 1000); 
     return () => clearTimeout(handler);
   }, [localSearch, search, onSearchChange]);
 
   const handleLocalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (localSearch.length >= 2 || localSearch.length === 0) {
-      if (localSearch !== search) {
-        onSearchChange(localSearch);
-      }
+    const trimmed = localSearch.trim();
+    if (trimmed !== search) {
+      onSearchChange(trimmed);
     }
     onSearchSubmit(e);
   };
@@ -101,12 +102,10 @@ export function TaxTableFilters({
 
   useEffect(() => {
     if (focusTarget === "search") {
-      // Focus mobile input (visible on small screens)
       if (window.innerWidth < 768) {
         mobileInputRef.current?.focus();
         mobileInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
-        // Focus desktop input
         inputRef.current?.focus();
         inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       }
@@ -128,8 +127,6 @@ export function TaxTableFilters({
     : filterPaymentStatus === "BELUM_LUNAS" ? "⏳ Belum Lunas"
     : filterPaymentStatus === "SUSPEND" ? "🚫 Sengketa"
     : "📄 Tdk Terbit";
-
-
 
   return (
     <div className="space-y-3">
