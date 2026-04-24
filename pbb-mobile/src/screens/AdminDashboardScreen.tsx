@@ -34,8 +34,11 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
   const fetchDashboard = async () => {
     try {
       const url = joinServerUrl(serverUrl, `/api/mobile/officer/dashboard?userId=${user.id}&tahun=${new Date().getFullYear()}`);
-      const res = await fetch(url); const data = await res.json();
-      if (data.success) { setDashboardData(data); if (data.villageConfig) setBapendaConfig(data.villageConfig); }
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) { setDashboardData(data); if (data.villageConfig) setBapendaConfig(data.villageConfig); }
+      }
     } catch (err) { console.error('Fetch Dashboard Error:', err); }
     finally { setLoading(false); setRefreshing(false); }
   };

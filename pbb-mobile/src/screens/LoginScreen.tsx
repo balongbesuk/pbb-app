@@ -28,19 +28,23 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify(form) 
       });
-      const data = await response.json();
-      if (data.success) {
-        if (data.magicToken) await AsyncStorage.setItem('@admin_magic_token', data.magicToken);
-        await AsyncStorage.setItem('@auth_user', JSON.stringify(data.user));
-        navigation.navigate('AdminDashboard', { 
-          serverUrl, 
-          user: data.user, 
-          isAdmin: true, 
-          stats: { totalSppt: 0, lunasSppt: 0 }, 
-          villageName: data.user.dusun || villageName || 'Panel Petugas' 
-        });
-      } else { 
-        setErrorMsg(data.error || 'Username atau password salah.'); 
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          if (data.magicToken) await AsyncStorage.setItem('@admin_magic_token', data.magicToken);
+          await AsyncStorage.setItem('@auth_user', JSON.stringify(data.user));
+          navigation.navigate('AdminDashboard', { 
+            serverUrl, 
+            user: data.user, 
+            isAdmin: true, 
+            stats: { totalSppt: 0, lunasSppt: 0 }, 
+            villageName: data.user.dusun || villageName || 'Panel Petugas' 
+          });
+        } else { 
+          setErrorMsg(data.error || 'Username atau password salah.'); 
+        }
+      } else {
+        setErrorMsg(`Gagal masuk (Status: ${response.status}). Pastikan server aktif.`);
       }
     } catch (err) { 
       setErrorMsg('Gagal terhubung ke server. Pastikan jaringan stabil.'); 
