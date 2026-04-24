@@ -38,9 +38,11 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
       // 2. Reload Village Stats from Server
       if (serverUrl) {
         const response = await fetch(joinServerUrl(serverUrl, '/api/mobile/connect'));
-        const data = await response.json();
-        if (data.success && data.stats) {
-          setDisplayStats(data.stats);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.stats) {
+            setDisplayStats(data.stats);
+          }
         }
       }
       

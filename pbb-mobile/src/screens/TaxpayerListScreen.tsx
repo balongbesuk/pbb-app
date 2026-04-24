@@ -38,9 +38,21 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
     try {
       const params = new URLSearchParams({ userId: user.id, tahun: tahun.toString(), search: q, page: pageNum.toString(), limit: '20' });
       const res = await fetch(joinServerUrl(serverUrl, `/api/mobile/officer/taxpayers?${params.toString()}`));
+      
+      if (!res.ok) {
+        console.warn(`Fetch taxpayers failed with status: ${res.status}`);
+        return;
+      }
+      
       const data = await res.json();
-      if (data.success) { if (pageNum === 1) setTaxpayers(data.data); else setTaxpayers((p) => [...p, ...data.data]); setHasMore(data.hasMore); }
-    } catch (err) { console.error(err); }
+      if (data.success) { 
+        if (pageNum === 1) setTaxpayers(data.data); 
+        else setTaxpayers((p) => [...p, ...data.data]); 
+        setHasMore(data.hasMore); 
+      }
+    } catch (err) { 
+      console.error('fetchTaxpayers error:', err); 
+    }
     finally { setLoading(false); setRefreshing(false); setLoadingMore(false); }
   };
 

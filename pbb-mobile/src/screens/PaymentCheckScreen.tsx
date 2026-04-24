@@ -41,17 +41,21 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
     setLoading(true); setErrorMsg(''); setResults([]);
     try {
       const response = await fetch(`${joinServerUrl(serverUrl, '/api/mobile/tax')}?nop=${encodeURIComponent(targetNop.trim())}`);
-      const data = await response.json();
-      if (data.success && Array.isArray(data.data)) {
-        setResults(data.data);
-        const updated = pinnedList.map((p) => { const m = data.data.find((d: any) => d.nop === p.nop); return m ? { ...p, status: m.status } : p; });
-        if (updated.length > 0) { setPinnedList(updated); AsyncStorage.setItem('@pinned_nops_v2', JSON.stringify(updated)); }
-        if (data.villageConfig) setBapendaConfig(data.villageConfig);
-      } else { setErrorMsg(data.error || 'Terjadi kesalahan.'); }
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.data)) {
+          setResults(data.data);
+          const updated = pinnedList.map((p) => { const m = data.data.find((d: any) => d.nop === p.nop); return m ? { ...p, status: m.status } : p; });
+          if (updated.length > 0) { setPinnedList(updated); AsyncStorage.setItem('@pinned_nops_v2', JSON.stringify(updated)); }
+          if (data.villageConfig) setBapendaConfig(data.villageConfig);
+        } else { setErrorMsg(data.error || 'Terjadi kesalahan.'); }
+      } else {
+        setErrorMsg(`Gagal mengambil data (Status: ${response.status})`);
+      }
       
       // Also refresh health on search
       checkHealth();
-    } catch (err) { setErrorMsg('Gagal mengambil data.'); } finally { setLoading(false); }
+    } catch (err) { setErrorMsg('Gagal mengambil data. Pastikan server aktif.'); } finally { setLoading(false); }
   };
 
   const isPinned = (item: any) => pinnedList.some((p) => p.nop === item.nop);
