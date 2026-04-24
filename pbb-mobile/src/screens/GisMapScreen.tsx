@@ -9,12 +9,15 @@ import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { appTheme } from '../theme/app-theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useServerHealth } from '../utils/hooks';
 
 export default function GisMapScreen({ route, navigation }: ScreenProps<'GisMap'>) {
   const { serverUrl } = route.params;
   const [loading, setLoading] = useState(true);
   const [mapUrl, setMapUrl] = useState('');
   const webViewRef = useRef<any>(null);
+  
+  const { health } = useServerHealth(serverUrl);
 
   useEffect(() => { const base = normalizeServerUrl(serverUrl); setMapUrl(joinServerUrl(base, '/mobile-map.html')); }, []);
 
@@ -30,8 +33,14 @@ export default function GisMapScreen({ route, navigation }: ScreenProps<'GisMap'
         }
         style={{ paddingBottom: 32 }}>
         <Animated.View entering={FadeInUp.delay(100)} style={{ alignItems: 'center', marginTop: 12 }}>
-          <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' }}>
+          <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', marginBottom: 8 }}>
             <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600', textAlign: 'center' }}>Persebaran objek pajak dan status pembayaran</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: health.server ? appTheme.colors.success : appTheme.colors.danger, marginRight: 6 }} />
+            <Text style={{ color: 'white', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' }}>
+              Status Server: {health.server ? 'Online' : 'Offline'}
+            </Text>
           </View>
         </Animated.View>
       </AppScreenHeader>

@@ -8,6 +8,7 @@ import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppEmptyState } from '../components/AppEmptyState';
 import { AppSkeletonCard } from '../components/AppSkeletonCard';
+import { useServerHealth } from '../utils/hooks';
 import { appTheme, statusTone } from '../theme/app-theme';
 
 export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'TaxpayerList'>) {
@@ -20,6 +21,8 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  const { health } = useServerHealth(serverUrl);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -47,6 +50,13 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
   const renderHeader = React.useMemo(() => (
     <AppScreenHeader title="Data wajib pajak" subtitle={villageName} onBack={() => navigation.goBack()}>
       <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '500', lineHeight: 20, marginTop: 6 }}>Daftar objek pajak, status pembayaran, dan detail lanjutan.</Text>
+      
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: health.server ? appTheme.colors.success : appTheme.colors.danger, marginRight: 8 }} />
+        <Text style={{ color: 'white', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          Status Server: {health.server ? 'Terhubung (Online)' : 'Terputus (Offline)'}
+        </Text>
+      </View>
       <View style={{ marginTop: 16, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 20, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 }}>
         <Ionicons name="search-outline" size={18} color="rgba(255,255,255,0.6)" />
         <TextInput style={{ flex: 1, paddingVertical: 15, paddingLeft: 12, color: 'white', fontSize: 15, fontWeight: '600' }} placeholder="Cari nama atau NOP" placeholderTextColor="rgba(255,255,255,0.4)" value={tempSearch} onChangeText={setTempSearch} />

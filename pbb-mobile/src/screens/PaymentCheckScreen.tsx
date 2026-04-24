@@ -87,14 +87,17 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
               placeholder="Ketik NOP atau nama wajib pajak"
               placeholderTextColor={appTheme.colors.textSoft}
               value={nop} onChangeText={handleNopChange} />
-            <ScalableButton onPress={() => fetchTaxData(nop)} disabled={loading || !nop}>
-              <View style={{ backgroundColor: nop ? 'white' : 'rgba(255,255,255,0.2)', borderRadius: 18, paddingVertical: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }}>
+            <ScalableButton onPress={() => fetchTaxData(nop)} disabled={loading || !nop || !health.server}>
+              <View style={{ backgroundColor: (nop && health.server) ? 'white' : 'rgba(255,255,255,0.2)', borderRadius: 18, paddingVertical: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }}>
                 {loading ? <ActivityIndicator color={appTheme.colors.primary} /> : (
-                  <><Ionicons name="search-outline" size={18} color={nop ? appTheme.colors.primary : 'rgba(255,255,255,0.5)'} />
-                  <Text style={{ color: nop ? appTheme.colors.primary : 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: '700', marginLeft: 8 }}>Cari tagihan</Text></>
+                  <><Ionicons name="search-outline" size={18} color={(nop && health.server) ? appTheme.colors.primary : 'rgba(255,255,255,0.5)'} />
+                  <Text style={{ color: (nop && health.server) ? appTheme.colors.primary : 'rgba(255,255,255,0.5)', fontSize: 14, fontWeight: '700', marginLeft: 8 }}>Cari tagihan</Text></>
                 )}
               </View>
             </ScalableButton>
+            {!health.server && <View style={{ marginTop: 12, backgroundColor: 'rgba(239, 68, 68, 0.15)', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+              <Text style={{ color: '#fca5a5', fontSize: 12, fontWeight: '600', textAlign: 'center' }}>Server sedang offline. Tidak dapat melakukan pencarian.</Text>
+            </View>}
             {errorMsg ? <View style={{ marginTop: 12, backgroundColor: 'rgba(224,49,49,0.15)', borderRadius: 14, padding: 12 }}>
               <Text style={{ color: '#fca5a5', fontSize: 12, fontWeight: '600' }}>{errorMsg}</Text>
             </View> : null}

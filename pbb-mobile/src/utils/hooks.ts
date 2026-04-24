@@ -23,19 +23,20 @@ export function useServerHealth(serverUrl: string | undefined) {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.status) {
-          setHealth(prev => ({
-            ...prev,
+          setHealth({
             server: true,
             database: data.status.database,
             bapenda: data.status.bapenda,
             loading: false,
-          }));
+          });
           return;
         }
       }
-      setHealth(prev => ({ ...prev, server: false, loading: false }));
+      // If server responds but success is false or status is missing
+      setHealth({ server: false, database: false, bapenda: false, loading: false });
     } catch (e) {
-      setHealth(prev => ({ ...prev, server: false, loading: false }));
+      // If fetch fails (network error, 502, etc)
+      setHealth({ server: false, database: false, bapenda: false, loading: false });
     }
   }, [serverUrl]);
 
