@@ -5,14 +5,25 @@ import { Topbar } from "@/components/layout/topbar";
 import { BottomNavbar } from "@/components/layout/bottom-navbar";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { data: session } = useSession();
+  const pathname = usePathname();
+  const router = useRouter();
 
   // Jika user wajib ganti password, kita sembunyikan navigasi (sidebar & topbar)
   // agar mereka tidak bisa berpindah halaman sampai password diganti.
   const isForcedPasswordChange = session?.user?.mustChangePassword;
+
+  // Redireksi otomatis jika wajib ganti password tapi tidak di halaman ganti password
+  useEffect(() => {
+    if (isForcedPasswordChange && pathname !== "/ganti-password") {
+      router.replace("/ganti-password");
+    }
+  }, [isForcedPasswordChange, pathname, router]);
 
   if (isForcedPasswordChange) {
     return (

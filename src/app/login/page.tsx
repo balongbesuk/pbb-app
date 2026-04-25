@@ -45,7 +45,17 @@ function LoginForm() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard");
+      // Periksa apakah user wajib ganti password sebelum redirect ke dashboard
+      const checkMustChange = async () => {
+        const sessionRes = await fetch("/api/auth/session");
+        const session = await sessionRes.json();
+        if (session?.user?.mustChangePassword) {
+          router.replace("/ganti-password");
+        } else {
+          router.replace("/dashboard");
+        }
+      };
+      checkMustChange();
     }
   }, [status, router]);
 
