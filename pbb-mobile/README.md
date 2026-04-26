@@ -1,4 +1,4 @@
-# PBB Mobile — Panduan Build APK & Development
+# PBB Mobile v1.1.0 — Panduan Build APK & Development
 <img width="100%" alt="PBB Mobile Banner" src="https://github.com/user-attachments/assets/18594d4f-f24d-42b2-bcf3-650e795181bf" />
 
 Dokumen ini berisi panduan teknis untuk melakukan build aplikasi **PBB Mobile** menjadi file APK (Android) menggunakan layanan **EAS Build (Expo Application Services)**.
@@ -80,4 +80,4 @@ Kemudian tekan `a` untuk membuka di emulator Android atau scan QR code dengan ap
 ---
 
 *Terakhir diperbarui: April 2026*
-*Dibuat untuk ekosistem PBB Manager v9.0.0*
+*Dibuat untuk ekosistem PBB Manager v9.1.0 (PBB Mobile v1.1.0)*
