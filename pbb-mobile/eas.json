@@ -19,7 +19,7 @@
     },
     "store": {
       "android": {
-        "buildType": "appBundle"
+        "buildType": "app-bundle"
       }
     }
   },
