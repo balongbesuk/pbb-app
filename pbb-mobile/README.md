@@ -1,5 +1,6 @@
 # PBB Mobile v1.1.0 — Panduan Build APK & Development
-<img width="100%" alt="PBB Mobile Banner" src="https://github.com/user-attachments/assets/18594d4f-f24d-42b2-bcf3-650e795181bf" />
+<img width="100%" alt="PBB Mobile Banner" src="https://github.com/user-attachments/assets/1cc7b3c6-030e-49c1-a388-33af515376bc" />
+
 
 Dokumen ini berisi panduan teknis untuk melakukan build aplikasi **PBB Mobile** menjadi file APK (Android) menggunakan layanan **EAS Build (Expo Application Services)**.
 
