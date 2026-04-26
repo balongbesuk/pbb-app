@@ -33,16 +33,16 @@ Jika ini adalah pertama kalinya Anda melakukan build pada mesin baru atau setela
 eas build:configure
 ```
 
-### 3. Build APK (Untuk Testing/Preview)
-Gunakan profil `preview` untuk menghasilkan file APK yang dapat diinstal langsung di perangkat Android tanpa melalui Play Store.
-```bash
-eas build -p android --profile preview
-```
-
-### 4. Build AAB (Untuk Play Store/Production)
-Gunakan profil `production` untuk menghasilkan file Android App Bundle (.aab) yang siap diunggah ke Google Play Console.
+### 3. Build APK Production (Rekomendasi)
+Gunakan profil `production` untuk menghasilkan file APK yang sudah dioptimasi untuk penggunaan akhir. File ini dapat diinstal langsung di HP.
 ```bash
 eas build -p android --profile production
+```
+
+### 4. Build AAB (Untuk Play Store)
+Gunakan profil `store` jika Anda ingin mengunggah aplikasi ke Google Play Store (menghasilkan file .aab).
+```bash
+eas build -p android --profile store
 ```
 
 ---
