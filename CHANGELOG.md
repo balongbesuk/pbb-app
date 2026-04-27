@@ -12,6 +12,9 @@ Pembaruan besar pada portal publik dengan fokus pada kemandirian warga dalam pen
 - **Unified Squircle UI**: Standarisasi seluruh elemen tombol publik menggunakan desain *Squircle* (`rounded-2xl`) untuk identitas visual yang lebih konsisten dan modern.
 - **Mobile Navigation Polish**: Optimasi navbar mobile dengan ikon login minimalis dan logo desa yang terintegrasi dengan tautan beranda.
 - **Hybrid Search Results**: Pengembalian fitur popup pada hasil pencarian NOP sementara tetap menyediakan akses ke halaman mandiri, memberikan fleksibilitas akses bagi warga.
+- **Auto-fill Applicant Identity**: Sinkronisasi otomatis antara Nama Pemohon (Tahap 1) dan Nama Wajib Pajak (Tahap 2) pada form pengajuan SPPT baru untuk mempercepat input data.
+- **Smart Vacant Land Flow**: Jalur navigasi cerdas pada form SPOP yang secara otomatis menyembunyikan tahap isian bangunan jika jenis tanah adalah "Tanah Kosong", lengkap dengan penyesuaian label tombol pratinjau.
+- **Enhanced Form Guidance**: Penambahan *placeholder* informatif pada kolom Alamat/Jalan untuk memandu warga memberikan data lokasi yang lebih presisi.
 
 ### PBB Mobile (Fitur Operasional)
 - **Dynamic Action Footer**: Implementasi barisan tombol aksi di Detail WP (Sengketa, Tdk Terbit, Tandai Lunas, Batal Lunas) yang menyederhanakan pembaruan status data langsung dari lapangan.

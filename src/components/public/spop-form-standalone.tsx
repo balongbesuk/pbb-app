@@ -391,7 +391,7 @@ export function SpopFormStandalone({
 
               <div className="space-y-2 md:col-span-6">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Nama Jalan Objek</Label>
-                <Input value={form.namaJalanObjek} onChange={(e) => setField("namaJalanObjek", sanitizeInput(e.target.value, MAX_ADDR))} className={cn("h-12 rounded-2xl font-bold uppercase", styles.input)} maxLength={MAX_ADDR} />
+                <Input value={form.namaJalanObjek} onChange={(e) => setField("namaJalanObjek", sanitizeInput(e.target.value, MAX_ADDR))} className={cn("h-12 rounded-2xl font-bold uppercase", styles.input)} placeholder="Contoh: JL. RAYA BALONGBESUK / DUSUN" maxLength={MAX_ADDR} />
               </div>
 
               <div className="grid grid-cols-2 gap-4 md:col-span-4">
@@ -556,14 +556,34 @@ export function SpopFormStandalone({
       <div className={cn("pt-6 border-t", isDark ? "border-white/5" : "border-slate-200")}>
         <div className="flex items-center gap-3">
           {step > 1 && (
-            <Button variant="outline" onClick={() => setStep((prev) => prev - 1)} className={cn("h-14 min-w-40 rounded-2xl font-black uppercase tracking-widest text-[10px]", isDark ? "border-white/10 text-white/60" : "border-slate-200 text-slate-500")}>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                if (step === 4 && form.jenisTanah === "TANAH_KOSONG") {
+                  setStep(2);
+                } else {
+                  setStep((prev) => prev - 1);
+                }
+              }} 
+              className={cn("h-14 min-w-40 rounded-2xl font-black uppercase tracking-widest text-[10px]", isDark ? "border-white/10 text-white/60" : "border-slate-200 text-slate-500")}
+            >
               <ChevronLeft className="h-5 w-5 mr-2" /> Kembali
             </Button>
           )}
           <div className="flex flex-1 items-center gap-3 justify-end">
             {step < 4 ? (
               <Button onClick={validateAndProceed} className={cn("h-14 min-w-56 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg transition-all", isDark ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-primary hover:bg-primary/90 text-white")}>
-                {step === 3 ? "Preview SPOP" : "Lanjut ke " + steps[step].label} <ChevronRight className="ml-2 h-4 w-4" />
+                {step === 3 || (step === 2 && form.jenisTanah === "TANAH_KOSONG") ? (
+                  <>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview SPOP
+                  </>
+                ) : (
+                  <>
+                    Lanjut ke {steps[step].label}
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </Button>
             ) : (
               <div className="flex items-center gap-2">
