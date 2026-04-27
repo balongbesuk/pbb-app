@@ -214,6 +214,20 @@ export function SpptNewForm({
     const logoSrc = vLogo ? `${vLogo}${cacheBuster}` : "/uploads/logo-desa.png";
     const year = new Date().getFullYear();
 
+    const safeDateStr = escapeHtml(dateStr);
+    const safeLogoSrc = escapeHtml(logoSrc);
+    const safePemohon = escapeHtml(pemohon);
+    const safeObjekAlamat = escapeHtml(objekAlamat);
+    const safeTelpPemohon = escapeHtml(telpPemohon || "-");
+    const safeNikPemohon = escapeHtml(nikPemohon || "-");
+    const safeNomorSurat = escapeHtml(nomorSurat);
+    const safeNamaKades = escapeHtml(namaKades);
+    const safeObjekNama = escapeHtml(objekNama);
+    const safeVName = escapeHtml(vName);
+    const safeDName = escapeHtml(dName);
+    const safeRName = escapeHtml(rName);
+    const safeVAddress = escapeHtml(vAddress);
+
     const html = `
       <div class="letter-stack">
         <!-- PAGE 1: SURAT PERMOHONAN -->
@@ -241,9 +255,9 @@ export function SpptNewForm({
           <div class="letter-table-wrap">
             <table class="letter-table">
               <tbody>
-                <tr><td>Nama Wajib Pajak</td><td>:</td><td class="font-bold uppercase">${pemohon}</td></tr>
-                <tr><td>Alamat</td><td>:</td><td class="uppercase">${objekAlamat}</td></tr>
-                <tr><td>Nomor Telpon</td><td>:</td><td>${telpPemohon || "-"}</td></tr>
+                <tr><td>Nama Wajib Pajak</td><td>:</td><td class="font-bold uppercase">${safePemohon}</td></tr>
+                <tr><td>Alamat</td><td>:</td><td class="uppercase">${safeObjekAlamat}</td></tr>
+                <tr><td>Nomor Telpon</td><td>:</td><td>${safeTelpPemohon}</td></tr>
               </tbody>
             </table>
           </div>
