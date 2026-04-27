@@ -17,6 +17,14 @@ interface SpptNewFormProps {
 
 const MAX_TEXT_LENGTH = 120;
 
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 const sanitizeText = (value: string, maxLength = MAX_TEXT_LENGTH) =>
   value
     .replace(/[<>]/g, "")
@@ -383,10 +391,11 @@ export function SpptNewForm({
     if (!win) return;
     const cacheBuster = vUpdatedAt ? `?v=${new Date(vUpdatedAt).getTime()}` : "";
     const logoSrc = vLogo ? `${window.location.origin}${vLogo}${cacheBuster}` : `${window.location.origin}/uploads/logo-desa.png`;
+    const safePemohon = escapeHtml(pemohon);
     win.document.write(`
       <html>
         <head>
-          <title>Cetak Pengajuan SPPT Baru - ${pemohon}</title>
+          <title>Cetak Pengajuan SPPT Baru - ${safePemohon}</title>
           <style>${letterDocumentStyles}</style>
         </head>
         <body onload="window.print(); window.close();">
