@@ -31,6 +31,12 @@ Pembaruan besar pada portal publik dengan fokus pada kemandirian warga dalam pen
 - **Rebranding Update**: Pembaruan teks label login dan identitas utama menjadi **PBB Mobile** untuk kejelasan fungsi sebagai alat operasional lapangan.
 - **Layout Overlap Fix**: Optimalisasi *bottom padding* dan *safe area* pada layar detail untuk memastikan semua elemen interaktif dapat diakses dengan nyaman.
 
+### Security Hardening & Maintenance
+- **XSS Protection (DOMPurify)**: Implementasi pembersihan HTML (*HTML Sanitization*) menyeluruh menggunakan library `dompurify` pada seluruh fitur cetak dokumen publik (SPPT Baru, SPOP/LSPOP, dan Mutasi).
+- **GitHub Security Alignment**: Penyinkronan kode dengan rekomendasi keamanan *GitHub Advanced Security (CodeQL)* untuk mencegah celah injeksi kode melalui input formulir warga.
+- **Build Optimization**: Perbaikan kesalahan deklarasi variabel ganda dan inkonsistensi tipe data (*TypeScript Type Mismatch*) pada formulir publik untuk menjamin kelancaran proses *production build*.
+- **Robust Dependency Management**: Penambahan library keamanan industri (`dompurify`) ke dalam dependensi inti proyek.
+
 ---
 
 

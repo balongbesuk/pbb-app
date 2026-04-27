@@ -25,6 +25,7 @@ import { getVillageConfig } from "@/app/actions/settings-actions";
 import { cn } from "@/lib/utils";
 import { Check, ChevronLeft, ChevronRight, Eye, Printer } from "lucide-react";
 import { toast } from "sonner";
+import DOMPurify from "dompurify";
 
 interface SpopFormDialogProps {
   open: boolean;
@@ -240,7 +241,8 @@ export function SpopFormDialog({
     if (!form) return;
     try {
       const html = buildSpopPrintHtml(form, villageConfig ?? undefined);
-      setPreviewHtml(html);
+      const sanitizedHtml = DOMPurify.sanitize(html, { WHOLE_DOCUMENT: true, ADD_TAGS: ["style"] });
+      setPreviewHtml(sanitizedHtml);
       setStep(4);
       toast.success("Preview siap dilihat.");
     } catch (error) {
@@ -253,13 +255,14 @@ export function SpopFormDialog({
   const handleHtmlPrint = () => {
     if (!form) return;
     const html = buildSpopPrintHtml(form, villageConfig ?? undefined);
+    const sanitizedHtml = DOMPurify.sanitize(html, { WHOLE_DOCUMENT: true, ADD_TAGS: ["style"] });
     const win = window.open("", "_blank");
     if (!win) {
       toast.error("Gagal membuka jendela cetak. Pastikan pop-up tidak diblokir.");
       return;
     }
 
-    win.document.write(html);
+    win.document.write(sanitizedHtml);
     win.document.close();
     
     // Auto trigger print for convenience

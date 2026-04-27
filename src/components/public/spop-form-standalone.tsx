@@ -227,7 +227,7 @@ export function SpopFormStandalone({
             rt: "",
             rw: "",
             dusun: "",
-            tahun: new Date().getFullYear().toString()
+            tahun: new Date().getFullYear()
         };
     }
     

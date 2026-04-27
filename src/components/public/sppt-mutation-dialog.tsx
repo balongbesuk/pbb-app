@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Printer, FileText, ChevronRight, ChevronLeft, Check, History, Eye, Loader2, AlertCircle, ShieldAlert } from "lucide-react";
 import { cn, formatDateNoTime } from "@/lib/utils";
 import { toast } from "sonner";
+import DOMPurify from "dompurify";
 import { generateMutationDocx } from "@/lib/mutation-docx-gen";
 
 interface SpptData {
@@ -427,7 +428,8 @@ export function SpptMutationDialog({
     `;
 
     setTimeout(() => {
-      setPreviewHtml(html);
+      const sanitizedHtml = DOMPurify.sanitize(html);
+      setPreviewHtml(sanitizedHtml);
       setIsGenerating(false);
     }, 600);
   };
@@ -486,17 +488,20 @@ export function SpptMutationDialog({
     if (!win) return;
     const cacheBuster = vUpdatedAt ? `?v=${new Date(vUpdatedAt).getTime()}` : "";
     const logoSrc = vLogo ? `${window.location.origin}${vLogo}${cacheBuster}` : `${window.location.origin}/uploads/logo-desa.png`;
-    win.document.write(`
+    const safePemohon = pemohon.replace(/[<>]/g, "");
+    const fullHtml = `
       <html>
         <head>
-          <title>Cetak Mutasi PBB - ${pemohon}</title>
+          <title>Cetak Mutasi PBB - ${safePemohon}</title>
           <style>${letterDocumentStyles}</style>
         </head>
         <body onload="window.print(); window.close();">
           ${previewHtml.replaceAll("/uploads/logo-desa.png", logoSrc)}
         </body>
       </html>
-    `);
+    `;
+    const sanitizedFullHtml = DOMPurify.sanitize(fullHtml, { WHOLE_DOCUMENT: true, ADD_TAGS: ["style"] });
+    win.document.write(sanitizedFullHtml);
     win.document.close();
   };
 
@@ -683,7 +688,7 @@ export function SpptMutationDialog({
                   ) : (
                     <iframe 
                       title="Preview Mutasi PBB"
-                      srcDoc={`<html><head><style>${letterDocumentStyles}</style></head><body>${previewHtml}</body></html>`}
+                      srcDoc={DOMPurify.sanitize(`<html><head><style>${letterDocumentStyles}</style></head><body>${previewHtml}</body></html>`, { WHOLE_DOCUMENT: true, ADD_TAGS: ["style"] })}
                       className="w-full h-[65vh] bg-white"
                     />
                   )}
