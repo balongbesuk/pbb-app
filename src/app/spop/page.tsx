@@ -2,7 +2,7 @@ import { getVillageConfig } from "@/app/actions/settings-actions";
 import { toTitleCase } from "@/lib/utils";
 import { PublicThemeWrapper } from "@/components/public/public-theme-wrapper";
 import { PublicNav } from "@/components/public/public-nav";
-import { FileText, ArrowLeft } from "lucide-react";
+import { FileText, ArrowLeft, Github } from "lucide-react";
 import { SpopFormStandalone } from "@/components/public/spop-form-standalone";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -56,9 +56,20 @@ export default async function SpopPage() {
         </div>
       </main>
 
-      <footer className="mt-auto pt-24 text-center pb-8 opacity-60">
+      <footer className="mt-auto pt-24 text-center pb-8 opacity-60 hover:opacity-100 transition-opacity">
         <p className="public-footer-text text-xs font-bold uppercase tracking-widest mb-1.5">PBB Manager &copy; {new Date().getFullYear()}</p>
-        <p className="public-footer-text text-[10px] font-medium">{namaDesa ? `Pemerintah Desa ${namaDesa}` : "PBB Manager"}</p>
+        <p className="public-footer-text text-[10px] font-medium mb-3">{namaDesa ? `Pemerintah Desa ${namaDesa}` : "PBB Manager"}</p>
+        <div className="flex justify-center mt-3">
+          <a
+            href="https://github.com/balongbesuk/pbb-app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors opacity-40 hover:opacity-100"
+            title="GitHub Repository"
+          >
+            <Github className="w-5 h-5 text-foreground" />
+          </a>
+        </div>
       </footer>
     </PublicThemeWrapper>
   );

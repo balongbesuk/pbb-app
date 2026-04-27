@@ -15,6 +15,8 @@ Pembaruan besar pada portal publik dengan fokus pada kemandirian warga dalam pen
 - **Auto-fill Applicant Identity**: Sinkronisasi otomatis antara Nama Pemohon (Tahap 1) dan Nama Wajib Pajak (Tahap 2) pada form pengajuan SPPT baru untuk mempercepat input data.
 - **Smart Vacant Land Flow**: Jalur navigasi cerdas pada form SPOP yang secara otomatis menyembunyikan tahap isian bangunan jika jenis tanah adalah "Tanah Kosong", lengkap dengan penyesuaian label tombol pratinjau.
 - **Enhanced Form Guidance**: Penambahan *placeholder* informatif pada kolom Alamat/Jalan untuk memandu warga memberikan data lokasi yang lebih presisi.
+- **Default Perekaman Transaction**: Penentuan "Perekaman Data Baru" sebagai opsi standar pada formulir SPOP untuk mempercepat proses pengisian bagi mayoritas warga.
+- **Unified Brand Footer**: Integrasi ikon GitHub dan tautan repositori pada seluruh halaman layanan mandiri (`/spop` & `/pengajuan`) untuk konsistensi identitas digital proyek.
 
 ### PBB Mobile (Fitur Operasional)
 - **Dynamic Action Footer**: Implementasi barisan tombol aksi di Detail WP (Sengketa, Tdk Terbit, Tandai Lunas, Batal Lunas) yang menyederhanakan pembaruan status data langsung dari lapangan.
