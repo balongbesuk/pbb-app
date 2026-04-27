@@ -8,6 +8,7 @@ import { Printer, FileText, ChevronRight, ChevronLeft, Check, Loader2, FilePlus2
 import { cn, formatDateNoTime } from "@/lib/utils";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
+import DOMPurify from "dompurify";
 import { generateNewSpptDocx } from "@/lib/new-sppt-docx-gen";
 import { usePublicThemeContext } from "./public-theme-provider";
 
@@ -340,9 +341,9 @@ export function SpptNewForm({
           <div class="letter-table-wrap">
             <table class="letter-table">
               <tbody>
-                <tr><td>Nama</td><td>:</td><td class="font-bold uppercase">${pemohon}</td></tr>
-                <tr><td>NIK</td><td>:</td><td>${nikPemohon || ".............................."}</td></tr>
-                <tr><td>Telp</td><td>:</td><td>${telpPemohon || "(Nomor Telp aktif)"}</td></tr>
+                <tr><td>Nama</td><td>:</td><td class="font-bold uppercase">${safePemohon}</td></tr>
+                <tr><td>NIK</td><td>:</td><td>${safeNikPemohon}</td></tr>
+                <tr><td>Telp</td><td>:</td><td>${safeTelpPemohon}</td></tr>
               </tbody>
             </table>
           </div>
@@ -407,6 +408,9 @@ export function SpptNewForm({
     const cacheBuster = vUpdatedAt ? `?v=${new Date(vUpdatedAt).getTime()}` : "";
     const logoSrc = vLogo ? `${window.location.origin}${vLogo}${cacheBuster}` : `${window.location.origin}/uploads/logo-desa.png`;
     const safePemohon = escapeHtml(pemohon);
+    const sanitizedPreviewHtml = DOMPurify.sanitize(
+      previewHtml.replaceAll("/uploads/logo-desa.png", logoSrc)
+    );
     win.document.write(`
       <html>
         <head>
@@ -414,7 +418,7 @@ export function SpptNewForm({
           <style>${letterDocumentStyles}</style>
         </head>
         <body onload="window.print(); window.close();">
-          ${previewHtml.replaceAll("/uploads/logo-desa.png", logoSrc)}
+          ${sanitizedPreviewHtml}
         </body>
       </html>
     `);
