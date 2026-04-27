@@ -227,6 +227,7 @@ export function SpptNewForm({
     const safeDName = escapeHtml(dName);
     const safeRName = escapeHtml(rName);
     const safeVAddress = escapeHtml(vAddress);
+    const safePemohon = escapeHtml(pemohon);
 
     const html = `
       <div class="letter-stack">
@@ -243,9 +244,9 @@ export function SpptNewForm({
                 <td class="letter-right-head">
                    <p>Kepada Yth.</p>
                    <p class="font-bold">Kepala Badan Pendapatan Daerah</p>
-                   <p class="font-bold">Kabupaten ${rName}</p>
+                   <p class="font-bold">Kabupaten ${safeRName}</p>
                    <p>di -</p>
-                   <p class="font-bold letter-city-indent">${rName.split("").join(" ")}</p>
+                   <p class="font-bold letter-city-indent">${safeRName.split("").join(" ")}</p>
                 </td>
               </tr>
             </tbody>
@@ -298,10 +299,10 @@ export function SpptNewForm({
           <p class="letter-block-gap">Demikian atas perhatiannya, kami sampaikan terima kasih.</p>
 
           <div class="letter-signature">
-            <p>${rName}, ${dateStr}</p>
+            <p>${safeRName}, ${dateStr}</p>
             <p class="letter-block-gap">Pemohon,</p>
             <div class="letter-sign-space"></div>
-            <p class="font-bold underline uppercase">${pemohon || "................"}</p>
+            <p class="font-bold underline uppercase">${safePemohon || "................"}</p>
           </div>
         </div>
 
