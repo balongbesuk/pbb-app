@@ -4,6 +4,7 @@ import { PublicTabs } from "@/components/public/public-tabs";
 import { Github, MapPin } from "lucide-react";
 import { PublicThemeWrapper } from "@/components/public/public-theme-wrapper";
 import { PublicNav } from "@/components/public/public-nav";
+import { PublicSelfService } from "@/components/public/public-self-service";
 import "./public.css";
 
 // Enable caching with revalidation every 30 seconds to support BFCache
@@ -50,6 +51,8 @@ export default async function IndexPage() {
             enablePublicGis={config?.enablePublicGis ?? true}
           />
         </div>
+
+        <PublicSelfService />
       </main>
 
       <footer className="mt-auto pt-24 text-center pb-8 opacity-60 hover:opacity-100 transition-opacity">

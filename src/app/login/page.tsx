@@ -244,7 +244,7 @@ function LoginForm() {
           <PublicModeToggle />
           <Link
             href="/"
-            className={`group flex items-center gap-2 backdrop-blur-md px-4 py-2 rounded-full font-bold text-xs uppercase tracking-widest border shadow-sm hover:scale-105 active:scale-95 transition-all ${backBtnCls}`}
+            className={`group flex items-center gap-2 backdrop-blur-md px-4 py-2 rounded-2xl font-bold text-xs uppercase tracking-widest border shadow-sm hover:scale-105 active:scale-95 transition-all ${backBtnCls}`}
           >
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
             Portal Warga

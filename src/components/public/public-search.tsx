@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Loader2, Search, MapPin, User, CheckCircle2, Phone, Info, Wallet, 
   ShieldAlert, Ruler, AlertCircle, History, Download, Eye, RefreshCcw, 
-  Copy, Check, FileText, Menu, ChevronDown, Printer 
+  Copy, Check, FileText, Menu, ChevronDown, Printer, FilePlus2 
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -22,7 +22,9 @@ import { formatCurrency, formatDate, formatDateNoTime, formatJatuhTempo, cn } fr
 import { toast } from "sonner";
 import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
 import { SpptMutationDialog } from "./sppt-mutation-dialog";
+import { SpptNewDialog } from "./sppt-new-dialog";
 import { SpopFormDialog } from "./spop-form-dialog";
+import Link from "next/link";
 
 interface PublicSearchResultItem {
   id: number;
@@ -82,6 +84,7 @@ export function PublicSearch({
   const [showPayRedirect, setShowPayRedirect] = useState<{ nop: string, namaWp: string } | null>(null);
   const [mutationItem, setMutationItem] = useState<PublicSearchResultItem | null>(null);
   const [spopItem, setSpopItem] = useState<PublicSearchResultItem | null>(null);
+  const [showNewSpptDialog, setShowNewSpptDialog] = useState(false);
   const [copiedNop, setCopiedNop] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
@@ -418,6 +421,25 @@ export function PublicSearch({
                 <ShieldAlert className="inline-block w-4 h-4 mr-2 -mt-0.5" />
               )}
               {message}
+              
+              {message === "Data tidak ditemukan." && (
+                <div className="mt-4 pt-4 border-t border-orange-500/20 flex flex-col items-center gap-3">
+                  <p className="text-[11px] opacity-60 font-medium">Apakah ini objek pajak baru yang belum terdaftar?</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewSpptDialog(true)}
+                    className={cn(
+                      "flex items-center gap-2 px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg",
+                      isDark 
+                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-900/20" 
+                        : "bg-zinc-900 hover:bg-zinc-800 text-white shadow-zinc-900/20"
+                    )}
+                  >
+                    <FilePlus2 className="w-4 h-4" />
+                    Ajukan SPPT Baru
+                  </button>
+                </div>
+              )}
             </div>
           )}
           
@@ -793,6 +815,15 @@ export function PublicSearch({
               }
             : null
         }
+        isDark={isDark}
+      />
+
+
+
+      <SpptNewDialog 
+        open={showNewSpptDialog}
+        onOpenChange={setShowNewSpptDialog}
+        initialName={query}
         isDark={isDark}
       />
     </div>

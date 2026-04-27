@@ -1,8 +1,17 @@
 # Changelog
 
-## v9.1 - 2026-04-18: PBB Mobile Action & Integration
+## v9.1 - 2026-04-27: Portal Publik & SPOP Standalone
 
-Peningkatan kapabilitas operasional petugas lapangan dengan fokus pada aksi interaktif, integrasi pembayaran pusat, dan penguatan identitas desa.
+Pembaruan besar pada portal publik dengan fokus pada kemandirian warga dalam pengajuan data melalui sistem formulir mandiri dan standarisasi desain antarmuka.
+
+### Portal Publik & Layanan Mandiri
+- **Standalone SPOP/LSPOP Page**: Implementasi halaman mandiri `/spop` dengan sistem tanya jawab interaktif untuk pengajuan Mutasi, Koreksi, dan Perekaman data baru.
+- **Standalone Pengajuan Baru**: Halaman mandiri `/pengajuan` untuk pendaftaran SPPT PBB Baru dengan formulir yang lebih lega dan fokus.
+- **Dynamic NOP Validation**: Sistem validasi NOP cerdas yang bersifat opsional untuk Perekaman baru, namun wajib (minimal 13 digit) untuk Pemutakhiran dan Penghapusan.
+- **Strict Form Sanitization**: Pengetatan batas karakter isian formulir (Nama: 21, Alamat: 21, Desa: 11, Kab: 8) sesuai standar fisik dokumen SPOP/LSPOP untuk akurasi cetak.
+- **Unified Squircle UI**: Standarisasi seluruh elemen tombol publik menggunakan desain *Squircle* (`rounded-2xl`) untuk identitas visual yang lebih konsisten dan modern.
+- **Mobile Navigation Polish**: Optimasi navbar mobile dengan ikon login minimalis dan logo desa yang terintegrasi dengan tautan beranda.
+- **Hybrid Search Results**: Pengembalian fitur popup pada hasil pencarian NOP sementara tetap menyediakan akses ke halaman mandiri, memberikan fleksibilitas akses bagi warga.
 
 ### PBB Mobile (Fitur Operasional)
 - **Dynamic Action Footer**: Implementasi barisan tombol aksi di Detail WP (Sengketa, Tdk Terbit, Tandai Lunas, Batal Lunas) yang menyederhanakan pembaruan status data langsung dari lapangan.

@@ -13,7 +13,7 @@ export function PublicModeToggle() {
       variant="ghost"
       size="icon"
       aria-label={isDark ? "Ganti ke tema terang" : "Ganti ke tema gelap"}
-      className={`rounded-full border transition-all h-11 w-11 shadow-sm ${
+      className={`rounded-2xl border transition-all h-11 w-11 shadow-sm ${
         isDark
           ? "bg-zinc-900 hover:bg-zinc-800 border-white/10 text-white"
           : "bg-white hover:bg-zinc-50 border-zinc-200 text-zinc-900"
