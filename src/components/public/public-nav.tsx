@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Building2, FilePlus2, LogIn } from "lucide-react";
+import { ArrowRight, Building2, LogIn } from "lucide-react";
 import { PublicModeToggle } from "./public-mode-toggle";
 import { usePublicThemeContext } from "./public-theme-provider";
-import { SpptNewDialog } from "./sppt-new-dialog";
+
 import { cn } from "@/lib/utils";
 
 interface PublicNavProps {
@@ -19,7 +19,7 @@ interface PublicNavProps {
 
 export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl, updatedAt }: PublicNavProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showNewDialog, setShowNewDialog] = useState(false);
+
   const { theme } = usePublicThemeContext();
   const isDark = theme === "dark";
 
@@ -82,13 +82,7 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl, updatedAt }
       </Link>
 
       <div className="flex items-center gap-2 sm:gap-3">
-        <button
-          onClick={() => setShowNewDialog(true)}
-          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 hover:bg-primary/20 transition-all group border border-primary/20"
-          title="Pengajuan SPPT PBB Baru"
-        >
-          <FilePlus2 className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
-        </button>
+
         <PublicModeToggle />
         <Link
           href="/login"
@@ -103,11 +97,7 @@ export function PublicNav({ namaDesa, kecamatan, kabupaten, logoUrl, updatedAt }
         </Link>
       </div>
 
-      <SpptNewDialog 
-        open={showNewDialog} 
-        onOpenChange={setShowNewDialog} 
-        isDark={isDark} 
-      />
+
     </nav>
   );
 }

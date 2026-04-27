@@ -41,7 +41,7 @@ export function PublicSelfService({ isDark = false }: PublicSelfServiceProps) {
             <FileText className="w-6 h-6 text-amber-500" />
           </div>
           <div className="text-left">
-            <p className="text-xs font-black uppercase tracking-widest text-amber-500">Mutasi / SPOP</p>
+            <p className="text-xs font-black uppercase tracking-widest text-amber-500">SPOP / LSPOP</p>
             <p className="text-[10px] font-medium opacity-50 group-hover:opacity-80 transition-opacity">Form SPOP / LSPOP Mandiri</p>
           </div>
         </Link>

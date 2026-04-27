@@ -89,6 +89,7 @@ export interface SpopFormData {
   dinding: SpopDindingType;
   lantai: SpopLantaiType;
   langitLangit: SpopLangitLangitType;
+  sketImage?: string;
 }
 
 function cleanText(value: string, maxLength = 120) {
@@ -133,7 +134,7 @@ export function buildSpopFormDefaults(source: SpopSourceTaxData): SpopFormData {
   const yyyyMmDd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   return {
-    transactionType: "PEREKAMAN",
+    transactionType: "PEMUTAKHIRAN",
     nop: cleanDigits(source.nop, 18),
     nopBersama: "",
     nopAsal: cleanDigits(source.nop, 18),
@@ -178,5 +179,6 @@ export function buildSpopFormDefaults(source: SpopSourceTaxData): SpopFormData {
     dinding: "BATA",
     lantai: "KERAMIK",
     langitLangit: "TRIPLEK",
+    sketImage: "",
   };
 }

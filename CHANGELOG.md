@@ -1,5 +1,20 @@
 # Changelog
 
+## v9.2 - 2026-04-27: SPOP Sketch Upload & UI Optimization
+
+Pembaruan fitur SPOP dengan kemampuan penyisipan gambar denah lokasi dan optimalisasi antarmuka portal publik.
+
+### Portal Publik & SPOP
+- **SPOP Sketch Insertion**: Implementasi fitur unggah gambar denah lokasi/peta pada formulir SPOP (Maks. 2MB). Gambar secara otomatis disisipkan ke dalam bingkai "SKET / DENAH" pada pratinjau dan dokumen cetak.
+- **Popup Layout Fix**: Optimalisasi grid pada SPOP Dialog untuk memperbaiki tampilan baris RT/RW dan penempatan kotak denah agar lebih proporsional pada layar dialog.
+- **Contextual Defaults**: Penyesuaian cerdas jenis transaksi; Default **Pemutakhiran** untuk versi Popup (basis NOP ada) dan **Perekaman** untuk versi Standalone (pendaftaran baru).
+- **Branding Refinement**: Perubahan label layanan menjadi **SPOP / LSPOP** pada kartu beranda untuk kejelasan terminologi teknis bagi warga.
+- **Search Results UI Consistency**: Penyelarasan warna tombol pada hasil pencarian (SPOP: Amber, Mutasi: Sky Blue) agar selaras dengan identitas visual di seluruh portal.
+- **Form Cleanup**: Penghapusan *placeholder* yang tidak perlu pada isian No. Surat Keterangan untuk tampilan formulir yang lebih bersih.
+- **Navbar Streamlining**: Penghapusan tautan "Pengajuan Baru" dari navigasi atas untuk menyederhanakan antarmuka dan memfokuskan navigasi melalui beranda.
+
+---
+
 ## v9.1 - 2026-04-27: Portal Publik & SPOP Standalone
 
 Pembaruan besar pada portal publik dengan fokus pada kemandirian warga dalam pengajuan data melalui sistem formulir mandiri dan standarisasi desain antarmuka.

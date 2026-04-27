@@ -25,7 +25,7 @@ import {
 import { buildSpopPrintHtml } from "@/lib/spop-print";
 import { getVillageConfig } from "@/app/actions/settings-actions";
 import { cn } from "@/lib/utils";
-import { Check, ChevronLeft, ChevronRight, Eye, Printer, Search, FileText } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Eye, Printer, Search, FileText, Image as ImageIcon, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePublicThemeContext } from "./public-theme-provider";
 
@@ -236,10 +236,40 @@ export function SpopFormStandalone({
       defaults.desaObjek = villageConfig.namaDesa || defaults.desaObjek || "";
     }
     
+    // Default to PEREKAMAN for standalone if it's a fresh form
+    if (!initialTaxData && !searchParams.get("nop")) {
+        defaults.transactionType = "PEREKAMAN";
+    }
+    
     setForm(defaults);
     setStep(1);
     setPreviewHtml("");
   }, [initialTaxData, villageConfig, searchParams]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      return toast.error("File harus berupa gambar (PNG, JPG, dll)");
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      return toast.error("Ukuran gambar maksimal 2MB");
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setField("sketImage", reader.result as string);
+      toast.success("Gambar denah berhasil diunggah.");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setField("sketImage", "");
+    toast.info("Gambar denah dihapus.");
+  };
 
   const setField = <K extends keyof SpopFormData>(key: K, value: SpopFormData[K]) => {
     setPreviewHtml("");
@@ -419,6 +449,43 @@ export function SpopFormStandalone({
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="space-y-4 md:col-span-12">
+                <div className="flex items-center justify-between px-1">
+                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60">Sket / Denah Lokasi (Opsional)</Label>
+                   {form.sketImage && (
+                     <button onClick={removeImage} className="text-[10px] font-black text-rose-500 uppercase flex items-center gap-1 hover:opacity-80">
+                        <X className="w-3 h-3" /> Hapus Gambar
+                     </button>
+                   )}
+                </div>
+                
+                {!form.sketImage ? (
+                  <label className={cn(
+                    "flex flex-col items-center justify-center w-full h-44 rounded-[2rem] border-2 border-dashed transition-all cursor-pointer group",
+                    isDark ? "border-white/10 hover:border-blue-500/50 bg-white/5" : "border-slate-300 hover:border-primary/50 bg-slate-50"
+                  )}>
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <div className={cn("p-4 rounded-2xl mb-3 transition-transform group-hover:scale-110", isDark ? "bg-blue-500/10 text-blue-400" : "bg-primary/10 text-primary")}>
+                         <Upload className="w-6 h-6" />
+                      </div>
+                      <p className="mb-1 text-xs font-black uppercase tracking-widest">Klik untuk unggah denah</p>
+                      <p className="text-[10px] opacity-50 font-medium">PNG, JPG atau WEBP (Maks. 2MB)</p>
+                    </div>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                  </label>
+                ) : (
+                  <div className={cn("relative w-full h-64 rounded-[2rem] border-2 overflow-hidden", isDark ? "border-white/10" : "border-slate-200")}>
+                     <img src={form.sketImage} alt="Sket Lokasi" className="w-full h-full object-contain bg-white" />
+                     <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <label className="p-4 bg-white rounded-2xl cursor-pointer text-slate-900 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 active:scale-95 transition-transform">
+                           <ImageIcon className="w-4 h-4" /> Ganti Gambar
+                           <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                        </label>
+                     </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

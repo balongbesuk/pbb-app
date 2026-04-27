@@ -138,7 +138,10 @@ function page2(f: SpopFormData) {
       <div class="col"><div class="ct">MENGETAHUI PEJABAT YG BERWENANG</div><div class="idr"><span>29. TANGGAL (TGL/BLN/THN)</span><div class="dt">${cells(d, 2)} / ${cells(m, 2)} / ${cells(y, 4)}</div></div><div class="lf"><span>30. TANDA TANGAN</span><div class="lv"></div></div><div class="lf"><span>31. NAMA JELAS</span><div class="lv">${esc(text(f.pejabatBerwenang))}</div></div><div class="lf"><span>32. NIP</span><div class="lv">${esc(digits(f.nipPejabatBerwenang))}</div></div></div>
     </div>
     <div class="title">SKET / DENAH LOKASI OBJEK PAJAK</div>
-    <div class="sketch"><div class="north"><div>U</div><div class="arr dark"></div></div></div>
+    <div class="sketch">
+      ${f.sketImage ? `<img src="${f.sketImage}" style="width: 100%; height: 100%; object-fit: contain; display: block;" />` : ""}
+      <div class="north"><div>U</div><div class="arr dark"></div></div>
+    </div>
     <div class="guides">
       <div><div class="gt">KETERANGAN</div><div>- Gambarkan sket / denah lokasi objek pajak (tanpa skala) yang dihubungkan dengan jalan raya / protokol, jalan lingkungan dan lain-lain yang sudah diketahui umum</div><div>- Sebutkan batas - batas kepemilikan sebelah utara, selatan, timur dan barat</div></div>
       <div><div class="gt">CONTOH PENGGAMBARAN</div><div class="ex"><div class="rh t">Jl. Seroja</div><div class="rh m">SAIM</div><div class="rv l"></div><div class="rv r"></div><div class="b b1">UCUP</div><div class="b b2">SAKLIS</div><div class="b b3">ANAM</div><div class="nu"><div>U</div><div class="arr dark"></div></div></div></div>

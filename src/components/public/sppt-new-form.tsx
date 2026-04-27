@@ -474,7 +474,7 @@ export function SpptNewForm({
         {step === 1 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2"><Label className="text-[11px] font-black uppercase opacity-60 px-1">No. Surat Keterangan</Label><Input className={cn("h-12 rounded-2xl font-black uppercase", styles.input)} value={nomorSurat} onChange={(e) => setNomorSurat(sanitizeNomorSurat(e.target.value.toUpperCase()))} placeholder="CONTOH: 100/082/415.51.17/II/2026" maxLength={30} /></div>
+                <div className="space-y-2"><Label className="text-[11px] font-black uppercase opacity-60 px-1">No. Surat Keterangan</Label><Input className={cn("h-12 rounded-2xl font-black uppercase", styles.input)} value={nomorSurat} onChange={(e) => setNomorSurat(sanitizeNomorSurat(e.target.value.toUpperCase()))} maxLength={30} /></div>
                 <div className="space-y-2"><Label className="text-[11px] font-black uppercase opacity-60 px-1">Nama Pemohon</Label><Input className={cn("h-12 rounded-2xl font-black uppercase", styles.input)} value={pemohon} onChange={(e) => {
                   const val = sanitizeText(e.target.value.toUpperCase(), 30);
                   setPemohon(val);

@@ -623,7 +623,7 @@ export function PublicSearch({
                           onClick={() => setMutationItem(item)}
                           className={cn(
                             "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
-                            isDark ? "border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20" : "border-amber-500/30 text-amber-600 hover:bg-amber-50"
+                            isDark ? "border-sky-500/30 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20" : "border-sky-500/30 text-sky-600 hover:bg-sky-50"
                           )}
                           title="Ajukan Perubahan"
                         >
@@ -636,7 +636,7 @@ export function PublicSearch({
                           onClick={() => setSpopItem(item)}
                           className={cn(
                             "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
-                            isDark ? "border-sky-500/30 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20" : "border-sky-500/30 text-sky-600 hover:bg-sky-50"
+                            isDark ? "border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20" : "border-amber-500/30 text-amber-600 hover:bg-amber-50"
                           )}
                           title="Isi SPOP / LSPOP"
                         >
