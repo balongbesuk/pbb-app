@@ -228,7 +228,6 @@ export function SpptNewForm({
     const safeDName = escapeHtml(dName);
     const safeRName = escapeHtml(rName);
     const safeVAddress = escapeHtml(vAddress);
-    const safePemohon = escapeHtml(pemohon);
 
     const html = `
       <div class="letter-stack">

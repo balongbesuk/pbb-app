@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import DOMPurify from "dompurify";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -256,7 +257,9 @@ export function SpopFormStandalone({
     if (!form) return;
     try {
       const html = buildSpopPrintHtml(form, villageConfig ?? undefined);
-      setPreviewHtml(html);
+      // Sanitize the HTML while preserving the whole document structure (style, html, body)
+      const sanitizedHtml = DOMPurify.sanitize(html, { WHOLE_DOCUMENT: true, ADD_TAGS: ["style"] });
+      setPreviewHtml(sanitizedHtml);
       setStep(4);
       toast.success("Preview SPOP siap dilihat.");
     } catch (error) {
@@ -267,12 +270,13 @@ export function SpopFormStandalone({
   const handleHtmlPrint = () => {
     if (!form) return;
     const html = buildSpopPrintHtml(form, villageConfig ?? undefined);
+    const sanitizedHtml = DOMPurify.sanitize(html, { WHOLE_DOCUMENT: true, ADD_TAGS: ["style"] });
     const win = window.open("", "_blank");
     if (!win) {
       toast.error("Gagal membuka jendela cetak. Pastikan pop-up tidak diblokir.");
       return;
     }
-    win.document.write(html);
+    win.document.write(sanitizedHtml);
     win.document.close();
     setTimeout(() => win.print(), 500);
   };
