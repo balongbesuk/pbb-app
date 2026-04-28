@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isPbbMobileEnabled } from "@/lib/mobile-access";
 import { createAuditLog } from "@/app/actions/log-actions";
+import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
 
 export async function POST(req: Request) {
   const headers = {
@@ -11,6 +12,13 @@ export async function POST(req: Request) {
   };
 
   try {
+    let auth;
+    try {
+      auth = await requireMobileAuth(req);
+    } catch {
+      return unauthorizedMobileResponse(headers);
+    }
+
     const mobileEnabled = await isPbbMobileEnabled();
     if (!mobileEnabled) {
       return NextResponse.json(
@@ -19,7 +27,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { taxId, senderId, receiverId, type, message } = await req.json();
+    const { taxId, receiverId, type, message } = await req.json();
+    const senderId = auth.userId;
 
     if (!taxId || !senderId || !receiverId) {
       return NextResponse.json({ success: false, error: "Data tidak lengkap" }, { status: 400, headers });
@@ -57,6 +66,13 @@ export async function POST(req: Request) {
 
     // If sender is PENARIK, create TransferRequest
     if (sender.role === 'PENARIK') {
+      if (taxData.penarikId !== senderId) {
+        return NextResponse.json(
+          { success: false, error: "Anda tidak diperbolehkan memindahkan data milik penarik lain." },
+          { status: 403, headers }
+        );
+      }
+
       // Check if already pending
       const existing = await prisma.transferRequest.findFirst({
         where: { taxId: taxData.id, status: "PENDING" },

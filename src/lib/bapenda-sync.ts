@@ -245,7 +245,7 @@ export async function syncBapendaStatus({
         const notifData = Array.from(targetUsers).map((userId) => ({
           userId,
           title: "Lunas Bapenda Otomatis",
-          message: `Wajib Pajak ${taxRecords[0]?.namaWp || "N/A"} (NOP ${cleanNop}) baru saja munas via server Bapenda.`,
+          message: `Wajib Pajak ${taxRecords[0]?.namaWp || "N/A"} (NOP ${cleanNop}) baru saja lunas via server Bapenda.`,
           type: "ACCEPTED" as const,
           link: "/admin/pajak",
         }));

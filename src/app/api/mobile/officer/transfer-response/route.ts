@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isPbbMobileEnabled } from "@/lib/mobile-access";
 import { createAuditLog } from "@/app/actions/log-actions";
+import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
 
 export async function POST(req: Request) {
   const headers = {
@@ -11,6 +12,13 @@ export async function POST(req: Request) {
   };
 
   try {
+    let auth;
+    try {
+      auth = await requireMobileAuth(req);
+    } catch {
+      return unauthorizedMobileResponse(headers);
+    }
+
     const mobileEnabled = await isPbbMobileEnabled();
     if (!mobileEnabled) {
       return NextResponse.json(
@@ -19,10 +27,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const { requestId, status, userId } = await req.json();
+    const { requestId, status } = await req.json();
+    const userId = auth.userId;
 
-    if (!requestId || !status || !userId) {
+    if (!requestId || !status) {
       return NextResponse.json({ success: false, error: "Data tidak lengkap" }, { status: 400, headers });
+    }
+
+    if (!["ACCEPTED", "REJECTED"].includes(status)) {
+      return NextResponse.json({ success: false, error: "Status tidak valid" }, { status: 400, headers });
     }
 
     const result = await prisma.$transaction(async (tx) => {
@@ -107,9 +120,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, message: `Permintaan berhasil ${status === 'ACCEPTED' ? 'disetujui' : 'ditolak'}.` }, { headers });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("Transfer Response API Error:", error);
-    return NextResponse.json({ success: false, error: error.message || "Internal Server Error" }, { status: 500, headers });
+    const message = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ success: false, error: message }, { status: 500, headers });
   }
 }
 

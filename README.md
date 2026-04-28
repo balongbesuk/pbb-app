@@ -45,6 +45,7 @@ Kami telah menyusun panduan lengkap agar Anda dapat mengoperasikan sistem ini de
 2.  **[Panduan Instalasi Pemula](./docs/PANDUAN_INSTALASI.md)**: Langkah demi langkah instalasi dari nol untuk pengguna baru.
 3.  **[Panduan Mobile App Build](./pbb-mobile/README.md)**: Petunjuk cara build file APK menggunakan EAS Build.
 4.  **[Dokumentasi Penggunaan](./docs/DOKUMENTASI_PENGGUNAAN.md)**: Panduan operasional fitur harian bagi admin dan petugas.
+5.  **[Checklist Produksi](./docs/CHECKLIST_PRODUCTION.md)**: Pemeriksaan environment, backup, proxy, upload, dan hardening sebelum go-live.
 
 ---
 

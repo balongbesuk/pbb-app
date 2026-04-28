@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
-import { joinServerUrl } from '../utils/server';
+import { authenticatedFetch } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppModalCard } from '../components/AppModalCard';
@@ -21,19 +21,19 @@ export default function NotificationScreen({ route, navigation }: ScreenProps<'N
 
   useEffect(() => { fetchNotifications(); markAllAsRead(); }, []);
 
-  const fetchNotifications = async () => { setLoading(true); try { const r = await fetch(joinServerUrl(serverUrl, `/api/mobile/officer/notifications?userId=${user.id}`)); const d = await r.json(); if (d.success) setNotifications(d.data); } catch (e) {} finally { setLoading(false); setRefreshing(false); } };
+  const fetchNotifications = async () => { setLoading(true); try { const r = await authenticatedFetch(serverUrl, '/api/mobile/officer/notifications'); const d = await r.json(); if (d.success) setNotifications(d.data); } catch (e) {} finally { setLoading(false); setRefreshing(false); } };
   const onRefresh = () => { setRefreshing(true); fetchNotifications(); };
   const getIcon = (type: string) => {
     switch (type) { case 'REQUEST': return { name: 'swap-horizontal', color: appTheme.colors.info, bg: appTheme.colors.infoSoft }; case 'ACCEPTED': return { name: 'checkmark-circle', color: appTheme.colors.success, bg: appTheme.colors.successSoft }; case 'REJECTED': return { name: 'close-circle', color: appTheme.colors.danger, bg: appTheme.colors.dangerSoft }; default: return { name: 'information-circle', color: appTheme.colors.primary, bg: appTheme.colors.primarySoft }; }
   };
   const handleTransferResponse = async (notifId: string, requestId: string, status: 'ACCEPTED' | 'REJECTED') => {
-    setRefreshing(true); try { const r = await fetch(joinServerUrl(serverUrl, '/api/mobile/officer/transfer-response'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requestId, status, userId: user.id }) }); const d = await r.json();
+    setRefreshing(true); try { const r = await authenticatedFetch(serverUrl, '/api/mobile/officer/transfer-response', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requestId, status }) }); const d = await r.json();
       if (d.success) { setStatusModal({ visible: true, type: 'success', title: 'Diproses', message: d.message || 'OK' }); markAsRead(notifId); fetchNotifications(); }
       else { setStatusModal({ visible: true, type: 'error', title: 'Gagal', message: d.error || 'Error' }); setRefreshing(false); }
     } catch (e) { setStatusModal({ visible: true, type: 'error', title: 'Koneksi error', message: 'Gagal terhubung' }); setRefreshing(false); }
   };
-  const markAsRead = async (id: string) => { try { await fetch(joinServerUrl(serverUrl, '/api/mobile/officer/notifications'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, notificationId: id }) }); } catch (e) {} };
-  const markAllAsRead = async () => { try { await fetch(joinServerUrl(serverUrl, '/api/mobile/officer/notifications'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, markAll: true }) }); } catch (e) {} };
+  const markAsRead = async (id: string) => { try { await authenticatedFetch(serverUrl, '/api/mobile/officer/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notificationId: id }) }); } catch (e) {} };
+  const markAllAsRead = async () => { try { await authenticatedFetch(serverUrl, '/api/mobile/officer/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ markAll: true }) }); } catch (e) {} };
 
   const renderHeader = () => (<AppScreenHeader title="Notifikasi" subtitle="Panel Petugas" onBack={() => navigation.goBack()}><Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '500', marginTop: 6 }}>Permintaan masuk dan update aktivitas.</Text></AppScreenHeader>);
 

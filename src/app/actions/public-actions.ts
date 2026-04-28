@@ -3,8 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { buildArchiveIndex, getArchiveDir } from "@/lib/archive-utils";
+import { findArchiveFilenameByNop, getArchiveDir, getCachedArchiveIndex } from "@/lib/archive-utils";
 import { getNopVariations } from "@/lib/utils";
+import { getClientIp } from "@/lib/request-ip";
 
 /**
  * Konfigurasi Rate Limit untuk pencarian publik.
@@ -33,21 +34,6 @@ type PublicVillageConfig = {
   namaKades: string | null;
 };
 
-/**
- * Ambil IP address dari request headers.
- * Mendukung x-forwarded-for (reverse proxy/Nginx) dan x-real-ip.
- */
-async function getClientIp(): Promise<string> {
-  const headersList = await headers();
-  const forwarded = headersList.get("x-forwarded-for");
-  if (forwarded) {
-    // x-forwarded-for bisa berisi banyak IP (client, proxy1, proxy2...)
-    // IP klien asli selalu yang pertama
-    return forwarded.split(",")[0].trim();
-  }
-  return headersList.get("x-real-ip") || "unknown";
-}
-
 export async function searchPublicTaxData(query: string, tahunPajak: number, page: number = 1, pageSize: number = 10) {
   try {
     // ─── Rate Limiting ──────────────────────────────────────────────
@@ -55,7 +41,7 @@ export async function searchPublicTaxData(query: string, tahunPajak: number, pag
     const userAgent = headersList.get("user-agent") || "";
     const isLighthouse = /Lighthouse|Google-Lighthouse/i.test(userAgent);
 
-    const ip = await getClientIp();
+    const ip = getClientIp({ headers: headersList });
     const rateLimitResult = !isLighthouse 
       ? checkRateLimit(ip, PUBLIC_SEARCH_RATE_LIMIT)
       : { allowed: true, remaining: 999 };
@@ -136,14 +122,13 @@ export async function searchPublicTaxData(query: string, tahunPajak: number, pag
 
     // Scan arsip folder (Year-aware)
     const archiveDir = getArchiveDir(tahunPajak);
-    const archiveIndex = buildArchiveIndex(archiveDir);
+    const archiveIndex = getCachedArchiveIndex(archiveDir);
 
       // Map data structure for public view
       const mapped = finalResults.map(r => {
         // Cari file arsip (NOP)
         const cleanNop = r.nop.replace(/\D/g, "");
-        const matchedArchive =
-          Array.from(archiveIndex.entries()).find(([digits]) => digits.startsWith(cleanNop))?.[1] ?? null;
+        const matchedArchive = findArchiveFilenameByNop(archiveIndex, cleanNop);
 
         // Pengaturan hak akses arsip digital
         let finalArsipUrl: string | null = null;

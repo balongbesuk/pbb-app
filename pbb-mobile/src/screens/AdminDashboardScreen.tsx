@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ScreenProps } from '../types/navigation';
-import { joinServerUrl, formatCurrency } from '../utils/server';
+import { authenticatedFetch, formatCurrency } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppActionCard } from '../components/AppActionCard';
@@ -36,8 +36,8 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
 
   const fetchDashboard = async () => {
     try {
-      const url = joinServerUrl(serverUrl, `/api/mobile/officer/dashboard?userId=${user.id}&tahun=${new Date().getFullYear()}`);
-      const res = await fetch(url);
+      const url = `/api/mobile/officer/dashboard?tahun=${new Date().getFullYear()}`;
+      const res = await authenticatedFetch(serverUrl, url);
       if (res.ok) {
         const data = await res.json();
         if (data.success) { setDashboardData(data); if (data.villageConfig) setBapendaConfig(data.villageConfig); }

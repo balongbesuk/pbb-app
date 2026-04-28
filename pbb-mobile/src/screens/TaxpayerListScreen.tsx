@@ -3,7 +3,7 @@ import { View, Text, TextInput, ActivityIndicator, RefreshControl, FlatList } fr
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
-import { joinServerUrl, formatCurrency } from '../utils/server';
+import { authenticatedFetch, formatCurrency } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppEmptyState } from '../components/AppEmptyState';
@@ -36,8 +36,8 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
   const fetchTaxpayers = async (pageNum: number, q: string) => {
     if (pageNum > 1) setLoadingMore(true); else setLoading(true);
     try {
-      const params = new URLSearchParams({ userId: user.id, tahun: tahun.toString(), search: q, page: pageNum.toString(), limit: '20' });
-      const res = await fetch(joinServerUrl(serverUrl, `/api/mobile/officer/taxpayers?${params.toString()}`));
+      const params = new URLSearchParams({ tahun: tahun.toString(), search: q, page: pageNum.toString(), limit: '20' });
+      const res = await authenticatedFetch(serverUrl, `/api/mobile/officer/taxpayers?${params.toString()}`);
       
       if (!res.ok) {
         console.warn(`Fetch taxpayers failed with status: ${res.status}`);

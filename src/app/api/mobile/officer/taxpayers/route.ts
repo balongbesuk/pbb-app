@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
+import type { PaymentStatus, Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
   const headers = {
@@ -9,23 +11,28 @@ export async function GET(req: Request) {
   };
 
   try {
+    let auth;
+    try {
+      auth = await requireMobileAuth(req);
+    } catch {
+      return unauthorizedMobileResponse(headers);
+    }
+
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
     const tahun = parseInt(searchParams.get("tahun") || new Date().getFullYear().toString());
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status"); // LUNAS or BELUM_LUNAS
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
     const skip = (page - 1) * limit;
 
-    if (!userId) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400, headers });
-    }
-
-    const where: any = {
-      penarikId: userId,
+    const where: Prisma.TaxDataWhereInput = {
       tahun: tahun
     };
+
+    if (auth.role === "PENARIK") {
+      where.penarikId = auth.userId;
+    }
 
     if (search) {
       where.OR = [
@@ -35,7 +42,7 @@ export async function GET(req: Request) {
     }
 
     if (status) {
-      where.paymentStatus = status;
+      where.paymentStatus = status as PaymentStatus;
     }
 
     const [taxpayers, total] = await Promise.all([

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/app/actions/log-actions";
+import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
+import type { PaymentStatus } from "@prisma/client";
 
 export async function POST(req: Request) {
   const headers = {
@@ -10,9 +12,16 @@ export async function POST(req: Request) {
   };
 
   try {
-    const { taxId, status, userId } = await req.json();
+    let auth;
+    try {
+      auth = await requireMobileAuth(req);
+    } catch {
+      return unauthorizedMobileResponse(headers);
+    }
 
-    if (!taxId || !status || !userId) {
+    const { taxId, status } = await req.json();
+
+    if (!taxId || !status) {
       return NextResponse.json({ success: false, error: "Data tidak lengkap" }, { status: 400, headers });
     }
 
@@ -22,10 +31,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Status tidak valid" }, { status: 400, headers });
     }
 
+    const numericTaxId = parseInt(String(taxId), 10);
+    if (!Number.isFinite(numericTaxId)) {
+      return NextResponse.json({ success: false, error: "ID pajak tidak valid" }, { status: 400, headers });
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       // 1. Get current taxpayer data
       const taxData = await tx.taxData.findUnique({
-        where: { id: parseInt(taxId) },
+        where: { id: numericTaxId },
         include: { penarik: true }
       });
 
@@ -33,13 +47,22 @@ export async function POST(req: Request) {
         throw new Error("Data Wajib Pajak tidak ditemukan");
       }
 
+      if (auth.role === "PENARIK" && taxData.penarikId !== auth.userId) {
+        throw new Error("Anda tidak diperbolehkan mengubah data milik penarik lain.");
+      }
+
+      const paymentStatus = status as PaymentStatus;
+      const pembayaran = paymentStatus === "LUNAS" ? taxData.ketetapan : 0;
+      const sisaTagihan = paymentStatus === "LUNAS" ? 0 : taxData.ketetapan;
+
       // 2. Update status
       const updatedTax = await tx.taxData.update({
-        where: { id: parseInt(taxId) },
+        where: { id: numericTaxId },
         data: { 
-          paymentStatus: status,
-          // If marking as lunas, maybe update tanggalBayar if not set? 
-          // But web version doesn't seem to force it, so we'll leave it as is.
+          paymentStatus,
+          pembayaran,
+          sisaTagihan,
+          tanggalBayar: paymentStatus === "LUNAS" ? new Date() : null,
         }
       });
 
@@ -59,7 +82,7 @@ export async function POST(req: Request) {
       "TaxData",
       result.taxData.namaWp,
       `Petugas mengubah status pembayaran WP ${result.taxData.namaWp} menjadi ${statusLabels[status] || status}`,
-      userId
+      auth.userId
     );
 
     return NextResponse.json({ 
@@ -68,9 +91,10 @@ export async function POST(req: Request) {
       data: result.updatedTax
     }, { headers });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("Taxpayer Status API Error:", error);
-    return NextResponse.json({ success: false, error: error.message || "Internal Server Error" }, { status: 500, headers });
+    const message = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ success: false, error: message }, { status: 500, headers });
   }
 }
 

@@ -32,6 +32,17 @@ import {
 import { toast } from "sonner";
 import { MapPickerDialog } from "./map-picker-dialog";
 
+type MapRestoreJobResponse = {
+    id: string;
+    state: "queued" | "processing" | "completed" | "failed";
+    phase?: "extracting" | "moving";
+    percent: number;
+    current: number;
+    total: number;
+    status: string;
+    error?: string;
+};
+
 export function PetaSettingsTab() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -161,14 +172,11 @@ export function PetaSettingsTab() {
         if (!restoreFile) return;
         setIsRestoring(true);
         setRestoreStatus("Mengunggah cadangan...");
-        setRestoreProgress(30);
+        setRestoreProgress(10);
 
         try {
             const formData = new FormData();
             formData.append("file", restoreFile);
-
-            setRestoreStatus("Mengekstrak dan memulihkan data spasial...");
-            setRestoreProgress(60);
 
             const res = await fetch("/api/peta/restore", {
                 method: "POST",
@@ -176,17 +184,44 @@ export function PetaSettingsTab() {
             });
             const data = await res.json();
 
-            if (res.ok) {
-                setRestoreProgress(100);
-                setRestoreStatus("Berhasil!");
-                toast.success(data.message || "Data peta berhasil dipulihkan!");
-                setTimeout(() => {
-                    setRestoreDialogOpen(false);
-                    router.refresh();
-                }, 1500);
-            } else {
-                toast.error(data.error || "Gagal memulihkan peta.");
-                setRestoreStatus("Gagal: " + (data.error || "Cek file ZIP Anda"));
+            if (!res.ok || !data.jobId) {
+                throw new Error(data.error || "Gagal memulai restore peta.");
+            }
+
+            setRestoreStatus(data.status || "Job restore peta dibuat.");
+
+            while (true) {
+                const statusRes = await fetch(`/api/peta/restore/${data.jobId}`, { cache: "no-store" });
+                const statusData = (await statusRes.json()) as MapRestoreJobResponse | { error?: string };
+
+                if (!statusRes.ok || !("state" in statusData)) {
+                    throw new Error(("error" in statusData && statusData.error) || "Gagal membaca status restore peta.");
+                }
+
+                setRestoreProgress(statusData.percent);
+                if (statusData.current && statusData.total) {
+                    const phase = statusData.phase === "extracting" ? "Ekstrak" : "Menyusun";
+                    setRestoreStatus(`${phase}: ${statusData.current} / ${statusData.total} file...`);
+                } else {
+                    setRestoreStatus(statusData.status);
+                }
+
+                if (statusData.state === "completed") {
+                    setRestoreProgress(100);
+                    setRestoreStatus("Berhasil!");
+                    toast.success(statusData.status || "Data peta berhasil dipulihkan!");
+                    setTimeout(() => {
+                        setRestoreDialogOpen(false);
+                        router.refresh();
+                    }, 1500);
+                    break;
+                }
+
+                if (statusData.state === "failed") {
+                    throw new Error(statusData.error || statusData.status || "Gagal memulihkan peta.");
+                }
+
+                await new Promise((resolve) => setTimeout(resolve, 1000));
             }
         } catch {
             toast.error("Terjadi kesalahan sistem saat pemulihan.");

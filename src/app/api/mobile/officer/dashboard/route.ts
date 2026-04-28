@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
+import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
   const headers = {
@@ -10,27 +12,20 @@ export async function GET(req: Request) {
   };
 
   try {
+    let auth;
+    try {
+      auth = await requireMobileAuth(req);
+    } catch {
+      return unauthorizedMobileResponse(headers);
+    }
+
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
     const tahun = parseInt(searchParams.get("tahun") || new Date().getFullYear().toString());
 
-    if (!userId) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400, headers });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true }
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404, headers });
-    }
-
-    const isAdmin = user.role === "ADMIN";
-    const whereClause: any = { tahun };
+    const isAdmin = auth.role === "ADMIN";
+    const whereClause: Prisma.TaxDataWhereInput = { tahun };
     if (!isAdmin) {
-      whereClause.penarikId = userId;
+      whereClause.penarikId = auth.userId;
     }
 
     const [all, lunas, sengketa, tdkTerbit, logs, villageConfig, unreadCount] = await Promise.all([
@@ -51,13 +46,13 @@ export async function GET(req: Request) {
         where: { ...whereClause, paymentStatus: "TIDAK_TERBIT" }
       }),
       prisma.auditLog.findMany({
-        where: isAdmin ? {} : { userId },
+        where: isAdmin ? {} : { userId: auth.userId },
         orderBy: { createdAt: "desc" },
         take: 5
       }),
       prisma.villageConfig.findFirst({ where: { id: 1 } }),
       prisma.notification.count({
-        where: { userId, isRead: false }
+        where: { userId: auth.userId, isRead: false }
       })
     ]);
 

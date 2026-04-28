@@ -27,6 +27,16 @@ function isAdmin(user?: AppUser): boolean {
   return user?.role === "ADMIN";
 }
 
+const MAX_MAP_UPLOAD_FILES = 20;
+const MAX_MAP_UPLOAD_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_MAP_EXTENSIONS = new Set([".gpx"]);
+const ALLOWED_MAP_MIME_TYPES = new Set([
+  "application/gpx+xml",
+  "application/xml",
+  "text/xml",
+  "application/octet-stream",
+]);
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -35,8 +45,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const formData = (await req.formData()) as any;
-    const files = formData.getAll("file") as File[];
+    const formData = await req.formData();
+    const files = formData.getAll("file").filter((value): value is File => value instanceof File);
     const lat = formData.get("lat") as string;
     const lng = formData.get("lng") as string;
     const zoom = formData.get("zoom") as string;
@@ -53,6 +63,36 @@ export async function POST(req: Request) {
 
     if (!files || files.length === 0) {
       return NextResponse.json({ success: true, message: "Koordinat diperbarui" });
+    }
+
+    if (files.length > MAX_MAP_UPLOAD_FILES) {
+      return NextResponse.json(
+        { error: `Maksimal ${MAX_MAP_UPLOAD_FILES} file GPX per unggahan.` },
+        { status: 400 }
+      );
+    }
+
+    for (const file of files) {
+      if (!(file instanceof File) || file.size <= 0) {
+        return NextResponse.json({ error: "Ada file GPX yang kosong atau tidak valid." }, { status: 400 });
+      }
+
+      const normalizedName = file.name.trim().toLowerCase();
+      const isAllowedExtension = [...ALLOWED_MAP_EXTENSIONS].some((extension) =>
+        normalizedName.endsWith(extension)
+      );
+
+      if (!isAllowedExtension) {
+        return NextResponse.json({ error: `File ${file.name} harus berformat GPX.` }, { status: 400 });
+      }
+
+      if (file.type && !ALLOWED_MAP_MIME_TYPES.has(file.type)) {
+        return NextResponse.json({ error: `Tipe file ${file.name} tidak didukung.` }, { status: 400 });
+      }
+
+      if (file.size > MAX_MAP_UPLOAD_FILE_SIZE) {
+        return NextResponse.json({ error: `File ${file.name} melebihi batas 5 MB.` }, { status: 400 });
+      }
     }
 
     // Baca data LAMA yang sudah ada

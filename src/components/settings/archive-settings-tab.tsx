@@ -38,6 +38,30 @@ type StreamMessage =
   | { type: "progress"; percent: number; current?: number; total?: number; phase?: string; file?: string; nopLast?: string }
   | { type: "done"; success: boolean; message?: string; error?: string };
 
+type SmartScanJobResponse = {
+  id: string;
+  state: "queued" | "processing" | "completed" | "failed";
+  percent: number;
+  current: number;
+  total: number;
+  status: string;
+  nopLast?: string;
+  detectedCount: number;
+  skippedCount: number;
+  error?: string;
+};
+
+type ArchiveRestoreJobResponse = {
+  id: string;
+  state: "queued" | "processing" | "completed" | "failed";
+  phase?: "extracting" | "moving";
+  percent: number;
+  current: number;
+  total: number;
+  status: string;
+  error?: string;
+};
+
 export function ArchiveSettingsTab() {
   const router = useRouter();
   const [scanning, setScanning] = useState(false);
@@ -96,6 +120,72 @@ export function ArchiveSettingsTab() {
     }
   };
 
+  const pollSmartScanJob = async (jobId: string) => {
+    while (true) {
+      const response = await fetch(`/api/archive/smart-scan/${jobId}`, { cache: "no-store" });
+      const data = (await response.json()) as SmartScanJobResponse | { error?: string };
+
+      if (!response.ok || !("state" in data)) {
+        throw new Error(("error" in data && data.error) || "Gagal membaca status smart scan.");
+      }
+
+      setScanningProgress(data.percent);
+      setScanningStatus(
+        data.current && data.total
+          ? `Halaman ${data.current}/${data.total} (NOP: ${data.nopLast || "Tidak terdeteksi"})`
+          : data.status
+      );
+
+      if (data.state === "completed") {
+        toast.success(data.status);
+        router.refresh();
+        return;
+      }
+
+      if (data.state === "failed") {
+        throw new Error(data.error || data.status || "Smart scan gagal.");
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  };
+
+  const pollArchiveRestoreJob = async (jobId: string) => {
+    while (true) {
+      const response = await fetch(`/api/archive/restore/${jobId}`, { cache: "no-store" });
+      const data = (await response.json()) as ArchiveRestoreJobResponse | { error?: string };
+
+      if (!response.ok || !("state" in data)) {
+        throw new Error(("error" in data && data.error) || "Gagal membaca status restore arsip.");
+      }
+
+      setRestoreProgress(data.percent);
+      if (data.current && data.total) {
+        const phase = data.phase === "extracting" ? "Ekstrak" : "Menyusun";
+        setRestoreStatus(`${phase}: ${data.current} / ${data.total} file...`);
+      } else {
+        setRestoreStatus(data.status);
+      }
+
+      if (data.state === "completed") {
+        setRestoreProgress(100);
+        setRestoreStatus("Selesai! Arsip berhasil dipulihkan.");
+        toast.success(data.status || "Arsip berhasil dipulihkan!");
+        setTimeout(() => {
+          setRestoreDialogOpen(false);
+          router.refresh();
+        }, 1500);
+        return;
+      }
+
+      if (data.state === "failed") {
+        throw new Error(data.error || data.status || "Restore arsip gagal.");
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  };
+
   // Ambil tahun pajak saat ini
   useEffect(() => {
     async function fetchConfig() {
@@ -130,23 +220,14 @@ export function ArchiveSettingsTab() {
         body: formData,
         signal: abortControllerRef.current.signal
       });
-      
-      if (!res.ok || !res.body) {
-        toast.error("Gagal memulai pemrosesan.");
-        setScanning(false);
-        return;
+
+      const data = (await res.json()) as { success?: boolean; jobId?: string; error?: string; status?: string };
+      if (!res.ok || !data.jobId) {
+        throw new Error(data.error || "Gagal memulai pemrosesan.");
       }
 
-      await readStreamMessages(res.body, (msg) => {
-        if (msg.type === "progress") {
-          setScanningProgress(msg.percent);
-          setScanningStatus(`Halaman ${msg.current}/${msg.total} (NOP: ${msg.nopLast})`);
-        } else if (msg.type === "done") {
-          if (msg.success) toast.success(msg.message);
-          else toast.error(msg.message);
-          router.refresh();
-        }
-      });
+      setScanningStatus(data.status || "Job smart scan dibuat.");
+      await pollSmartScanJob(data.jobId);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       const message = error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
@@ -296,38 +377,17 @@ export function ArchiveSettingsTab() {
          signal: abortControllerRef.current.signal
        });
 
-       if (!res.ok || !res.body) {
-         throw new Error("Gagal memulai proses restore.");
+       const data = (await res.json()) as { success?: boolean; jobId?: string; error?: string; status?: string };
+       if (!res.ok || !data.jobId) {
+         throw new Error(data.error || "Gagal memulai proses restore.");
        }
 
-       await readStreamMessages(res.body, (msg) => {
-         if (msg.type === "info") {
-           setRestoreStatus(msg.message);
-         } else if (msg.type === "progress") {
-           setRestoreProgress(msg.percent);
-           if (msg.current && msg.total) {
-             const phase = msg.phase === "extracting" ? "Ekstrak" : "Menyusun";
-             setRestoreStatus(`${phase}: ${msg.current} / ${msg.total} file...`);
-           }
-         } else if (msg.type === "done") {
-           if (msg.success) {
-             setRestoreProgress(100);
-             setRestoreStatus("Selesai! Arsip berhasil dipulihkan.");
-             toast.success(msg.message || "Arsip berhasil dipulihkan!");
-             setTimeout(() => {
-               setRestoreDialogOpen(false);
-               router.refresh();
-             }, 1500);
-           } else {
-             setRestoreStatus("Error: " + (msg.error || "Gagal restore arsip."));
-             toast.error(msg.error || "Gagal restore arsip.");
-           }
-         }
-       });
+       setRestoreStatus(data.status || "Job restore dibuat.");
+       await pollArchiveRestoreJob(data.jobId);
     } catch (error) {
        if (error instanceof DOMException && error.name === "AbortError") return;
-       setRestoreStatus("Gagal: Terjadi kesalahan sistem.");
        const message = error instanceof Error ? error.message : "Terjadi kesalahan sistem.";
+       setRestoreStatus("Gagal: " + message);
        toast.error("Terjadi kesalahan sistem: " + message);
     } finally {
        setIsRestoring(false);

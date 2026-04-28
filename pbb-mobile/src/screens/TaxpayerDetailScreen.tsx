@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import type { ScreenProps } from '../types/navigation';
-import { joinServerUrl, formatCurrency } from '../utils/server';
+import { authenticatedFetch, joinServerUrl, formatCurrency } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppActionCard } from '../components/AppActionCard';
@@ -45,10 +45,10 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
   const handleStatusUpdate = async (s: string) => {
     setActionSheetVisible(false); setUpdating(true);
     try {
-      const r = await fetch(joinServerUrl(serverUrl, '/api/mobile/officer/taxpayers/status'), {
+      const r = await authenticatedFetch(serverUrl, '/api/mobile/officer/taxpayers/status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taxId: taxpayer.id, status: s, userId: user.id })
+        body: JSON.stringify({ taxId: taxpayer.id, status: s })
       });
       const d = await r.json();
       if (d.success) {

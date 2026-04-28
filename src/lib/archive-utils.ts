@@ -1,6 +1,13 @@
 import fs from "fs";
 import { getArchivePath } from "@/lib/storage";
 
+type ArchiveIndexCacheEntry = {
+  mtimeMs: number;
+  index: Map<string, string>;
+};
+
+const archiveIndexCache = new Map<string, ArchiveIndexCacheEntry>();
+
 export function getArchiveDir(year: number | string): string {
   return getArchivePath(year.toString());
 }
@@ -35,4 +42,43 @@ export function buildArchiveIndex(archiveDir: string): Map<string, string> {
       .map((filename) => [filename.replace(/\D/g, ""), filename] as const)
       .filter(([digits]) => Boolean(digits)),
   );
+}
+
+export function getCachedArchiveIndex(archiveDir: string): Map<string, string> {
+  if (!fs.existsSync(archiveDir)) {
+    archiveIndexCache.delete(archiveDir);
+    return new Map();
+  }
+
+  const stat = fs.statSync(archiveDir);
+  const cached = archiveIndexCache.get(archiveDir);
+  if (cached && cached.mtimeMs === stat.mtimeMs) {
+    return cached.index;
+  }
+
+  const index = buildArchiveIndex(archiveDir);
+  archiveIndexCache.set(archiveDir, { mtimeMs: stat.mtimeMs, index });
+  return index;
+}
+
+export function findArchiveFilenameByNop(
+  archiveIndex: Map<string, string>,
+  cleanNop: string
+): string | null {
+  if (!cleanNop) {
+    return null;
+  }
+
+  const exactMatch = archiveIndex.get(cleanNop);
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  for (const [digits, filename] of archiveIndex.entries()) {
+    if (digits.startsWith(cleanNop)) {
+      return filename;
+    }
+  }
+
+  return null;
 }

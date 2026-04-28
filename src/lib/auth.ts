@@ -3,35 +3,12 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/request-ip";
 
 const LOGIN_RATE_LIMIT = {
   limit: 5,
   windowMs: 10 * 60 * 1000,
 };
-
-function getHeaderValue(
-  headers: Headers | Record<string, string | string[] | undefined> | undefined,
-  key: string
-): string | null {
-  if (!headers) return null;
-
-  if (typeof (headers as Headers).get === "function") {
-    return (headers as Headers).get(key);
-  }
-
-  const value = (headers as Record<string, string | string[] | undefined>)[key];
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value ?? null;
-}
-
-function getRequestIp(req: { headers?: Headers | Record<string, string | string[] | undefined> }): string {
-  const forwarded = getHeaderValue(req.headers, "x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-
-  return getHeaderValue(req.headers, "x-real-ip") || "unknown";
-}
 
 function maskIp(ip: string): string {
   if (!ip || ip === "unknown") return "unknown";
@@ -74,7 +51,7 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.username || !credentials?.password) return null;
 
         const username = credentials.username.trim();
-        const ip = getRequestIp(req);
+        const ip = getClientIp(req);
         const rateLimitKey = `login:${ip}:${username.toLowerCase()}`;
         const loginRateLimit = checkRateLimit(rateLimitKey, LOGIN_RATE_LIMIT);
 

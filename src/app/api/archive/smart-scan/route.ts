@@ -1,111 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-import { PDFDocument } from "pdf-lib";
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import { requireAdmin } from "@/lib/server-auth";
-import { ensureArchiveDir, extractNopFromText } from "@/lib/archive-utils";
+import { createSmartScanJob } from "@/lib/archive-smart-scan-job";
 
 export const dynamic = "force-dynamic";
 
-type SmartScanStreamMessage =
-  | { type: "info"; message: string }
-  | { type: "progress"; current: number; total: number; percent: number; nopLast: string }
-  | { type: "done"; success: boolean; message: string; detectedCount?: number; skippedCount?: number };
+const MAX_SMART_SCAN_FILE_SIZE = 50 * 1024 * 1024;
+const ALLOWED_SMART_SCAN_MIME_TYPES = new Set(["application/pdf"]);
 
 export async function POST(req: NextRequest) {
   try {
     await requireAdmin();
-    const formData = (await req.formData()) as any;
-    const file = formData.get("file") as File;
+    const formData = await req.formData();
+    const fileCandidate = formData.get("file");
+    const file = fileCandidate instanceof File ? fileCandidate : null;
     const yearRaw = formData.get("year");
     const year = yearRaw ? parseInt(yearRaw.toString()) : new Date().getFullYear();
-    const archiveDir = ensureArchiveDir(year);
 
     if (!file || file.size === 0) {
       return NextResponse.json({ error: "File tidak ditemukan" }, { status: 400 });
     }
 
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
-        const sendProgress = (data: SmartScanStreamMessage) => {
-          controller.enqueue(encoder.encode(JSON.stringify(data) + "\n"));
-        };
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      return NextResponse.json({ error: "Smart scan hanya menerima file PDF." }, { status: 400 });
+    }
 
-        try {
-          sendProgress({ type: "info", message: `Memulai pemrosesan ${file.name}...` });
-          
-          const arrayBuffer = await file.arrayBuffer();
-          const mainPdfDoc = await PDFDocument.load(Buffer.from(arrayBuffer));
-          const totalPages = mainPdfDoc.getPageCount();
-          
-          let detectedCount = 0;
-          let skippedCount = 0;
+    if (file.type && !ALLOWED_SMART_SCAN_MIME_TYPES.has(file.type)) {
+      return NextResponse.json({ error: "Tipe file PDF tidak valid." }, { status: 400 });
+    }
 
-          for (let i = 0; i < totalPages; i++) {
-            if (req.signal.aborted) {
-              return controller.close();
-            }
-            try {
-              const subPdfDoc = await PDFDocument.create();
-              const [copiedPage] = await subPdfDoc.copyPages(mainPdfDoc, [i]);
-              subPdfDoc.addPage(copiedPage);
-              const subPdfBytes = await subPdfDoc.save();
+    if (file.size > MAX_SMART_SCAN_FILE_SIZE) {
+      return NextResponse.json({ error: "Ukuran PDF maksimal 50 MB." }, { status: 400 });
+    }
 
-              // Extract text
-              let rawText = "";
-              try {
-                const data = await pdfParse(Buffer.from(subPdfBytes));
-                rawText = data.text || "";
-              } catch {}
+    const job = createSmartScanJob(file.name, year, Buffer.from(await file.arrayBuffer()));
 
-              const nop = extractNopFromText(rawText);
-
-              if (nop) {
-                const filename = `${nop}.pdf`;
-                fs.writeFileSync(path.join(archiveDir, filename), subPdfBytes);
-                detectedCount++;
-              } else {
-                skippedCount++;
-              }
-
-              // Send periodic progress
-              sendProgress({
-                type: "progress",
-                current: i + 1,
-                total: totalPages,
-                percent: Math.round(((i + 1) / totalPages) * 100),
-                nopLast: nop || "Tidak terdeteksi"
-              });
-
-            } catch {
-              skippedCount++;
-            }
-          }
-
-          sendProgress({
-            type: "done",
-            success: true,
-            message: `Selesai! Berhasil: ${detectedCount}, Terlewati: ${skippedCount}.`,
-            detectedCount,
-            skippedCount
-          });
-          controller.close();
-        } catch (error) {
-          const message = error instanceof Error ? error.message : "Internal Server Error";
-          sendProgress({ type: "done", success: false, message });
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "application/x-ndjson",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
-      },
+    return NextResponse.json({
+      success: true,
+      jobId: job.id,
+      status: job.status,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal Server Error";

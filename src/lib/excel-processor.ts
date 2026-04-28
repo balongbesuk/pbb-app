@@ -8,6 +8,7 @@ import type {
   VillageRegion,
 } from "@prisma/client";
 import { extractRTRW, detectDusun } from "./address-parser";
+import { sanitizeExcelText } from "./export-safety";
 
 export interface ExcelRow {
   nop: string;
@@ -67,7 +68,7 @@ export async function parseExcel(buffer: Buffer, _isCsv: boolean = false): Promi
     
     const getNop = (idx: number) => {
       const val = getVal(idx);
-      return String(val).trim();
+      return sanitizeExcelText(String(val).trim());
     };
     
     const getNum = (idx: number): number => {
@@ -96,8 +97,8 @@ export async function parseExcel(buffer: Buffer, _isCsv: boolean = false): Promi
 
     data.push({
       nop: nop,
-      namaWp: String(getVal(1)),
-      alamatObjek: String(getVal(2)),
+      namaWp: sanitizeExcelText(String(getVal(1))),
+      alamatObjek: sanitizeExcelText(String(getVal(2))),
       luasTanah: getNum(3),
       luasBangunan: getNum(4),
       ketetapan: getNum(5),
@@ -108,7 +109,7 @@ export async function parseExcel(buffer: Buffer, _isCsv: boolean = false): Promi
       lebihBayar: getNum(10),
       tanggalBayar: getDate(11),
       sisaTagihan: getNum(12),
-      tempatBayar: String(getVal(13)),
+      tempatBayar: sanitizeExcelText(String(getVal(13))),
     });
   }
 
@@ -276,7 +277,7 @@ export async function processBackupAssignments(
   const getColVal = (row: ExcelSheetRow, colIdx: number): string => {
     if (colIdx === -1) return "";
     const v = row[colIdx];
-    return v === undefined || v === null ? "" : String(v).trim();
+    return v === undefined || v === null ? "" : sanitizeExcelText(String(v).trim());
   };
 
   let usernameCol = -1;

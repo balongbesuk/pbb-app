@@ -189,6 +189,7 @@ export function SpopFormStandalone({
 }: SpopFormStandaloneProps) {
   const { theme } = usePublicThemeContext();
   const searchParams = useSearchParams();
+  const safeSearchParams = searchParams;
   const isDark = theme === "dark";
 
   const [step, setStep] = useState(1);
@@ -212,11 +213,11 @@ export function SpopFormStandalone({
     if (initialTaxData) {
         taxData = initialTaxData;
     } else {
-        const qNop = searchParams.get("nop") || "";
-        const qNama = searchParams.get("nama") || "";
-        const qAlamat = searchParams.get("alamat") || "";
-        const qLuasTanah = searchParams.get("luasTanah") || "0";
-        const qLuasBangunan = searchParams.get("luasBangunan") || "0";
+        const qNop = safeSearchParams?.get("nop") || "";
+        const qNama = safeSearchParams?.get("nama") || "";
+        const qAlamat = safeSearchParams?.get("alamat") || "";
+        const qLuasTanah = safeSearchParams?.get("luasTanah") || "0";
+        const qLuasBangunan = safeSearchParams?.get("luasBangunan") || "0";
         
         taxData = {
             nop: qNop,
@@ -237,14 +238,14 @@ export function SpopFormStandalone({
     }
     
     // Default to PEREKAMAN for standalone if it's a fresh form
-    if (!initialTaxData && !searchParams.get("nop")) {
+    if (!initialTaxData && !safeSearchParams?.get("nop")) {
         defaults.transactionType = "PEREKAMAN";
     }
     
     setForm(defaults);
     setStep(1);
     setPreviewHtml("");
-  }, [initialTaxData, villageConfig, searchParams]);
+  }, [initialTaxData, villageConfig, safeSearchParams]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

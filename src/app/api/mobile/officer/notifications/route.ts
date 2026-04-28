@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
 
 export async function GET(req: Request) {
   const headers = {
@@ -9,15 +10,15 @@ export async function GET(req: Request) {
   };
 
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400, headers });
+    let auth;
+    try {
+      auth = await requireMobileAuth(req);
+    } catch {
+      return unauthorizedMobileResponse(headers);
     }
 
     const notifications = await prisma.notification.findMany({
-      where: { userId },
+      where: { userId: auth.userId },
       orderBy: { createdAt: "desc" },
       take: 50
     });
@@ -41,25 +42,28 @@ export async function POST(req: Request) {
   };
 
   try {
-    const body = await req.json();
-    const { userId, notificationId, markAll } = body;
-
-    if (!userId) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400, headers });
+    let auth;
+    try {
+      auth = await requireMobileAuth(req);
+    } catch {
+      return unauthorizedMobileResponse(headers);
     }
+
+    const body = await req.json();
+    const { notificationId, markAll } = body;
 
     if (markAll) {
       await prisma.notification.updateMany({
         where: { 
-          userId, 
+          userId: auth.userId,
           isRead: false,
           NOT: { type: 'REQUEST' } // Don't auto-read requests
         },
         data: { isRead: true }
       });
     } else if (notificationId) {
-      await prisma.notification.update({
-        where: { id: notificationId },
+      await prisma.notification.updateMany({
+        where: { id: notificationId, userId: auth.userId },
         data: { isRead: true }
       });
     }

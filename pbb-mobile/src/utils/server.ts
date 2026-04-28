@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export const normalizeServerUrl = (serverUrl: string, defaultToHttps = false) => {
   let url = serverUrl.trim();
 
@@ -14,6 +16,26 @@ export const joinServerUrl = (serverUrl: string, path: string) => {
   const baseUrl = serverUrl.replace(/\/+$/, '');
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   return `${baseUrl}${normalizedPath}`;
+};
+
+export const getAuthHeaders = async (headers: HeadersInit = {}) => {
+  const token = await AsyncStorage.getItem('@admin_magic_token');
+  return {
+    ...headers,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
+
+export const authenticatedFetch = async (
+  serverUrl: string,
+  path: string,
+  init: RequestInit = {}
+) => {
+  const headers = await getAuthHeaders(init.headers || {});
+  return fetch(joinServerUrl(serverUrl, path), {
+    ...init,
+    headers,
+  });
 };
 
 export const buildVillageHost = (villageCode: string, baseDomain: string) => {
@@ -38,4 +60,3 @@ export const buildVillageHost = (villageCode: string, baseDomain: string) => {
 export const formatCurrency = (amount: number) => {
   return 'Rp ' + Number(amount || 0).toLocaleString('id-ID');
 };
-

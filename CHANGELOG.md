@@ -1,5 +1,42 @@
 # Changelog
 
+## v9.2 - 2026-04-28: Security, Resilience & Production Hardening
+
+Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi performa publik, dan kesiapan produksi agar PBB Manager lebih aman dipakai di lingkungan nyata.
+
+### Security Hardening
+- **Mobile Bearer Authentication**: Seluruh endpoint operasional mobile petugas kini mewajibkan `Authorization: Bearer` dan tidak lagi mempercayai `userId` dari body/query.
+- **Role Ownership Enforcement**: Akses petugas `PENARIK` diperketat agar hanya bisa melihat dan memodifikasi data yang memang menjadi alokasinya.
+- **Archive & Report Sanitization**: Penambahan helper sanitasi untuk mencegah HTML injection pada laporan cetak dan formula injection pada ekspor/impor Excel.
+- **Safer Production Defaults**: `.env.example` diperbarui agar tidak lagi mencontohkan secret dan password lemah, serta menambahkan flag `TRUST_PROXY`.
+
+### Backup, Restore & Operational Safety
+- **Database Path Consistency Fix**: Mekanisme backup kini membaca path SQLite dari `DATABASE_URL` secara konsisten, bukan hardcoded ke lokasi lama.
+- **Web Database Restore Disabled**: Restore database penuh via endpoint web dinonaktifkan demi keamanan.
+- **Manual Maintenance Restore Tool**: Penambahan script `scripts/restore-database-from-backup.mjs` untuk proses restore database dalam mode maintenance/manual.
+- **Background Archive Restore**: Restore arsip digital dipindah ke sistem job background dengan polling status.
+- **Background Map Restore**: Restore data peta juga dipindah ke model background job untuk menghindari request panjang yang rapuh.
+
+### Performance & Scalability
+- **Background Smart Scan**: Pemecahan PDF bundle arsip kini berjalan sebagai background job, sehingga UI tidak lagi tergantung koneksi streaming panjang.
+- **Region Stats Aggregate Optimization**: Endpoint statistik wilayah tidak lagi menarik seluruh data ke memory Node, tetapi menghitung agregat langsung di database.
+- **Cached Public Archive Index**: Pencarian publik tidak lagi melakukan scan folder arsip mentah di setiap request; indeks arsip sekarang dicache per tahun/folder.
+- **Persistent Rate Limit Backend**: Rate limiter kini memakai backend SQLite persisten dengan fallback memory, jauh lebih stabil dibanding limiter in-memory murni.
+- **Trusted Proxy IP Handling**: Pengambilan IP klien disatukan melalui helper khusus dan hanya mempercayai `x-forwarded-for`/`x-real-ip` saat `TRUST_PROXY=true`.
+
+### Upload & File Validation
+- **Global Request Limit Tightening**: `serverActions.bodySizeLimit` diturunkan dari `500mb` menjadi `25mb`.
+- **Route-Specific Upload Guards**: Validasi ketat ditambahkan untuk PDF/ZIP/GPX berdasarkan ukuran, jumlah file, MIME type, ekstensi, dan jumlah entry ZIP.
+- **Archive Restore ZIP Validation**: Restore arsip sekarang menolak ZIP yang kosong, terlalu besar, terlalu banyak file, atau berisi file non-PDF.
+- **Map Restore ZIP Validation**: Restore peta kini membatasi ukuran ZIP, jumlah entry, dan jenis file yang boleh diekstrak.
+
+### Build & Production Readiness
+- **Production Build Fix**: Error `useSearchParams()` nullable pada formulir publik diperbaiki sehingga `next build` kembali sukses.
+- **Production Checklist**: Penambahan `docs/CHECKLIST_PRODUCTION.md` untuk panduan environment, proxy, upload, backup, dan verifikasi sebelum go-live.
+- **README Ops Update**: README diperbarui agar checklist produksi ikut terdokumentasi resmi.
+
+---
+
 ## v9.1 - 2026-04-27: Portal Publik & SPOP Standalone
 
 Pembaruan besar pada portal publik dengan fokus pada kemandirian warga dalam pengajuan data melalui sistem formulir mandiri dan standarisasi desain antarmuka.

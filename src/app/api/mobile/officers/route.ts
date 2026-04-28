@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isPbbMobileEnabled } from "@/lib/mobile-access";
+import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
 
 export async function GET(req: Request) {
   const headers = {
@@ -10,6 +11,12 @@ export async function GET(req: Request) {
   };
 
   try {
+    try {
+      await requireMobileAuth(req);
+    } catch {
+      return unauthorizedMobileResponse(headers);
+    }
+
     const mobileEnabled = await isPbbMobileEnabled();
     if (!mobileEnabled) {
       return NextResponse.json(

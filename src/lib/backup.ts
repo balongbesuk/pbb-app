@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { resolveSqliteDatabasePath } from "@/lib/database-path";
 
 /**
  * Creates a backup of the SQLite database file in the backups directory.
@@ -7,7 +8,7 @@ import path from "path";
  */
 export async function createDatabaseBackup(): Promise<string | null> {
   try {
-    const dbPath = path.join(process.cwd(), "prisma", "dev.db");
+    const dbPath = resolveSqliteDatabasePath();
     
     // Check if DB exists (SQLite mode)
     if (!fs.existsSync(dbPath)) {

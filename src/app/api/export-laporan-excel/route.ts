@@ -4,6 +4,7 @@ import ExcelJS from "exceljs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import path from "path";
+import { sanitizeExcelCellValue, sanitizeExcelText } from "@/lib/export-safety";
 
 export async function GET(req: NextRequest) {
   try {
@@ -155,7 +156,7 @@ export async function GET(req: NextRequest) {
     kopLines.push("LAPORAN REKAPITULASI PAJAK BUMI DAN BANGUNAN");
     kopLines.push(`TAHUN PAJAK ${tahun}`);
 
-    kopCell.value = kopLines.join("\n");
+    kopCell.value = sanitizeExcelText(kopLines.join("\n"));
     kopCell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
     kopCell.font = { bold: true, size: 12, name: "Arial" };
     for (let r = 1; r <= 4; r++) sheet.getRow(r).height = 18;
@@ -214,18 +215,18 @@ export async function GET(req: NextRequest) {
     const headerRowNum = 7;
     const headerRow = sheet.getRow(headerRowNum);
     headerRow.values = [
-      "No",
-      "Penarik / Kolektor",
-      "Wilayah",
-      "Total WP",
-      "Lunas",
-      "Belum",
-      "Sengketa",
-      "Tdk Terbit",
-      "Ketetapan (Target)",
-      "Realisasi (Terbayar)",
-      "Sisa Pagu",
-      "Persentase (%)",
+      sanitizeExcelText("No"),
+      sanitizeExcelText("Penarik / Kolektor"),
+      sanitizeExcelText("Wilayah"),
+      sanitizeExcelText("Total WP"),
+      sanitizeExcelText("Lunas"),
+      sanitizeExcelText("Belum"),
+      sanitizeExcelText("Sengketa"),
+      sanitizeExcelText("Tdk Terbit"),
+      sanitizeExcelText("Ketetapan (Target)"),
+      sanitizeExcelText("Realisasi (Terbayar)"),
+      sanitizeExcelText("Sisa Pagu"),
+      sanitizeExcelText("Persentase (%)"),
     ];
     headerRow.font = { bold: true, name: "Arial", size: 10, color: { argb: "FFFFFFFF" } };
     headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1A56DB" } };
@@ -252,8 +253,8 @@ export async function GET(req: NextRequest) {
 
       const row = sheet.addRow({
         no: index + 1,
-        penarikName: stat.name,
-        wilayah: stat.dusun || "-",
+        penarikName: sanitizeExcelCellValue(stat.name || ""),
+        wilayah: sanitizeExcelCellValue(stat.dusun || "-"),
         totalWp: stat.nop,
         lunas: stat.lunas,
         belum: stat.belum,
@@ -293,8 +294,8 @@ export async function GET(req: NextRequest) {
     // ─── TOTAL ROW ────────────────────────────────────────────────────────
     const totalRow = sheet.addRow({
       no: "",
-      penarikName: "TOTAL KESELURUHAN",
-      wilayah: "-",
+      penarikName: sanitizeExcelText("TOTAL KESELURUHAN"),
+      wilayah: sanitizeExcelText("-"),
       totalWp: totalWp,
       lunas: totalWpLunas,
       belum: totalWpBelumLunas,
@@ -323,7 +324,7 @@ export async function GET(req: NextRequest) {
     // ─── FOOTER ───────────────────────────────────────────────────────────
     sheet.addRow([]);
     const footerRow = sheet.addRow([
-      `Dicetak: ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`,
+      sanitizeExcelText(`Dicetak: ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`),
     ]);
     footerRow.font = { italic: true, size: 9, color: { argb: "FF888888" }, name: "Arial" };
 

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getVillageConfig } from "@/app/actions/settings-actions";
+import { escapeHtml } from "@/lib/export-safety";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -85,18 +86,18 @@ export async function GET(req: NextRequest) {
       .format(val)
       .replace("Rp\u00a0", "");
 
-  const desa = config?.namaDesa || "—";
-  const kecamatan = config?.kecamatan || "—";
-  const kabupaten = config?.kabupaten || "—";
-  const logoUrl = config?.logoUrl || "";
+  const desa = escapeHtml(config?.namaDesa || "—");
+  const kecamatan = escapeHtml(config?.kecamatan || "—");
+  const kabupaten = escapeHtml(config?.kabupaten || "—");
+  const logoUrl = escapeHtml(config?.logoUrl || "");
 
   const tableRows = stats.map((s, i) => {
     const pct = s.ketetapan > 0 ? ((s.pembayaran / s.ketetapan) * 100).toFixed(1) : "0.0";
     return `
       <tr>
         <td style="text-align:center">${i + 1}</td>
-        <td>${s.name}</td>
-        <td style="text-align:center">${s.dusun}</td>
+        <td>${escapeHtml(s.name)}</td>
+        <td style="text-align:center">${escapeHtml(s.dusun)}</td>
         <td style="text-align:center">${s.nop}</td>
         <td style="text-align:center">${s.lunas}</td>
         <td style="text-align:center">${s.belum}</td>

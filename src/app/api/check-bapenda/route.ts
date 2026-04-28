@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncBapendaStatus } from "@/lib/bapenda-sync";
-
-function getClientIp(req: NextRequest): string {
-  const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-
-  return req.headers.get("x-real-ip") || "unknown";
-}
+import { getClientIp } from "@/lib/request-ip";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
-import { joinServerUrl } from '../utils/server';
+import { authenticatedFetch } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppModalCard } from '../components/AppModalCard';
@@ -20,12 +20,12 @@ export default function SelectOfficerScreen({ route, navigation }: ScreenProps<'
   const [resultModal, setResultModal] = useState<{ visible: boolean; type: 'success' | 'error'; title: string; message: string }>({ visible: false, type: 'success', title: '', message: '' });
 
   useEffect(() => { fetchOfficers(); }, []);
-  const fetchOfficers = async () => { try { const r = await fetch(joinServerUrl(serverUrl, '/api/mobile/officers')); const d = await r.json(); if (d.success) setOfficers(d.data.filter((o: any) => o.id !== senderId)); } catch (e) {} finally { setLoading(false); } };
+  const fetchOfficers = async () => { try { const r = await authenticatedFetch(serverUrl, '/api/mobile/officers'); const d = await r.json(); if (d.success) setOfficers(d.data.filter((o: any) => o.id !== senderId)); } catch (e) {} finally { setLoading(false); } };
 
   const executeTransfer = async () => {
     setSubmitting(true);
     try {
-      const r = await fetch(joinServerUrl(serverUrl, '/api/mobile/officer/taxpayers/transfer'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taxId, senderId, receiverId: confirmModal.officerId, type: 'GIVE', message: `Pemindahan dari mobile oleh ${senderRole}` }) });
+      const r = await authenticatedFetch(serverUrl, '/api/mobile/officer/taxpayers/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ taxId, receiverId: confirmModal.officerId, type: 'GIVE', message: `Pemindahan dari mobile oleh ${senderRole}` }) });
       const d = await r.json();
       if (d.success) { setConfirmModal({ ...confirmModal, visible: false }); setResultModal({ visible: true, type: 'success', title: 'Berhasil', message: d.message || 'Dialokasikan.' }); }
       else setResultModal({ visible: true, type: 'error', title: 'Gagal', message: d.error || 'Error' });

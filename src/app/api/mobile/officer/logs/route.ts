@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
 
 export async function GET(req: Request) {
   const headers = {
@@ -9,20 +10,22 @@ export async function GET(req: Request) {
   };
 
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
-    const skip = (page - 1) * limit;
-
-    if (!userId) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400, headers });
+    let auth;
+    try {
+      auth = await requireMobileAuth(req);
+    } catch {
+      return unauthorizedMobileResponse(headers);
     }
+
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
+    const skip = (page - 1) * limit;
 
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({
         where: { 
-          userId, 
+          userId: auth.userId,
           action: "UPDATE_PAYMENT",
         },
         orderBy: { createdAt: "desc" },
@@ -31,7 +34,7 @@ export async function GET(req: Request) {
       }),
       prisma.auditLog.count({
         where: { 
-          userId, 
+          userId: auth.userId,
           action: "UPDATE_PAYMENT"
         }
       })

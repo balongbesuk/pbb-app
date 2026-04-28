@@ -153,18 +153,19 @@ export function SpptNewForm({
 }: SpptNewFormProps) {
   const { theme } = usePublicThemeContext();
   const searchParams = useSearchParams();
+  const safeSearchParams = searchParams;
   const isDark = theme === "dark";
   
   const [step, setStep] = useState(1);
-  const [pemohon, setPemohon] = useState(initialName || searchParams.get("nama") || "");
+  const [pemohon, setPemohon] = useState(initialName || safeSearchParams?.get("nama") || "");
   const [nikPemohon, setNikPemohon] = useState("");
   const [telpPemohon, setTelpPemohon] = useState("");
   const [nomorSurat, setNomorSurat] = useState("");
   const [namaKades, setNamaKades] = useState("");
   
   // Objek Pajak Data
-  const [objekNama, setObjekNama] = useState(initialName || searchParams.get("nama") || "");
-  const [objekAlamat, setObjekAlamat] = useState(searchParams.get("alamat") || "");
+  const [objekNama, setObjekNama] = useState(initialName || safeSearchParams?.get("nama") || "");
+  const [objekAlamat, setObjekAlamat] = useState(safeSearchParams?.get("alamat") || "");
   const [luasTanah, setLuasTanah] = useState<number>(0);
   const [luasBangunan, setLuasBangunan] = useState<number>(0);
 

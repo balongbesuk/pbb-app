@@ -3,7 +3,7 @@ import { View, Text, RefreshControl, FlatList, ActivityIndicator } from 'react-n
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
-import { joinServerUrl } from '../utils/server';
+import { authenticatedFetch } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppEmptyState } from '../components/AppEmptyState';
@@ -19,7 +19,7 @@ export default function BillingHistoryScreen({ route, navigation }: ScreenProps<
   const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => { fetchLogs(1); }, []);
-  const fetchLogs = async (p: number) => { try { const r = await fetch(joinServerUrl(serverUrl, `/api/mobile/officer/logs?userId=${user.id}&page=${p}&limit=20`)); const d = await r.json(); if (d.success) { if (p === 1) setLogs(d.data); else setLogs((prev) => [...prev, ...d.data]); setHasMore(d.hasMore); setPage(p); } } catch (e) {} finally { setLoading(false); setRefreshing(false); } };
+  const fetchLogs = async (p: number) => { try { const r = await authenticatedFetch(serverUrl, `/api/mobile/officer/logs?page=${p}&limit=20`); const d = await r.json(); if (d.success) { if (p === 1) setLogs(d.data); else setLogs((prev) => [...prev, ...d.data]); setHasMore(d.hasMore); setPage(p); } } catch (e) {} finally { setLoading(false); setRefreshing(false); } };
   const onRefresh = () => { setRefreshing(true); fetchLogs(1); };
 
   const renderHeader = () => (<AppScreenHeader title="Riwayat penagihan" subtitle={villageName} onBack={() => navigation.goBack()}><Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '500', marginTop: 6 }}>Histori transaksi dan aktivitas lapangan.</Text></AppScreenHeader>);
