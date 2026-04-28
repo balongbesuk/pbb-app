@@ -11,6 +11,8 @@ import { joinServerUrl, normalizeServerUrl } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { appTheme } from '../theme/app-theme';
 
+import { version } from '../../package.json';
+
 export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding'>) {
   const [serverUrl, setServerUrl] = useState('pbb.galaxynet.my.id');
   const [isHttps, setIsHttps] = useState(true);
@@ -202,7 +204,7 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
               </Animated.View>
 
               <View style={{ marginTop: 'auto', paddingTop: 40, alignItems: 'center' }}>
-                <Text style={{ color: 'rgba(255,255,255,0.4)', ...appTheme.typo.label }}>VERSI 1.0.0 • DESA DIGITAL</Text>
+                <Text style={{ color: 'rgba(255,255,255,0.4)', ...appTheme.typo.label }}>VERSI {version} • DESA DIGITAL</Text>
               </View>
             </ScrollView>
           </KeyboardAvoidingView>

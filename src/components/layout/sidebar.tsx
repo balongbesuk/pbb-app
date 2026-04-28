@@ -24,6 +24,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import type { AppUser } from "@/types/app";
+import { version } from "../../../package.json";
 
 const menuItems = [
   {
@@ -174,6 +175,13 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
               className={cn("h-5 w-5 transition-transform", isCollapsed && "rotate-180")}
             />
           </Button>
+          {!isCollapsed && (
+            <div className="mt-2 text-center">
+              <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
+                Versi {version}
+              </span>
+            </div>
+          )}
         </div>
       </aside>
     </>
