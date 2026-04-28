@@ -102,12 +102,12 @@ export function UnpaidBillDialog({
 
         <DialogFooter className="flex flex-col-reverse sm:flex-row gap-3 mt-4">
           <Button 
-              variant="outline" 
+              variant="secondary" 
               onClick={() => onOpenChange(false)}
               className={cn(
-                "w-full sm:w-auto rounded-2xl font-black uppercase tracking-widest text-[10px] h-12 border-zinc-200 dark:border-zinc-800",
+                "w-full sm:w-auto rounded-2xl font-black uppercase tracking-widest text-[11px] h-12 transition-all",
                 "flex-1",
-                isDark ? "hover:bg-white/5 text-blue-200" : "hover:bg-zinc-50 text-slate-500"
+                isDark ? "bg-zinc-800 hover:bg-zinc-700 text-zinc-300" : "bg-slate-100 hover:bg-slate-200 text-slate-600"
               )}
           >
             Tutup
