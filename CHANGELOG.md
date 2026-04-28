@@ -9,11 +9,13 @@ Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi perfor
 - **Role Ownership Enforcement**: Akses petugas `PENARIK` diperketat agar hanya bisa melihat dan memodifikasi data yang memang menjadi alokasinya.
 - **Archive & Report Sanitization**: Penambahan helper sanitasi untuk mencegah HTML injection pada laporan cetak dan formula injection pada ekspor/impor Excel.
 - **Safer Production Defaults**: `.env.example` diperbarui agar tidak lagi mencontohkan secret dan password lemah, serta menambahkan flag `TRUST_PROXY`.
+- **Dependency Security Patch**: Perbaikan kerentanan keamanan tinggi pada paket `basic-ftp` melalui sistem `overrides` di `package.json`.
+- **CodeQL Integration**: Penghapusan workflow manual CodeQL untuk menghindari konflik dengan sistem *Default Setup* otomatis dari GitHub.
 
 ### Backup, Restore & Operational Safety
 - **Database Path Consistency Fix**: Mekanisme backup kini membaca path SQLite dari `DATABASE_URL` secara konsisten, bukan hardcoded ke lokasi lama.
-- **Web Database Restore Disabled**: Restore database penuh via endpoint web dinonaktifkan demi keamanan.
 - **Manual Maintenance Restore Tool**: Penambahan script `scripts/restore-database-from-backup.mjs` untuk proses restore database dalam mode maintenance/manual.
+- **Web Database Restore Re-enabled**: Fitur restore database penuh dari antarmuka web dikembalikan dengan sistem keamanan baru (Safety Backup otomatis sebelum restore).
 - **Background Archive Restore**: Restore arsip digital dipindah ke sistem job background dengan polling status.
 - **Background Map Restore**: Restore data peta juga dipindah ke model background job untuk menghindari request panjang yang rapuh.
 
