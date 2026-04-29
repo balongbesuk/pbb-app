@@ -7,6 +7,7 @@ import type {
   TaxMapping,
   VillageRegion,
 } from "@prisma/client";
+import Fuse from "fuse.js";
 import { extractRTRW, detectDusun } from "./address-parser";
 import { sanitizeExcelText } from "./export-safety";
 
@@ -147,9 +148,15 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
   // Map NOP -> Existing Record for quick lookup
   const existingTaxMap = new Map(existingTaxes.map((tax: Pick<TaxData, "id" | "nop" | "paymentStatus">) => [tax.nop, tax]));
 
+  // Pre-initialize Fuse instance for fuzzy matching
+  const fuse = new Fuse(dusunList, {
+    threshold: 0.2,
+    distance: 100,
+  });
+
   // Reduced batch size for SQLite parameter limits on Windows
-  // and ensured dates for createdAt/updatedAt
-  const BATCH_SIZE = 100;
+  // SQLite default limit is 999 parameters. 20+ fields * 40 rows = ~800-900 params.
+  const BATCH_SIZE = 40;
   const toCreate: TaxCreatePayload[] = [];
   const toUpdate: { id: number; data: TaxProcessingPayload }[] = [];
   const now = new Date();
@@ -176,7 +183,7 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
       const extracted = extractRTRW(row.alamatObjek);
       rt = extracted.rt;
       rw = extracted.rw;
-      dusun = detectDusun(row.alamatObjek, dusunList);
+      dusun = detectDusun(row.alamatObjek, dusunList, fuse);
 
       // 3. Fallback to RW/RT Rule if Dusun is still unknown
       if (!dusun && rw) {
@@ -242,17 +249,33 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
     }
   }
 
-  // 2. Process updates (Sequential or chunks to avoid locking)
+  // 2. Process updates in transactions to speed up sequential updates
   if (toUpdate.length > 0) {
-    // We update payment status and amounts - this is what makes "Update via Excel" work
-    for (const item of toUpdate) {
+    const UPDATE_BATCH_SIZE = 100;
+    for (let i = 0; i < toUpdate.length; i += UPDATE_BATCH_SIZE) {
+      const batch = toUpdate.slice(i, i + UPDATE_BATCH_SIZE);
       try {
-        await prisma.taxData.update({
-          where: { id: item.id },
-          data: item.data,
-        });
-      } catch {
-        console.warn(`Failed to update NOP ${item.data.nop}`);
+        await prisma.$transaction(
+          batch.map((item) =>
+            prisma.taxData.update({
+              where: { id: item.id },
+              data: item.data,
+            })
+          )
+        );
+      } catch (err) {
+        console.error("Batch update failed, falling back to individual updates:", err);
+        // Fallback to individual updates if batch fails
+        for (const item of batch) {
+          try {
+            await prisma.taxData.update({
+              where: { id: item.id },
+              data: item.data,
+            });
+          } catch (itemErr) {
+            console.warn(`Failed to update NOP ${item.data.nop}:`, itemErr);
+          }
+        }
       }
     }
   }

@@ -51,7 +51,7 @@ export function extractRTRW(address: string) {
   return { rt, rw };
 }
 
-export function detectDusun(address: string, dusunList: string[]): string | null {
+export function detectDusun(address: string, dusunList: string[], fuseInstance?: Fuse<string>): string | null {
   if (!address || dusunList.length === 0) return null;
   const norm = normalizeAddress(address);
 
@@ -64,7 +64,7 @@ export function detectDusun(address: string, dusunList: string[]): string | null
   }
 
   // 2. Fuzzy match
-  const fuse = new Fuse(dusunList, {
+  const fuse = fuseInstance || new Fuse(dusunList, {
     threshold: 0.2, // Min 80% similarity
     distance: 100,
   });
