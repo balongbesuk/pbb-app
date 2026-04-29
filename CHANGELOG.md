@@ -23,6 +23,8 @@ Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi perfor
 - **Background Smart Scan**: Pemecahan PDF bundle arsip kini berjalan sebagai background job, sehingga UI tidak lagi tergantung koneksi streaming panjang.
 - **Region Stats Aggregate Optimization**: Endpoint statistik wilayah tidak lagi menarik seluruh data ke memory Node, tetapi menghitung agregat langsung di database.
 - **Cached Public Archive Index**: Pencarian publik tidak lagi melakukan scan folder arsip mentah di setiap request; indeks arsip sekarang dicache per tahun/folder.
+- **Fuzzy Matching Optimization**: Refaktor logika `detectDusun` dengan reuse instance `Fuse.js` untuk menghindari CPU spike dan timeout pada pemrosesan data massal (1700+ baris).
+- **Transaction-based Batch Updates**: Implementasi `prisma.$transaction` untuk proses update data pajak secara massal, mempercepat penulisan ke database SQLite secara signifikan.
 - **Persistent Rate Limit Backend**: Rate limiter kini memakai backend SQLite persisten dengan fallback memory, jauh lebih stabil dibanding limiter in-memory murni.
 - **Trusted Proxy IP Handling**: Pengambilan IP klien disatukan melalui helper khusus dan hanya mempercayai `x-forwarded-for`/`x-real-ip` saat `TRUST_PROXY=true`.
 
@@ -31,6 +33,8 @@ Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi perfor
 - **Route-Specific Upload Guards**: Validasi ketat ditambahkan untuk PDF/ZIP/GPX berdasarkan ukuran, jumlah file, MIME type, ekstensi, dan jumlah entry ZIP.
 - **Archive Restore ZIP Validation**: Restore arsip sekarang menolak ZIP yang kosong, terlalu besar, terlalu banyak file, atau berisi file non-PDF.
 - **Map Restore ZIP Validation**: Restore peta kini membatasi ukuran ZIP, jumlah entry, dan jenis file yang boleh diekstrak.
+- **SQLite Parameter Limit Adjustment**: Penurunan `BATCH_SIZE` impor menjadi 40 baris untuk menjamin kompatibilitas dengan batasan parameter SQLite (`SQLITE_MAX_VARIABLE_NUMBER`) di Windows.
+- **Expo Dependency Alignment**: Perbaikan ketidaksesuaian versi paket `expo` dan `expo-file-system` melalui `expo install --fix` untuk stabilitas SDK 54.
 
 ### Build & Production Readiness
 - **Production Build Fix**: Error `useSearchParams()` nullable pada formulir publik diperbaiki sehingga `next build` kembali sukses.
