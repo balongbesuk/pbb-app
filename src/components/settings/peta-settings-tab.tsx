@@ -367,6 +367,52 @@ export function PetaSettingsTab() {
                             </Button>
                         </CardFooter>
                     </Card>
+
+                    {/* Panduan Penamaan File */}
+                    <Card className="glass border-none shadow-lg bg-blue-500/5 dark:bg-blue-500/10 border-blue-500/10">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="flex items-center gap-2 text-lg">
+                                <AlertTriangle className="text-blue-500 h-5 w-5" />
+                                Panduan Penamaan File GPX
+                            </CardTitle>
+                            <CardDescription className="text-xs -mt-1 font-medium">Sistem menggunakan nama file untuk menentukan level wilayah secara otomatis.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-3 bg-white/40 dark:bg-black/20 p-4 rounded-2xl border border-blue-500/10">
+                                    <h4 className="text-[11px] font-black uppercase text-blue-600 tracking-wider">Level RT & RW</h4>
+                                    <ul className="space-y-2 text-[11px] font-medium leading-relaxed">
+                                        <li className="flex gap-2">
+                                            <span className="text-blue-500">•</span>
+                                            <span><strong>RT & RW:</strong> Gunakan format <code>RT[xx]RW[yy].gpx</code><br/><span className="text-muted-foreground">Contoh: <code>RT01RW05.gpx</code></span></span>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-blue-500">•</span>
+                                            <span><strong>Hanya RW:</strong> Gunakan format <code>RW[xx].gpx</code><br/><span className="text-muted-foreground">Contoh: <code>RW02.gpx</code></span></span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div className="space-y-3 bg-white/40 dark:bg-black/20 p-4 rounded-2xl border border-blue-500/10">
+                                    <h4 className="text-[11px] font-black uppercase text-blue-600 tracking-wider">Level Dusun, Blok & Desa</h4>
+                                    <ul className="space-y-2 text-[11px] font-medium leading-relaxed">
+                                        <li className="flex gap-2">
+                                            <span className="text-blue-500">•</span>
+                                            <span><strong>Blok PBB:</strong> Gunakan format <code>blok[xxx].gpx</code><br/><span className="text-muted-foreground">Contoh: <code>blok001.gpx</code></span></span>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-blue-500">•</span>
+                                            <span><strong>Dusun / Desa:</strong> Gunakan prefix <code>dusun_</code> atau <code>desa_</code><br/><span className="text-muted-foreground">Contoh: <code>dusun_mojosongo.gpx</code></span></span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div className="bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                                <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold leading-relaxed">
+                                    💡 <strong>Tips:</strong> Anda bisa memilih banyak file sekaligus (Multi-select) dan sistem akan memproses semuanya dalam satu kali klik tombol "Simpan & Tanam Data Peta".
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 {/* Kolom Kanan: Sidebar Pemeliharaan */}

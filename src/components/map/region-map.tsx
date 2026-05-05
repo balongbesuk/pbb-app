@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState, useRef } from "react";
-import { Maximize, Plus, Minus, Layers } from "lucide-react";
+import { Maximize, Plus, Minus, Layers, Map as MapIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMap } from "react-leaflet";
 import type { Feature, FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
@@ -77,6 +77,7 @@ type RegionProperties = GeoJsonProperties & {
   rt?: string;
   rw?: string;
   dusun?: string;
+  blok?: string;
 };
 
 type RegionFeature = Feature<Geometry, RegionProperties>;
@@ -93,6 +94,7 @@ type DialogConfig = {
   rt?: string;
   rw?: string;
   dusun?: string;
+  blok?: string;
   title: string;
 };
 
@@ -111,7 +113,8 @@ function MapControls({
   showDesa, setShowDesa,
   showDusun, setShowDusun,
   showRW, setShowRW,
-  showRT, setShowRT
+  showRT, setShowRT,
+  showBlok, setShowBlok
 }: { 
   showSatellite: boolean; 
   setShowSatellite: (v: boolean) => void;
@@ -119,6 +122,7 @@ function MapControls({
   showDusun: boolean; setShowDusun: (v: boolean) => void;
   showRW: boolean; setShowRW: (v: boolean) => void;
   showRT: boolean; setShowRT: (v: boolean) => void;
+  showBlok: boolean; setShowBlok: (v: boolean) => void;
 }) {
   const map = useMap();
 
@@ -172,7 +176,7 @@ function MapControls({
             <Layers className="w-5 h-5" />
         </button>
 
-        {/* Region Toggles Section */}
+        {/* Region Toggles Section (Administrative) */}
         <div className="flex flex-col bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl rounded-2xl shadow-2xl overflow-hidden mt-1">
             {[
                 { label: "DS", full: "Desa", state: showDesa, setter: setShowDesa },
@@ -182,7 +186,14 @@ function MapControls({
             ].map((item, i) => (
                 <button
                     key={item.label}
-                    onClick={() => item.setter(!item.state)}
+                    onClick={() => {
+                        const nextState = !item.state;
+                        item.setter(nextState);
+                        if (nextState) {
+                            // Jika layer administratif aktif, matikan layer Blok
+                            setShowBlok(false);
+                        }
+                    }}
                     className={cn(
                         "flex flex-col items-center justify-center p-3 transition-all active:scale-95 group",
                         item.state 
@@ -197,12 +208,35 @@ function MapControls({
                     )}>
                         {item.label}
                     </span>
-                    {!item.state && (
-                      <div className="w-1 h-1 rounded-full mt-1 bg-slate-300 dark:bg-slate-600" />
-                    )}
                 </button>
             ))}
         </div>
+        
+        {/* Layer PBB (Blok) - Separated but on the Left */}
+        <button
+            onClick={() => {
+                const nextState = !showBlok;
+                setShowBlok(nextState);
+                if (nextState) {
+                    setShowDesa(false);
+                    setShowDusun(false);
+                    setShowRW(false);
+                    setShowRT(false);
+                }
+            }}
+            className={cn(
+                "flex flex-col items-center justify-center p-3 backdrop-blur-3xl rounded-2xl shadow-2xl transition-all active:scale-95 group mt-1",
+                showBlok 
+                  ? "bg-emerald-600 text-white" 
+                  : "bg-white/95 dark:bg-[#050505]/95 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-600 dark:text-white"
+            )}
+            title="Toggle Peta Blok PBB"
+        >
+            <MapIcon className={cn(
+                "w-5 h-5 transition-transform duration-300",
+                showBlok ? "scale-110" : "scale-100"
+            )} />
+        </button>
     </div>
   );
 }
@@ -247,6 +281,7 @@ export function RegionMap({
   const [showRT, setShowRT] = useState(false);
   const [showRW, setShowRW] = useState(false);
   const [showDusun, setShowDusun] = useState(false);
+  const [showBlok, setShowBlok] = useState(false);
   const [showDesa, setShowDesa] = useState(false);
   const [showSatellite, setShowSatellite] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -324,6 +359,7 @@ export function RegionMap({
           rt: data.rt,
           rw: data.rw,
           dusun: data.dusun,
+          blok: data.blok,
           title: data.title || "Detail WP"
         });
         setOpenUnpaidDialog(true);
@@ -347,6 +383,7 @@ export function RegionMap({
     if (props.regionType === "RT") return `RT_${parseInt(props.rt ?? "0")}RW_${parseInt(props.rw ?? "0")}`;
     if (props.regionType === "RW") return `RW_${parseInt(props.rw ?? "0")}`;
     if (props.regionType === "DUSUN") return `DUSUN_${(props.dusun ?? "").toUpperCase()}`;
+    if (props.regionType === "BLOK") return `BLOK_${props.blok ?? ""}`;
     if (props.regionType === "DESA") return `DESA_TOTAL`; 
     return "";
   };
@@ -370,8 +407,9 @@ export function RegionMap({
     const isPrimaryFill = 
       (type === "RT" && showRT) ||
       (type === "RW" && showRW && !showRT) ||
-      (type === "DUSUN" && showDusun && !showRW && !showRT) ||
-      (type === "DESA" && showDesa && !showDusun && !showRW && !showRT);
+      (type === "BLOK" && showBlok && !showRW && !showRT) ||
+      (type === "DUSUN" && showDusun && !showBlok && !showRW && !showRT) ||
+      (type === "DESA" && showDesa && !showDusun && !showBlok && !showRW && !showRT);
 
     const sKey = getStatsKey(props);
     const s = stats[sKey] || { total: 0, lunas: 0, percentage: 0 };
@@ -404,6 +442,7 @@ export function RegionMap({
     }
     else if (props.regionType === "RW") title = `RW ${escapeHtml(props.rw ?? "")}`;
     else if (props.regionType === "DUSUN") title = `Dusun ${escapeHtml(props.dusun ?? "")}`;
+    else if (props.regionType === "BLOK") title = `Blok ${escapeHtml(props.blok ?? "")}`;
     else if (props.regionType === "DESA") title = `Desa Balongbesuk`;
 
     const color = s.percentage >= 90 ? '#10b981' : s.percentage >= 75 ? '#84cc16' : s.percentage >= 50 ? '#eab308' : '#ef4444';
@@ -416,6 +455,7 @@ export function RegionMap({
           data-rt="${props.rt || ""}"
           data-rw="${props.rw || ""}"
           data-dusun="${props.dusun || ""}"
+          data-blok="${props.blok || ""}"
           data-title="${escapeHtml(title)}"
         >
           Detail WP Belum Bayar
@@ -504,6 +544,7 @@ export function RegionMap({
   const rtFeatures = geoData.features.filter((feature) => feature.properties?.regionType === "RT");
   const rwFeatures = geoData.features.filter((feature) => feature.properties?.regionType === "RW");
   const dusunFeatures = geoData.features.filter((feature) => feature.properties?.regionType === "DUSUN");
+  const blokFeatures = geoData.features.filter((feature) => feature.properties?.regionType === "BLOK");
   const desaFeatures = geoData.features.filter((feature) => feature.properties?.regionType === "DESA");
 
   return (
@@ -528,14 +569,17 @@ export function RegionMap({
             showDusun={showDusun} setShowDusun={setShowDusun}
             showRW={showRW} setShowRW={setShowRW}
             showRT={showRT} setShowRT={setShowRT}
+            showBlok={showBlok} setShowBlok={setShowBlok}
           />
           
           {showDesa && <GeoJSON key={`desa-${showDesa}`} data={{ type: "FeatureCollection", features: desaFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
           {showDusun && <GeoJSON key={`dusun-${showDusun}`} data={{ type: "FeatureCollection", features: dusunFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
+          {showBlok && <GeoJSON key={`blok-${showBlok}`} data={{ type: "FeatureCollection", features: blokFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
           {showRW && <GeoJSON key={`rw-${showRW}`} data={{ type: "FeatureCollection", features: rwFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
           {showRT && <GeoJSON key={`rt-${showRT}-${tahun}`} data={{ type: "FeatureCollection", features: rtFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
         </MapContainer>
       </div>
+
 
       {/* Mini Legend (Top Right) */}
       <div className={cn(
@@ -568,6 +612,7 @@ export function RegionMap({
           rt={dialogConfig.rt}
           rw={dialogConfig.rw}
           dusun={dialogConfig.dusun}
+          blok={dialogConfig.blok}
           title={dialogConfig.title}
           container={portalContainer}
         />

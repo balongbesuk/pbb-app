@@ -10,7 +10,7 @@ import * as togeojson from "togeojson";
 import type { AppUser } from "@/types/app";
 import type { Feature, FeatureCollection, GeoJsonProperties, Geometry, LineString, Polygon } from "geojson";
 
-type RegionType = "RT" | "RW" | "DUSUN" | "DESA" | "LAINNYA";
+type RegionType = "RT" | "RW" | "DUSUN" | "DESA" | "BLOK" | "LAINNYA";
 
 type MapFeatureProperties = GeoJsonProperties & {
   name?: string;
@@ -18,6 +18,7 @@ type MapFeatureProperties = GeoJsonProperties & {
   rt?: string;
   rw?: string;
   dusun?: string;
+  blok?: string;
 };
 
 type MapFeature = Feature<Geometry, MapFeatureProperties>;
@@ -129,10 +130,11 @@ export async function POST(req: Request) {
             }
 
             let regionType: RegionType = "LAINNYA";
-            let rt = "", rw = "", dusun = "";
+            let rt = "", rw = "", dusun = "", blok = "";
             const rtMatch = name.match(/RT\s*(\d+)/i);
             const rwMatch = name.match(/RW\s*(\d+)/i);
             const dusunMatch = name.match(/DUSUN\s*([\w\s]+)/i) || name.match(/Dusun\s+([\w\s]+)/i);
+            const blokMatch = name.match(/BLOK\s*(\d+)/i) || name.match(/Blok\s*(\d+)/i);
 
             if (rtMatch) {
                 regionType = "RT";
@@ -146,6 +148,9 @@ export async function POST(req: Request) {
             } else if (dusunMatch || name.toUpperCase().includes("DUSUN")) {
                 regionType = "DUSUN";
                 dusun = (dusunMatch ? dusunMatch[1] : name.replace(/DUSUN\s*/i, "")).trim();
+            } else if (blokMatch) {
+                regionType = "BLOK";
+                blok = blokMatch[1].padStart(3, "0");
             } else if (name.toUpperCase().includes("BALONGBESUK") || name.toUpperCase().includes("DESA")) {
                 regionType = "DESA";
             }
@@ -166,7 +171,7 @@ export async function POST(req: Request) {
             const processedFeature: MapFeature = {
                 ...feature,
                 geometry,
-                properties: { ...feature.properties, name, regionType, rt, rw, dusun }
+                properties: { ...feature.properties, name, regionType, rt, rw, dusun, blok }
             };
             
             combinedMap.set(name, processedFeature);

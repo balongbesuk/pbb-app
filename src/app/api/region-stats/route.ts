@@ -16,7 +16,7 @@ export async function GET(req: Request) {
 
     const stats: Record<string, { total: number; lunas: number; percentage: number }> = {};
 
-    const [rtRows, rwRows, dusunRows, desaRows] = await Promise.all([
+    const [rtRows, rwRows, dusunRows, desaRows, blokRows] = await Promise.all([
       prisma.$queryRaw<AggregateRow[]>`
         SELECT
           rt,
@@ -60,6 +60,16 @@ export async function GET(req: Request) {
         FROM TaxData
         WHERE tahun = ${tahun}
       `,
+      prisma.$queryRaw<{ blok: string; total: number; lunas: number }[]>`
+        SELECT
+          SUBSTR(nop, INSTR(nop, '-') - 3, 3) as blok,
+          COUNT(*) AS total,
+          SUM(CASE WHEN paymentStatus = 'LUNAS' THEN 1 ELSE 0 END) AS lunas
+        FROM TaxData
+        WHERE tahun = ${tahun}
+          AND nop LIKE '%-%'
+        GROUP BY blok
+      `,
     ]);
 
     for (const row of rtRows) {
@@ -94,6 +104,15 @@ export async function GET(req: Request) {
       const total = Number(row.total);
       const lunas = Number(row.lunas ?? 0);
       stats[`DUSUN_${dusun}`] = { total, lunas, percentage: 0 };
+    }
+
+    // Process Blok Stats
+    for (const row of (blokRows as any[])) {
+      const blok = String(row.blok || "").trim();
+      if (!blok) continue;
+      const total = Number(row.total);
+      const lunas = Number(row.lunas ?? 0);
+      stats[`BLOK_${blok}`] = { total, lunas, percentage: 0 };
     }
 
     const desaRow = desaRows[0];

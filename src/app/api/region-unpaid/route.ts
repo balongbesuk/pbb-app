@@ -12,6 +12,7 @@ export async function GET(req: Request) {
     const rt = searchParams.get("rt");
     const rw = searchParams.get("rw");
     const dusun = searchParams.get("dusun");
+    const blok = searchParams.get("blok");
 
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
@@ -27,6 +28,9 @@ export async function GET(req: Request) {
       where.rw = rw;
     } else if (type === "DUSUN" && dusun) {
       where.dusun = { contains: dusun };
+    } else if (type === "BLOK" && blok) {
+      // Filter berdasarkan pola .blok- pada NOP
+      where.nop = { contains: `.${blok}-` };
     }
 
     if (search) {

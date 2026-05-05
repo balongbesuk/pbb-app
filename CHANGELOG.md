@@ -38,6 +38,16 @@ Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi perfor
 - **Indonesian Date Parsing Support**: Mesin impor Excel kini mendukung format tanggal khusus Indonesia (contoh: `04-MEI-26`) dengan pengenalan nama bulan teks dan tahun 2 digit.
 - **Import Payment Date Fallback**: Penambahan logika pengamanan yang otomatis menetapkan tanggal hari ini jika data berstatus `LUNAS` namun tidak memiliki tanggal bayar yang valid di file Excel, memastikan data realisasi tetap muncul di dashboard bulanan.
 
+
+### GIS & Map Analytics Enhancement
+- **Blok PBB Layer Integration**: Implementasi layer peta baru khusus untuk visualisasi "Blok PBB" yang memungkinkan pemantauan progres penagihan berdasarkan blok pajak di NOP.
+- **Dynamic Block Statistics Extraction**: Penambahan logika backend untuk mengekstraksi data blok otomatis dari NOP (segmen sebelum tanda hubung) untuk agregasi statistik real-time pada peta.
+- **Mutually Exclusive Map Controls**: Navigasi peta diperbarui dengan pemisahan antara kontrol wilayah administratif (Desa/Dusun/RW/RT) dan layer Blok PBB untuk menjaga kejernihan visual.
+- **Enhanced GPX Processor Support**: Backend pemroses GPX kini mendukung format file `blokxxx.gpx` dengan deteksi tipe wilayah otomatis dan mekanisme "tanam data" ke dalam file GeoJSON utama.
+- **Block-specific Unpaid WP Details**: Fitur detail Wajib Pajak kini mendukung filter per blok, memungkinkan admin melihat daftar tunggakan yang spesifik hanya untuk blok yang dipilih di peta.
+- **Interactive GPX Naming Tutorial**: Penambahan section panduan tutorial penamaan file GPX pada halaman pengaturan peta untuk meminimalisir kesalahan pemetaan data wilayah.
+- **Dashboard Leaderboard Optimization**: Leaderboard "Top Kolektor" kini diurutkan berdasarkan persentase capaian (%) alih-alih nilai nominal, memberikan penilaian performa yang lebih adil bagi petugas.
+
 ### Build & Production Readiness
 - **Production Build Fix**: Error `useSearchParams()` nullable pada formulir publik diperbaiki sehingga `next build` kembali sukses.
 - **Production Checklist**: Penambahan `docs/CHECKLIST_PRODUCTION.md` untuk panduan environment, proxy, upload, backup, dan verifikasi sebelum go-live.

@@ -21,6 +21,7 @@ interface RegionUnpaidDialogProps {
   rt?: string;
   rw?: string;
   dusun?: string;
+  blok?: string;
   title: string;
   container?: HTMLElement | null;
 }
@@ -57,6 +58,7 @@ export function RegionUnpaidDialog({
   rt,
   rw,
   dusun,
+  blok,
   title,
   container,
 }: RegionUnpaidDialogProps) {
@@ -121,6 +123,7 @@ export function RegionUnpaidDialog({
         ...(rt && { rt }),
         ...(rw && { rw }),
         ...(dusun && { dusun }),
+        ...(blok && { blok }),
         ...(dbSearch && { search: dbSearch }),
       });
       const res = await fetch(`/api/region-unpaid?${params.toString()}`);
@@ -153,7 +156,7 @@ export function RegionUnpaidDialog({
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [dusun, rt, rw, tahun, type, dbSearch]);
+  }, [dusun, rt, rw, blok, tahun, type, dbSearch]);
 
   useEffect(() => {
     if (open) {
