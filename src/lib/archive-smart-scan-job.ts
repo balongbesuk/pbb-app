@@ -4,7 +4,7 @@ import { PDFDocument } from "pdf-lib";
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import { ensureArchiveDir, extractNopFromText } from "@/lib/archive-utils";
 
-const JOB_DIR = path.join(process.cwd(), "tmp", "archive-smart-scan-jobs");
+const JOB_DIR = path.join(/* turbopackIgnore: true */ process.cwd(), "tmp", "archive-smart-scan-jobs");
 
 export type SmartScanJobState = "queued" | "processing" | "completed" | "failed";
 

@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     }
     const filename = `avatar-${userId}.${ext}`;
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "avatars");
+    const uploadDir = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "uploads", "avatars");
     await mkdir(uploadDir, { recursive: true });
 
     const filePath = path.join(uploadDir, filename);

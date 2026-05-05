@@ -43,7 +43,7 @@ export async function compressArchiveFiles(
     const Ghostscript = GhostscriptModule.default;
     gs = await Ghostscript({
       locateFile: (fname: string) =>
-        path.join(process.cwd(), "node_modules", "@jspawn", "ghostscript-wasm", fname),
+        path.join(/* turbopackIgnore: true */ process.cwd(), "node_modules", "@jspawn", "ghostscript-wasm", fname),
     });
   } catch {
     globalScope.fetch = originalFetch;

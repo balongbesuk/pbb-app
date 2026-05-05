@@ -53,7 +53,7 @@ export async function deleteAllTaxData() {
 
     // 2. Physical file deletion (Cleaning public/uploads)
     try {
-      const uploadsPath = path.join(process.cwd(), "public", "uploads");
+      const uploadsPath = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "uploads");
       if (fs.existsSync(uploadsPath)) {
         const rootFiles = fs.readdirSync(uploadsPath);
         for (const entry of rootFiles) {

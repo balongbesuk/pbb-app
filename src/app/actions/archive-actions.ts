@@ -82,7 +82,7 @@ export async function getArchiveStats(year: number) {
 
 /** Smart Action to Split Large PDF by NOP */
 export async function processSmartArchive(formData: FormData) {
-  const logDir = path.join(process.cwd(), "tmp");
+  const logDir = path.join(/* turbopackIgnore: true */ process.cwd(), "tmp");
   if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir, { recursive: true });
   }

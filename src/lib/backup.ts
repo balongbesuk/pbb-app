@@ -16,7 +16,7 @@ export async function createDatabaseBackup(): Promise<string | null> {
       return null;
     }
 
-    const backupDir = path.join(process.cwd(), "backups");
+    const backupDir = path.join(/* turbopackIgnore: true */ process.cwd(), "backups");
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir, { recursive: true });
     }

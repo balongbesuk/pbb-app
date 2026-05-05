@@ -5,7 +5,7 @@ function normalizeFileDatabaseUrl(databaseUrl: string): string {
 }
 
 export function resolveSqliteDatabasePath(databaseUrl = process.env.DATABASE_URL): string {
-  const fallbackPath = path.join(process.cwd(), "dev.db");
+  const fallbackPath = path.join(/* turbopackIgnore: true */ process.cwd(), "dev.db");
 
   if (!databaseUrl) {
     return fallbackPath;
@@ -18,5 +18,5 @@ export function resolveSqliteDatabasePath(databaseUrl = process.env.DATABASE_URL
 
   return path.isAbsolute(normalized)
     ? normalized
-    : path.resolve(process.cwd(), normalized);
+    : path.resolve(/* turbopackIgnore: true */ process.cwd(), normalized);
 }

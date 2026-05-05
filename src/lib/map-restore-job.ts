@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
 
-const JOB_DIR = path.join(process.cwd(), "tmp", "map-restore-jobs");
+const JOB_DIR = path.join(/* turbopackIgnore: true */ process.cwd(), "tmp", "map-restore-jobs");
 const MAX_MAP_RESTORE_ENTRIES = 1000;
 const ALLOWED_MAP_RESTORE_EXTENSIONS = new Set([".gpx", ".json", ".geojson"]);
 
@@ -93,8 +93,8 @@ async function processMapRestoreJob(jobId: string) {
     return;
   }
 
-  const mapDir = path.join(process.cwd(), "public", "maps");
-  const stagingDir = path.join(process.cwd(), "tmp", `restore-map-${job.id}`);
+  const mapDir = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "maps");
+  const stagingDir = path.join(/* turbopackIgnore: true */ process.cwd(), "tmp", `restore-map-${job.id}`);
 
   try {
     updateJob(jobId, (current) => ({

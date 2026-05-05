@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     const filename = `logo-desa.${ext}`;
 
     // Save to public/uploads/logos
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "logos");
+    const uploadDir = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "uploads", "logos");
     await mkdir(uploadDir, { recursive: true });
     const filePath = path.join(uploadDir, filename);
     await writeFile(filePath, buffer);

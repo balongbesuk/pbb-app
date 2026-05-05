@@ -14,7 +14,7 @@ export async function GET(_req: NextRequest) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const mapDir = path.join(process.cwd(), "public", "maps");
+    const mapDir = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "maps");
 
     if (!fs.existsSync(mapDir)) {
       return new NextResponse("No map data found", { status: 404 });

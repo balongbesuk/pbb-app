@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   try {
     await requireAdmin();
 
-    const filePath = path.join(process.cwd(), "public", "maps", "village.json");
+    const filePath = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "maps", "village.json");
     const emptyGeoJSON = {
       type: "FeatureCollection",
       features: [],

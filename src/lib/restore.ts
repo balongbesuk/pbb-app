@@ -19,10 +19,10 @@ function ensureDir(dir: string) {
 
 export async function restoreDatabaseFromZip(zipBuffer: Buffer): Promise<{ success: boolean; message: string }> {
   const timestamp = Date.now();
-  const stagingDir = path.join(process.cwd(), "tmp", `restore-staging-${timestamp}`);
-  const backupDir = path.join(process.cwd(), "backups");
+  const stagingDir = path.join(/* turbopackIgnore: true */ process.cwd(), "tmp", `restore-staging-${timestamp}`);
+  const backupDir = path.join(/* turbopackIgnore: true */ process.cwd(), "backups");
   const dbPath = resolveSqliteDatabasePath();
-  const uploadsPath = path.join(process.cwd(), "public", "uploads");
+  const uploadsPath = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "uploads");
   const stagedDbPath = path.join(stagingDir, "dev.db");
   const stagedUploadsDir = path.join(stagingDir, "uploads");
 

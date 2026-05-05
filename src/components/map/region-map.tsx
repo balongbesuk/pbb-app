@@ -70,7 +70,7 @@ const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.Map
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
 const GeoJSON = dynamic(() => import("react-leaflet").then((mod) => mod.GeoJSON), { ssr: false });
 
-type RegionType = "RT" | "RW" | "DUSUN" | "DESA";
+type RegionType = "RT" | "RW" | "DUSUN" | "DESA" | "BLOK" | "LAINNYA";
 
 type RegionProperties = GeoJsonProperties & {
   regionType: RegionType;
@@ -316,6 +316,7 @@ export function RegionMap({
             if (features.some((feature) => feature.properties?.regionType === "RT")) setShowRT(true);
             if (features.some((feature) => feature.properties?.regionType === "RW")) setShowRW(true);
             if (features.some((feature) => feature.properties?.regionType === "DUSUN")) setShowDusun(true);
+            if (features.some((feature) => feature.properties?.regionType === "BLOK")) setShowBlok(true);
             if (features.some((feature) => feature.properties?.regionType === "DESA")) setShowDesa(true);
         }
 

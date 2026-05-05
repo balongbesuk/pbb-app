@@ -165,7 +165,7 @@ export async function GET(req: NextRequest) {
     if (villageConfig.logoUrl) {
       try {
         const logoPath = path.join(
-          process.cwd(),
+          /* turbopackIgnore: true */ process.cwd(),
           "public",
           String(villageConfig.logoUrl).replace(/^\//, "")
         );

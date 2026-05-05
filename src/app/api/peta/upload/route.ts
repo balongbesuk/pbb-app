@@ -98,7 +98,7 @@ export async function POST(req: Request) {
 
     // Baca data LAMA yang sudah ada
     let existingFeatures: MapFeature[] = [];
-    const filePath = path.join(process.cwd(), "public", "maps", "village.json");
+    const filePath = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "maps", "village.json");
     if (fs.existsSync(filePath)) {
         try {
             const oldData = JSON.parse(fs.readFileSync(filePath, "utf-8")) as MapFeatureCollection;
@@ -204,7 +204,7 @@ export async function DELETE() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const filePath = path.join(process.cwd(), "public", "maps", "village.json");
+    const filePath = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "maps", "village.json");
     const emptyGeoJSON: MapFeatureCollection = {
       type: "FeatureCollection",
       features: [],

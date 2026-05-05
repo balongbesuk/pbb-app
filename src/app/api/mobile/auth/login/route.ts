@@ -41,11 +41,8 @@ export async function POST(request: Request) {
     try {
       isPasswordValid = await bcrypt.compare(password, user.password);
     } catch(e) {
-      // Fallback if bcryptjs vs bcrypt issues
-      // To strictly follow the project's setup, we can import from standard bcrypt if preferred, 
-      // but nextjs edge typically uses bcryptjs.
-      const bcryptNode = require('bcryptjs');
-      isPasswordValid = await bcryptNode.compare(password, user.password);
+      console.error("Bcrypt compare error:", e);
+      isPasswordValid = false;
     }
 
     if (!isPasswordValid) {

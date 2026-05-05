@@ -3,7 +3,7 @@ import path from "path";
 import AdmZip from "adm-zip";
 import { getArchivePath } from "@/lib/storage";
 
-const JOB_DIR = path.join(process.cwd(), "tmp", "archive-restore-jobs");
+const JOB_DIR = path.join(/* turbopackIgnore: true */ process.cwd(), "tmp", "archive-restore-jobs");
 const MAX_ARCHIVE_RESTORE_ENTRIES = 5000;
 
 export type ArchiveRestoreJobState = "queued" | "processing" | "completed" | "failed";
@@ -96,7 +96,7 @@ async function processArchiveRestoreJob(jobId: string) {
   }
 
   const archiveDir = getArchivePath(job.year);
-  const stagingDir = path.join(process.cwd(), "tmp", `restore-archive-${job.id}`);
+  const stagingDir = path.join(/* turbopackIgnore: true */ process.cwd(), "tmp", `restore-archive-${job.id}`);
 
   try {
     updateJob(jobId, (current) => ({

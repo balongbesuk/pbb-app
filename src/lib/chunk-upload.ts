@@ -4,7 +4,7 @@ import fs from "fs";
 import Busboy from "busboy";
 import { assertSafeSessionId } from "@/lib/file-security";
 
-export const CHUNK_UPLOAD_DIR = path.join(process.cwd(), "tmp", "upload-chunks");
+export const CHUNK_UPLOAD_DIR = path.join(/* turbopackIgnore: true */ process.cwd(), "tmp", "upload-chunks");
 
 export function ensureChunkUploadDir() {
   if (!fs.existsSync(CHUNK_UPLOAD_DIR)) {

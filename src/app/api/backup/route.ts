@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest) {
 
     const zip = new AdmZip();
     const dbPath = resolveSqliteDatabasePath();
-    const uploadsPath = path.join(process.cwd(), "public", "uploads");
+    const uploadsPath = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "uploads");
 
     if (!fs.existsSync(dbPath)) {
       return new NextResponse("Database file not found", { status: 404 });
