@@ -238,7 +238,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function TrendAnalysisChart({ data }: { data: MonthlyPayment[] }) {
+export function TrendAnalysisChart({ data, tahun }: { data: MonthlyPayment[], tahun?: number }) {
   const [view, setView] = useState<"month" | "year">("month");
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
   const [mounted, setMounted] = useState(false);
@@ -276,7 +276,7 @@ export function TrendAnalysisChart({ data }: { data: MonthlyPayment[] }) {
 
   const { chartData, totalNominal, countLunas, description } = useMemo(() => {
     const now = new Date();
-    const currentYear = now.getFullYear();
+    const currentYear = tahun || now.getFullYear();
 
     let finalChartData: any[] = [];
     let total = 0;

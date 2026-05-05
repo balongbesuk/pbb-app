@@ -449,7 +449,7 @@ export default async function DashboardPage({
 
           <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
             <CardContent className="pt-6">
-              <TrendAnalysisChart data={stats.trenPembayaran} />
+              <TrendAnalysisChart data={stats.trenPembayaran} tahun={currentYear} />
             </CardContent>
           </Card>
         </div>

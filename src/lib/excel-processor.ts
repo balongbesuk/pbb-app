@@ -87,7 +87,38 @@ export async function parseExcel(buffer: Buffer, _isCsv: boolean = false): Promi
         return XLSX.SSF.parse_date_code(val) ? new Date((val - 25569) * 86400 * 1000) : null;
       }
       if (typeof val === "string" && val.trim() !== "") {
-        const d = new Date(val);
+        const str = val.trim().toUpperCase();
+        
+        // 1. Cek format DD-MMM-YY (Contoh: 04-MEI-26)
+        const idMonthMatch = str.match(/^(\d{1,2})[/-]([A-Z]{3})[/-](\d{2,4})$/);
+        if (idMonthMatch) {
+          const day = parseInt(idMonthMatch[1], 10);
+          const monthStr = idMonthMatch[2];
+          let year = idMonthMatch[3];
+          if (year.length === 2) year = "20" + year;
+
+          const months: Record<string, number> = {
+            JAN: 0, FEB: 1, MAR: 2, APR: 3, MEI: 4, JUN: 5,
+            JUL: 6, AGT: 7, AGS: 7, SEP: 8, OKT: 9, NOV: 10, DES: 11
+          };
+
+          if (months[monthStr] !== undefined) {
+            return new Date(parseInt(year, 10), months[monthStr], day);
+          }
+        }
+
+        // 2. Cek format DD-MM-YYYY atau DD/MM/YYYY
+        const dmyMatch = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+        if (dmyMatch) {
+          const day = parseInt(dmyMatch[1], 10);
+          const month = parseInt(dmyMatch[2], 10) - 1;
+          let year = dmyMatch[3];
+          if (year.length === 2) year = "20" + year;
+          const d = new Date(parseInt(year, 10), month, day);
+          return isNaN(d.getTime()) ? null : d;
+        }
+        
+        const d = new Date(str);
         return isNaN(d.getTime()) ? null : d;
       }
       return null;
@@ -200,8 +231,7 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
       }
     }
 
-    // Determine Payment Status
-    // Determine PaymentStatus based on real numbers
+    // Determine Payment Status based on real numbers
     let paymentStatus: PaymentStatus = "BELUM_LUNAS";
     if (row.ketetapan === 0) {
       paymentStatus = "TIDAK_TERBIT";
@@ -209,6 +239,11 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
       paymentStatus = "LUNAS";
     } else if (row.sisaTagihan <= 0 && row.pembayaran > 0) {
       paymentStatus = "LUNAS";
+    }
+
+    // Force set tanggalBayar if LUNAS but date is missing
+    if (paymentStatus === "LUNAS" && (!row.tanggalBayar || isNaN(new Date(row.tanggalBayar).getTime()))) {
+      row.tanggalBayar = now;
     }
 
     const data: TaxProcessingPayload = {

@@ -35,6 +35,8 @@ Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi perfor
 - **Map Restore ZIP Validation**: Restore peta kini membatasi ukuran ZIP, jumlah entry, dan jenis file yang boleh diekstrak.
 - **SQLite Parameter Limit Adjustment**: Penurunan `BATCH_SIZE` impor menjadi 40 baris untuk menjamin kompatibilitas dengan batasan parameter SQLite (`SQLITE_MAX_VARIABLE_NUMBER`) di Windows.
 - **Expo Dependency Alignment**: Perbaikan ketidaksesuaian versi paket `expo` dan `expo-file-system` melalui `expo install --fix` untuk stabilitas SDK 54.
+- **Indonesian Date Parsing Support**: Mesin impor Excel kini mendukung format tanggal khusus Indonesia (contoh: `04-MEI-26`) dengan pengenalan nama bulan teks dan tahun 2 digit.
+- **Import Payment Date Fallback**: Penambahan logika pengamanan yang otomatis menetapkan tanggal hari ini jika data berstatus `LUNAS` namun tidak memiliki tanggal bayar yang valid di file Excel, memastikan data realisasi tetap muncul di dashboard bulanan.
 
 ### Build & Production Readiness
 - **Production Build Fix**: Error `useSearchParams()` nullable pada formulir publik diperbaiki sehingga `next build` kembali sukses.

@@ -206,6 +206,7 @@ export async function createManualTaxData(data: {
         denda: 0,
         lebihBayar: 0,
         sisaTagihan: data.paymentStatus === "LUNAS" ? 0 : Number(data.ketetapan) || 0,
+        tanggalBayar: data.paymentStatus === "LUNAS" ? new Date() : null,
         dusun: data.dusun ? String(data.dusun).trim() : null,
         rw: data.rw ? String(data.rw).trim() : null,
         rt: data.rt ? String(data.rt).trim() : null,
