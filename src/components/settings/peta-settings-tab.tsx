@@ -408,7 +408,7 @@ export function PetaSettingsTab() {
                             </div>
                             <div className="bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
                                 <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold leading-relaxed">
-                                    💡 <strong>Tips:</strong> Anda bisa memilih banyak file sekaligus (Multi-select) dan sistem akan memproses semuanya dalam satu kali klik tombol "Simpan & Tanam Data Peta".
+                                    💡 <strong>Tips:</strong> Anda bisa memilih banyak file sekaligus (Multi-select) dan sistem akan memproses semuanya dalam satu kali klik tombol &quot;Simpan &amp; Tanam Data Peta&quot;.
                                 </p>
                             </div>
                         </CardContent>
