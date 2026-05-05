@@ -196,7 +196,7 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
           ? ((s._sum.pembayaran || 0) / (s._sum.ketetapan || 0)) * 100
           : 0,
     }))
-    .sort((a, b) => b.nominal - a.nominal)
+    .sort((a, b) => b.percent - a.percent)
     .slice(0, 4);
 
   return {
