@@ -16,6 +16,7 @@ import {
   Zap as ZapIcon,
   Clock,
   History,
+  UserCheck,
   XCircle,
 } from "lucide-react";
 import {
@@ -168,6 +169,7 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
         tanggalBayar: { not: null },
       },
       _sum: { pembayaran: true },
+      _count: { _all: true },
     }),
 
     prisma.taxData.groupBy({
@@ -421,14 +423,14 @@ export default async function DashboardPage({
           title="Total Ketetapan"
           value={formatCurrency(stats.totalNominal)}
           icon={<Wallet className="h-5 w-5" />}
-          description="Target anggaran desa"
+          description={`${stats.totalPajak.toLocaleString("id-ID")} WP Desa terdaftar`}
           color="indigo"
         />
         <StatsHeroCard
           title="Sudah Realisasi"
           value={formatCurrency(stats.sudahDibayarValue)}
           icon={<CheckCircle2 className="h-5 w-5" />}
-          description={`${stats.persentase.toFixed(1)}% dari target`}
+          description={`${stats.sudahDibayarCount.toLocaleString("id-ID")} WP sudah lunas`}
           percent={stats.persentase}
           color="emerald"
         />
@@ -440,10 +442,10 @@ export default async function DashboardPage({
           color="rose"
         />
         <StatsHeroCard
-          title="Populasi WP"
-          value={stats.totalPajak.toLocaleString("id-ID")}
-          icon={<Users className="h-5 w-5" />}
-          description="Total wajib pajak terdaftar"
+          title="Partisipasi Warga"
+          value={`${((stats.sudahDibayarCount / (stats.totalPajak || 1)) * 100).toFixed(1)}%`}
+          icon={<UserCheck className="h-5 w-5" />}
+          description="Wajib Pajak yang sudah lunas"
           color="blue"
         />
       </div>

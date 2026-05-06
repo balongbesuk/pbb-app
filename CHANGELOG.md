@@ -1,5 +1,13 @@
 # Changelog
 
+## v9.2.1 - 2026-05-06: Dashboard Analytics & Counting Precision
+
+### Dashboard & Analytics Fixes
+- **Transaction Counting Accuracy**: Perbaikan bug kritis pada grafik analisis tren di mana sistem menghitung jumlah stempel waktu (timestamp) unik alih-alih jumlah total record. Hal ini memastikan impor massal dari Excel (yang memiliki waktu sama) menampilkan volume transaksi yang akurat.
+- **Enhanced Summary Cards**: Memperbarui kartu "Sudah Realisasi" dan "Total Ketetapan" untuk menampilkan jumlah Wajib Pajak (WP) asli dalam keterangan sebagai konteks tambahan.
+- **Participation Rate Analytics**: Mengganti kartu "Populasi WP" yang redundan dengan "Partisipasi Warga" yang menampilkan persentase jumlah WP yang telah melunasi kewajibannya.
+- **Optimized Dashboard Queries**: Memperbarui backend untuk menyertakan hitungan record dalam data transaksi terkelompok guna mendukung penjumlahan yang akurat di sisi tampilan.
+
 ## v9.2 - 2026-04-28: Security, Resilience & Production Hardening
 
 Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi performa publik, dan kesiapan produksi agar PBB Manager lebih aman dipakai di lingkungan nyata.

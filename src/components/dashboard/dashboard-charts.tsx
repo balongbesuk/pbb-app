@@ -35,6 +35,7 @@ interface RwGroupStat {
 interface MonthlyPayment {
   tanggalBayar: Date | string | null;
   _sum: { pembayaran: number | null };
+  _count?: { _all: number };
 }
 
 type ChartTooltipPayload = Array<{ value: number }>;
@@ -305,7 +306,7 @@ export function TrendAnalysisChart({ data, tahun }: { data: MonthlyPayment[], ta
             const month = d.getMonth();
             monthlyData[month].nominal += item._sum.pembayaran || 0;
             total += item._sum.pembayaran || 0;
-            count++;
+            count += item._count?._all || 0;
           }
         }
       });
@@ -328,7 +329,7 @@ export function TrendAnalysisChart({ data, tahun }: { data: MonthlyPayment[], ta
             const val = item._sum.pembayaran || 0;
             
             total += val;
-            count++;
+            count += item._count?._all || 0;
 
             if (day <= 7) weekGroups[0].nominal += val;
             else if (day <= 14) weekGroups[1].nominal += val;
