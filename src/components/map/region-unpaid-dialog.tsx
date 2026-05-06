@@ -310,7 +310,7 @@ export function RegionUnpaidDialog({
           </div>
 
           <div 
-            className="px-5 sm:px-8 pb-8 overflow-y-auto max-h-[55vh] scroll-smooth mt-4"
+            className="px-5 sm:px-8 pb-20 sm:pb-10 overflow-y-auto max-h-[55vh] scroll-smooth mt-4"
             onScroll={handleScroll}
           >
             {loading && data.length === 0 ? (
@@ -420,6 +420,9 @@ export function RegionUnpaidDialog({
                 ))}
               </div>
             )}
+
+            {/* Spacer extra agar data terakhir tidak terpotong di HP */}
+            <div className="h-10 sm:hidden" />
 
             {loadingMore && (
               <div className="flex items-center justify-center py-6 gap-2">

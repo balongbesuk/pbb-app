@@ -6,6 +6,10 @@ Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi perfor
 
 ### Security Hardening
 - **Mobile Bearer Authentication**: Seluruh endpoint operasional mobile petugas kini mewajibkan `Authorization: Bearer` dan tidak lagi mempercayai `userId` dari body/query.
+- **Dashboard Role Guard**: Halaman internal `/dashboard` dan `/data-pajak` kini menolak role `PENGGUNA` di server-side dan mengarahkan warga kembali ke portal publik.
+- **Mobile Login Rate Limit**: Endpoint login PBB Mobile sekarang memakai rate-limit persisten berbasis IP + username untuk menahan brute-force dan beban bcrypt berlebih.
+- **Strict Mobile Token Secret**: Fallback `NEXTAUTH_SECRET` hardcoded pada token mobile dihapus; server kini gagal aman jika secret produksi belum dikonfigurasi.
+- **Mobile Role Restriction**: Login PBB Mobile dibatasi hanya untuk `ADMIN` dan `PENARIK`, sehingga akun warga tidak dapat memperoleh token operasional mobile.
 - **Role Ownership Enforcement**: Akses petugas `PENARIK` diperketat agar hanya bisa melihat dan memodifikasi data yang memang menjadi alokasinya.
 - **Archive & Report Sanitization**: Penambahan helper sanitasi untuk mencegah HTML injection pada laporan cetak dan formula injection pada ekspor/impor Excel.
 - **Safer Production Defaults**: `.env.example` diperbarui agar tidak lagi mencontohkan secret dan password lemah, serta menambahkan flag `TRUST_PROXY`.
@@ -20,6 +24,9 @@ Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi perfor
 - **Background Map Restore**: Restore data peta juga dipindah ke model background job untuk menghindari request panjang yang rapuh.
 
 ### Performance & Scalability
+- **Dashboard Aggregate Query Consolidation**: Statistik utama dashboard digabung ke satu raw SQL conditional aggregation untuk mengurangi banyak query `count`/`aggregate` terpisah saat runtime.
+- **Mobile Login Config Query Optimization**: Endpoint login mobile kini membaca `VillageConfig` satu kali dan memakai ulang hasilnya untuk seluruh payload konfigurasi Bapenda/mobile.
+- **Shared Tax Filter Builder**: Logika filter data pajak dipusatkan di `src/lib/tax-query.ts` dan dipakai ulang oleh halaman data pajak, API `/api/tax`, bulk assign, bulk region update, dan sync Bapenda-by-filter.
 - **Background Smart Scan**: Pemecahan PDF bundle arsip kini berjalan sebagai background job, sehingga UI tidak lagi tergantung koneksi streaming panjang.
 - **Region Stats Aggregate Optimization**: Endpoint statistik wilayah tidak lagi menarik seluruh data ke memory Node, tetapi menghitung agregat langsung di database.
 - **Cached Public Archive Index**: Pencarian publik tidak lagi melakukan scan folder arsip mentah di setiap request; indeks arsip sekarang dicache per tahun/folder.
@@ -49,9 +56,14 @@ Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi perfor
 - **Dashboard Leaderboard Optimization**: Leaderboard "Top Kolektor" kini diurutkan berdasarkan persentase capaian (%) alih-alih nilai nominal, memberikan penilaian performa yang lebih adil bagi petugas.
 
 ### Build & Production Readiness
+- **Production Script Optimization**: `prisma generate` dipindahkan ke script `build`, sementara `start` kini langsung menjalankan `next start` agar startup produksi lebih cepat dan stabil.
+- **Verification Scripts**: Penambahan script `typecheck` dan `verify` untuk menjalankan lint, TypeScript check, dan production build dalam satu alur verifikasi.
+- **Lint Cleanup**: Seluruh warning lint yang tersisa dibersihkan, termasuk unused imports, `any` ringan, dependency `tahun` pada chart dashboard, dan preview gambar berbasis data URL.
 - **Production Build Fix**: Error `useSearchParams()` nullable pada formulir publik diperbaiki sehingga `next build` kembali sukses.
 - **Production Checklist**: Penambahan `docs/CHECKLIST_PRODUCTION.md` untuk panduan environment, proxy, upload, backup, dan verifikasi sebelum go-live.
 - **README Ops Update**: README diperbarui agar checklist produksi ikut terdokumentasi resmi.
+- **GIS Popup Layering Fix**: Perbaikan bug visual di mana popup detail wilayah pada peta tertutupi oleh kontrol navigasi dan legenda. Solusi melibatkan sinkronisasi *stacking context* dan optimasi `z-index`.
+- **Mobile Detail UI Polish**: Optimalisasi tampilan daftar Wajib Pajak pada perangkat mobile dengan penambahan *safe-area padding* dan *spacer* ekstra di akhir daftar agar data terakhir tidak terpotong.
 
 ---
 

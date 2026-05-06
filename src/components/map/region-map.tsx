@@ -31,6 +31,9 @@ const mapStyles = `
   .leaflet-popup-tip {
     background: rgba(255,255,255,0.95) !important;
   }
+  .leaflet-popup-pane, .leaflet-tooltip-pane {
+    z-index: 3000 !important;
+  }
   .leaflet-tooltip {
     border-radius: 12px !important;
     border: none !important;
@@ -127,7 +130,7 @@ function MapControls({
   const map = useMap();
 
   return (
-    <div className="absolute top-6 left-6 z-[2000] flex flex-col gap-3">
+    <div className="absolute top-6 left-6 z-[450] flex flex-col gap-3">
         {/* Zoom Controls */}
         <div className="flex flex-col bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl rounded-2xl shadow-2xl overflow-hidden">
             <button
@@ -241,6 +244,31 @@ function MapControls({
   );
 }
 
+function MapLegend() {
+  return (
+    <div className={cn(
+        "absolute z-[450] bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl border border-slate-200 dark:border-white/10 min-w-[120px] sm:min-w-[160px]",
+        "top-8 right-8"
+    )}>
+      <div className="text-[9px] font-black text-slate-500 dark:text-white/40 uppercase tracking-widest mb-3 text-center">Status Bayar</div>
+      <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold text-slate-700 dark:text-white/60">Sangat Baik</span>
+              <div className="w-4 h-1 rounded-full bg-[#10b981]" />
+          </div>
+          <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold text-slate-700 dark:text-white/60">Cukup</span>
+              <div className="w-4 h-1 rounded-full bg-[#eab308]" />
+          </div>
+          <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold text-slate-700 dark:text-white/60">Buruk</span>
+              <div className="w-4 h-1 rounded-full bg-[#ef4444]" />
+          </div>
+      </div>
+    </div>
+  );
+}
+
 export function RegionMap({ 
   tahun = 2026, 
   center = [-7.5744, 112.235], 
@@ -329,8 +357,8 @@ export function RegionMap({
         if (statsRes.ok) {
           setStats((await statsRes.json()) as Record<string, RegionStat>);
         }
-      } catch (err: any) {
-        if (err.name === 'AbortError') {
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
            console.error("Fetch timeout");
         }
         console.error("Gagal memuat data peta:", err);
@@ -576,33 +604,14 @@ export function RegionMap({
           {showDesa && <GeoJSON key={`desa-${showDesa}`} data={{ type: "FeatureCollection", features: desaFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
           {showDusun && <GeoJSON key={`dusun-${showDusun}`} data={{ type: "FeatureCollection", features: dusunFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
           {showBlok && <GeoJSON key={`blok-${showBlok}`} data={{ type: "FeatureCollection", features: blokFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
-          {showRW && <GeoJSON key={`rw-${showRW}`} data={{ type: "FeatureCollection", features: rwFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
-          {showRT && <GeoJSON key={`rt-${showRT}-${tahun}`} data={{ type: "FeatureCollection", features: rtFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
-        </MapContainer>
-      </div>
-
-
-      {/* Mini Legend (Top Right) */}
-      <div className={cn(
-          "absolute z-[2000] bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl p-4 sm:p-5 rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl border border-slate-200 dark:border-white/10 min-w-[120px] sm:min-w-[160px]",
-          "top-8 right-8"
-      )}>
-        <div className="text-[9px] font-black text-slate-500 dark:text-white/40 uppercase tracking-widest mb-3 text-center">Status Bayar</div>
-        <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold text-slate-700 dark:text-white/60">Sangat Baik</span>
-                <div className="w-4 h-1 rounded-full bg-[#10b981]" />
-            </div>
-            <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold text-slate-700 dark:text-white/60">Cukup</span>
-                <div className="w-4 h-1 rounded-full bg-[#eab308]" />
-            </div>
-            <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold text-slate-700 dark:text-white/60">Buruk</span>
-                <div className="w-4 h-1 rounded-full bg-[#ef4444]" />
-            </div>
+            {showRW && <GeoJSON key={`rw-${showRW}`} data={{ type: "FeatureCollection", features: rwFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
+            {showRT && <GeoJSON key={`rt-${showRT}-${tahun}`} data={{ type: "FeatureCollection", features: rtFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
+            <MapLegend />
+          </MapContainer>
         </div>
-      </div>
+
+
+
 
       {(!isPublic || showUnpaidDetailsGis) && dialogConfig && (
         <RegionUnpaidDialog
