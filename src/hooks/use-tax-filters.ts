@@ -19,6 +19,7 @@ export function useTaxFilters() {
   const dusun = searchParams.get("dusun") || "all";
   const rw = searchParams.get("rw") || "all";
   const rt = searchParams.get("rt") || "all";
+  const blok = searchParams.get("blok") || "all";
   const penarik = searchParams.get("penarik") || "all";
   const regionStatus = searchParams.get("regionStatus") || "all";
   const paymentStatus = searchParams.get("paymentStatus") || "all";
@@ -63,6 +64,7 @@ export function useTaxFilters() {
   const setDusun = useCallback((v: string | null) => updateParam("dusun", v || "all"), [updateParam]);
   const setRw = useCallback((v: string | null) => updateParam("rw", v || "all"), [updateParam]);
   const setRt = useCallback((v: string | null) => updateParam("rt", v || "all"), [updateParam]);
+  const setBlok = useCallback((v: string | null) => updateParam("blok", v || "all"), [updateParam]);
   const setPenarik = useCallback((v: string | null) => updateParam("penarik", v || "all"), [updateParam]);
   const setRegionStatus = useCallback((v: string | null) => updateParam("regionStatus", v || "all"), [updateParam]);
   const setPaymentStatus = useCallback((v: string | null) => updateParam("paymentStatus", v || "all"), [updateParam]);
@@ -84,6 +86,7 @@ export function useTaxFilters() {
     dusun, setDusun,
     rw, setRw,
     rt, setRt,
+    blok, setBlok,
     penarik, setPenarik,
     regionStatus, setRegionStatus,
     paymentStatus, setPaymentStatus,

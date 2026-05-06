@@ -28,12 +28,12 @@ export async function GET() {
         validateStatus: () => true 
       });
       status.bapenda = bapendaRes.status === 200;
-    } catch (e) {
+    } catch {
       status.bapenda = false;
     }
 
     return NextResponse.json({ success: true, status }, { headers });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ 
       success: false, 
       status: { ...status, server: true, database: false } 

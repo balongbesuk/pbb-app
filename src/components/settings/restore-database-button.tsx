@@ -62,8 +62,9 @@ export function RestoreDatabaseButton() {
       }, 2000);
       
       setIsDialogOpen(false);
-    } catch (error: any) {
-      toast.error(error.message || "Gagal memulihkan database.", { id: toastId });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal memulihkan database.";
+      toast.error(message, { id: toastId });
     } finally {
       setIsRestoring(false);
     }

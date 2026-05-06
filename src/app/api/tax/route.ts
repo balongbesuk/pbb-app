@@ -1,19 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { PaymentStatus, Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { getArchiveList } from "@/app/actions/archive-actions";
 import type { AppUser } from "@/types/app";
-import { getNopVariations } from "@/lib/utils";
+import { buildTaxOrderBy, buildTaxWhereInput } from "@/lib/tax-query";
 
 const INTERNAL_ROLES: AppUser["role"][] = ["ADMIN", "PENARIK"];
-const PAYMENT_STATUS_VALUES: PaymentStatus[] = [
-  "LUNAS",
-  "BELUM_LUNAS",
-  "SUSPEND",
-  "TIDAK_TERBIT",
-];
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -32,6 +25,7 @@ export async function GET(req: NextRequest) {
   const filterDusun = searchParams.get("dusun") || "";
   const filterRw = searchParams.get("rw") || "";
   const filterRt = searchParams.get("rt") || "";
+  const filterBlok = searchParams.get("blok") || "";
   const filterPenarik = searchParams.get("penarik") || "";
   const regionStatus = searchParams.get("regionStatus") || "all";
   const paymentStatus = searchParams.get("paymentStatus") || "all";
@@ -39,48 +33,18 @@ export async function GET(req: NextRequest) {
   const sortBy = searchParams.get("sortBy") || "nop";
   const sortOrder = searchParams.get("sortOrder") || "asc";
   const pageSize = 50;
-  
-  const whereClause: Prisma.TaxDataWhereInput = {
+
+  const whereClause = buildTaxWhereInput({
     tahun,
-  };
-
-  if (paymentStatus !== "all" && PAYMENT_STATUS_VALUES.includes(paymentStatus as PaymentStatus)) {
-    whereClause.paymentStatus = paymentStatus as PaymentStatus;
-  }
-
-  const andFilters: Prisma.TaxDataWhereInput[] = [];
-
-  if (query) {
-    const searchQuery = query.trim();
-    const variations = getNopVariations(searchQuery);
-
-    const orConditions: Prisma.TaxDataWhereInput[] = [
-      ...variations.map(v => ({ nop: { contains: v } })),
-      { namaWp: { contains: searchQuery } },
-      { namaWp: { contains: searchQuery.toUpperCase() } },
-      { alamatObjek: { contains: searchQuery } },
-      { alamatObjek: { contains: searchQuery.toUpperCase() } },
-    ];
-    
-    andFilters.push({ OR: orConditions });
-  }
-
-  if (regionStatus === "incomplete") {
-    andFilters.push({
-      OR: [{ dusun: null }, { rw: null }, { rt: null }, { dusun: "" }, { rw: "" }, { rt: "" }],
-    });
-  }
-
-  if (filterDusun && filterDusun !== "all") whereClause.dusun = filterDusun;
-  if (filterRw && filterRw !== "all") whereClause.rw = filterRw;
-  if (filterRt && filterRt !== "all") whereClause.rt = filterRt;
-  if (filterPenarik && filterPenarik !== "all") {
-    if (filterPenarik === "none") {
-      whereClause.penarikId = null;
-    } else {
-      whereClause.penarikId = filterPenarik;
-    }
-  }
+    q: query,
+    dusun: filterDusun,
+    rw: filterRw,
+    rt: filterRt,
+    blok: filterBlok,
+    penarik: filterPenarik,
+    regionStatus,
+    paymentStatus,
+  });
   
   if (archiveStatus === "missing") {
     // Get all files currently in the archive directory for this year
@@ -101,11 +65,13 @@ export async function GET(req: NextRequest) {
       })
       .map(t => t.id);
       
-    andFilters.push({ id: { in: missingArchiveIds } });
-  }
-
-  if (andFilters.length > 0) {
-    whereClause.AND = andFilters;
+    const existingAnd = whereClause.AND;
+    const archiveFilter = { id: { in: missingArchiveIds } };
+    whereClause.AND = Array.isArray(existingAnd)
+      ? [...existingAnd, archiveFilter]
+      : existingAnd
+        ? [existingAnd, archiveFilter]
+        : [archiveFilter];
   }
 
   const [data, total] = await Promise.all([
@@ -123,9 +89,7 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: { 
-        [sortBy === "tagihan" ? "sisaTagihan" : sortBy === "nama" ? "namaWp" : sortBy === "status" ? "paymentStatus" : "nop"]: sortOrder 
-      },
+      orderBy: buildTaxOrderBy(sortBy, sortOrder),
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),

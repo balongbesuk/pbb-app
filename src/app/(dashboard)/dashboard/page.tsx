@@ -1,10 +1,9 @@
 import { Suspense, type ReactNode } from "react";
 import { prisma } from "@/lib/prisma";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CheckCircle2,
   AlertCircle,
-  TrendingUp,
   Target,
   Users,
   Calendar,
@@ -33,6 +32,7 @@ import { formatCurrency, toTitleCase, cn } from "@/lib/utils";
 import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 type SessionUser = {
   id?: string;
@@ -52,6 +52,21 @@ type PhysicalStatsCardProps = {
   value: string;
   description: string;
   icon: ReactNode;
+};
+
+type DashboardAggregateRow = {
+  totalPajak: number | bigint;
+  totalKetetapan: number | bigint | null;
+  totalPembayaranLunas: number | bigint | null;
+  totalKetetapanBelumLunas: number | bigint | null;
+  countLunas: number | bigint;
+  countBelumLunas: number | bigint;
+  countTidakTerbit: number | bigint;
+  countSengketa: number | bigint;
+  tanahTanpaBangunan: number | bigint;
+  tanahDenganBangunan: number | bigint;
+  totalLuasTanah: number | bigint | null;
+  totalLuasBangunan: number | bigint | null;
 };
 
 type StatsHeroCardProps = {
@@ -116,33 +131,28 @@ async function getPenarikDailyLog(userId: string) {
 
 async function getDashboardStats(tahun: number = new Date().getFullYear()) {
   const [
-    totalPajak,
-    totalNominal,
-    sudahDibayar,
-    belumDibayar,
-    tidakTerbit,
-    sengketa,
+    aggregateRows,
     pajakPerRW,
     trenPembayaran,
     penarikStats,
-    tanahTanpaBangunan,
-    tanahDenganBangunan,
-    totalLuas,
   ] = await Promise.all([
-    prisma.taxData.count({ where: { tahun } }),
-    prisma.taxData.aggregate({ where: { tahun }, _sum: { ketetapan: true } }),
-    prisma.taxData.aggregate({
-      where: { tahun, paymentStatus: "LUNAS" },
-      _sum: { ketetapan: true, pembayaran: true },
-      _count: true,
-    }),
-    prisma.taxData.aggregate({
-      where: { tahun, paymentStatus: "BELUM_LUNAS" },
-      _sum: { ketetapan: true },
-      _count: true,
-    }),
-    prisma.taxData.count({ where: { tahun, paymentStatus: "TIDAK_TERBIT" } }),
-    prisma.taxData.count({ where: { tahun, paymentStatus: "SUSPEND" } }),
+    prisma.$queryRaw<DashboardAggregateRow[]>`
+      SELECT
+        COUNT(*) AS totalPajak,
+        SUM(ketetapan) AS totalKetetapan,
+        SUM(CASE WHEN paymentStatus = 'LUNAS' THEN pembayaran ELSE 0 END) AS totalPembayaranLunas,
+        SUM(CASE WHEN paymentStatus = 'BELUM_LUNAS' THEN ketetapan ELSE 0 END) AS totalKetetapanBelumLunas,
+        SUM(CASE WHEN paymentStatus = 'LUNAS' THEN 1 ELSE 0 END) AS countLunas,
+        SUM(CASE WHEN paymentStatus = 'BELUM_LUNAS' THEN 1 ELSE 0 END) AS countBelumLunas,
+        SUM(CASE WHEN paymentStatus = 'TIDAK_TERBIT' THEN 1 ELSE 0 END) AS countTidakTerbit,
+        SUM(CASE WHEN paymentStatus = 'SUSPEND' THEN 1 ELSE 0 END) AS countSengketa,
+        SUM(CASE WHEN luasTanah > 0 AND luasBangunan = 0 THEN 1 ELSE 0 END) AS tanahTanpaBangunan,
+        SUM(CASE WHEN luasTanah > 0 AND luasBangunan > 0 THEN 1 ELSE 0 END) AS tanahDenganBangunan,
+        SUM(luasTanah) AS totalLuasTanah,
+        SUM(luasBangunan) AS totalLuasBangunan
+      FROM TaxData
+      WHERE tahun = ${tahun}
+    `,
 
     prisma.taxData.groupBy({
       by: ["rw"],
@@ -165,15 +175,13 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
       where: { tahun },
       _sum: { pembayaran: true, ketetapan: true },
     }),
-
-    prisma.taxData.count({ where: { tahun, luasTanah: { gt: 0 }, luasBangunan: 0 } }),
-    prisma.taxData.count({ where: { tahun, luasTanah: { gt: 0 }, luasBangunan: { gt: 0 } } }),
-    prisma.taxData.aggregate({ where: { tahun }, _sum: { luasTanah: true, luasBangunan: true } }),
   ]);
 
-  const totalNominalValue = totalNominal._sum.ketetapan || 0;
-  const sudahDibayarValue = sudahDibayar._sum.pembayaran || 0;
-  const sengketaCount = sengketa;
+  const aggregate = aggregateRows[0];
+  const totalPajak = Number(aggregate?.totalPajak ?? 0);
+  const totalNominalValue = Number(aggregate?.totalKetetapan ?? 0);
+  const sudahDibayarValue = Number(aggregate?.totalPembayaranLunas ?? 0);
+  const sengketaCount = Number(aggregate?.countSengketa ?? 0);
   const persentase = totalNominalValue > 0 ? (sudahDibayarValue / totalNominalValue) * 100 : 0;
 
   // Get penarik names
@@ -202,11 +210,11 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
   return {
     totalPajak,
     totalNominal: totalNominalValue,
-    sudahDibayarCount: sudahDibayar._count || 0,
+    sudahDibayarCount: Number(aggregate?.countLunas ?? 0),
     sudahDibayarValue,
-    belumDibayarCount: belumDibayar._count || 0,
-    belumDibayarValue: belumDibayar._sum.ketetapan || 0,
-    tidakTerbit,
+    belumDibayarCount: Number(aggregate?.countBelumLunas ?? 0),
+    belumDibayarValue: Number(aggregate?.totalKetetapanBelumLunas ?? 0),
+    tidakTerbit: Number(aggregate?.countTidakTerbit ?? 0),
     sengketaCount,
     persentase,
     pajakPerRW: pajakPerRW
@@ -217,10 +225,10 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
       })),
     trenPembayaran,
     topPenariks,
-    tanahTanpaBangunan,
-    tanahDenganBangunan,
-    totalLuasTanah: totalLuas._sum.luasTanah || 0,
-    totalLuasBangunan: totalLuas._sum.luasBangunan || 0,
+    tanahTanpaBangunan: Number(aggregate?.tanahTanpaBangunan ?? 0),
+    tanahDenganBangunan: Number(aggregate?.tanahDenganBangunan ?? 0),
+    totalLuasTanah: Number(aggregate?.totalLuasTanah ?? 0),
+    totalLuasBangunan: Number(aggregate?.totalLuasBangunan ?? 0),
   };
 }
 
@@ -233,6 +241,9 @@ export default async function DashboardPage({
   const currentYear = parseInt(params.tahun || new Date().getFullYear().toString());
   const session = await getServerSession(authOptions);
   const currentUser = session?.user as SessionUser | undefined;
+  if (!currentUser || currentUser.role === "PENGGUNA") {
+    redirect("/");
+  }
 
   const [stats, villageConfig] = await Promise.all([
     getDashboardStats(currentYear),

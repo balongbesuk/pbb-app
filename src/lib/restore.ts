@@ -121,9 +121,10 @@ export async function restoreDatabaseFromZip(zipBuffer: Buffer): Promise<{ succe
     }
 
     return { success: true, message: "Restore database dan arsip berhasil." };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Restore failed:", error);
-    return { success: false, message: error.message || "Gagal memulihkan database." };
+    const message = error instanceof Error ? error.message : "Gagal memulihkan database.";
+    return { success: false, message };
   } finally {
     if (fs.existsSync(stagingDir)) {
       fs.rmSync(stagingDir, { recursive: true, force: true });

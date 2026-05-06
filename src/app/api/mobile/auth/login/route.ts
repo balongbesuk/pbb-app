@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/prisma';
-import { isPbbMobileEnabled } from '@/lib/mobile-access';
 import bcrypt from 'bcryptjs';
 import { encode } from 'next-auth/jwt';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/request-ip';
+
+const MOBILE_LOGIN_RATE_LIMIT = {
+  limit: 5,
+  windowMs: 10 * 60 * 1000,
+};
+
+const MOBILE_ALLOWED_ROLES = new Set(["ADMIN", "PENARIK"]);
 
 export async function POST(request: Request) {
   const headers = {
@@ -13,8 +21,20 @@ export async function POST(request: Request) {
   };
 
   try {
-    const mobileEnabled = await isPbbMobileEnabled();
-    if (!mobileEnabled) {
+    const villageConfig = await prisma.villageConfig.findUnique({
+      where: { id: 1 },
+      select: {
+        enablePbbMobile: true,
+        bapendaUrl: true,
+        bapendaPaymentUrl: true,
+        enableBapendaPayment: true,
+        bapendaRegionName: true,
+        isJombangBapenda: true,
+        enableBapendaSync: true,
+      },
+    });
+
+    if (villageConfig?.enablePbbMobile === false) {
       return NextResponse.json(
         { success: false, error: 'Login PBB Mobile sedang dinonaktifkan oleh admin desa.' },
         { status: 403, headers }
@@ -24,16 +44,36 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { username, password } = body;
 
-    if (!username || !password) {
+    if (typeof username !== "string" || typeof password !== "string" || !username || !password) {
       return NextResponse.json({ success: false, error: 'Username dan Password wajib diisi' }, { status: 400, headers });
     }
 
+    const normalizedUsername = username.trim();
+    const clientIp = getClientIp({ headers: request.headers });
+    const rateLimit = checkRateLimit(
+      `mobile-login:${clientIp}:${normalizedUsername.toLowerCase()}`,
+      MOBILE_LOGIN_RATE_LIMIT
+    );
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Terlalu banyak percobaan login. Coba lagi dalam ${rateLimit.retryAfter} detik.`,
+        },
+        { status: 429, headers }
+      );
+    }
+
     const user = await prisma.user.findUnique({
-      where: { username },
+      where: { username: normalizedUsername },
     });
 
     if (!user) {
       return NextResponse.json({ success: false, error: 'Kredensial tidak valid' }, { status: 401, headers });
+    }
+
+    if (!MOBILE_ALLOWED_ROLES.has(user.role)) {
+      return NextResponse.json({ success: false, error: 'Akun ini tidak memiliki akses PBB Mobile.' }, { status: 403, headers });
     }
 
     // Verify password
@@ -49,6 +89,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Kredensial tidak valid' }, { status: 401, headers });
     }
 
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      console.error("Mobile Auth Error: NEXTAUTH_SECRET belum dikonfigurasi.");
+      return NextResponse.json(
+        { success: false, error: 'Konfigurasi autentikasi server belum lengkap.' },
+        { status: 500, headers }
+      );
+    }
+
     const magicToken = await encode({
       token: {
         id: user.id,
@@ -56,7 +105,7 @@ export async function POST(request: Request) {
         role: user.role,
         mustChangePassword: user.mustChangePassword,
       },
-      secret: process.env.NEXTAUTH_SECRET || 'pbb-desa-rahasia-sekali-123',
+      secret,
     });
 
     return NextResponse.json({
@@ -71,12 +120,12 @@ export async function POST(request: Request) {
         dusun: user.dusun,
       },
       villageConfig: {
-        bapendaUrl: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.bapendaUrl,
-        bapendaPaymentUrl: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.bapendaPaymentUrl,
-        enableBapendaPayment: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.enableBapendaPayment ?? true,
-        bapendaRegionName: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.bapendaRegionName || "Bapenda",
-        isJombangBapenda: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.isJombangBapenda ?? false,
-        enableBapendaSync: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.enableBapendaSync ?? false,
+        bapendaUrl: villageConfig?.bapendaUrl,
+        bapendaPaymentUrl: villageConfig?.bapendaPaymentUrl,
+        enableBapendaPayment: villageConfig?.enableBapendaPayment ?? true,
+        bapendaRegionName: villageConfig?.bapendaRegionName || "Bapenda",
+        isJombangBapenda: villageConfig?.isJombangBapenda ?? false,
+        enableBapendaSync: villageConfig?.enableBapendaSync ?? false,
       }
     }, { headers });
 

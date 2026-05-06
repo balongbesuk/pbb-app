@@ -2,13 +2,12 @@
 
 import { FilePlus2, FileText } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 interface PublicSelfServiceProps {
   isDark?: boolean;
 }
 
-export function PublicSelfService({ isDark = false }: PublicSelfServiceProps) {
+export function PublicSelfService({ isDark: _isDark = false }: PublicSelfServiceProps) {
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-2xl animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500 fill-mode-both">
       <div className="flex items-center gap-4 w-full">

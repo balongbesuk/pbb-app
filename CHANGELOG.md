@@ -63,10 +63,12 @@ Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi perfor
 - **Production Checklist**: Penambahan `docs/CHECKLIST_PRODUCTION.md` untuk panduan environment, proxy, upload, backup, dan verifikasi sebelum go-live.
 - **README Ops Update**: README diperbarui agar checklist produksi ikut terdokumentasi resmi.
 - **GIS Popup Layering Fix**: Perbaikan bug visual di mana popup detail wilayah pada peta tertutupi oleh kontrol navigasi dan legenda. Solusi melibatkan sinkronisasi *stacking context* dan optimasi `z-index`.
+- **Blok Filter Feature**: Implementasi filter "Blok" yang diekstrak otomatis dari NOP. Pencarian menggunakan pola presisi (segment 5) untuk menghindari pencampuran data dengan nomor objek. Blok juga kini ditampilkan pada kolom Wilayah di tabel desktop dan mobile card.
 - **Mobile Detail UI Polish**: Optimalisasi tampilan daftar Wajib Pajak pada perangkat mobile dengan penambahan *safe-area padding* dan *spacer* ekstra di akhir daftar agar data terakhir tidak terpotong.
 - **Enhanced Mobile Filter Targets**: Peningkatan ukuran tombol filter, chip status, dan dropdown pada perangkat mobile untuk memenuhi standar aksesibilitas *touch target* yang lebih ergonomis.
 - **WP Card Layout Fix**: Perbaikan bug visual pada kartu WP di mana data wilayah (Dusun/RT/RW) terpotong. Penyesuaian melibatkan sistem *wrapping* cerdas dan penghapusan teks redundan.
 - **Pagination UI Streamlining**: Penyelarasan kontrol paginasi agar selalu tampil dalam satu baris horisontal di layar HP, meningkatkan efisiensi ruang dan kemudahan navigasi.
+- **Hook Syntax Fix**: Perbaikan bug *syntax error* pada `useTaxFilters` hook yang menyebabkan aplikasi crash setelah pembaruan parameter filter.
 
 ---
 

@@ -580,6 +580,7 @@ export function SpopFormDialog({
                     </label>
                   ) : (
                     <div className={cn("relative w-full h-64 rounded-[2rem] border-2 overflow-hidden", isDark ? "border-white/10" : "border-slate-200")}>
+                       {/* eslint-disable-next-line @next/next/no-img-element -- Data URL preview dari file lokal pengguna. */}
                        <img src={form.sketImage} alt="Sket Lokasi" className="w-full h-full object-contain bg-white" />
                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                           <label className="p-4 bg-white rounded-2xl cursor-pointer text-slate-900 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 active:scale-95 transition-transform">

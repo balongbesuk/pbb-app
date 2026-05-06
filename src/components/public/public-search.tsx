@@ -2,21 +2,15 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { searchPublicTaxData } from "@/app/actions/public-actions";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Loader2, Search, MapPin, User, CheckCircle2, Phone, Info, Wallet, 
-  ShieldAlert, Ruler, AlertCircle, History, Download, Eye, RefreshCcw, 
-  Copy, Check, FileText, Menu, ChevronDown, Printer, FilePlus2 
+  Loader2, Search, MapPin, User, CheckCircle2, Phone, Info, Wallet,
+  ShieldAlert, Ruler, AlertCircle, History, Download, Eye,
+  Copy, Check, FileText, Printer, FilePlus2
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
 import { formatCurrency, formatDate, formatDateNoTime, formatJatuhTempo, cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -24,7 +18,6 @@ import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
 import { SpptMutationDialog } from "./sppt-mutation-dialog";
 import { SpptNewDialog } from "./sppt-new-dialog";
 import { SpopFormDialog } from "./spop-form-dialog";
-import Link from "next/link";
 
 interface PublicSearchResultItem {
   id: number;

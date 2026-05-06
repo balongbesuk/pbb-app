@@ -25,6 +25,8 @@ interface TaxTableFiltersProps {
   onRwChange: (val: string) => void;
   filterRt: string;
   onRtChange: (val: string) => void;
+  filterBlok: string;
+  onBlokChange: (val: string) => void;
   filterPenarik: string;
   onPenarikChange: (val: string) => void;
   filterRegionStatus: string;
@@ -58,6 +60,8 @@ export function TaxTableFilters({
   onPaymentStatusChange,
   filterArchiveStatus,
   onArchiveStatusChange,
+  filterBlok,
+  onBlokChange,
   availableFilters,
   onPrint,
   showPrint,
@@ -117,6 +121,7 @@ export function TaxTableFilters({
     filterDusun !== "all" && filterDusun,
     filterRw !== "all" && filterRw,
     filterRt !== "all" && filterRt,
+    filterBlok !== "all" && filterBlok,
     filterPenarik !== "all" && filterPenarik,
     filterRegionStatus !== "all" && filterRegionStatus,
     filterPaymentStatus !== "all" && filterPaymentStatus,
@@ -310,6 +315,27 @@ export function TaxTableFilters({
                 </div>
               </div>
             </div>
+            
+            {/* Blok chips */}
+            {availableFilters.blok && availableFilters.blok.length > 0 && (
+               <div>
+                 <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Blok</p>
+                 <div className="flex flex-wrap gap-1 max-h-[80px] overflow-y-auto">
+                   <button onClick={() => onBlokChange("all")}
+                     className={cn("rounded-full border px-3 py-1.5 text-xs font-bold transition-all",
+                       filterBlok === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                     Semua
+                   </button>
+                   {availableFilters.blok.map((b: string) => (
+                     <button key={b} onClick={() => onBlokChange(b)}
+                       className={cn("rounded-full border px-3 py-1.5 text-xs font-bold transition-all",
+                         filterBlok === b ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
+                       {b}
+                     </button>
+                   ))}
+                 </div>
+               </div>
+            )}
 
             {/* Penarik, Kelengkapan, Status row */}
             <div className="space-y-3">
@@ -437,6 +463,18 @@ export function TaxTableFilters({
                 <SelectItem value="all" className="font-bold">Semua RT</SelectItem>
                 {availableFilters.rt.map((rt: string) => (
                   <SelectItem key={rt} value={rt}>RT {rt}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterBlok} onValueChange={(v) => onBlokChange(v || "all")}>
+              <SelectTrigger className="h-10 flex-1 rounded-xl border-border bg-card text-[10px] font-bold shadow-sm sm:text-xs lg:w-[100px]">
+                <span className="flex flex-1 truncate text-left">{filterBlok === "all" ? "Semua Blok" : `Blok ${filterBlok}`}</span>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border shadow-2xl">
+                <SelectItem value="all" className="font-bold">Semua Blok</SelectItem>
+                {availableFilters.blok.map((b: string) => (
+                  <SelectItem key={b} value={b}>Blok {b}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

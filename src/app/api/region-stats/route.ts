@@ -107,7 +107,7 @@ export async function GET(req: Request) {
     }
 
     // Process Blok Stats
-    for (const row of (blokRows as any[])) {
+    for (const row of blokRows) {
       const blok = String(row.blok || "").trim();
       if (!blok) continue;
       const total = Number(row.total);

@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "ID pengguna tidak valid." }, { status: 400 });
     }
 
-    const formData = (await req.formData()) as any;
+    const formData = await req.formData();
     const file = formData.get("avatar") as File | null;
 
     if (!file) {

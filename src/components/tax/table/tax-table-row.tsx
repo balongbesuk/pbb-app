@@ -70,8 +70,10 @@ export function TaxTableRow({
           <MapPin className="text-primary h-3 w-3 shrink-0" />
           <span className="truncate">{item.dusun || "-"}</span>
         </div>
-        <div className="text-muted-foreground text-xs truncate">
-          RT {item.rt || "-"} / RW {item.rw || "-"}
+        <div className="text-muted-foreground text-[10px] truncate flex items-center gap-1">
+          <span>RT {item.rt || "-"} / RW {item.rw || "-"}</span>
+          <span className="text-xs opacity-30">|</span>
+          <span className="font-bold text-primary/80">BLOK {item.nop.replace(/\D/g, "").substring(10, 13) || "-"}</span>
         </div>
       </div>
       <div className={cn("flex items-center justify-end font-semibold px-4", TAX_TABLE_WIDTHS.tagihan)}>

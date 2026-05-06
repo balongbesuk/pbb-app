@@ -29,6 +29,7 @@ interface BulkRegionDialogProps {
     dusun?: string;
     rw?: string;
     rt?: string;
+    blok?: string;
     penarik?: string;
     regionStatus?: string;
   };

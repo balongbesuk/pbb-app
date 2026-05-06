@@ -1,11 +1,11 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/server-auth";
 import { createAuditLog } from "./log-actions";
 import { formatZodError } from "@/lib/validations/schemas";
+import { buildTaxWhereInput } from "@/lib/tax-query";
 
 async function syncTaxMappingsForRecords(
   records: Array<{
@@ -41,6 +41,7 @@ async function syncTaxMappingsForRecords(
   );
 }
 
+
 export async function assignPenarikByFilter(
   filters: {
     tahun: number;
@@ -48,6 +49,7 @@ export async function assignPenarikByFilter(
     dusun?: string;
     rw?: string;
     rt?: string;
+    blok?: string;
     penarik?: string;
     regionStatus?: string;
   },
@@ -56,43 +58,9 @@ export async function assignPenarikByFilter(
   try {
     await requireAdmin();
 
-    const whereClause: Prisma.TaxDataWhereInput = {
-      tahun: filters.tahun,
-    };
-
-    const andFilters: Prisma.TaxDataWhereInput[] = [];
-
-    if (filters.q) {
-      andFilters.push({
-        OR: [
-          { nop: { contains: filters.q } },
-          { namaWp: { contains: filters.q } },
-          { alamatObjek: { contains: filters.q } },
-        ],
-      });
-    }
-
-    if (filters.regionStatus === "incomplete") {
-      andFilters.push({
-        OR: [{ dusun: null }, { rw: null }, { rt: null }, { dusun: "" }, { rw: "" }, { rt: "" }],
-      });
-    }
-
-    if (filters.dusun && filters.dusun !== "all") whereClause.dusun = filters.dusun;
-    if (filters.rw && filters.rw !== "all") whereClause.rw = filters.rw;
-    if (filters.rt && filters.rt !== "all") whereClause.rt = filters.rt;
-    
-    if (filters.penarik && filters.penarik !== "all") {
-      if (filters.penarik === "none") {
-        whereClause.penarikId = null;
-      } else {
-        whereClause.penarikId = filters.penarik;
-      }
-    }
-
-    if (andFilters.length > 0) {
-      whereClause.AND = andFilters;
-    }
+    const whereClause = buildTaxWhereInput(filters, {
+      includePaymentStatus: false,
+    });
 
     const matchingRecords = await prisma.taxData.findMany({
       where: whereClause,

@@ -65,6 +65,7 @@ export function TaxDataTable({
     dusun, setDusun,
     rw, setRw,
     rt, setRt,
+    blok, setBlok,
     penarik, setPenarik,
     regionStatus, setRegionStatus,
     paymentStatus, setPaymentStatus,
@@ -80,7 +81,7 @@ export function TaxDataTable({
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ["tax-data", { q, page, tahun, dusun, rw, rt, penarik, regionStatus, paymentStatus, archiveStatus, sortBy, sortOrder }],
+    queryKey: ["tax-data", { q, page, tahun, dusun, rw, rt, blok, penarik, regionStatus, paymentStatus, archiveStatus, sortBy, sortOrder }],
     queryFn: async () => {
       const params = new URLSearchParams({
         q: q || "",
@@ -89,6 +90,7 @@ export function TaxDataTable({
         dusun: dusun || "all",
         rw: rw || "all",
         rt: rt || "all",
+        blok: blok || "all",
         penarik: penarik || "all",
         regionStatus: regionStatus || "all",
         paymentStatus: paymentStatus || "all",
@@ -175,6 +177,7 @@ export function TaxDataTable({
     if (dusun && dusun !== "all") params.set("dusun", dusun);
     if (rw && rw !== "all") params.set("rw", rw);
     if (rt && rt !== "all") params.set("rt", rt);
+    if (blok && blok !== "all") params.set("blok", blok);
     if (penarik && penarik !== "all") params.set("penarik", penarik);
     params.set("tahun", tahun || new Date().getFullYear().toString());
     window.open(`/api/export-tax?${params.toString()}`, "_blank");
@@ -187,7 +190,7 @@ export function TaxDataTable({
     let res;
     if (isAllFilteredSelected) {
       res = await assignPenarikByFilter({
-        tahun: parseInt(tahun || "0"), q: q || undefined, dusun: dusun || undefined, rw: rw || undefined, rt: rt || undefined, penarik: penarik || undefined, regionStatus: regionStatus || undefined
+        tahun: parseInt(tahun || "0"), q: q || undefined, dusun: dusun || undefined, rw: rw || undefined, rt: rt || undefined, blok: blok || undefined, penarik: penarik || undefined, regionStatus: regionStatus || undefined
       }, penarikId);
     } else {
       res = await assignPenarikBulk(Array.from(selectedIds), penarikId);
@@ -220,7 +223,7 @@ export function TaxDataTable({
       if (isAllFilteredSelected) {
         toast.loading(`Mengambil data filter...`, { id: toastId });
         const res = await syncBapendaByFilter({
-           tahun: parseInt(tahun || "0"), q: q || undefined, dusun: dusun || undefined, rw: rw || undefined, rt: rt || undefined, penarik: penarik || undefined, regionStatus: regionStatus || undefined, paymentStatus: paymentStatus || undefined
+           tahun: parseInt(tahun || "0"), q: q || undefined, dusun: dusun || undefined, rw: rw || undefined, rt: rt || undefined, blok: blok || undefined, penarik: penarik || undefined, regionStatus: regionStatus || undefined, paymentStatus: paymentStatus || undefined
         });
         if (!res.success) throw new Error(res.message);
         ids = res.data || [];
@@ -284,6 +287,8 @@ export function TaxDataTable({
         onRwChange={setRw}
         filterRt={rt || "all"}
         onRtChange={setRt}
+        filterBlok={blok || "all"}
+        onBlokChange={setBlok}
         filterPenarik={penarik || "all"}
         onPenarikChange={setPenarik}
         filterRegionStatus={regionStatus || "all"}
@@ -473,7 +478,7 @@ export function TaxDataTable({
         selectedIds={Array.from(selectedIds)}
         isAllFilteredSelected={isAllFilteredSelected}
         filters={{
-          tahun: parseInt(tahun || "0"), q: q || undefined, dusun: dusun || undefined, rw: rw || undefined, rt: rt || undefined
+          tahun: parseInt(tahun || "0"), q: q || undefined, dusun: dusun || undefined, rw: rw || undefined, rt: rt || undefined, blok: blok || undefined
         }}
         availableFilters={availableFilters}
         onSuccess={() => {

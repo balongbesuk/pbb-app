@@ -1,24 +1,18 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { PaymentStatus, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/lib/server-auth";
 import { createAuditLog } from "./log-actions";
 import { TaxRegionUpdateSchema, formatZodError } from "@/lib/validations/schemas";
 import { z } from "zod";
+import { buildTaxWhereInput } from "@/lib/tax-query";
 
 const statusSchema = z.object({
   id: z.union([z.string(), z.number()]),
   paymentStatus: z.enum(["LUNAS", "BELUM_LUNAS", "TIDAK_TERBIT", "SUSPEND"]),
 });
-
-const paymentStatusValues: PaymentStatus[] = [
-  "LUNAS",
-  "BELUM_LUNAS",
-  "TIDAK_TERBIT",
-  "SUSPEND",
-];
 
 export async function updatePaymentStatus(
   id: string | number,
@@ -124,10 +118,9 @@ export async function bulkUpdatePaymentStatus(
     const now = new Date();
 
     // Grouping by status action to batch update easily 
-    // Wait, updating status individually allows correct `pembayaran` values since `ketetapan` differs per row.
     let updatedCount = 0;
     
-    // Using transaction for atomic mass upate
+    // Using transaction for atomic mass update
     await prisma.$transaction(
       taxDataRecords.map(data => {
         let sisa = data.sisaTagihan;
@@ -154,11 +147,9 @@ export async function bulkUpdatePaymentStatus(
       })
     );
 
-    // Append WP names into the log
     const wpNames = taxDataRecords.map(d => d.namaWp).join(", ");
     const limitedNames = wpNames.length > 60 ? wpNames.substring(0, 57) + "..." : wpNames;
 
-    // Create single audit log for bulk
     await createAuditLog(
       "UPDATE_PAYMENT",
       "TaxData",
@@ -166,7 +157,6 @@ export async function bulkUpdatePaymentStatus(
       `Ubah status pembayaran ${updatedCount} data WP menjadi ${paymentStatus}`
     );
 
-    // Send notification to admins if status changed to LUNAS/BELUM_LUNAS
     if ((paymentStatus === "LUNAS" || paymentStatus === "BELUM_LUNAS") && (role === "PENARIK" || role === "ADMIN")) {
       const penarikName = await prisma.user.findUnique({
         where: { id: userId },
@@ -340,7 +330,6 @@ export async function updateWpRegionBulk(
     const { role, userId } = await requireAuth();
 
     if (role === "PENARIK") {
-      // Only allow updating if all IDs belong to this penarik
       const count = await prisma.taxData.count({
         where: {
           id: { in: ids },
@@ -397,6 +386,7 @@ export async function updateWpRegionByFilter(
     dusun?: string;
     rw?: string;
     rt?: string;
+    blok?: string;
     penarik?: string;
     regionStatus?: string;
   },
@@ -407,48 +397,10 @@ export async function updateWpRegionByFilter(
   try {
     const { role, userId } = await requireAuth();
 
-    const whereClause: Prisma.TaxDataWhereInput = {
-      tahun: filters.tahun,
-    };
-
-    const andFilters: Prisma.TaxDataWhereInput[] = [];
-
-    if (filters.q) {
-      andFilters.push({
-        OR: [
-          { nop: { contains: filters.q } },
-          { namaWp: { contains: filters.q } },
-          { alamatObjek: { contains: filters.q } },
-        ],
-      });
-    }
-
-    if (filters.regionStatus === "incomplete") {
-      andFilters.push({
-        OR: [{ dusun: null }, { rw: null }, { rt: null }, { dusun: "" }, { rw: "" }, { rt: "" }],
-      });
-    }
-
-    if (filters.dusun && filters.dusun !== "all") whereClause.dusun = filters.dusun;
-    if (filters.rw && filters.rw !== "all") whereClause.rw = filters.rw;
-    if (filters.rt && filters.rt !== "all") whereClause.rt = filters.rt;
-    
-    if (filters.penarik && filters.penarik !== "all") {
-      if (filters.penarik === "none") {
-        whereClause.penarikId = null;
-      } else {
-        whereClause.penarikId = filters.penarik;
-      }
-    }
-
-    if (andFilters.length > 0) {
-      whereClause.AND = andFilters;
-    }
-
-    // Role check for PENARIK
-    if (role === "PENARIK") {
-      whereClause.penarikId = userId;
-    }
+    const whereClause = buildTaxWhereInput(filters, {
+      includePaymentStatus: false,
+      roleScope: { role, userId, restrictPenarikToOwn: true },
+    });
 
     const updateData: Prisma.TaxDataUpdateManyMutationInput = {};
     
@@ -487,51 +439,25 @@ export async function updateWpRegionByFilter(
     return { success: false, message: formatZodError(error) };
   }
 }
+
 export async function syncBapendaByFilter(filters: {
   tahun: number;
   q?: string;
   dusun?: string;
   rw?: string;
   rt?: string;
+  blok?: string;
   penarik?: string;
   regionStatus?: string;
   paymentStatus?: string;
 }) {
   try {
     const { role, userId } = await requireAuth();
-    
-    // Build where clause
-    const whereClause: Prisma.TaxDataWhereInput = {
-      tahun: filters.tahun,
-    };
 
-    const andFilters: Prisma.TaxDataWhereInput[] = [];
-    if (filters.q) {
-      andFilters.push({
-        OR: [
-          { nop: { contains: filters.q } },
-          { namaWp: { contains: filters.q } },
-        ],
-      });
-    }
-
-    if (filters.dusun && filters.dusun !== "all") whereClause.dusun = filters.dusun;
-    if (filters.rw && filters.rw !== "all") whereClause.rw = filters.rw;
-    if (filters.rt && filters.rt !== "all") whereClause.rt = filters.rt;
-    if (filters.penarik && filters.penarik !== "all") {
-      if (filters.penarik === "none") whereClause.penarikId = null;
-      else whereClause.penarikId = filters.penarik;
-    }
-    if (
-      filters.paymentStatus &&
-      filters.paymentStatus !== "all" &&
-      paymentStatusValues.includes(filters.paymentStatus as PaymentStatus)
-    ) {
-      whereClause.paymentStatus = filters.paymentStatus as PaymentStatus;
-    }
-
-    if (andFilters.length > 0) whereClause.AND = andFilters;
-    if (role === "PENARIK") whereClause.penarikId = userId;
+    const whereClause = buildTaxWhereInput(filters, {
+      includeAddressSearch: false,
+      roleScope: { role, userId, restrictPenarikToOwn: true },
+    });
 
     const allData = await prisma.taxData.findMany({
       where: whereClause,
@@ -540,8 +466,6 @@ export async function syncBapendaByFilter(filters: {
 
     if (allData.length === 0) return { success: true, count: 0 };
 
-    // This is still a loop but on server, it can be optimized with better background jobs
-    // For now, let's process in batches or just return IDs for client to handle but with better logic
     return { success: true, data: allData, count: allData.length };
   } catch {
     return { success: false, message: "Gagal mengambil data filter" };

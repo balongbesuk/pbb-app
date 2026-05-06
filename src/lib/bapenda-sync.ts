@@ -167,7 +167,7 @@ export async function syncBapendaStatus({
     }
     
     htmlText = response.data;
-  } catch (error) {
+  } catch {
     return {
       status: 502,
       body: { error: "Server Bapenda sedang tidak dapat diakses atau offline." },

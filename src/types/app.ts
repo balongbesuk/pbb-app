@@ -51,6 +51,7 @@ export interface TaxDataItem {
   dusun: string | null;
   rt: string | null;
   rw: string | null;
+  blok: string | null;
   status: string;
   paymentStatus: PaymentStatus;
   penarikId: string | null;
@@ -64,6 +65,7 @@ export interface AvailableFilters {
   dusun: string[];
   rw: string[];
   rt: string[];
+  blok: string[];
   penarik: { id: string; name: string }[];
   dusunRefs?: string[];
 }

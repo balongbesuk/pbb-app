@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Printer, FileText, ChevronRight, ChevronLeft, Check, Loader2, FilePlus2 } from "lucide-react";
+import { Printer, FileText, ChevronRight, ChevronLeft, Check, Loader2 } from "lucide-react";
 import { cn, formatDateNoTime } from "@/lib/utils";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
@@ -15,6 +15,18 @@ import { usePublicThemeContext } from "./public-theme-provider";
 interface SpptNewFormProps {
   initialName?: string;
 }
+
+type VillageConfigResponse = {
+  namaKades?: string | null;
+  namaDesa?: string | null;
+  kecamatan?: string | null;
+  kabupaten?: string | null;
+  alamatKantor?: string | null;
+  email?: string | null;
+  kodePos?: string | null;
+  logoUrl?: string | null;
+  updatedAt?: string | null;
+};
 
 const MAX_TEXT_LENGTH = 120;
 
@@ -186,7 +198,7 @@ export function SpptNewForm({
     // Auto-detect village config
     fetch("/api/village-config")
       .then(res => res.json())
-      .then(data => {
+      .then((data: VillageConfigResponse) => {
         if (data.namaKades) setNamaKades(data.namaKades);
         if (data.namaDesa) setVName(data.namaDesa);
         if (data.kecamatan) setDName(data.kecamatan);
@@ -269,8 +281,8 @@ export function SpptNewForm({
             <table class="letter-table">
               <tbody>
                 <tr><td>Nama Jalan</td><td>:</td><td class="uppercase">${objekAlamat}</td></tr>
-                <tr><td>Kel/Desa</td><td>:</td><td class="uppercase">Desa ${vName},</td></tr>
-                <tr><td>Kecamatan</td><td>:</td><td class="uppercase">${dName}</td></tr>
+                <tr><td>Kel/Desa</td><td>:</td><td class="uppercase">Desa ${safeVName},</td></tr>
+                <tr><td>Kecamatan</td><td>:</td><td class="uppercase">${safeDName}</td></tr>
                 <tr><td>Kabupaten</td><td>:</td><td class="uppercase">${rName}</td></tr>
               </tbody>
             </table>
@@ -300,7 +312,7 @@ export function SpptNewForm({
           <p class="letter-block-gap">Demikian atas perhatiannya, kami sampaikan terima kasih.</p>
 
           <div class="letter-signature">
-            <p>${safeRName}, ${dateStr}</p>
+            <p>${safeRName}, ${safeDateStr}</p>
             <p class="letter-block-gap">Pemohon,</p>
             <div class="letter-sign-space"></div>
             <p class="font-bold underline uppercase">${safePemohon || "................"}</p>
@@ -311,28 +323,28 @@ export function SpptNewForm({
         <div class="letter-page">
           <div class="letter-kop">
             <div class="letter-kop-flex">
-              <img src="${logoSrc}" class="letter-kop-logo" />
+              <img src="${safeLogoSrc}" class="letter-kop-logo" />
               <div class="letter-kop-text">
                 <p class="font-bold uppercase">PEMERINTAH KABUPATEN ${rName}</p>
-                <p class="font-bold uppercase">KECAMATAN ${dName}</p>
-                <p class="font-bold" style="font-size: 14pt; letter-spacing: 1px;">KANTOR DESA ${vName}</p>
-                <p class="letter-kop-address">${vAddress}</p>
-                <p class="letter-kop-address">E-mail: ${vEmail || `desa${vName.toLowerCase()}@gmail.com`} | Kode Pos: ${vZip || "61471"}</p>
+                <p class="font-bold uppercase">KECAMATAN ${safeDName}</p>
+                <p class="font-bold" style="font-size: 14pt; letter-spacing: 1px;">KANTOR DESA ${safeVName}</p>
+                <p class="letter-kop-address">${safeVAddress}</p>
+                <p class="letter-kop-address">E-mail: ${escapeHtml(vEmail || `desa${vName.toLowerCase()}@gmail.com`)} | Kode Pos: ${escapeHtml(vZip || "61471")}</p>
               </div>
             </div>
           </div>
           
           <div class="letter-center" style="margin-bottom: 30px;">
             <p class="font-bold underline uppercase" style="font-size: 16pt; letter-spacing: 2px;">SURAT KETERANGAN</p>
-            <p>Nomor : ${nomorSurat || ".... / .... / .... / ...."}</p>
+            <p>Nomor : ${safeNomorSurat || ".... / .... / .... / ...."}</p>
           </div>
 
           <p>Yang bertanda tangan di bawah ini :</p>
           <div class="letter-table-wrap">
             <table class="letter-table">
               <tbody>
-                <tr><td>Nama</td><td>:</td><td>${namaKades || "(diisi Nama Kepala Desa)"}</td></tr>
-                <tr><td>Jabatan</td><td>:</td><td>Kepala Desa / Lurah ${vName}</td></tr>
+                <tr><td>Nama</td><td>:</td><td>${safeNamaKades || "(diisi Nama Kepala Desa)"}</td></tr>
+                <tr><td>Jabatan</td><td>:</td><td>Kepala Desa / Lurah ${safeVName}</td></tr>
               </tbody>
             </table>
           </div>
@@ -353,7 +365,7 @@ export function SpptNewForm({
             <table class="letter-table">
               <tbody>
                 <tr><td>NOP</td><td>:</td><td>: ..................................</td></tr>
-                <tr><td>Nama</td><td>:</td><td class="font-bold uppercase">${objekNama}</td></tr>
+                <tr><td>Nama</td><td>:</td><td class="font-bold uppercase">${safeObjekNama}</td></tr>
                 <tr><td>Alamat</td><td>:</td><td class="uppercase">${objekAlamat}</td></tr>
                 <tr><td>Luas Tanah / Bangunan</td><td>:</td><td><span class="font-bold">${luasTanah}</span> m² / <span class="font-bold">${luasBangunan}</span> m²</td></tr>
               </tbody>
@@ -365,10 +377,10 @@ export function SpptNewForm({
           </p>
 
           <div class="letter-signature">
-            <p>${vName}, ${dateStr}</p>
-            <p class="letter-block-gap">Kepala Desa ${vName}</p>
+            <p>${safeVName}, ${safeDateStr}</p>
+            <p class="letter-block-gap">Kepala Desa ${safeVName}</p>
             <div class="letter-sign-space"></div>
-            <p class="font-bold underline">${namaKades || "................"}</p>
+            <p class="font-bold underline">${safeNamaKades || "................"}</p>
           </div>
         </div>
       </div>

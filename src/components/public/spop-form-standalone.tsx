@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import DOMPurify from "dompurify";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,6 @@ import {
   type SpopKonstruksiType,
   type SpopLangitLangitType,
   type SpopLantaiType,
-  type SpopPekerjaanType,
   type SpopSourceTaxData,
   type SpopStatusType,
   type SpopTransactionType,
@@ -25,7 +24,7 @@ import {
 import { buildSpopPrintHtml } from "@/lib/spop-print";
 import { getVillageConfig } from "@/app/actions/settings-actions";
 import { cn } from "@/lib/utils";
-import { Check, ChevronLeft, ChevronRight, Eye, Printer, Search, FileText, Image as ImageIcon, Upload, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Eye, Printer, Image as ImageIcon, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePublicThemeContext } from "./public-theme-provider";
 
@@ -85,14 +84,6 @@ const statusSubjekOptions: Array<{ value: SpopStatusType; label: string }> = [
   { value: "PENGELOLA", label: "Pengelola" },
   { value: "PEMAKAI", label: "Pemakai" },
   { value: "SENGKETA", label: "Sengketa" },
-];
-
-const pekerjaanOptions: Array<{ value: SpopPekerjaanType; label: string }> = [
-  { value: "PNS", label: "PNS" },
-  { value: "TNI", label: "TNI / POLRI" },
-  { value: "PENSIUNAN", label: "Pensiunan" },
-  { value: "BADAN", label: "Badan" },
-  { value: "LAINNYA", label: "Lainnya" },
 ];
 
 const jenisBangunanOptions: Array<{ value: SpopJenisBangunanType; label: string }> = [
@@ -184,6 +175,8 @@ const buildingCategories: Array<{
   },
 ];
 
+type VillageConfig = Awaited<ReturnType<typeof getVillageConfig>>;
+
 export function SpopFormStandalone({
   initialTaxData = null,
 }: SpopFormStandaloneProps) {
@@ -195,7 +188,7 @@ export function SpopFormStandalone({
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<SpopFormData | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string>("");
-  const [villageConfig, setVillageConfig] = useState<any>(null);
+  const [villageConfig, setVillageConfig] = useState<VillageConfig | null>(null);
 
   useEffect(() => {
     getVillageConfig().then((cfg) => {
@@ -478,6 +471,7 @@ export function SpopFormStandalone({
                   </label>
                 ) : (
                   <div className={cn("relative w-full h-64 rounded-[2rem] border-2 overflow-hidden", isDark ? "border-white/10" : "border-slate-200")}>
+                     {/* eslint-disable-next-line @next/next/no-img-element -- Data URL preview dari file lokal pengguna. */}
                      <img src={form.sketImage} alt="Sket Lokasi" className="w-full h-full object-contain bg-white" />
                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                         <label className="p-4 bg-white rounded-2xl cursor-pointer text-slate-900 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 active:scale-95 transition-transform">

@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { PaymentStatus, Prisma } from "@prisma/client";
 import { TaxDataTable } from "@/components/tax/tax-data-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServerSession } from "next-auth";
@@ -8,6 +7,8 @@ import type { AppUser } from "@/types/app";
 import { Suspense } from "react";
 import { TaxTableSkeleton } from "@/components/tax/table/tax-skeleton";
 import { TaxAddManualDialog } from "@/components/tax/tax-add-manual-dialog";
+import { redirect } from "next/navigation";
+import { buildTaxWhereInput } from "@/lib/tax-query";
 
 
 export default async function DataPajakPage({
@@ -20,18 +21,18 @@ export default async function DataPajakPage({
     dusun?: string;
     rw?: string;
     rt?: string;
+    blok?: string;
     penarik?: string;
     regionStatus?: string;
     paymentStatus?: string;
   }>;
 }) {
-  const paymentStatusValues: PaymentStatus[] = [
-    "LUNAS",
-    "BELUM_LUNAS",
-    "SUSPEND",
-    "TIDAK_TERBIT",
-  ];
   const session = await getServerSession(authOptions);
+  const currentUser = session?.user as AppUser | undefined;
+  if (!currentUser || currentUser.role === "PENGGUNA") {
+    redirect("/");
+  }
+
   const params = await searchParams;
   const query = params.q || "";
   const page = parseInt(params.page || "1");
@@ -39,96 +40,23 @@ export default async function DataPajakPage({
   const filterDusun = params.dusun || "";
   const filterRw = params.rw || "";
   const filterRt = params.rt || "";
+  const filterBlok = params.blok || "";
   const filterPenarik = params.penarik || "";
   const regionStatus = params.regionStatus || "all";
   const paymentStatus = params.paymentStatus || "all";
   const pageSize = 50;
 
-  const whereClause: Prisma.TaxDataWhereInput = {
+  const whereClause = buildTaxWhereInput({
     tahun,
-  };
-
-  if (paymentStatus !== "all" && paymentStatusValues.includes(paymentStatus as PaymentStatus)) {
-    whereClause.paymentStatus = paymentStatus as PaymentStatus;
-  }
-
-  const andFilters: Prisma.TaxDataWhereInput[] = [];
-
-  if (query) {
-    const searchQuery = query.trim();
-    const pureNumbers = searchQuery.replace(/\D/g, "");
-    
-    // Generasi variasi format NOP untuk pencarian yang lebih tangguh
-    const variations: string[] = [searchQuery];
-    if (pureNumbers.length > 0) variations.push(pureNumbers); // Cari angka mentah
-
-    if (pureNumbers.length >= 2) {
-      let v1 = ""; // Standard: XX.XX.XXX.XXX.XXX-XXXX.X
-      let v2 = ""; // All Dots: XX.XX.XXX.XXX.XXX.XXXX.X
-      
-      v1 += pureNumbers.substring(0, 2);
-      v2 += pureNumbers.substring(0, 2);
-      
-      if (pureNumbers.length > 2) {
-        v1 += "." + pureNumbers.substring(2, 4);
-        v2 += "." + pureNumbers.substring(2, 4);
-      }
-      if (pureNumbers.length > 4) {
-        v1 += "." + pureNumbers.substring(4, 7);
-        v2 += "." + pureNumbers.substring(4, 7);
-      }
-      if (pureNumbers.length > 7) {
-        v1 += "." + pureNumbers.substring(7, 10);
-        v2 += "." + pureNumbers.substring(7, 10);
-      }
-      if (pureNumbers.length > 10) {
-        v1 += "." + pureNumbers.substring(10, 13);
-        v2 += "." + pureNumbers.substring(10, 13);
-      }
-      if (pureNumbers.length > 13) {
-        v1 += "-" + pureNumbers.substring(13, 17);
-        v2 += "." + pureNumbers.substring(13, 17);
-      }
-      if (pureNumbers.length > 17) {
-        v1 += "." + pureNumbers.substring(17, 18);
-        v2 += "." + pureNumbers.substring(17, 18);
-      }
-      variations.push(v1, v2);
-    }
-
-    // Filter duplikat dan string kosong
-    const finalVariations = Array.from(new Set(variations.filter(v => v.length >= 3)));
-
-    const orConditions: Prisma.TaxDataWhereInput[] = [
-      ...finalVariations.map(v => ({ nop: { contains: v } })),
-      { namaWp: { contains: searchQuery } },
-      { namaWp: { contains: searchQuery.toUpperCase() } },
-      { alamatObjek: { contains: searchQuery } },
-      { alamatObjek: { contains: searchQuery.toUpperCase() } },
-    ];
-    andFilters.push({ OR: orConditions });
-  }
-
-  if (regionStatus === "incomplete") {
-    andFilters.push({
-      OR: [{ dusun: null }, { rw: null }, { rt: null }, { dusun: "" }, { rw: "" }, { rt: "" }],
-    });
-  }
-
-  if (filterDusun && filterDusun !== "all") whereClause.dusun = filterDusun;
-  if (filterRw && filterRw !== "all") whereClause.rw = filterRw;
-  if (filterRt && filterRt !== "all") whereClause.rt = filterRt;
-  if (filterPenarik && filterPenarik !== "all") {
-    if (filterPenarik === "none") {
-      whereClause.penarikId = null;
-    } else {
-      whereClause.penarikId = filterPenarik;
-    }
-  }
-
-  if (andFilters.length > 0) {
-    whereClause.AND = andFilters;
-  }
+    q: query,
+    dusun: filterDusun,
+    rw: filterRw,
+    rt: filterRt,
+    blok: filterBlok,
+    penarik: filterPenarik,
+    regionStatus,
+    paymentStatus,
+  });
 
   const [data, total, penariks, filterOptions, dusunRefsRaw] = await Promise.all([
     prisma.taxData.findMany({
@@ -158,8 +86,8 @@ export default async function DataPajakPage({
     }),
     prisma.taxData.findMany({
       where: { tahun },
-      select: { dusun: true, rw: true, rt: true },
-      distinct: ["dusun", "rw", "rt"],
+      select: { dusun: true, rw: true, rt: true, nop: true },
+      distinct: ["dusun", "rw", "rt", "nop"],
     }),
     prisma.dusunReference.findMany({
       select: { name: true },
@@ -176,11 +104,19 @@ export default async function DataPajakPage({
   const uniqueRts = Array.from(
     new Set(filterOptions.map((o) => o.rt).filter(Boolean))
   ).sort() as string[];
-
+  
+  const uniqueBloks = Array.from(
+    new Set(filterOptions.map((o) => {
+        const cleanNop = o.nop.replace(/\D/g, "");
+        return cleanNop.length >= 13 ? cleanNop.substring(10, 13) : null;
+    }).filter(Boolean))
+  ).sort() as string[];
+ 
   const availableFilters = {
     dusun: uniqueDusuns,
     rw: uniqueRws,
     rt: uniqueRts,
+    blok: uniqueBloks,
     penarik: penariks.map((p) => ({ id: p.id, name: p.name || "" })),
     dusunRefs: dusunRefsRaw.map((d) => d.name),
   };
@@ -204,13 +140,11 @@ export default async function DataPajakPage({
           <h1 className="text-3xl font-bold">Data Pajak PBB</h1>
           <p className="text-muted-foreground">Kelola dan pantau seluruh data pajak terdaftar</p>
         </div>
-        {session?.user?.role !== "PENGGUNA" && (
-          <TaxAddManualDialog 
-            dusunList={passDusuns}
-            rwList={passRws}
-            rtList={passRts}
-          />
-        )}
+        <TaxAddManualDialog
+          dusunList={passDusuns}
+          rwList={passRws}
+          rtList={passRts}
+        />
       </div>
 
       <Card className="glass border-none shadow-xl">
@@ -225,7 +159,7 @@ export default async function DataPajakPage({
               pageSize={pageSize}
               penariks={JSON.parse(JSON.stringify(penariks))}
               availableFilters={availableFilters}
-              currentUser={session?.user as AppUser | undefined}
+              currentUser={currentUser}
             />
           </Suspense>
         </CardContent>

@@ -11,8 +11,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   AreaChart,
   Area,
   Legend,
@@ -25,7 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatCurrency, cn } from "@/lib/utils";
-import { TrendingUp, Calendar, Clock, CheckCircle2, ChevronDown, Download, Map as MapIcon, Target, Wallet } from "lucide-react";
+import { TrendingUp, CheckCircle2, ChevronDown, Download, Map as MapIcon } from "lucide-react";
 import { toPng } from "html-to-image";
 import type { StatusPieChartItem } from "@/types/app";
 
@@ -39,7 +37,18 @@ interface MonthlyPayment {
   _sum: { pembayaran: number | null };
 }
 
-const RWCustomTooltip = ({ active, payload, label }: any) => {
+type ChartTooltipPayload = Array<{ value: number }>;
+type ChartTooltipProps = {
+  active?: boolean;
+  payload?: ChartTooltipPayload;
+  label?: string;
+};
+type TrendChartItem = {
+  name: string;
+  nominal: number;
+};
+
+const RWCustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-background/95 border-border shadow-2xl backdrop-blur-md rounded-2xl border p-4 min-w-[180px]">
@@ -218,7 +227,7 @@ export function StatusPieChart({ data }: { data: StatusPieChartItem[] }) {
   );
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-background/95 border-border shadow-2xl backdrop-blur-md rounded-2xl border p-4">
@@ -278,7 +287,7 @@ export function TrendAnalysisChart({ data, tahun }: { data: MonthlyPayment[], ta
     const now = new Date();
     const currentYear = tahun || now.getFullYear();
 
-    let finalChartData: any[] = [];
+    let finalChartData: TrendChartItem[] = [];
     let total = 0;
     let count = 0;
     let desc = "";
@@ -334,7 +343,7 @@ export function TrendAnalysisChart({ data, tahun }: { data: MonthlyPayment[], ta
     }
 
     return { chartData: finalChartData, totalNominal: total, countLunas: count, description: desc };
-  }, [data, view, selectedMonth, months]);
+  }, [data, view, selectedMonth, months, tahun]);
 
   const triggerStyle = "relative flex flex-1 items-center justify-center gap-1.5 rounded-md px-1.5 py-1.5 text-[10px] font-bold whitespace-nowrap transition-all uppercase outline-none";
   const activeStyle = "bg-white text-foreground shadow-sm dark:bg-zinc-800 dark:text-white";

@@ -9,12 +9,8 @@ import {
   WidthType, 
   BorderStyle, 
   AlignmentType, 
-  Header, 
-  Footer, 
   ImageRun, 
-  VerticalAlign,
   PageBreak,
-  ExternalHyperlink
 } from "docx";
 
 interface SpptData {
@@ -290,7 +286,7 @@ export async function generateMutationDocx(data: MutationData) {
     }),
     ...emptyLine(1),
     new Paragraph({ children: [new TextRun({ text: "Dimutasi / diubah menjadi :", size: 24, font: "Times New Roman" })] }),
-    ...newDataList.map((item, idx) => [
+    ...newDataList.map((item) => [
       new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
         borders: { insideHorizontal: { style: BorderStyle.NONE }, insideVertical: { style: BorderStyle.NONE }, top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },

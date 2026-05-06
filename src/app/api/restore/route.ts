@@ -32,7 +32,8 @@ export async function POST(req: NextRequest) {
       success: true, 
       message: result.message 
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Gagal memproses restore." }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Gagal memproses restore.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
