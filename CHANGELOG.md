@@ -9,6 +9,7 @@ Pembaruan pada keamanan backend, penguatan upload/restore, optimasi performa, se
 - **Enhanced Summary Cards**: Memperbarui kartu "Sudah Realisasi" dan "Total Ketetapan" untuk menampilkan jumlah Wajib Pajak (WP) asli dalam keterangan sebagai konteks tambahan.
 - **Participation Rate Analytics**: Mengganti kartu "Populasi WP" yang redundan dengan "Partisipasi Warga" yang menampilkan persentase jumlah WP yang telah melunasi kewajibannya.
 - **Optimized Dashboard Queries**: Memperbarui backend untuk menyertakan hitungan record dalam data transaksi terkelompok guna mendukung penjumlahan yang akurat di sisi tampilan.
+- **TaxDataTable Type Fix**: Memperbaiki error TypeScript pada komponen `TaxDataTable` di mana properti `blok` tidak terdefinisi pada nilai default filters, mencegah kegagalan proses build/type-check.
 
 ### Security Hardening
 - **Mobile Bearer Authentication**: Seluruh endpoint operasional mobile petugas kini mewajibkan `Authorization: Bearer` dan tidak lagi mempercayai `userId` dari body/query.

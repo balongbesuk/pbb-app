@@ -47,7 +47,7 @@ export function TaxDataTable({
   total,
   pageSize,
   penariks = [],
-  availableFilters = { dusun: [], rw: [], rt: [], penarik: [] },
+  availableFilters = { dusun: [], rw: [], rt: [], blok: [], penarik: [] },
   currentUser,
 }: {
   initialData: TaxDataItem[];
