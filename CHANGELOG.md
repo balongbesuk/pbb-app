@@ -64,6 +64,9 @@ Pembaruan besar pada keamanan backend, penguatan upload/restore, optimasi perfor
 - **README Ops Update**: README diperbarui agar checklist produksi ikut terdokumentasi resmi.
 - **GIS Popup Layering Fix**: Perbaikan bug visual di mana popup detail wilayah pada peta tertutupi oleh kontrol navigasi dan legenda. Solusi melibatkan sinkronisasi *stacking context* dan optimasi `z-index`.
 - **Mobile Detail UI Polish**: Optimalisasi tampilan daftar Wajib Pajak pada perangkat mobile dengan penambahan *safe-area padding* dan *spacer* ekstra di akhir daftar agar data terakhir tidak terpotong.
+- **Enhanced Mobile Filter Targets**: Peningkatan ukuran tombol filter, chip status, dan dropdown pada perangkat mobile untuk memenuhi standar aksesibilitas *touch target* yang lebih ergonomis.
+- **WP Card Layout Fix**: Perbaikan bug visual pada kartu WP di mana data wilayah (Dusun/RT/RW) terpotong. Penyesuaian melibatkan sistem *wrapping* cerdas dan penghapusan teks redundan.
+- **Pagination UI Streamlining**: Penyelarasan kontrol paginasi agar selalu tampil dalam satu baris horisontal di layar HP, meningkatkan efisiensi ruang dan kemudahan navigasi.
 
 ---
 

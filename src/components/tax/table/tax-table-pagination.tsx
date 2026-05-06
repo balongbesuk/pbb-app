@@ -48,7 +48,7 @@ export function TaxTablePagination({
         </span>
       </div>
 
-      <div className="flex w-full sm:w-auto flex-wrap items-center justify-center gap-2">
+      <div className="flex w-full sm:w-auto items-center justify-center gap-1.5 sm:gap-2">
         <Button
           variant="outline"
           size="icon"

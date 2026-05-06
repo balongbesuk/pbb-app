@@ -97,10 +97,10 @@ export function TaxMobileCard({
          </div>
          <div className="px-4 py-3 flex flex-col justify-center overflow-hidden">
             <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60 tracking-widest mb-0.5 whitespace-nowrap">LOKASI WILAYAH</span>
-            <div className="text-[10px] font-black text-foreground/80 flex items-center gap-1 uppercase truncate">
-               <span>{item.dusun || "-"}</span>
-               <span className="text-zinc-300 mx-0.5">•</span>
-               <span className="whitespace-nowrap">RT {item.rt}/{item.rw}</span>
+            <div className="text-[10px] font-black text-foreground/80 flex flex-wrap items-center gap-x-1 gap-y-0.5 uppercase leading-tight">
+               <span className="truncate max-w-[60%]">{item.dusun || "-"}</span>
+               <span className="text-zinc-300 shrink-0">•</span>
+               <span className="whitespace-nowrap shrink-0">RT {item.rt}/{item.rw}</span>
             </div>
          </div>
       </div>

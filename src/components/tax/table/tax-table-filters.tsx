@@ -174,9 +174,9 @@ export function TaxTableFilters({
           {showPrint && (
             <button
               onClick={onPrint}
-              className="flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-800"
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-800"
             >
-              <Printer className="h-3 w-3" />
+              <Printer className="h-3.5 w-3.5" />
               Cetak
             </button>
           )}
@@ -185,20 +185,20 @@ export function TaxTableFilters({
             <button
               onClick={() => filterPenarik === currentUser.id ? onPenarikChange("all") : onPenarikChange(currentUser.id)}
               className={cn(
-                "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors",
+                "flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-colors",
                 filterPenarik === currentUser.id
                   ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
                   : "bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800"
               )}
             >
-              <User className="h-3 w-3" />
+              <User className="h-3.5 w-3.5" />
               {filterPenarik === currentUser.id ? "Tugas Saya ✓" : "Tugas Saya"}
             </button>
           )}
           <button
             onClick={() => filterPaymentStatus === "BELUM_LUNAS" ? onPaymentStatusChange("all") : onPaymentStatusChange("BELUM_LUNAS")}
             className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all",
+              "flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all",
               filterPaymentStatus === "BELUM_LUNAS"
                 ? "bg-amber-600 text-white border-amber-600 shadow-lg shadow-amber-500/20"
                 : "bg-amber-500/5 dark:bg-amber-950/20 border-amber-500/30 text-amber-600 dark:text-amber-500 hover:bg-amber-500/10"
@@ -211,7 +211,7 @@ export function TaxTableFilters({
           <button
             onClick={() => filterArchiveStatus === "missing" ? onArchiveStatusChange("all") : onArchiveStatusChange("missing")}
             className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all",
+              "flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2.5 text-[11px] font-black uppercase tracking-widest transition-all",
               filterArchiveStatus === "missing"
                 ? "bg-red-600 text-white border-red-600 shadow-lg shadow-red-500/20"
                 : "bg-red-500/5 dark:bg-red-950/20 border-red-500/30 text-red-600 dark:text-red-500 hover:bg-red-500/10"
@@ -243,7 +243,7 @@ export function TaxTableFilters({
                   const label = s === "all" ? "Semua" : s === "BELUM_LUNAS" ? "⏳ Belum Lunas" : s === "LUNAS" ? "✅ Lunas" : s === "SUSPEND" ? "🚫 Suspend" : "Tdk Terbit";
                   return (
                     <button key={s} onClick={() => onPaymentStatusChange(s)}
-                      className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold transition-all",
+                      className={cn("rounded-full border px-3.5 py-2 text-xs font-bold transition-all",
                         filterPaymentStatus === s ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                       {label}
                     </button>
@@ -258,13 +258,13 @@ export function TaxTableFilters({
                 <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Dusun</p>
                 <div className="flex flex-wrap gap-1.5">
                   <button onClick={() => onDusunChange("all")}
-                    className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold transition-all",
+                    className={cn("rounded-full border px-4 py-2 text-xs font-bold transition-all",
                       filterDusun === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                     Semua
                   </button>
                   {availableFilters.dusun.map((d: string) => (
                     <button key={d} onClick={() => onDusunChange(d)}
-                      className={cn("rounded-full border px-2.5 py-1 text-[10px] font-bold transition-all",
+                      className={cn("rounded-full border px-4 py-2 text-xs font-bold transition-all",
                         filterDusun === d ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                       {d}
                     </button>
@@ -279,13 +279,13 @@ export function TaxTableFilters({
                 <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">RW</p>
                 <div className="flex flex-wrap gap-1">
                   <button onClick={() => onRwChange("all")}
-                    className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
+                    className={cn("rounded-full border px-3 py-1.5 text-xs font-bold transition-all",
                       filterRw === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                     Semua
                   </button>
                   {availableFilters.rw.map((rw: string) => (
                     <button key={rw} onClick={() => onRwChange(rw)}
-                      className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
+                      className={cn("rounded-full border px-3 py-1.5 text-xs font-bold transition-all",
                         filterRw === rw ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                       {rw}
                     </button>
@@ -296,13 +296,13 @@ export function TaxTableFilters({
                 <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">RT</p>
                 <div className="flex flex-wrap gap-1 max-h-[60px] overflow-y-auto">
                   <button onClick={() => onRtChange("all")}
-                    className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
+                    className={cn("rounded-full border px-3 py-1.5 text-xs font-bold transition-all",
                       filterRt === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                     Semua
                   </button>
                   {availableFilters.rt.map((rt: string) => (
                     <button key={rt} onClick={() => onRtChange(rt)}
-                      className={cn("rounded-full border px-2 py-0.5 text-[10px] font-bold transition-all",
+                      className={cn("rounded-full border px-3 py-1.5 text-xs font-bold transition-all",
                         filterRt === rt ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-border text-muted-foreground")}>
                       {rt}
                     </button>
@@ -316,7 +316,7 @@ export function TaxTableFilters({
               <div>
                 <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Penarik</p>
                 <Select value={filterPenarik} onValueChange={(v) => onPenarikChange(v || "all")}>
-                  <SelectTrigger className="h-9 w-full rounded-xl border-border bg-muted/40 text-[10px] font-bold">
+                  <SelectTrigger className="h-11 w-full rounded-xl border-border bg-muted/40 text-xs font-bold">
                     <span className="flex flex-1 truncate text-left">
                       {filterPenarik === "all" ? "Semua Penarik" : filterPenarik === "none" ? "Tanpa Petugas"
                         : availableFilters.penarik?.find((p) => p.id === filterPenarik)?.name || "Pilih"}
@@ -336,7 +336,7 @@ export function TaxTableFilters({
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Kelengkapan</p>
                   <Select value={filterRegionStatus} onValueChange={(v) => onRegionStatusChange(v || "all")}>
-                    <SelectTrigger className="h-9 w-full rounded-xl border-border bg-muted/40 text-[10px] font-bold">
+                    <SelectTrigger className="h-11 w-full rounded-xl border-border bg-muted/40 text-xs font-bold">
                       <span className="flex flex-1 text-left">
                         {filterRegionStatus === "all" ? "Semua" : "⚠️ Blm Lengkap"}
                       </span>
@@ -350,7 +350,7 @@ export function TaxTableFilters({
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Status Bayar</p>
                   <Select value={filterPaymentStatus} onValueChange={(v) => onPaymentStatusChange(v || "all")}>
-                    <SelectTrigger className="h-9 w-full rounded-xl border-border bg-muted/40 text-[10px] font-bold">
+                    <SelectTrigger className="h-11 w-full rounded-xl border-border bg-muted/40 text-xs font-bold">
                       <span className="flex flex-1 text-left truncate italic">
                         {paymentStatusLabel}
                       </span>

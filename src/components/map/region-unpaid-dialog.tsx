@@ -350,12 +350,12 @@ export function RegionUnpaidDialog({
                         )}>
                           {wp.namaWp}
                         </h4>
-                        <div className="flex items-center gap-2 mb-3">
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
                           <span className={cn(
-                            "text-[9px] font-black uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200/50 transition-colors",
+                            "inline-flex items-center text-[10px] font-bold uppercase bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/50 transition-colors whitespace-nowrap",
                             isDark ? "bg-zinc-800 border-zinc-700/50 text-slate-300" : "bg-slate-100 border-slate-200/50 text-muted-foreground/60"
                           )}>
-                            Wilayah: RT {wp.rt} / RW {wp.rw}
+                            RT {wp.rt} / RW {wp.rw}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
