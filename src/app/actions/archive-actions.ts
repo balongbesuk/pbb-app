@@ -2,7 +2,7 @@
 import fs from "fs";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
+import * as pdfParse from "pdf-parse";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/server-auth";
 import { assertSafeFilename, resolveSafeChildPath } from "@/lib/file-security";
@@ -33,7 +33,7 @@ for (const key of [
 
 type PdfParseResult = { text?: string };
 type PdfParseFn = (dataBuffer: Buffer) => Promise<PdfParseResult>;
-const parsePdf = pdfParse as PdfParseFn;
+const parsePdf = (pdfParse as any).default || pdfParse;
 
 function getArchiveDir(year: number) {
   return resolveArchiveDir(year);

@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
+import * as pdfParse from "pdf-parse";
 import { ensureArchiveDir, extractNopFromText } from "@/lib/archive-utils";
 
 const JOB_DIR = path.join(/* turbopackIgnore: true */ process.cwd(), "tmp", "archive-smart-scan-jobs");
@@ -31,7 +31,7 @@ const MAX_SMART_SCAN_PAGES = 500;
 
 type PdfParseResult = { text?: string };
 type PdfParseFn = (dataBuffer: Buffer) => Promise<PdfParseResult>;
-const parsePdf = pdfParse as PdfParseFn;
+const parsePdf = (pdfParse as any).default || pdfParse;
 
 function ensureJobDir() {
   if (!fs.existsSync(JOB_DIR)) {

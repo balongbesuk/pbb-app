@@ -76,6 +76,13 @@ Pembaruan pada keamanan backend, penguatan upload/restore, optimasi performa, se
 - **WP Card Layout Fix**: Perbaikan bug visual pada kartu WP di mana data wilayah (Dusun/RT/RW) terpotong. Penyesuaian melibatkan sistem *wrapping* cerdas dan penghapusan teks redundan.
 - **Pagination UI Streamlining**: Penyelarasan kontrol paginasi agar selalu tampil dalam satu baris horisontal di layar HP, meningkatkan efisiensi ruang dan kemudahan navigasi.
 - **Hook Syntax Fix**: Perbaikan bug *syntax error* pada `useTaxFilters` hook yang menyebabkan aplikasi crash setelah pembaruan parameter filter.
+- **Infrastructure Modernization (2026-05-14)**:
+    - **Next.js 16 Upgrade**: Migrasi core dashboard ke Next.js 16 untuk optimasi performa Turbopack.
+    - **React 19 & Compiler**: Update ke React 19.2.6 dengan dukungan awal React Compiler untuk otomatisasi memoization.
+    - **TypeScript 6.0**: Peningkatan codebase ke TypeScript 6.0.3 untuk keamanan tipe data yang lebih baik.
+    - **Prisma 7.8**: Update Prisma ke 7.8.0 untuk performa query SQLite yang lebih stabil.
+    - **ESLint & Lucide Fix**: Penyesuaian versi ESLint dan Lucide-React untuk menjamin kompatibilitas plugin Next.js dan ketersediaan icon brand (Github).
+    - **Expo SDK 55 (Mobile)**: Migrasi penuh PBB Mobile ke Expo SDK 55 dan React Native 0.85.3 untuk stabilitas aplikasi mobile jangka panjang.
 
 ---
 
