@@ -230,9 +230,10 @@ export function TaxTableFilters({
         {/* Collapsible Filter Panel */}
         <div className={cn(
           "overflow-hidden transition-all duration-300 ease-in-out",
-          mobileFiltersOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
+          mobileFiltersOpen ? "max-h-[1000px] opacity-100 mt-2" : "max-h-0 opacity-0"
         )}>
-          <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-3 space-y-3 shadow-lg">
+          <div className="rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm p-4 space-y-4 shadow-xl mb-4">
+
             <div className="flex items-center justify-between">
               <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Filter & Sortir</span>
               <button onClick={() => setMobileFiltersOpen(false)} className="rounded-lg p-1 hover:bg-muted">
@@ -363,7 +364,7 @@ export function TaxTableFilters({
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1.5">Kelengkapan</p>
                   <Select value={filterRegionStatus} onValueChange={(v) => onRegionStatusChange(v || "all")}>
                     <SelectTrigger className="h-11 w-full rounded-xl border-border bg-muted/40 text-xs font-bold">
-                      <span className="flex flex-1 text-left">
+                      <span className="flex flex-1 text-left truncate">
                         {filterRegionStatus === "all" ? "Semua" : "⚠️ Blm Lengkap"}
                       </span>
                     </SelectTrigger>
@@ -394,7 +395,7 @@ export function TaxTableFilters({
             </div>
 
             {/* Apply button */}
-            <Button onClick={() => setMobileFiltersOpen(false)} size="sm" className="w-full rounded-xl h-10 font-black text-xs gap-2">
+            <Button onClick={() => setMobileFiltersOpen(false)} size="sm" className="w-full rounded-xl h-11 font-black text-xs gap-2 mt-2 shadow-lg shadow-primary/20">
               <CheckCircle2 className="h-4 w-4" />
               Terapkan Filter
               {activeFilterCount > 0 && (
@@ -403,6 +404,7 @@ export function TaxTableFilters({
                 </span>
               )}
             </Button>
+            <div className="h-2" /> {/* Extra space at bottom */}
           </div>
         </div>
       </div>

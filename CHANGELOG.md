@@ -90,6 +90,9 @@ Pembaruan pada keamanan backend, penguatan upload/restore, optimasi performa, se
 - **Extended Connection Timeout**: Peningkatan timeout menjadi 20 detik guna mengakomodasi respon server pusat yang sering mengalami latensi tinggi di jam kerja.
 - **Detailed Connectivity Diagnostics**: Pembaruan sistem pelaporan error yang kini mampu membedakan antara *Timeout*, *DNS Error*, *HTTP Status Error*, dan *Suspected IP Blocking* untuk mempermudah diagnosa teknis oleh admin.
 - **Sync Request Logging**: Penambahan log server-side untuk setiap percobaan sinkronisasi guna meningkatkan transparansi aktivitas integrasi data luar.
+- **Node.js Type Consistency**: Perbaikan `TSError` pada script `prisma/seed.ts` dengan penambahan referensi tipe Node.js global (`/// <reference types="node" />`) dan migrasi ke ESM imports untuk menjamin keberhasilan proses `postinstall` pada environment Linux/Armbian.
+- **Global Type Definitions**: Pembaruan `tsconfig.json` dengan penyertaan tipe `"node"` secara eksplisit untuk menjamin pengenalan variabel global Node.js (`process`, `require`) di seluruh codebase.
+- **Mobile Filter Resilience**: Perbaikan bug visual pada perangkat mobile di mana panel filter (Status Bayar, Kelengkapan) terpotong. Peningkatan `max-height` panel dari 600px ke 1000px dan penambahan sistem *truncation* serta *padding* ekstra memastikan seluruh kontrol filter tetap dapat diakses dan terlihat dengan jelas.
 
 ---
 
