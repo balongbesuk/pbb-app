@@ -84,6 +84,13 @@ Pembaruan pada keamanan backend, penguatan upload/restore, optimasi performa, se
     - **ESLint & Lucide Fix**: Penyesuaian versi ESLint dan Lucide-React untuk menjamin kompatibilitas plugin Next.js dan ketersediaan icon brand (Github).
     - **Expo SDK 55 (Mobile)**: Migrasi penuh PBB Mobile ke Expo SDK 55 dan React Native 0.85.3 untuk stabilitas aplikasi mobile jangka panjang.
 
+### Bapenda Sync & Connectivity Resilience (2026-05-15)
+- **Enhanced Request Headers**: Implementasi header browser lengkap (User-Agent, Accept-Language, etc) pada sinkronisasi Bapenda untuk meminimalisir deteksi bot dan pemblokiran akses.
+- **SSL/TLS Compatibility**: Penambahan opsi bypass verifikasi sertifikat (`rejectUnauthorized: false`) untuk menjamin konektivitas ke server pemerintah yang mungkin memiliki konfigurasi SSL lama atau bermasalah.
+- **Extended Connection Timeout**: Peningkatan timeout menjadi 20 detik guna mengakomodasi respon server pusat yang sering mengalami latensi tinggi di jam kerja.
+- **Detailed Connectivity Diagnostics**: Pembaruan sistem pelaporan error yang kini mampu membedakan antara *Timeout*, *DNS Error*, *HTTP Status Error*, dan *Suspected IP Blocking* untuk mempermudah diagnosa teknis oleh admin.
+- **Sync Request Logging**: Penambahan log server-side untuk setiap percobaan sinkronisasi guna meningkatkan transparansi aktivitas integrasi data luar.
+
 ---
 
 ## v9.1 - 2026-04-27: Portal Publik & SPOP Standalone
