@@ -149,13 +149,24 @@ export async function syncBapendaStatus({
   }
 
   let htmlText = "";
+  const targetUrl = buildJombangBapendaUrl(cleanNop);
+  
   try {
-    const response = await axios.get(buildJombangBapendaUrl(cleanNop), {
-      timeout: 15000,
+    console.log(`[Bapenda Sync] Requesting: ${targetUrl}`);
+    const response = await axios.get(targetUrl, {
+      timeout: 20000,
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36",
-        Accept: "text/html",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        "Upgrade-Insecure-Requests": "1",
       },
+      // Mengabaikan error sertifikat jika ada (beberapa server pemda sertifikatnya bermasalah)
+      httpsAgent: new (require('https').Agent)({  
+        rejectUnauthorized: false 
+      }),
       validateStatus: () => true,
     });
 
@@ -167,10 +178,28 @@ export async function syncBapendaStatus({
     }
     
     htmlText = response.data;
-  } catch {
+  } catch (error) {
+    let errorMessage = "Server Bapenda sedang tidak dapat diakses atau offline.";
+    
+    if (axios.isAxiosError(error)) {
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = "Koneksi ke Bapenda timeout (Server lambat).";
+      } else if (error.code === 'ENOTFOUND') {
+        errorMessage = "Domain Bapenda tidak dapat ditemukan (DNS Error).";
+      } else if (error.response) {
+        errorMessage = `Bapenda merespon dengan status ${error.response.status}.`;
+      } else if (error.request) {
+        errorMessage = "Tidak ada respon dari server Bapenda (Kemungkinan IP Terblokir).";
+      } else {
+        errorMessage = `Gagal koneksi: ${error.message}`;
+      }
+    }
+
+    console.error("[Bapenda Sync Error]:", error);
+
     return {
       status: 502,
-      body: { error: "Server Bapenda sedang tidak dapat diakses atau offline." },
+      body: { error: errorMessage },
     };
   }
   const $ = cheerio.load(htmlText);
