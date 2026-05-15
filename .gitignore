@@ -76,3 +76,7 @@ test_qr.js
 /backups/
 map-data/
 public/maps/
+*.ps1
+/scratch/
+/tmp/
+
