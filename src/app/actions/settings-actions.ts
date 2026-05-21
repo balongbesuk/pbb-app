@@ -126,6 +126,8 @@ export const getVillageConfig = cache(async () => {
         archiveOnlyLunas: true,
         enablePublicGis: true,
         showUnpaidDetailsGis: false,
+        adminFee: 2000,
+        showReceiptPublic: true,
         ...(supportsEnablePbbMobile ? { enablePbbMobile: true } : {}),
       },
     });
@@ -155,6 +157,8 @@ export const getVillageConfig = cache(async () => {
       enablePublicGis: true,
       showUnpaidDetailsGis: false,
       enablePbbMobile: true,
+      adminFee: 2000,
+      showReceiptPublic: true,
       updatedAt: new Date() 
     };
   }
@@ -208,6 +212,14 @@ export async function updateVillageConfig(raw: VillageConfigInput) {
 
     if (data.showNominalPajak !== undefined) {
       updateData.showNominalPajak = data.showNominalPajak;
+    }
+
+    if (data.adminFee !== undefined) {
+      updateData.adminFee = data.adminFee;
+    }
+
+    if (data.showReceiptPublic !== undefined) {
+      updateData.showReceiptPublic = data.showReceiptPublic;
     }
 
     if (data.enableDigitalArchive !== undefined) {

@@ -10,7 +10,13 @@ import "./public.css";
 // Enable caching with revalidation every 30 seconds to support BFCache
 export const revalidate = 30;
 
-export default async function IndexPage() {
+export default async function IndexPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }> | { q?: string };
+}) {
+  const resolvedParams = searchParams instanceof Promise ? await searchParams : searchParams;
+  const q = resolvedParams?.q || "";
   const config = await getVillageConfig();
   const rawNamaDesa = config?.namaDesa || "";
   const namaDesa = rawNamaDesa ? toTitleCase(rawNamaDesa) : "";
@@ -49,6 +55,7 @@ export default async function IndexPage() {
             tahunPajak={tahunPajak} 
             showNominalPajak={config?.showNominalPajak || false}
             enablePublicGis={config?.enablePublicGis ?? true}
+            initialQuery={q}
           />
         </div>
 

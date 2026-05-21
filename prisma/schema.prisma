@@ -178,6 +178,8 @@ model VillageConfig {
   enablePublicGis      Boolean @default(true)
   showUnpaidDetailsGis Boolean @default(false)
   enablePbbMobile      Boolean @default(true)
+  adminFee             Int     @default(2000)
+  showReceiptPublic    Boolean @default(true)
   updatedAt         DateTime @default(now()) @updatedAt
 }
 

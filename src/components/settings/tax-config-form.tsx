@@ -27,6 +27,8 @@ export function TaxConfigForm() {
   const [enablePublicGis, setEnablePublicGis] = useState(true);
   const [showUnpaidGis, setShowUnpaidGis] = useState(false);
   const [enablePbbMobile, setEnablePbbMobile] = useState(true);
+  const [adminFee, setAdminFee] = useState(2000);
+  const [showReceiptPublic, setShowReceiptPublic] = useState(true);
 
   const DEFAULT_JOMBANG_URL = "https://bapenda.jombangkab.go.id/cek-bayar/ceknopbayar-jmb.kab?module=pbb";
 
@@ -47,6 +49,8 @@ export function TaxConfigForm() {
       setEnablePublicGis(data.enablePublicGis ?? true);
       setShowUnpaidGis(data.showUnpaidDetailsGis ?? false);
       setEnablePbbMobile(data.enablePbbMobile ?? true);
+      setAdminFee(data.adminFee ?? 2000);
+      setShowReceiptPublic(data.showReceiptPublic ?? true);
       setLoading(false);
     }
     load();
@@ -75,6 +79,8 @@ export function TaxConfigForm() {
       enablePublicGis: !!enablePublicGis,
       showUnpaidDetailsGis: !!showUnpaidGis,
       enablePbbMobile: !!enablePbbMobile,
+      adminFee: adminFee,
+      showReceiptPublic: showReceiptPublic,
     });
     if (res.success) {
       toast.success("Konfigurasi sistem diperbarui");
@@ -322,6 +328,45 @@ export function TaxConfigForm() {
               <Checkbox
                 checked={!!showUnpaidGis}
                 onCheckedChange={(checked) => setShowUnpaidGis(!!checked)}
+                className="size-5 rounded-lg border-2"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-primary/5 border-primary/10 flex flex-col justify-between rounded-2xl border p-4 gap-2">
+              <div className="space-y-1">
+                <Label className="flex items-center gap-2 text-sm font-bold">
+                  Biaya Admin Bawaan (Kwitansi)
+                </Label>
+                <p className="text-muted-foreground text-[10px]">
+                  Tentukan biaya admin tambahan yang otomatis dijumlahkan pada struk / kwitansi pembayaran.
+                </p>
+              </div>
+              <div className="relative mt-1">
+                <span className="absolute left-3 top-2.5 text-xs font-semibold text-muted-foreground">Rp</span>
+                <Input
+                  type="number"
+                  value={adminFee}
+                  onChange={(e) => setAdminFee(parseInt(e.target.value) || 0)}
+                  className="bg-white/50 dark:bg-[#111827]/50 pl-8 text-sm font-medium"
+                  placeholder="2000"
+                />
+              </div>
+            </div>
+
+            <div className="bg-primary/5 border-primary/10 flex items-center justify-between rounded-2xl border p-4">
+              <div className="space-y-1">
+                <Label className="flex items-center gap-2 text-sm font-bold">
+                  Tampilkan Cetak Kwitansi di Portal Publik
+                </Label>
+                <p className="text-muted-foreground text-[10px]">
+                  Jika diaktifkan, warga dapat mengunduh atau mencetak kwitansi pembayaran lunas dari situs pencarian publik.
+                </p>
+              </div>
+              <Checkbox
+                checked={!!showReceiptPublic}
+                onCheckedChange={(checked) => setShowReceiptPublic(!!checked)}
                 className="size-5 rounded-lg border-2"
               />
             </div>

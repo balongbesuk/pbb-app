@@ -18,6 +18,7 @@ import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
 import { SpptMutationDialog } from "./sppt-mutation-dialog";
 import { SpptNewDialog } from "./sppt-new-dialog";
 import { SpopFormDialog } from "./spop-form-dialog";
+import { ReceiptDialog } from "@/components/tax/receipt-dialog";
 
 interface PublicSearchResultItem {
   id: number;
@@ -27,6 +28,7 @@ interface PublicSearchResultItem {
   luasTanah: number;
   luasBangunan: number;
   tagihan: number;
+  ketetapan: number;
   status: string;
   updatedAt: string | Date;
   tanggalBayar: string | Date | null;
@@ -52,12 +54,14 @@ type PublicSearchResponse = Awaited<ReturnType<typeof searchPublicTaxData>> & {
 
 export function PublicSearch({ 
   tahunPajak, 
-  showNominalPajak = false 
+  showNominalPajak = false,
+  initialQuery = ""
 }: { 
   tahunPajak: number;
   showNominalPajak?: boolean;
+  initialQuery?: string;
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<PublicSearchResultItem[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
@@ -70,7 +74,100 @@ export function PublicSearch({
   const [isJombangBapenda, setIsJombangBapenda] = useState(true);
   const [enableBapendaSync, setEnableBapendaSync] = useState(false);
   const [enableBapendaPayment, setEnableBapendaPayment] = useState(true);
+  const [showReceiptPublic, setShowReceiptPublic] = useState(true);
+  const [adminFee, setAdminFee] = useState(2000);
+  const [showNominalPajakState, setShowNominalPajakState] = useState(showNominalPajak);
   const { theme } = usePublicThemeContext();
+
+  useEffect(() => {
+    setShowNominalPajakState(showNominalPajak);
+  }, [showNominalPajak]);
+
+  // Auto search when initialQuery is provided
+  useEffect(() => {
+    if (initialQuery) {
+      setQuery(initialQuery);
+      
+      const performAutoSearch = async () => {
+        setLoading(true);
+        setHasSearched(true);
+        setMessage("");
+        setIsRateLimited(false);
+        setPage(1);
+        
+        try {
+          const res = await searchPublicTaxData(initialQuery, tahunPajak, 1);
+          if (res.success) {
+            const data = res.data || [];
+            setResults(data);
+            setHasMore(!!res.hasMore);
+
+            // Simpan ke riwayat jika ada hasil
+            if (data.length > 0) {
+              setRecentSearches(prev => {
+                const filtered = prev.filter(s => s.toLowerCase() !== initialQuery.toLowerCase());
+                const next = [initialQuery, ...filtered].slice(0, 3);
+                localStorage.setItem("pbb_recent_searches", JSON.stringify(next));
+                return next;
+              });
+            }
+
+            const successRes = res as PublicSearchResponse;
+            if (successRes.jatuhTempo) {
+              setJatuhTempo(successRes.jatuhTempo);
+            }
+            if (successRes.bapendaUrl) {
+              setBapendaUrl(successRes.bapendaUrl);
+              setBapendaPaymentUrl(successRes.bapendaPaymentUrl || null);
+              setBapendaRegionName(successRes.bapendaRegionName || "Bapenda");
+              setIsJombangBapenda(!!successRes.isJombangBapenda);
+              setEnableBapendaSync(!!successRes.enableBapendaSync);
+              setEnableBapendaPayment(!!successRes.enableBapendaPayment);
+            } else {
+              setBapendaUrl(null);
+              setBapendaPaymentUrl(null);
+              setBapendaRegionName("Bapenda");
+            }
+            if (successRes.showReceiptPublic !== undefined) {
+              setShowReceiptPublic(!!successRes.showReceiptPublic);
+            }
+            if (successRes.adminFee !== undefined) {
+              setAdminFee(successRes.adminFee);
+            }
+            if (successRes.showNominalPajak !== undefined) {
+              setShowNominalPajakState(!!successRes.showNominalPajak);
+            }
+
+            // Auto-open Receipt Dialog if single matching paid item found (for direct verification scan)
+            if (
+              data.length === 1 &&
+              data[0].nop === initialQuery &&
+              data[0].status === "LUNAS" &&
+              (successRes.showReceiptPublic ?? true)
+            ) {
+              setSelectedReceiptItem(data[0]);
+            }
+          } else {
+            const errorRes = res as PublicSearchResponse;
+            setResults([]);
+            setHasMore(false);
+            setMessage(res.message || "Terjadi kesalahan sistem.");
+            if (errorRes.rateLimited) {
+              setIsRateLimited(true);
+            }
+          }
+        } catch (err) {
+          console.error("Auto search error:", err);
+          setMessage("Terjadi kesalahan koneksi sistem.");
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      performAutoSearch();
+    }
+  }, [initialQuery, tahunPajak]);
+
   const [openPdfMap, setOpenPdfMap] = useState<Record<string, boolean>>({});
   const [isCheckingAuto, setIsCheckingAuto] = useState<Record<string, boolean>>({});
   const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
@@ -80,6 +177,7 @@ export function PublicSearch({
   const [showNewSpptDialog, setShowNewSpptDialog] = useState(false);
   const [copiedNop, setCopiedNop] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [selectedReceiptItem, setSelectedReceiptItem] = useState<PublicSearchResultItem | null>(null);
 
   // Pagination states
   const [page, setPage] = useState(1);
@@ -134,6 +232,15 @@ export function PublicSearch({
         setBapendaUrl(null);
         setBapendaPaymentUrl(null);
         setBapendaRegionName("Bapenda");
+      }
+      if (successRes.showReceiptPublic !== undefined) {
+        setShowReceiptPublic(!!successRes.showReceiptPublic);
+      }
+      if (successRes.adminFee !== undefined) {
+        setAdminFee(successRes.adminFee);
+      }
+      if (successRes.showNominalPajak !== undefined) {
+        setShowNominalPajakState(!!successRes.showNominalPajak);
       }
     } else {
       const errorRes = res as PublicSearchResponse;
@@ -212,6 +319,15 @@ export function PublicSearch({
          setIsJombangBapenda(!!successRes.isJombangBapenda);
          setEnableBapendaSync(!!successRes.enableBapendaSync);
          setEnableBapendaPayment(!!successRes.enableBapendaPayment);
+      }
+      if (successRes.showReceiptPublic !== undefined) {
+        setShowReceiptPublic(!!successRes.showReceiptPublic);
+      }
+      if (successRes.adminFee !== undefined) {
+        setAdminFee(successRes.adminFee);
+      }
+      if (successRes.showNominalPajak !== undefined) {
+        setShowNominalPajakState(!!successRes.showNominalPajak);
       }
     } else {
       setResults([]);
@@ -521,7 +637,7 @@ export function PublicSearch({
                     </div>
                   </div>
                   
-                  {showNominalPajak && (
+                  {showNominalPajakState && (
                     <div className="space-y-1">
                       <div className={`flex items-center gap-1.5 mb-0.5 ${mutedLabelCls}`}>
                         <Wallet className="w-3.5 h-3.5" />
@@ -660,6 +776,23 @@ export function PublicSearch({
                             title={openPdfMap[item.nop] ? "Tutup E-SPPT" : "Lihat E-SPPT"}
                           >
                             <Eye className="w-5.25 h-5.25" />
+                          </Button>
+                        )}
+
+                        {showReceiptPublic && (
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={() => setSelectedReceiptItem(item)}
+                            className={cn(
+                              "h-11 w-11 rounded-2xl transition-all active:scale-95 shadow-sm",
+                              isDark
+                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                                : "border-emerald-500/30 text-emerald-600 hover:bg-emerald-50"
+                            )}
+                            title="Cetak Bukti Lunas"
+                          >
+                            <Printer className="w-5.25 h-5.25" />
                           </Button>
                         )}
 
@@ -819,6 +952,16 @@ export function PublicSearch({
         initialName={query}
         isDark={isDark}
       />
+
+      {selectedReceiptItem && (
+        <ReceiptDialog 
+          open={!!selectedReceiptItem}
+          onOpenChange={(open) => !open && setSelectedReceiptItem(null)}
+          item={selectedReceiptItem}
+          adminFee={adminFee}
+          publicMode={true}
+        />
+      )}
     </div>
   );
 }

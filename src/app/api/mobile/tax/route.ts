@@ -56,13 +56,15 @@ export async function GET(request: Request) {
       });
     }
 
+    const config = await prisma.villageConfig.findUnique({ where: { id: 1 } });
     const bapendaConfig = {
-      bapendaUrl: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.bapendaUrl,
-      bapendaPaymentUrl: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.bapendaPaymentUrl,
-      enableBapendaPayment: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.enableBapendaPayment ?? true,
-      bapendaRegionName: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.bapendaRegionName || "Bapenda",
-      isJombangBapenda: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.isJombangBapenda ?? false,
-      enableBapendaSync: (await prisma.villageConfig.findUnique({ where: { id: 1 } }))?.enableBapendaSync ?? false,
+      bapendaUrl: config?.bapendaUrl,
+      bapendaPaymentUrl: config?.bapendaPaymentUrl,
+      enableBapendaPayment: config?.enableBapendaPayment ?? true,
+      bapendaRegionName: config?.bapendaRegionName || "Bapenda",
+      isJombangBapenda: config?.isJombangBapenda ?? false,
+      enableBapendaSync: config?.enableBapendaSync ?? false,
+      adminFee: config?.adminFee ?? 2000,
     };
 
     if (taxes.length === 0) {
@@ -82,6 +84,7 @@ export async function GET(request: Request) {
         alamatObjek: tax.alamatObjek,
         tahun: tax.tahun,
         tagihanPajak: tax.tagihanDenda + tax.ketetapan,
+        ketetapan: tax.ketetapan,
         status: tax.paymentStatus,
         luasTanah: tax.luasTanah,
         luasBangunan: tax.luasBangunan,

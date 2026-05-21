@@ -11,9 +11,15 @@ interface PublicTabsProps {
   tahunPajak: number;
   showNominalPajak: boolean;
   enablePublicGis?: boolean;
+  initialQuery?: string;
 }
 
-export function PublicTabs({ tahunPajak, showNominalPajak, enablePublicGis = true }: PublicTabsProps) {
+export function PublicTabs({ 
+  tahunPajak, 
+  showNominalPajak, 
+  enablePublicGis = true,
+  initialQuery = ""
+}: PublicTabsProps) {
   const [activeTab, setActiveTab] = useState<"SEARCH" | "GIS">("SEARCH");
   const { theme } = usePublicThemeContext();
   const isDark = theme === "dark";
@@ -71,6 +77,7 @@ export function PublicTabs({ tahunPajak, showNominalPajak, enablePublicGis = tru
             <PublicSearch 
               tahunPajak={tahunPajak} 
               showNominalPajak={showNominalPajak} 
+              initialQuery={initialQuery}
             />
           </div>
         ) : (

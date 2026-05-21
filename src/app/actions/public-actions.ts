@@ -32,6 +32,9 @@ type PublicVillageConfig = {
   email: string | null;
   kodePos: string | null;
   namaKades: string | null;
+  showReceiptPublic: boolean | null;
+  adminFee: number | null;
+  showNominalPajak: boolean | null;
 };
 
 export async function searchPublicTaxData(query: string, tahunPajak: number, page: number = 1, pageSize: number = 10) {
@@ -114,8 +117,12 @@ export async function searchPublicTaxData(query: string, tahunPajak: number, pag
         email: true,
         kodePos: true,
         namaKades: true,
+        showReceiptPublic: true,
+        adminFee: true,
+        showNominalPajak: true,
       },
     }) as PublicVillageConfig | null;
+
     const jatuhTempoStr = config?.jatuhTempo || "31 Agustus";
     const bapendaUrl = config?.bapendaUrl || null;
     const isJombangBapenda = config?.isJombangBapenda ?? true;
@@ -153,6 +160,7 @@ export async function searchPublicTaxData(query: string, tahunPajak: number, pag
           luasTanah: r.luasTanah,
           luasBangunan: r.luasBangunan,
           tagihan: r.sisaTagihan,
+          ketetapan: r.ketetapan,
           status: r.paymentStatus,
           updatedAt: r.updatedAt,
           tanggalBayar: r.tanggalBayar,
@@ -184,6 +192,9 @@ export async function searchPublicTaxData(query: string, tahunPajak: number, pag
       email: config?.email || "",
       kodePos: config?.kodePos || "",
       namaKades: config?.namaKades || "",
+      showReceiptPublic: config?.showReceiptPublic ?? true,
+      adminFee: config?.adminFee ?? 2000,
+      showNominalPajak: config?.showNominalPajak ?? false,
       remaining: rateLimitResult.remaining 
     };
   } catch (error) {

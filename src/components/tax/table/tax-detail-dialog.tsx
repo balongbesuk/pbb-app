@@ -17,6 +17,7 @@ import { getVillageConfig as fetchConfig } from "@/app/actions/settings-actions"
 import { checkArchiveByNop } from "@/app/actions/archive-actions";
 import { deleteTaxData, updateTaxData } from "@/app/actions/tax-actions";
 import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
+import { ReceiptDialog } from "@/components/tax/receipt-dialog";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
@@ -73,6 +74,7 @@ export function TaxDetailDialog({
   const [isArchiveLoading, setIsArchiveLoading] = useState(false);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [isJombangBapenda, setIsJombangBapenda] = useState(false);
+  const [adminFee, setAdminFee] = useState(2000);
   
   const [isFullEditing, setIsFullEditing] = useState(false);
   const [editNamaWp, setEditNamaWp] = useState("");
@@ -83,6 +85,7 @@ export function TaxDetailDialog({
   const [editPaymentStatus, setEditPaymentStatus] = useState<PaymentStatus>("BELUM_LUNAS");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [showReceiptDialog, setShowReceiptDialog] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -108,6 +111,9 @@ export function TaxDetailDialog({
         setBapendaUrl(config.bapendaUrl || null);
         setBapendaRegionName(config.bapendaRegionName || "Bapenda");
         setIsJombangBapenda(config.isJombangBapenda ?? false);
+        if (config.adminFee !== undefined) {
+          setAdminFee(config.adminFee);
+        }
       });
 
       setIsFullEditing(false);
@@ -323,6 +329,19 @@ export function TaxDetailDialog({
                 >
                   <Search className="h-4 w-4" />
                   <span className="hidden sm:inline text-[9px]">Bayar Online</span>
+                </Button>
+              )}
+
+              {item.paymentStatus === "LUNAS" && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex h-8 items-center justify-center gap-2 rounded-full border-emerald-500/30 bg-emerald-50 px-3 text-[10px] font-black uppercase tracking-widest text-emerald-600 shadow-sm hover:bg-emerald-100 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/50" 
+                  onClick={() => setShowReceiptDialog(true)} 
+                  disabled={isUIBlocked}
+                >
+                  <Printer className="h-4 w-4" />
+                  <span className="hidden sm:inline text-[9px]">Cetak Kwitansi</span>
                 </Button>
               )}
               <DialogClose 
@@ -619,6 +638,13 @@ export function TaxDetailDialog({
           </div>
         </DialogContent>
       </Dialog>
+      <ReceiptDialog 
+        open={showReceiptDialog} 
+        onOpenChange={setShowReceiptDialog} 
+        item={item} 
+        adminFee={adminFee}
+        publicMode={false}
+      />
     </>
   );
 }
