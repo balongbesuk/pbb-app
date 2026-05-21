@@ -50,7 +50,13 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
           if (data.villageConfig) setBapendaConfig(data.villageConfig);
         } else { setErrorMsg(data.error || 'Terjadi kesalahan.'); }
       } else {
-        setErrorMsg(`Gagal mengambil data (Status: ${response.status})`);
+        try {
+          const data = await response.json();
+          setErrorMsg(data.error || `Gagal mengambil data (Status: ${response.status})`);
+          if (data.villageConfig) setBapendaConfig(data.villageConfig);
+        } catch (e) {
+          setErrorMsg(`Gagal mengambil data (Status: ${response.status})`);
+        }
       }
       
       // Also refresh health on search

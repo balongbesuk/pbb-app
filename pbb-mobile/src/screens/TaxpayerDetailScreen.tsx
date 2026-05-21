@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Modal, ActivityIndicator, Linking, Alert, Platform, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, ScrollView, Modal, ActivityIndicator, Linking, Alert, Platform, TouchableWithoutFeedback, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -33,7 +33,7 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
   const [statusModal, setStatusModal] = useState({ visible: false, type: 'success' as 'success' | 'error', message: '' });
   const [syncModal, setSyncModal] = useState<{ visible: boolean; type: 'success' | 'unpaid' | 'error'; message: string }>({ visible: false, type: 'success', message: '' });
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
-  
+
   const { health, checkHealth } = useServerHealth(serverUrl);
 
   useEffect(() => { fetchConfig(); }, []);
@@ -252,6 +252,7 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
             <Text style={{ color: appTheme.colors.text, ...appTheme.typo.heading, marginBottom: 6 }}>Aksi Lanjutan</Text>
             <Text style={{ color: appTheme.colors.textMuted, ...appTheme.typo.body, marginBottom: 28 }}>Opsi alternatif untuk penanganan kasus khusus.</Text>
 
+
             <ScalableButton onPress={() => handleStatusUpdate('SUSPEND')} style={{ marginBottom: 12 }}>
               <View style={{ backgroundColor: appTheme.colors.warningSoft, borderRadius: 24, padding: 22, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.1)' }}>
                 <View style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: 'rgba(245, 158, 11, 0.1)', alignItems: 'center', justifyContent: 'center' }}>
@@ -301,6 +302,7 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
           </LinearGradient>
         </ScalableButton>
       </AppModalCard>
+
 
       <StatusBar style="light" />
     </View>
