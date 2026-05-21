@@ -53,7 +53,7 @@ export const authOptions: NextAuthOptions = {
         const username = credentials.username.trim();
         const ip = getClientIp(req);
         const rateLimitKey = `login:${ip}:${username.toLowerCase()}`;
-        const loginRateLimit = checkRateLimit(rateLimitKey, LOGIN_RATE_LIMIT);
+        const loginRateLimit = await checkRateLimit(rateLimitKey, LOGIN_RATE_LIMIT);
 
         if (!loginRateLimit.allowed) {
           await createFailedLoginAuditLog(username, ip, "RATE_LIMIT");

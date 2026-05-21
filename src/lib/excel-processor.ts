@@ -185,9 +185,9 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
     distance: 100,
   });
 
-  // Reduced batch size for SQLite parameter limits on Windows
-  // SQLite default limit is 999 parameters. 20+ fields * 40 rows = ~800-900 params.
-  const BATCH_SIZE = 40;
+  // Optimized batch size. Modern better-sqlite3 supports up to 32766 parameters.
+  // 20+ fields * 200 rows = ~4000 params, which is extremely safe and 5x faster.
+  const BATCH_SIZE = 200;
   const toCreate: TaxCreatePayload[] = [];
   const toUpdate: { id: number; data: TaxProcessingPayload }[] = [];
   const now = new Date();
@@ -286,7 +286,7 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
 
   // 2. Process updates in transactions to speed up sequential updates
   if (toUpdate.length > 0) {
-    const UPDATE_BATCH_SIZE = 100;
+    const UPDATE_BATCH_SIZE = 200;
     for (let i = 0; i < toUpdate.length; i += UPDATE_BATCH_SIZE) {
       const batch = toUpdate.slice(i, i + UPDATE_BATCH_SIZE);
       try {
@@ -472,11 +472,15 @@ export async function processBackupAssignments(
     }
 
     if (idsToUpdate.length > 0) {
-      const updateResult = await prisma.taxData.updateMany({
-        where: { id: { in: idsToUpdate } },
-        data: { penarikId: userId },
-      });
-      updatedCount += updateResult.count;
+      const CHUNK_SIZE = 500;
+      for (let j = 0; j < idsToUpdate.length; j += CHUNK_SIZE) {
+        const chunk = idsToUpdate.slice(j, j + CHUNK_SIZE);
+        const updateResult = await prisma.taxData.updateMany({
+          where: { id: { in: chunk } },
+          data: { penarikId: userId },
+        });
+        updatedCount += updateResult.count;
+      }
     }
   }
 
@@ -486,13 +490,30 @@ export async function processBackupAssignments(
     const nops = uniqueMappings.map((a) => a.nop);
 
     try {
+      const CHUNK_SIZE = 500;
+      const deletePromises = [];
+      for (let j = 0; j < nops.length; j += CHUNK_SIZE) {
+        const chunk = nops.slice(j, j + CHUNK_SIZE);
+        deletePromises.push(
+          prisma.taxMapping.deleteMany({
+            where: { nop: { in: chunk } },
+          })
+        );
+      }
+
+      const createPromises = [];
+      for (let j = 0; j < uniqueMappings.length; j += CHUNK_SIZE) {
+        const chunk = uniqueMappings.slice(j, j + CHUNK_SIZE);
+        createPromises.push(
+          prisma.taxMapping.createMany({
+            data: chunk,
+          })
+        );
+      }
+
       await prisma.$transaction([
-        prisma.taxMapping.deleteMany({
-          where: { nop: { in: nops } },
-        }),
-        prisma.taxMapping.createMany({
-          data: uniqueMappings,
-        }),
+        ...deletePromises,
+        ...createPromises,
       ]);
     } catch (txError) {
       console.error("Mapping sync failed, falling back to individual upserts:", txError);

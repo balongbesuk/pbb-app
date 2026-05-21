@@ -43,7 +43,7 @@ export async function searchPublicTaxData(query: string, tahunPajak: number, pag
 
     const ip = getClientIp({ headers: headersList });
     const rateLimitResult = !isLighthouse 
-      ? checkRateLimit(ip, PUBLIC_SEARCH_RATE_LIMIT)
+      ? await checkRateLimit(ip, PUBLIC_SEARCH_RATE_LIMIT)
       : { allowed: true, remaining: 999 };
 
     if (!rateLimitResult.allowed) {

@@ -87,7 +87,7 @@ export async function syncBapendaStatus({
   }
 
   const rateLimitKey = `public-bapenda:${clientIp}:${cleanNop}`;
-  const rateLimitResult = checkRateLimit(rateLimitKey, PUBLIC_BAPENDA_RATE_LIMIT);
+  const rateLimitResult = await checkRateLimit(rateLimitKey, PUBLIC_BAPENDA_RATE_LIMIT);
   if (!rateLimitResult.allowed) {
     return {
       status: 429,

@@ -26,12 +26,20 @@ export async function previewTaxData(formData: FormData, tahun: number) {
     
     // Map to find existing rows by NOP for update vs create count
     const nops = rows.map(r => r.nop ? String(r.nop).trim() : "").filter(Boolean);
-    const existing = await prisma.taxData.count({
-      where: {
-        tahun,
-        nop: { in: nops }
-      }
-    });
+    
+    // Chunking to avoid SQLite parameter limit (999)
+    let existing = 0;
+    const CHUNK_SIZE = 500;
+    for (let i = 0; i < nops.length; i += CHUNK_SIZE) {
+      const chunk = nops.slice(i, i + CHUNK_SIZE);
+      const countChunk = await prisma.taxData.count({
+        where: {
+          tahun,
+          nop: { in: chunk }
+        }
+      });
+      existing += countChunk;
+    }
 
     rows.forEach((r: ExcelRow) => {
       const val = parseFloat(String(r.ketetapan || 0).replace(/[^\d.-]/g, ''));

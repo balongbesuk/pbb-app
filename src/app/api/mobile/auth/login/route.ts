@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     const normalizedUsername = username.trim();
     const clientIp = getClientIp({ headers: request.headers });
-    const rateLimit = checkRateLimit(
+    const rateLimit = await checkRateLimit(
       `mobile-login:${clientIp}:${normalizedUsername.toLowerCase()}`,
       MOBILE_LOGIN_RATE_LIMIT
     );
