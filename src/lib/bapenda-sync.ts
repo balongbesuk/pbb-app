@@ -163,10 +163,6 @@ export async function syncBapendaStatus({
         "Pragma": "no-cache",
         "Upgrade-Insecure-Requests": "1",
       },
-      // Mengabaikan error sertifikat jika ada (beberapa server pemda sertifikatnya bermasalah)
-      httpsAgent: new (require('https').Agent)({  
-        rejectUnauthorized: false 
-      }),
       validateStatus: () => true,
     });
 
