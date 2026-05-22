@@ -25,6 +25,19 @@ const nextConfig: NextConfig = {
     "@prisma/adapter-better-sqlite3",
     "better-sqlite3",
   ],
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "X-Robots-Tag",
+            value: "noindex, nofollow, noarchive, nosnippet",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
