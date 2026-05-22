@@ -78,6 +78,24 @@ export function PublicSearch({
   const [adminFee, setAdminFee] = useState(2000);
   const [showNominalPajakState, setShowNominalPajakState] = useState(showNominalPajak);
   const { theme } = usePublicThemeContext();
+  const isDark = theme === "dark";
+
+  const [openPdfMap, setOpenPdfMap] = useState<Record<string, boolean>>({});
+  const [isCheckingAuto, setIsCheckingAuto] = useState<Record<string, boolean>>({});
+  const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
+  const [showPayRedirect, setShowPayRedirect] = useState<{ nop: string, namaWp: string } | null>(null);
+  const [mutationItem, setMutationItem] = useState<PublicSearchResultItem | null>(null);
+  const [spopItem, setSpopItem] = useState<PublicSearchResultItem | null>(null);
+  const [showNewSpptDialog, setShowNewSpptDialog] = useState(false);
+  const [copiedNop, setCopiedNop] = useState<string | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [selectedReceiptItem, setSelectedReceiptItem] = useState<PublicSearchResultItem | null>(null);
+
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setShowNominalPajakState(showNominalPajak);
@@ -168,23 +186,7 @@ export function PublicSearch({
     }
   }, [initialQuery, tahunPajak]);
 
-  const [openPdfMap, setOpenPdfMap] = useState<Record<string, boolean>>({});
-  const [isCheckingAuto, setIsCheckingAuto] = useState<Record<string, boolean>>({});
-  const [cooldowns, setCooldowns] = useState<Record<string, number>>({});
-  const [showPayRedirect, setShowPayRedirect] = useState<{ nop: string, namaWp: string } | null>(null);
-  const [mutationItem, setMutationItem] = useState<PublicSearchResultItem | null>(null);
-  const [spopItem, setSpopItem] = useState<PublicSearchResultItem | null>(null);
-  const [showNewSpptDialog, setShowNewSpptDialog] = useState(false);
-  const [copiedNop, setCopiedNop] = useState<string | null>(null);
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [selectedReceiptItem, setSelectedReceiptItem] = useState<PublicSearchResultItem | null>(null);
 
-  // Pagination states
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const observerTarget = useRef<HTMLDivElement>(null);
-  const isDark = theme === "dark";
 
   const togglePdf = (nop: string) => {
     setOpenPdfMap(prev => ({ ...prev, [nop]: !prev[nop] }));
@@ -267,7 +269,7 @@ export function PublicSearch({
       setHasMore(!!res.hasMore);
     }
     setIsLoadingMore(false);
-  }, [page, hasMore, isLoadingMore, query, tahunPajak]);
+  }, [page, hasMore, isLoadingMore, query, tahunPajak, setResults, setPage, setHasMore, setIsLoadingMore]);
 
   // Load recent searches from localStorage
   useEffect(() => {
