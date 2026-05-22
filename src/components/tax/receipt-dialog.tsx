@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Printer, X, CreditCard, User, Check, Loader2, Award, Landmark, Calendar, MapPin, Receipt, Download } from "lucide-react";
 import { formatCurrency, formatDateNoTime } from "@/lib/utils";
 import { getVillageConfig } from "@/app/actions/settings-actions";
+import { toPng } from "html-to-image";
+import { toast } from "sonner";
 
 // Terbilang Bahasa Indonesia Helper
 function terbilang(angka: number): string {
@@ -65,6 +67,8 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [scale, setScale] = useState<number>(1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -233,8 +237,8 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
             gap: 8px;
           }
           .village-logo {
-            width: 26px;
-            height: 32px;
+            width: 36px;
+            height: 44px;
             object-fit: contain;
           }
           .header-text {
@@ -454,7 +458,7 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
               </div>
               <div class="receipt-number">
                 <h4 class="doc-type">KWITANSI</h4>
-                <span class="doc-ref">NO: PBB-${cleanNop.substring(13, 18)}-${item.tahun}</span>
+                <span class="doc-ref">NO: PBB-${cleanNop.substring(10, 13)}-${cleanNop.substring(13, 17)}-${item.tahun}</span>
               </div>
             </div>
             
@@ -554,13 +558,37 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
   };
 
   const handleDownload = () => {
-    const html = getReceiptHtml();
-    const newWindow = window.open("", "_blank");
-    if (newWindow) {
-      newWindow.document.write(html);
-      newWindow.document.close();
-      newWindow.document.title = `Kwitansi-PBB-${cleanNop}-${item.tahun}`;
-    }
+    if (!receiptRef.current) return;
+    
+    setIsDownloading(true);
+    const toastId = toast.loading("Sedang menyiapkan file unduhan kwitansi...");
+    
+    setTimeout(() => {
+      toPng(receiptRef.current!, { 
+        cacheBust: true,
+        pixelRatio: 3, // High DPI for crisp look and printing quality
+        backgroundColor: "#ffffff",
+        style: {
+          transform: "scale(1)",
+          transformOrigin: "top left",
+          margin: "0",
+        }
+      })
+      .then((dataUrl) => {
+        const link = document.createElement("a");
+        link.download = `Kwitansi-PBB-${cleanNop}-${item.tahun}.png`;
+        link.href = dataUrl;
+        link.click();
+        toast.success("Kwitansi berhasil diunduh!", { id: toastId });
+      })
+      .catch((err) => {
+        console.error("Gagal mengunduh kwitansi:", err);
+        toast.error("Gagal mengunduh kwitansi. Silakan gunakan Cetak Kwitansi.", { id: toastId });
+      })
+      .finally(() => {
+        setIsDownloading(false);
+      });
+    }, 200);
   };
 
   return (
@@ -623,6 +651,7 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
               >
                 {/* Custom 1/4 A4 Preview Card (840px x 296px = 210mm x 74mm aspect ratio) */}
                 <div 
+                  ref={receiptRef}
                   className="bg-white text-slate-800 p-5 rounded-2xl shadow-2xl border border-zinc-200 flex flex-col justify-between relative overflow-hidden select-none shrink-0"
                   style={{ 
                     fontFamily: "'Outfit', sans-serif",
@@ -641,9 +670,18 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
                     {/* Header */}
                     <div className="flex items-center justify-between border-b-2 border-emerald-600 pb-1">
                       <div className="flex items-center gap-3">
-                        <div className="bg-emerald-500 p-1.5 rounded-lg text-white">
-                          <Award className="w-5 h-5" />
-                        </div>
+                        {villageConfig?.logoUrl ? (
+                          <img 
+                            className="w-[36px] h-[44px] object-contain animate-fade-in" 
+                            src={villageConfig.logoUrl} 
+                            alt="Logo Desa"
+                            crossOrigin="anonymous"
+                          />
+                        ) : (
+                          <div className="bg-emerald-50 p-1.5 rounded-lg text-white">
+                            <Award className="w-5 h-5" />
+                          </div>
+                        )}
                         <div className="text-left leading-none">
                           <span className="font-bold text-zinc-400 uppercase tracking-widest" style={{ fontSize: "8px" }}>Pemerintah Kabupaten {kab}</span>
                           <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight mt-0.5">KANTOR DESA {desa}</h3>
@@ -652,7 +690,7 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
                       </div>
                       <div className="text-right leading-none">
                         <h4 className="text-base font-black text-emerald-600 tracking-wider">KWITANSI</h4>
-                        <span className="text-zinc-400 font-bold uppercase" style={{ fontSize: "7.5px" }}>NO: PBB-{cleanNop.substring(13, 18)}-{item.tahun}</span>
+                        <span className="text-zinc-400 font-bold uppercase" style={{ fontSize: "7.5px" }}>NO: PBB-{cleanNop.substring(10, 13)}-{cleanNop.substring(13, 17)}-{item.tahun}</span>
                       </div>
                     </div>
 
@@ -757,11 +795,15 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
             </Button>
             <Button 
               onClick={handleDownload}
-              disabled={isLoadingConfig}
+              disabled={isLoadingConfig || isDownloading}
               variant="outline"
               className="flex-1 h-12 font-black uppercase text-xs tracking-widest gap-2.5 rounded-2xl border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
             >
-              <Download className="w-4.5 h-4.5" />
+              {isDownloading ? (
+                <Loader2 className="w-4.5 h-4.5 animate-spin" />
+              ) : (
+                <Download className="w-4.5 h-4.5" />
+              )}
               Unduh
             </Button>
           </div>
