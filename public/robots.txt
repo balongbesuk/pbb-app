@@ -1,9 +1,2 @@
 User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /dashboard/
-Disallow: /pengguna/
-Disallow: /settings/
-Disallow: /log-aktivitas/
-Disallow: /upload-pbb/
-Disallow: /laporan/
+Disallow: /
