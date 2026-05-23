@@ -1,29 +1,29 @@
 <img width="2536" height="923" alt="PBB Manager Dashboard" src="https://github.com/user-attachments/assets/d540a662-121b-41d0-8882-5cb8455aa37b" />
 
-# PBB Manager — Fitur Unggulan PBB Mobile `v1.1.0`
+# PBB Manager — Keamanan Maksimal & PIN NOP `v10.0`
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
 [![React Native](https://img.shields.io/badge/React%20Native-Expo-61DAFB?logo=react)](https://reactnative.dev)
 [![Prisma](https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma)](https://prisma.io)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css)](https://tailwindcss.com)
-[![Version](https://img.shields.io/badge/Version-9.1.0-blue)](https://github.com/balongbesuk/pbb-app/tags)
+[![Version](https://img.shields.io/badge/Version-10.0.0-blue)](https://github.com/balongbesuk/pbb-app/tags)
 
-**PBB Manager v9.1.0 (PBB Mobile Action & Integration)** membawa integrasi revolusioner antara dashboard web administratif dengan operasional petugas di lapangan melalui aplikasi mobile yang telah dimodernisasi. Menghadirkan performa tinggi untuk penanganan data besar, sistem notifikasi cerdas, dan pengalaman pengguna (*Experience Polish*) yang setara dengan aplikasi perbankan modern. Dirancang untuk efisiensi total dalam pemungutan PBB desa, mulai dari penagihan *real-time*, manajemen wajib pajak masif, hingga pemetaan spasial (GIS) yang instan.
+**PBB Manager v10.0 (Deep Security Hardening & NOP PIN Protection)** menghadirkan peningkatan keamanan skala penuh untuk melindungi data privasi wajib pajak desa dari scraping massal dan akses tidak sah. Dengan integrasi Cloudflare Turnstile, sistem verifikasi Kunci 4-Digit NOP fisik untuk pencarian warga dan peta GIS publik, perlindungan brute-force PIN dengan penguncian sesi, penambalan celah autentikasi API Mobile, perlindungan Zip Slip, serta sinkronisasi pembayaran Bapenda secara instan dan tangguh.
 
 ---
 
-## Fitur Unggulan v9.1.0 (Mobile & Core)
+## Fitur Utama v10.0 (Security & Core)
 
 | Fitur | Deskripsi |
 |---|---|
-| **PBB Mobile v1.1.0** | **BARU (v1.1.0):** Aplikasi petugas dengan dukungan aksi interaktif (Update Status, Transfer Respons) dan integrasi EPAY Jombang. |
-| **Taxpayer Lazy Load** | Sistem paging cerdas pada aplikasi mobile untuk memuat ribuan data Wajib Pajak secara ringan dan cepat. |
-| **Billing Activity Timeline** | Log aktivitas penagihan lengkap dalam format timeline, memudahkan petugas melakukan audit harian langsung dari HP. |
-| **Smart Notifications** | **BARU (v1.1.0):** Sistem pemberitahuan *real-time* interaktif dengan tombol aksi langsung dari notifikasi. |
-| **GIS Command Center v2.0** | Dashboard peta interaktif berbasis GeoJSON/GPX untuk manajemen wilayah RT/RW/Dusun secara visual dengan layer citra satelit. |
-| **Bapenda Sync Resilience** | Penanganan error sinkronisasi Bapenda yang tangguh dan penyisipan parameter NOP otomatis ke portal pajak daerah. |
-| **Portal Mutasi (Self-Service)** | Memungkinkan warga mengajukan perubahan data (Hibah, Waris, Jual Beli) dan mencetak draf dokumen (.docx). |
-| **Smart Scan Archive** | Algoritma ekstraksi otomatis yang memecah ribuan lembar E-SPPT menjadi file personal berdasarkan NOP secara instan. |
+| **NOP PIN Protection** | **BARU (v10.0):** Akses salin NOP asli, cetak kwitansi, pratinjau E-SPPT PDF, dan pengajuan LSPOP/Mutasi diwajibkan melewati verifikasi 4-digit terakhir NOP fisik warga dengan proteksi brute-force IP. |
+| **GIS Map Public Hardening** | **BARU (v10.0):** Sensor otomatis NOP pada peta GIS publik, verifikasi PIN dinamis saat warga mengakses opsi pembayaran dari peta, serta *bypass* akses penuh tanpa sensor bagi administrator. |
+| **Turnstile Lifecycle SPA** | **BARU (v10.0):** Widget Cloudflare Turnstile ter-render secara programmatic dan instan saat berpindah tab tanpa perlu refresh peramban secara manual. |
+| **Zip Slip & API Protection** | **BARU (v10.0):** Penambalan celah Broken Authentication pada API Mobile dengan pengamanan token JWT ketat, serta penambalan celah ekstraksi ZIP (Zip Slip) menggunakan `resolveSafeChildPath`. |
+| **PBB Mobile v1.2.0** | Aplikasi petugas dengan otentikasi Bearer Token ketat, dukungan aksi interaktif (Update Status, Transfer Respons), dan integrasi EPAY Jombang. |
+| **Bapenda Sync Resilience** | Sinkronisasi pembayaran Bapenda real-time yang tangguh, penanganan error latensi/SSL, dan integrasi pemicu popup tagihan belum terbayar. |
+| **Portal Mutasi (Self-Service)** | Memungkinkan warga mengajukan perubahan data (Hibah, Waris, Jual Beli) dan mencetak draf dokumen (.docx) setelah lolos verifikasi PIN. |
+| **Smart Scan Archive** | Algoritma ekstraksi otomatis yang memecah ribuan lembar E-SPPT menjadi file personal berdasarkan NOP secara instan dan disajikan melalui tautan aman server-side. |
 
 ---
 
@@ -33,7 +33,7 @@ Sistem keamanan berlapis untuk menjaga integritas data desa:
 
 *   **ADMIN (Kepala Desa / Admin IT)**: Memegang kendali penuh atas konfigurasi instansi, GIS, sinkronisasi data pusat, pengelolaan arsip digital, dan manajemen akun pengguna.
 *   **PETUGAS (Kepala Dusun / Penarik)**: Menggunakan **PBB Manager Mobile** untuk pembaruan status bayar di lapangan, manajemen wajib pajak, dan memonitor riwayat penagihan harian.
-*   **PENGGUNA (Warga)**: Akses terbatas untuk cek tagihan mandiri dan pengajuan mutasi SPPT.
+*   **PENGGUNA (Warga)**: Akses terbatas untuk cek tagihan mandiri, cetak PDF, pratinjau berkas, dan pengajuan mutasi SPPT setelah melewati verifikasi PIN.
 
 ---
 
@@ -78,4 +78,4 @@ Instalasi sekarang sepenuhnya otomatis. Cukup pastikan Anda memiliki **Node.js (
 ---
 
 *Dikembangkan untuk kemajuan digitalisasi desa di Indonesia.*
-*Terakhir Diperbarui: April 2026*
+*Terakhir Diperbarui: Mei 2026*

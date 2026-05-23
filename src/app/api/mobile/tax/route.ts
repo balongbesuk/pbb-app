@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = "force-dynamic";
 import { prisma } from '@/lib/prisma';
 import { isPbbMobileEnabled } from '@/lib/mobile-access';
+import { requireMobileAuth, unauthorizedMobileResponse } from '@/lib/mobile-auth';
 
 async function ensureMobileEnabled(headers: Record<string, string>) {
   const mobileEnabled = await isPbbMobileEnabled();
@@ -28,6 +29,14 @@ export async function GET(request: Request) {
 
     const blockedResponse = await ensureMobileEnabled(headers);
     if (blockedResponse) return blockedResponse;
+
+    // Pengecekan autentikasi token JWT Mobile
+    let auth;
+    try {
+      auth = await requireMobileAuth(request);
+    } catch (e) {
+      return unauthorizedMobileResponse(headers);
+    }
 
     const rawQuery = (nop || '').trim();
     if (!rawQuery) {
@@ -113,6 +122,14 @@ export async function POST(request: Request) {
 
     const blockedResponse = await ensureMobileEnabled(headers);
     if (blockedResponse) return blockedResponse;
+
+    // Pengecekan autentikasi token JWT Mobile
+    let auth;
+    try {
+      auth = await requireMobileAuth(request);
+    } catch (e) {
+      return unauthorizedMobileResponse(headers);
+    }
 
     if (!nop) {
       return NextResponse.json({ success: false, error: 'NOP wajib dikirim' }, { status: 400, headers });

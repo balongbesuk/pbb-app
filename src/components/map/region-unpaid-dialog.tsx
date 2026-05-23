@@ -12,6 +12,25 @@ import { usePublicThemeContext } from "@/components/public/public-theme-provider
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { getUnmaskedTaxData } from "@/app/actions/public-actions";
+
+function maskNop(nop: string, isPublic: boolean = true): string {
+  if (!isPublic) return nop;
+  const cleanNop = nop.replace(/\D/g, "");
+  if (cleanNop.length === 18) {
+    const p1 = cleanNop.substring(0, 2);
+    const p2 = cleanNop.substring(2, 4);
+    const p3 = cleanNop.substring(4, 7);
+    const p4 = cleanNop.substring(7, 10);
+    const p5 = cleanNop.substring(10, 13);
+    return `${p1}.${p2}.${p3}.${p4}.${p5}-XXXX.X`;
+  }
+  if (nop.includes("-")) {
+    const parts = nop.split("-");
+    return `${parts[0]}-XXXX.X`;
+  }
+  return nop.substring(0, Math.max(0, nop.length - 5)) + "XXXXX";
+}
 
 interface RegionUnpaidDialogProps {
   open: boolean;
@@ -71,6 +90,27 @@ export function RegionUnpaidDialog({
   const [totalCount, setTotalCount] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
+  // PIN Verification States
+  const [verifiedNops, setVerifiedNops] = useState<Record<string, boolean>>({});
+  const [unmaskedNops, setUnmaskedNops] = useState<Record<string, string>>({});
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [pinTargetItem, setPinTargetItem] = useState<UnpaidTaxItem | null>(null);
+  const [pinValue, setPinValue] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [pinVerifying, setPinVerifying] = useState(false);
+  const [pinActionType, setPinActionType] = useState<"cek_bapenda" | "bayar_online">("cek_bapenda");
+  const [pinLockTimer, setPinLockTimer] = useState<number>(0);
+
+  // Lock timer countdown
+  useEffect(() => {
+    if (pinLockTimer > 0) {
+      const interval = setInterval(() => {
+        setPinLockTimer(prev => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [pinLockTimer]);
+
   // State untuk Cek Bapenda
   const [checkingBapendaId, setCheckingBapendaId] = useState<string | null>(null);
   const [unpaidBillItem, setUnpaidBillItem] = useState<{ nop: string, namaWp: string } | null>(null);
@@ -184,14 +224,16 @@ export function RegionUnpaidDialog({
   };
 
   const handleCopy = (nop: string) => {
-    navigator.clipboard.writeText(nop.replace(/\D/g, ""));
+    const masked = maskNop(nop, isPublicPortal);
+    navigator.clipboard.writeText(isPublicPortal ? masked : nop.replace(/\D/g, ""));
     setCopiedId(nop);
-    toast.success("NOP berhasil disalin");
+    toast.success(isPublicPortal ? "NOP (Sensor) berhasil disalin" : "NOP asli berhasil disalin");
     setTimeout(() => setCopiedId(null), 2000);
   };
 
   const handleCheckBapenda = async (wp: UnpaidTaxItem) => {
-    const lastCheck = cooldowns[wp.nop] || 0;
+    const originalNop = unmaskedNops[wp.id] || wp.nop;
+    const lastCheck = cooldowns[originalNop] || 0;
     const now = Date.now();
     const COOLDOWN_MS = 15000;
 
@@ -202,13 +244,13 @@ export function RegionUnpaidDialog({
     }
 
     setCheckingBapendaId(wp.id);
-    setCooldowns(prev => ({ ...prev, [wp.nop]: now }));
+    setCooldowns(prev => ({ ...prev, [originalNop]: now }));
     try {
       toast.info(`Mengecek status pembayaran ${wp.namaWp}...`);
       const res = await fetch("/api/check-bapenda", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nop: wp.nop, tahun }),
+        body: JSON.stringify({ nop: originalNop, tahun }),
       });
       
       const resData = await res.json();
@@ -224,7 +266,7 @@ export function RegionUnpaidDialog({
         setTotalCount(prev => prev - 1);
         setTotalPiutang(prev => prev - wp.ketetapan);
       } else {
-        setUnpaidBillItem({ nop: wp.nop, namaWp: wp.namaWp });
+        setUnpaidBillItem({ nop: originalNop, namaWp: wp.namaWp });
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Gagal terhubung ke server Bapenda";
@@ -232,6 +274,76 @@ export function RegionUnpaidDialog({
       console.error(err);
     } finally {
       setCheckingBapendaId(null);
+    }
+  };
+
+  const handleCheckBapendaClick = (wp: UnpaidTaxItem) => {
+    if (!isPublicPortal || verifiedNops[wp.id]) {
+      handleCheckBapenda(wp);
+    } else {
+      setPinTargetItem(wp);
+      setPinActionType("cek_bapenda");
+      setPinValue("");
+      setPinError("");
+      setPinModalOpen(true);
+    }
+  };
+
+  const handlePayOnlineClick = (wp: UnpaidTaxItem) => {
+    if (!isPublicPortal || verifiedNops[wp.id]) {
+      const cleanNop = (unmaskedNops[wp.id] || wp.nop).replace(/\D/g, "");
+      const targetUrl = bapendaPaymentUrl!.replace(/\{nop\}/gi, cleanNop);
+      window.open(targetUrl, "_blank");
+    } else {
+      setPinTargetItem(wp);
+      setPinActionType("bayar_online");
+      setPinValue("");
+      setPinError("");
+      setPinModalOpen(true);
+    }
+  };
+
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pinValue.trim()) {
+      setPinError("Masukkan 4 digit PIN.");
+      return;
+    }
+    if (pinValue.trim().length !== 4 || !/^\d+$/.test(pinValue)) {
+      setPinError("PIN harus berupa 4 digit angka.");
+      return;
+    }
+
+    setPinVerifying(true);
+    setPinError("");
+
+    try {
+      const res = await getUnmaskedTaxData(Number(pinTargetItem!.id), pinValue.trim(), tahun);
+      if (res.success && res.nop) {
+        setUnmaskedNops(prev => ({ ...prev, [pinTargetItem!.id]: res.nop! }));
+        setVerifiedNops(prev => ({ ...prev, [pinTargetItem!.id]: true }));
+        
+        toast.success("PIN Terverifikasi! Fitur terbuka.");
+        setPinModalOpen(false);
+
+        const verifiedWp = { ...pinTargetItem!, nop: res.nop! };
+        if (pinActionType === "cek_bapenda") {
+          handleCheckBapenda(verifiedWp);
+        } else if (pinActionType === "bayar_online") {
+          const cleanNop = res.nop!.replace(/\D/g, "");
+          const targetUrl = bapendaPaymentUrl!.replace(/\{nop\}/gi, cleanNop);
+          window.open(targetUrl, "_blank");
+        }
+      } else {
+        setPinError(res.message || "PIN Salah.");
+        if (res.rateLimited) {
+          setPinLockTimer(900);
+        }
+      }
+    } catch (err) {
+      setPinError("Gagal menghubungi server.");
+    } finally {
+      setPinVerifying(false);
     }
   };
 
@@ -363,7 +475,7 @@ export function RegionUnpaidDialog({
                             onClick={() => handleCopy(wp.nop)}
                             className="flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors"
                            >
-                              <span className="text-[11px] font-mono text-muted-foreground font-bold">{wp.nop}</span>
+                              <span className="text-[11px] font-mono text-muted-foreground font-bold">{maskNop(wp.nop, isPublicPortal)}</span>
                               {copiedId === wp.nop ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3 text-muted-foreground/40" />}
                            </div>
                         </div>
@@ -376,7 +488,7 @@ export function RegionUnpaidDialog({
                           <Button 
                             size="sm"
                             variant="outline"
-                            onClick={() => handleCheckBapenda(wp)}
+                            onClick={() => handleCheckBapendaClick(wp)}
                             disabled={checkingBapendaId === wp.id}
                             className={cn(
                               "h-8 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
@@ -398,11 +510,7 @@ export function RegionUnpaidDialog({
                            <Button 
                              size="sm"
                              variant="outline"
-                             onClick={() => {
-                               const cleanNop = wp.nop.replace(/\D/g, "");
-                               const targetUrl = bapendaPaymentUrl.replace(/\{nop\}/gi, cleanNop);
-                               window.open(targetUrl, "_blank");
-                             }}
+                             onClick={() => handlePayOnlineClick(wp)}
                              className={cn(
                                "h-8 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
                                isDark 
@@ -451,6 +559,70 @@ export function RegionUnpaidDialog({
           bapendaRegionName={bapendaRegionName}
         />
       )}
+
+      {/* PIN Verification Dialog */}
+      <Dialog open={pinModalOpen} onOpenChange={setPinModalOpen}>
+        <DialogContent container={container} className={cn("rounded-3xl border-0 shadow-2xl max-w-sm w-full p-6", isDark ? "bg-[#0A192F] text-white" : "bg-white text-slate-900")}>
+          <DialogHeader className="text-center pb-2">
+            <DialogTitle className="text-xl font-bold uppercase tracking-tight flex items-center justify-center gap-2">
+              <RefreshCcw className="w-5 h-5 text-amber-500" />
+              Verifikasi PIN NOP
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs leading-relaxed mt-2", isDark ? "text-blue-200/60" : "text-slate-500")}>
+              Untuk melakukan transaksi pembayaran online atau mengecek status tagihan penuh di Bapenda, masukkan 4 digit terakhir NOP Anda (sebelum digit paling akhir) yang tertera pada lembaran cetak SPPT fisik Anda.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePinSubmit} className="space-y-4 mt-2">
+            <div className="text-center bg-black/5 dark:bg-white/5 py-2.5 px-4 rounded-xl text-xs font-mono tracking-wider opacity-80">
+              Format: 35.17.030.010.005-[ <span className="text-amber-500 font-bold">_ _ _ _</span> ].[X]
+            </div>
+            
+            <div>
+              <Input
+                type="text"
+                maxLength={4}
+                disabled={pinVerifying || pinLockTimer > 0}
+                placeholder="Contoh: 0123"
+                value={pinValue}
+                onChange={(e) => setPinValue(e.target.value.replace(/\D/g, ""))}
+                className={cn("h-12 rounded-xl text-center text-lg font-black tracking-[0.5em] w-full shadow-sm focus:ring-amber-500", 
+                  isDark ? "bg-[#050B14] border-white/10 text-white" : "bg-white border-zinc-200 text-zinc-900"
+                )}
+              />
+              {pinError && (
+                <p className="text-xs text-rose-500 font-bold mt-2 text-center flex items-center justify-center gap-1">
+                  <X className="w-3.5 h-3.5" />
+                  {pinError}
+                </p>
+              )}
+              {pinLockTimer > 0 && (
+                <p className="text-xs text-rose-500 font-bold mt-2 text-center flex items-center justify-center gap-1">
+                  <X className="w-3.5 h-3.5 animate-pulse" />
+                  Terblokir! Coba lagi dalam {Math.ceil(pinLockTimer / 60)} menit ({pinLockTimer}s).
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2 pt-4">
+              <Button 
+                type="submit" 
+                disabled={pinVerifying || pinLockTimer > 0 || pinValue.trim().length !== 4} 
+                className={cn("h-11 w-full rounded-xl font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-900/20", pinVerifying && "opacity-80")}
+              >
+                {pinVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verifikasi & Buka Berkas"}
+              </Button>
+              <Button 
+                type="button" 
+                variant="ghost"
+                onClick={() => setPinModalOpen(false)}
+                className="h-11 w-full rounded-xl font-semibold hover:bg-black/5 dark:hover:bg-white/5"
+              >
+                Batalkan
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

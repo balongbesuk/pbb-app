@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { searchPublicTaxData } from "@/app/actions/public-actions";
+import Script from "next/script";
+import { searchPublicTaxData, getSecureArsipUrl, getUnmaskedTaxData } from "@/app/actions/public-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -33,6 +35,7 @@ interface PublicSearchResultItem {
   updatedAt: string | Date;
   tanggalBayar: string | Date | null;
   arsipUrl: string | null;
+  hasArsip: boolean;
   tahun: number;
   dusun: string | null;
   rt: string | null;
@@ -91,11 +94,64 @@ export function PublicSearch({
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [selectedReceiptItem, setSelectedReceiptItem] = useState<PublicSearchResultItem | null>(null);
 
+  // States for Turnstile and PIN Verification (SEC-05)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [verifiedNops, setVerifiedNops] = useState<Record<number, boolean>>({});
+  const [unmaskedNops, setUnmaskedNops] = useState<Record<number, string>>({});
+  const [spptUrls, setSpptUrls] = useState<Record<number, string>>({});
+  
+  // State for PIN modal
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [pinTargetItem, setPinTargetItem] = useState<any | null>(null);
+  const [pinValue, setPinValue] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [pinVerifying, setPinVerifying] = useState(false);
+  const [pinActionType, setPinActionType] = useState<"view_pdf" | "print_receipt" | "copy_nop" | "pay_online" | "mutation" | "spop">("view_pdf");
+  const [pinLockTimer, setPinLockTimer] = useState<number>(0);
+
   // Pagination states
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
+
+  // Lock timer countdown
+  useEffect(() => {
+    if (pinLockTimer > 0) {
+      const interval = setInterval(() => {
+        setPinLockTimer(prev => prev - 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [pinLockTimer]);
+
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+
+  const initTurnstile = useCallback(() => {
+    if (typeof window !== "undefined" && (window as any).turnstile && turnstileContainerRef.current) {
+      try {
+        turnstileContainerRef.current.innerHTML = "";
+        (window as any).turnstile.render(turnstileContainerRef.current, {
+          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+          callback: (token: string) => {
+            setTurnstileToken(token);
+          },
+          "expired-callback": () => {
+            setTurnstileToken(null);
+          },
+          theme: isDark ? "dark" : "light",
+        });
+      } catch (e) {
+        console.error("Turnstile render error:", e);
+      }
+    }
+  }, [isDark]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).turnstile) {
+      initTurnstile();
+    }
+  }, [initTurnstile]);
 
   useEffect(() => {
     setShowNominalPajakState(showNominalPajak);
@@ -203,7 +259,7 @@ export function PublicSearch({
     setIsRateLimited(false);
     setPage(1); // Reset to page 1 for new search
     
-    const res = await searchPublicTaxData(query, tahunPajak, 1);
+    const res = await searchPublicTaxData(query, tahunPajak, 1, 10, turnstileToken || undefined);
     if (res.success) {
       const data = res.data || [];
       setResults(data);
@@ -262,14 +318,14 @@ export function PublicSearch({
     setIsLoadingMore(true);
     const nextPage = page + 1;
     
-    const res = await searchPublicTaxData(query, tahunPajak, nextPage);
+    const res = await searchPublicTaxData(query, tahunPajak, nextPage, 10, turnstileToken || undefined);
     if (res.success) {
       setResults(prev => [...prev, ...(res.data || [])]);
       setPage(nextPage);
       setHasMore(!!res.hasMore);
     }
     setIsLoadingMore(false);
-  }, [page, hasMore, isLoadingMore, query, tahunPajak, setResults, setPage, setHasMore, setIsLoadingMore]);
+  }, [page, hasMore, isLoadingMore, query, tahunPajak, turnstileToken, setResults, setPage, setHasMore, setIsLoadingMore]);
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -300,7 +356,7 @@ export function PublicSearch({
     setIsRateLimited(false);
     setPage(1);
     
-    const res = await searchPublicTaxData(term, tahunPajak, 1);
+    const res = await searchPublicTaxData(term, tahunPajak, 1, 10, turnstileToken || undefined);
     if (res.success) {
       const data = res.data || [];
       setResults(data);
@@ -356,7 +412,7 @@ export function PublicSearch({
     return () => observer.disconnect();
   }, [loadMore, hasMore, isLoadingMore]);
 
-  const handleCheckBapenda = async (nop: string) => {
+  const handleCheckBapenda = async (nop: string, itemId?: number) => {
     const lastCheck = cooldowns[nop] || 0;
     const now = Date.now();
     const COOLDOWN_MS = 15000; // 15 detik jeda aman
@@ -386,9 +442,9 @@ export function PublicSearch({
       } else {
         toast.warning(data.message);
         // Tampilkan popup bayar
-        const item = results.find(r => r.nop === nop);
+        const item = results.find(r => r.id === itemId || r.nop === nop || unmaskedNops[r.id] === nop);
         if (item) {
-          setShowPayRedirect({ nop: item.nop, namaWp: item.namaWp });
+          setShowPayRedirect({ nop: nop || unmaskedNops[item.id] || item.nop, namaWp: item.namaWp });
         }
       }
     } catch (error) {
@@ -399,12 +455,136 @@ export function PublicSearch({
     }
   };
 
-  const handleCopyNop = (nop: string) => {
-    const cleanNop = nop.replace(/\D/g, "");
-    navigator.clipboard.writeText(cleanNop);
-    setCopiedNop(nop);
-    toast.success(`NOP ${cleanNop} disalin`);
-    setTimeout(() => setCopiedNop(null), 2000);
+  const openPinModal = (item: PublicSearchResultItem, actionType: "view_pdf" | "print_receipt" | "copy_nop" | "pay_online" | "mutation" | "spop") => {
+    setPinTargetItem(item);
+    setPinActionType(actionType);
+    setPinValue("");
+    setPinError("");
+    setPinModalOpen(true);
+  };
+
+  const handlePdfEyeClick = (item: PublicSearchResultItem) => {
+    if (verifiedNops[item.id]) {
+      setOpenPdfMap(prev => ({ ...prev, [item.nop]: !prev[item.nop] }));
+    } else {
+      openPinModal(item, "view_pdf");
+    }
+  };
+
+  const handleReceiptPrintClick = (item: PublicSearchResultItem) => {
+    if (verifiedNops[item.id]) {
+      const unmaskedItem = { ...item, nop: unmaskedNops[item.id] || item.nop };
+      setSelectedReceiptItem(unmaskedItem);
+    } else {
+      openPinModal(item, "print_receipt");
+    }
+  };
+
+  const handleCopyNopClick = (item: PublicSearchResultItem) => {
+    if (verifiedNops[item.id] && unmaskedNops[item.id]) {
+      const cleanNop = unmaskedNops[item.id].replace(/\D/g, "");
+      navigator.clipboard.writeText(cleanNop);
+      setCopiedNop(item.nop);
+      toast.success(`NOP asli ${cleanNop} disalin`);
+      setTimeout(() => setCopiedNop(null), 2000);
+    } else {
+      openPinModal(item, "copy_nop");
+    }
+  };
+
+  const handlePayClick = (item: PublicSearchResultItem) => {
+    if (verifiedNops[item.id] && unmaskedNops[item.id]) {
+      handleCheckBapenda(unmaskedNops[item.id], item.id);
+    } else {
+      openPinModal(item, "pay_online");
+    }
+  };
+
+  const handleMutationClick = (item: PublicSearchResultItem) => {
+    if (verifiedNops[item.id]) {
+      setMutationItem(item);
+    } else {
+      openPinModal(item, "mutation");
+    }
+  };
+
+  const handleSpopClick = (item: PublicSearchResultItem) => {
+    if (verifiedNops[item.id]) {
+      setSpopItem(item);
+    } else {
+      openPinModal(item, "spop");
+    }
+  };
+
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pinValue.trim()) {
+      setPinError("Masukkan 4 digit PIN.");
+      return;
+    }
+    if (pinValue.trim().length !== 4 || !/^\d+$/.test(pinValue)) {
+      setPinError("PIN harus berupa 4 digit angka.");
+      return;
+    }
+
+    setPinVerifying(true);
+    setPinError("");
+
+    try {
+      if (pinActionType === "view_pdf") {
+        const res = await getSecureArsipUrl(pinTargetItem.id, pinValue.trim(), tahunPajak);
+        if (res.success && res.arsipUrl) {
+          setSpptUrls(prev => ({ ...prev, [pinTargetItem.id]: res.arsipUrl! }));
+          setVerifiedNops(prev => ({ ...prev, [pinTargetItem.id]: true }));
+          setUnmaskedNops(prev => ({ ...prev, [pinTargetItem.id]: pinTargetItem.nop }));
+          
+          setOpenPdfMap(prev => ({ ...prev, [pinTargetItem.nop]: true }));
+          
+          toast.success("PIN Terverifikasi! Dokumen E-SPPT dibuka.");
+          setPinModalOpen(false);
+        } else {
+          setPinError(res.message || "PIN Salah.");
+          if (res.rateLimited) {
+            setPinLockTimer(900);
+          }
+        }
+      } else {
+        const res = await getUnmaskedTaxData(pinTargetItem.id, pinValue.trim(), tahunPajak);
+        if (res.success && res.nop) {
+          setUnmaskedNops(prev => ({ ...prev, [pinTargetItem.id]: res.nop! }));
+          setVerifiedNops(prev => ({ ...prev, [pinTargetItem.id]: true }));
+          
+          toast.success("PIN Terverifikasi! Fitur terbuka.");
+          setPinModalOpen(false);
+
+          if (pinActionType === "copy_nop") {
+            const cleanNop = res.nop!.replace(/\D/g, "");
+            navigator.clipboard.writeText(cleanNop);
+            setCopiedNop(pinTargetItem.nop);
+            toast.success(`NOP asli ${cleanNop} disalin`);
+            setTimeout(() => setCopiedNop(null), 2000);
+          } else if (pinActionType === "print_receipt") {
+            const unmaskedItem = { ...pinTargetItem, nop: res.nop! };
+            setSelectedReceiptItem(unmaskedItem);
+          } else if (pinActionType === "pay_online") {
+            handleCheckBapenda(res.nop!, pinTargetItem.id);
+          } else if (pinActionType === "mutation") {
+            setMutationItem(pinTargetItem);
+          } else if (pinActionType === "spop") {
+            setSpopItem(pinTargetItem);
+          }
+        } else {
+          setPinError(res.message || "PIN Salah.");
+          if (res.rateLimited) {
+            setPinLockTimer(900);
+          }
+        }
+      }
+    } catch (err) {
+      setPinError("Gagal menghubungi server.");
+    } finally {
+      setPinVerifying(false);
+    }
   };
 
 
@@ -470,22 +650,43 @@ export function PublicSearch({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-400" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Misal: 35.15.118... atau NAMA ANDA"
-                aria-label="Cari NOP atau Nama Wajib Pajak"
-                maxLength={30}
-                className={`pl-11 h-12 rounded-2xl w-full text-base shadow-sm ${inputCls}`}
-              />
-
+          <form onSubmit={handleSearch} className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-3.5 h-5 w-5 text-gray-400" />
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Misal: 35.15.118... atau NAMA ANDA"
+                  aria-label="Cari NOP atau Nama Wajib Pajak"
+                  maxLength={30}
+                  className={`pl-11 h-12 rounded-2xl w-full text-base shadow-sm ${inputCls}`}
+                />
+              </div>
+              <Button 
+                type="submit" 
+                disabled={loading || (!!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken)} 
+                className={`h-12 w-full sm:w-32 rounded-2xl font-bold shadow-lg ${btnCls}`}
+              >
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Cari Data"}
+              </Button>
             </div>
-            <Button type="submit" disabled={loading} className={`h-12 w-full sm:w-32 rounded-2xl font-bold shadow-lg ${btnCls}`}>
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Cari Data"}
-            </Button>
+
+            {/* Turnstile Widget */}
+            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              <div className="flex justify-center mt-1.5 animate-in fade-in duration-300">
+                <div
+                  ref={turnstileContainerRef}
+                  key={isDark ? "dark" : "light"}
+                  className="min-h-[65px]"
+                />
+                <Script
+                  src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+                  strategy="afterInteractive"
+                  onLoad={initTurnstile}
+                />
+              </div>
+            )}
           </form>
 
           {/* Recent Searches */}
@@ -560,9 +761,9 @@ export function PublicSearch({
                 <CardHeader className={`p-5 pb-3 bg-gradient-to-r border-b flex flex-row items-center justify-between gap-4 ${cardHeaderBgCls}`}>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <p className={`text-[10px] font-black uppercase tracking-widest leading-none opacity-60 ${nopCls}`}>{item.nop}</p>
+                      <p className={`text-[10px] font-black uppercase tracking-widest leading-none opacity-60 ${nopCls}`}>{unmaskedNops[item.id] || item.nop}</p>
                       <button 
-                        onClick={() => handleCopyNop(item.nop)}
+                        onClick={() => handleCopyNopClick(item)}
                         className={cn(
                           "transition-all active:scale-90 hover:opacity-100 opacity-40 p-1 -m-1 rounded-md",
                           isDark ? "hover:bg-white/10" : "hover:bg-black/5"
@@ -587,7 +788,7 @@ export function PublicSearch({
                           nativeButton={false}
                           render={
                             <a 
-                              href={getBapendaUrl(item.nop)}
+                              href={getBapendaUrl(unmaskedNops[item.id] || item.nop)}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -697,8 +898,8 @@ export function PublicSearch({
                       {enableBapendaSync && (
                         <Button
                           variant="default"
-                          onClick={() => handleCheckBapenda(item.nop)}
-                          disabled={isCheckingAuto[item.nop]}
+                          onClick={() => handlePayClick(item)}
+                          disabled={isCheckingAuto[unmaskedNops[item.id] || item.nop]}
                           className={cn(
                             "flex-1 h-11 text-xs font-black uppercase tracking-widest gap-2.5 rounded-2xl transition-all shadow-lg active:scale-95",
                             isDark ? "bg-amber-600 hover:bg-amber-700 shadow-amber-900/20" : "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"
@@ -731,7 +932,7 @@ export function PublicSearch({
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => setMutationItem(item)}
+                          onClick={() => handleMutationClick(item)}
                           className={cn(
                             "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
                             isDark ? "border-sky-500/30 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20" : "border-sky-500/30 text-sky-600 hover:bg-sky-50"
@@ -744,7 +945,7 @@ export function PublicSearch({
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => setSpopItem(item)}
+                          onClick={() => handleSpopClick(item)}
                           className={cn(
                             "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
                             isDark ? "border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20" : "border-amber-500/30 text-amber-600 hover:bg-amber-50"
@@ -764,11 +965,11 @@ export function PublicSearch({
                       </div>
 
                       <div className="flex items-center gap-2.5 shrink-0">
-                        {item.arsipUrl && (
+                        {item.hasArsip && (
                           <Button 
                             variant="outline" 
                             size="icon"
-                            onClick={() => togglePdf(item.nop)}
+                            onClick={() => handlePdfEyeClick(item)}
                             className={cn(
                               "h-11 w-11 rounded-2xl transition-all active:scale-95 shadow-sm",
                               isDark
@@ -785,7 +986,7 @@ export function PublicSearch({
                           <Button 
                             variant="outline" 
                             size="icon"
-                            onClick={() => setSelectedReceiptItem(item)}
+                            onClick={() => handleReceiptPrintClick(item)}
                             className={cn(
                               "h-11 w-11 rounded-2xl transition-all active:scale-95 shadow-sm",
                               isDark
@@ -801,7 +1002,7 @@ export function PublicSearch({
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => setMutationItem(item)}
+                          onClick={() => handleMutationClick(item)}
                           className={cn(
                             "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
                             isDark ? "border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20" : "border-amber-500/30 text-amber-600 hover:bg-amber-50"
@@ -814,7 +1015,7 @@ export function PublicSearch({
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => setSpopItem(item)}
+                          onClick={() => handleSpopClick(item)}
                           className={cn(
                             "h-11 w-11 rounded-2xl transition-all shadow-sm active:scale-95",
                             isDark ? "border-sky-500/30 bg-sky-500/10 text-sky-400 hover:bg-sky-500/20" : "border-sky-500/30 text-sky-600 hover:bg-sky-50"
@@ -828,10 +1029,10 @@ export function PublicSearch({
                   )}
 
 
-                  {openPdfMap[item.nop] && item.arsipUrl && (
+                  {openPdfMap[item.nop] && spptUrls[item.id] && (
                     <div className="border-t bg-black/5 dark:bg-black/20 p-2 sm:p-4 animate-in slide-in-from-top-2 duration-300">
                       <iframe 
-                        src={`${item.arsipUrl}#toolbar=0&navpanes=0`} 
+                        src={`${spptUrls[item.id]}#toolbar=0&navpanes=0`} 
                         className="w-full h-[60vh] sm:h-[500px] rounded-xl border-dashed border-2 border-primary/20 bg-white" 
                         title={`E-SPPT NOP ${item.nop}`}
                       />
@@ -845,7 +1046,7 @@ export function PublicSearch({
                               ? "border-white/10 bg-white/5 text-white hover:bg-white/10" 
                               : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
                           )}
-                          onClick={() => window.open(item.arsipUrl || "", "_blank")}
+                          onClick={() => window.open(spptUrls[item.id] || "", "_blank")}
                           title="Cetak SPPT"
                         >
                           <Printer className="w-5.25 h-5.25" />
@@ -860,8 +1061,8 @@ export function PublicSearch({
                           title="Unduh PDF"
                           render={
                             <a 
-                              href={`${item.arsipUrl}?dl=1`} 
-                              download={`${item.nop}-${tahunPajak}.pdf`}
+                              href={`${spptUrls[item.id]}&dl=1`} 
+                              download={`${unmaskedNops[item.id] || item.nop}-${tahunPajak}.pdf`}
                             >
                               <Download className="w-5.25 h-5.25" />
                             </a>
@@ -915,7 +1116,7 @@ export function PublicSearch({
           open={!!mutationItem}
           onOpenChange={(open) => !open && setMutationItem(null)}
           oldData={{
-            nop: mutationItem.nop,
+            nop: unmaskedNops[mutationItem.id] || mutationItem.nop,
             namaWp: mutationItem.namaWp,
             alamat: mutationItem.alamat,
             luasTanah: mutationItem.luasTanah,
@@ -931,7 +1132,7 @@ export function PublicSearch({
         taxItem={
           spopItem
             ? {
-                nop: spopItem.nop,
+                nop: unmaskedNops[spopItem.id] || spopItem.nop,
                 namaWp: spopItem.namaWp,
                 alamat: spopItem.alamat,
                 luasTanah: spopItem.luasTanah,
@@ -947,6 +1148,73 @@ export function PublicSearch({
       />
 
 
+
+      {/* PIN Verification Dialog */}
+      <Dialog open={pinModalOpen} onOpenChange={setPinModalOpen}>
+        <DialogContent className={cn("rounded-3xl border-0 shadow-2xl max-w-sm w-full p-6", isDark ? "bg-[#0A192F] text-white" : "bg-white text-slate-900")}>
+          <DialogHeader className="text-center pb-2">
+            <DialogTitle className="text-xl font-bold uppercase tracking-tight flex items-center justify-center gap-2">
+              <Wallet className="w-5 h-5 text-amber-500" />
+              Verifikasi PIN NOP
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs leading-relaxed mt-2", isDark ? "text-blue-200/60" : "text-slate-500")}>
+              {pinActionType === "view_pdf" 
+                ? "Untuk melihat atau mengunduh berkas E-SPPT digital, masukkan 4 digit terakhir NOP Anda (sebelum digit paling akhir) yang tertera pada lembaran cetak SPPT fisik Anda."
+                : pinActionType === "mutation" || pinActionType === "spop"
+                ? "Untuk mengajukan perubahan data SPPT (Mutasi) atau mengisi formulir SPOP/LSPOP, masukkan 4 digit terakhir NOP Anda (sebelum digit paling akhir) yang tertera pada lembaran cetak SPPT fisik Anda."
+                : "Untuk melakukan transaksi pembayaran online atau menyalin NOP asli, masukkan 4 digit terakhir NOP Anda (sebelum digit paling akhir) yang tertera pada lembaran cetak SPPT fisik Anda."
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePinSubmit} className="space-y-4 mt-2">
+            <div className="text-center bg-black/5 dark:bg-white/5 py-2.5 px-4 rounded-xl text-xs font-mono tracking-wider opacity-80">
+              Format: 35.17.030.010.005-[ <span className="text-amber-500 font-bold">_ _ _ _</span> ].[X]
+            </div>
+            
+            <div>
+              <Input
+                type="text"
+                maxLength={4}
+                disabled={pinVerifying || pinLockTimer > 0}
+                placeholder="Contoh: 0123"
+                value={pinValue}
+                onChange={(e) => setPinValue(e.target.value.replace(/\D/g, ""))}
+                className={cn("h-12 rounded-xl text-center text-lg font-black tracking-[0.5em] w-full shadow-sm focus:ring-amber-500", inputCls)}
+              />
+              {pinError && (
+                <p className="text-xs text-rose-500 font-bold mt-2 text-center flex items-center justify-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {pinError}
+                </p>
+              )}
+              {pinLockTimer > 0 && (
+                <p className="text-xs text-rose-500 font-bold mt-2 text-center flex items-center justify-center gap-1">
+                  <ShieldAlert className="w-3.5 h-3.5 animate-pulse" />
+                  Terblokir! Coba lagi dalam {Math.ceil(pinLockTimer / 60)} menit ({pinLockTimer}s).
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2 pt-4">
+              <Button 
+                type="submit" 
+                disabled={pinVerifying || pinLockTimer > 0 || pinValue.trim().length !== 4} 
+                className={cn("h-11 w-full rounded-xl font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-900/20", pinVerifying && "opacity-80")}
+              >
+                {pinVerifying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verifikasi & Buka Berkas"}
+              </Button>
+              <Button 
+                type="button" 
+                variant="ghost"
+                onClick={() => setPinModalOpen(false)}
+                className="h-11 w-full rounded-xl font-semibold hover:bg-black/5 dark:hover:bg-white/5"
+              >
+                Batalkan
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <SpptNewDialog 
         open={showNewSpptDialog}

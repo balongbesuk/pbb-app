@@ -150,6 +150,19 @@ export async function GET(
       );
     }
 
+    // --- VERIFIKASI PIN 4-DIGIT UNTUK PENGGUNA NON-ADMIN ---
+    const userPin = (searchParams.get("pin") || "").trim();
+    if (cleanNop.length === 18) {
+      const standardPin = cleanNop.substring(13, 17);
+      const absolutePin = cleanNop.substring(14, 18);
+      if (userPin !== standardPin && userPin !== absolutePin) {
+        return new NextResponse(
+          createErrorPage("Akses Ditolak: PIN Salah", "Akses ditolak. Anda harus memasukkan Kode PIN 4-digit NOP yang tertera pada dokumen fisik Anda untuk melihat/mengunduh dokumen ini.", "rose"), 
+          { headers: { "Content-Type": "text/html" }, status: 403 }
+        );
+      }
+    }
+
     // OK, Kirim Filenya!
     const fileBuffer = fs.readFileSync(storagePath);
     return new NextResponse(fileBuffer, {

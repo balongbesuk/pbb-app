@@ -3,6 +3,7 @@ import path from "path";
 import AdmZip from "adm-zip";
 import { resolveSqliteDatabasePath } from "@/lib/database-path";
 import { prisma } from "@/lib/prisma";
+import { resolveSafeChildPath } from "@/lib/file-security";
 
 const MAX_RESTORE_ZIP_SIZE = 200 * 1024 * 1024;
 const MAX_RESTORE_ENTRIES = 5000;
@@ -69,7 +70,7 @@ export async function restoreDatabaseFromZip(zipBuffer: Buffer): Promise<{ succe
       for (const entry of uploadEntries) {
         if (entry.isDirectory) continue;
         const relPath = entry.entryName.replace(/^uploads\//, "");
-        const target = path.join(stagedUploadsDir, relPath);
+        const target = resolveSafeChildPath(stagedUploadsDir, relPath);
         const targetParent = path.dirname(target);
         ensureDir(targetParent);
         fs.writeFileSync(target, entry.getData());

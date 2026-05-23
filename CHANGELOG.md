@@ -1,5 +1,38 @@
 # Changelog
 
+## v10.0 - 2026-05-23: Deep Security Hardening, NOP PIN Protection, GIS Map Security & Cloudflare Turnstile Lifecycle Refactoring
+
+Pembaruan keamanan skala besar menyeluruh untuk mengamankan seluruh platform PBB App. Mengimplementasikan pembatasan akses data wajib pajak menggunakan Kunci 4-Digit NOP, proteksi brute-force PIN dengan penguncian sesi, perlindungan peta GIS publik, penyelarasan Cloudflare Turnstile, penambalan celah kritis autentikasi API Mobile dan Zip Slip cadangan, serta penyelarasan detail verifikasi pada pengajuan LSPOP/Mutasi, peta publik, dan alur pembayaran online Bapenda.
+
+### Pengamanan Akses Data Wajib Pajak & Kunci 4-Digit NOP (SEC-04 & SEC-05)
+- **NOP Masking di Seluruh Portal Publik**: Sensor otomatis Nomor Objek Pajak (NOP) menjadi format disensor (`35.17.XXX.XXX-XXXX.X`) di hasil pencarian publik warga dan popup Peta GIS wilayah, melindungi akun wajib pajak dari pemindaian massal (*mass data scraping*). Nama dan alamat tetap dibiarkan utuh demi kemudahan pencarian warga desa.
+- **Verifikasi PIN 4-Digit Warga**: Akses salin NOP asli, pembayaran online, unduh/pratinjau E-SPPT PDF secara server-side, serta pencetakan kuitansi modern kini diwajibkan melewati dialog **Verifikasi PIN NOP** yang meminta 4 digit nomor urut atau 4 digit absolut terakhir NOP dari lembar SPPT fisik warga.
+- **Proteksi Anti Brute-Force PIN**: Server Actions `getSecureArsipUrl` and `getUnmaskedTaxData` dilengkapi pembatasan IP persisten menggunakan `checkRateLimit`. Warga hanya diberikan **maksimal 5 kali kesempatan salah PIN** (dikurangi dari batas sebelumnya demi pengamanan tinggi), setelah itu sesi akses akan langsung **dikunci secara total selama 15 menit** untuk mencegah serangan tebakan kamus (*dictionary attack*).
+- **Integrasi Verifikasi PIN pada Pengajuan LSPOP & Mutasi PBB**: Menambahkan alur verifikasi PIN NOP 4-digit wajib sebelum tombol pengajuan baru LSPOP maupun Mutasi/Pemecahan PBB dapat diakses di portal publik. Setelah verifikasi berhasil, sensor pada NOP untuk baris tersebut akan dibuka secara otomatis dan aman sehingga data pengajuan tidak tersensor lagi.
+- **Integrasi Peta GIS Publik**:
+  - **Sensor NOP Publik**: Detail WP Belum Bayar pada peta GIS publik disensor sepenuhnya menggunakan sistem mask NOP agar data warga terlindung dari publikasi tidak sah.
+  - **Verifikasi PIN di Peta GIS**: Menambahkan verifikasi PIN NOP 4-digit saat warga mengakses opsi bayar online atau cek Bapenda dari detail WP Belum Bayar di Peta GIS publik.
+- **Pemisahan Hak Akses Admin (Peta GIS)**: Menambahkan deteksi halaman dinamis (`isPublicPortal`) pada komponen peta wilayah. Di area publik warga, NOP dan aksi disensor ketat dengan prompt verifikasi PIN, sedangkan di sisi dashboard admin (/peta internal admin), NOP ditampilkan utuh sepenuhnya tanpa sensor, NOP asli dapat disalin langsung, dan bisa diakses bebas tanpa prompt PIN.
+
+### Sinkronisasi & Perbaikan Alur Pembayaran Bapenda
+- **Perbaikan Link & NOP Terpotong pada Cek Bapenda**: Memperbaiki masalah nilai NOP yang terkirim terpotong atau kosong ke portal Bapenda Jombang saat melakukan "Bayar Online" tepat setelah verifikasi PIN berhasil. Kode disinkronkan untuk menggunakan nilai NOP yang baru dikembalikan dari server secara langsung alih-alih menunggu *asynchronous state update* React yang terlambat.
+- **Pemicu Popup Tagihan Belum Lunas**: Memperbaiki pemicu otomatis munculnya popup informasi tagihan belum lunas untuk diarahkan ke Bapenda. Ketika validasi status bayar ke Bapenda mengembalikan status "Belum Terbayar/Belum Lunas", popup instruksi bayar ke Bapenda akan muncul secara instan dengan link rujukan NOP lengkap yang aman dan akurat.
+- **Validasi NOP pada Tombol Cek Bapenda**: Menerapkan validasi PIN NOP secara ketat saat tombol "Cek Bapenda" ditekan pada status belum bayar, memastikan NOP asli yang lengkap dikirim ke website Bapenda hanya setelah pengguna terverifikasi secara sah memiliki akses ke properti tersebut.
+
+### Tambal Celah Keamanan Kritis (SEC-01 & SEC-02 & SEC-03)
+- **Broken Authentication Patch pada Mobile API (SEC-01)**: Penegakan ketat validasi JWT token petugas via `requireMobileAuth` pada seluruh method `GET` dan `POST` di endpoint [tax/route.ts](src/app/api/mobile/tax/route.ts), menghentikan total celah fraud pengubahan status `LUNAS` ilegal tanpa bayar dan kebocoran data mobile.
+- **Zip Slip Path Traversal Patch (SEC-02)**: Menggantikan fungsi rawan `path.join` dengan fungsi pengaman tangguh `resolveSafeChildPath` pada proses ekstraksi arsip cadangan ZIP di modul database restore [restore.ts](src/lib/restore.ts), mengamankan server dari ancaman overwriting file biner sistem/ webshell (Remote Code Execution).
+- **Rekomendasi Rotasi Kredensial (SEC-03)**: Penyusunan saran rotasi kunci rahasia NextAuth (`NEXTAUTH_SECRET`), password admin default, dan pengalihan ke mode `production` di berkas `.env.example` dan Laporan Audit Keamanan resmi.
+
+### Refaktorisasi Turnstile & Lifecycle SPA
+- **Penyelarasan Request siteverify**: Refaktor penulisan body fetch Turnstile `siteverify` di server action menggunakan standar `URLSearchParams`. Mengatasi tuntas respons error `invalid-input-secret` dari Cloudflare.
+- **Explicit Programmatic Rendering & Reset Tab**: Mengubah pemuatan widget Turnstile ke mode eksplisit (`?render=explicit`) menggunakan React `ref` dan callback `onLoad` pada berkas `public-search.tsx`. Menjamin widget Turnstile langsung muncul dan ter-render ulang secara instan saat warga berpindah-pindah tab antara Peta GIS dan Cek Status tanpa perlu me-refresh browser secara manual.
+- **Koreksi Kunci Pengujian Lokal**: Menyelaraskan kunci rahasia Turnstile di berkas `.env` dan `.env.example` ke kunci dummy resmi Cloudflare ending `AA` (`1x0000000000000000000000000000000AA`), mempermudah testing lokal yang selalu sukses secara out-of-the-box.
+
+### UI/UX Polish & Stabilitas Build
+- **Koreksi Overflow Dialog Button**: Menghapus penggunaan `<DialogFooter>` di dalam tag `<form>` modal PIN dan menggantinya dengan pembungkus flex `div` vertikal yang rapi. Mengatasi masalah tombol submit "Verifikasi & Buka Berkas" yang terlempar keluar modal dan melayang di sisi kiri layar.
+- **TypeScript 100% Compile Pass**: Menambahkan deklarasi properti `hasArsip: boolean` ke antarmuka tipe data `PublicSearchResultItem` pada halaman pencarian, menyelesaikan error typecheck pada `next build` dan `npm run typecheck` sehingga build produksi lulus sukses dengan nol kesalahan.
+
 ## v9.2 - 2026-05-06: Security, Resilience, Dashboard Analytics & Modern Receipts
 
 Pembaruan pada keamanan backend, penguatan upload/restore, optimasi performa, perbaikan akurasi perhitungan statistik pada dashboard, serta implementasi kwitansi landscape modern dengan konfigurasi biaya admin, visibilitas publik, dan perbaikan sinkronisasi schema database.
