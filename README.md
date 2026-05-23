@@ -1,81 +1,222 @@
 <img width="2536" height="923" alt="PBB Manager Dashboard" src="https://github.com/user-attachments/assets/d540a662-121b-41d0-8882-5cb8455aa37b" />
 
-# PBB Manager — Keamanan Maksimal & PIN NOP `v10.0`
+<div align="center">
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
-[![React Native](https://img.shields.io/badge/React%20Native-Expo-61DAFB?logo=react)](https://reactnative.dev)
-[![Prisma](https://img.shields.io/badge/Prisma-SQLite-2D3748?logo=prisma)](https://prisma.io)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css)](https://tailwindcss.com)
-[![Version](https://img.shields.io/badge/Version-10.0.0-blue)](https://github.com/balongbesuk/pbb-app/tags)
+# PBB Manager
 
-**PBB Manager v10.0 (Deep Security Hardening & NOP PIN Protection)** menghadirkan peningkatan keamanan skala penuh untuk melindungi data privasi wajib pajak desa dari scraping massal dan akses tidak sah. Dengan integrasi Cloudflare Turnstile, sistem verifikasi Kunci 4-Digit NOP fisik untuk pencarian warga dan peta GIS publik, perlindungan brute-force PIN dengan penguncian sesi, penambalan celah autentikasi API Mobile, perlindungan Zip Slip, serta sinkronisasi pembayaran Bapenda secara instan dan tangguh.
+**Sistem Manajemen Pajak Bumi & Bangunan Tingkat Desa**
+*All-in-one platform untuk digitalisasi penagihan PBB, pemetaan GIS wilayah, arsip SPPT digital, dan aplikasi petugas lapangan.*
+
+[![Next.js](https://img.shields.io/badge/Next.js_16-black?logo=next.js&logoColor=white)](https://nextjs.org)
+[![React 19](https://img.shields.io/badge/React_19-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![Expo SDK 55](https://img.shields.io/badge/Expo_SDK_55-000020?logo=expo&logoColor=white)](https://expo.dev)
+[![Prisma](https://img.shields.io/badge/Prisma_7.8-2D3748?logo=prisma&logoColor=white)](https://prisma.io)
+[![SQLite](https://img.shields.io/badge/SQLite_WAL-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS_4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/v10.0.0-blue)](./CHANGELOG.md)
+
+[📖 Panduan Instalasi](./docs/PANDUAN_INSTALASI.md) · [📘 Wiki Teknis](./docs/WIKI.md) · [📋 Changelog](./CHANGELOG.md) · [🔒 Security](./SECURITY.md)
+
+</div>
 
 ---
 
-## Fitur Utama v10.0 (Security & Core)
+## ✨ Kenapa PBB Manager?
 
-| Fitur | Deskripsi |
+PBB Manager dibangun khusus untuk menyelesaikan masalah nyata pengelolaan pajak di tingkat desa — mulai dari pencatatan manual yang rawan hilang, kesulitan pemantauan pembayaran real-time, hingga distribusi SPPT yang tidak efisien. Sistem ini menggabungkan **dashboard web admin**, **peta GIS interaktif**, **portal layanan warga**, dan **aplikasi mobile petugas lapangan** dalam satu platform terintegrasi.
+
+### Perbandingan dengan Cara Konvensional
+
+| Aspek | ❌ Cara Lama | ✅ PBB Manager |
+|---|---|---|
+| **Pencatatan** | Buku DHKP fisik rawan rusak/hilang | Database digital terenkripsi + backup otomatis |
+| **Monitoring** | Rekap manual akhir bulan | Dashboard real-time per wilayah + heatmap GIS |
+| **Distribusi SPPT** | Cetak massal, bagi manual | Smart Scan + arsip digital per NOP |
+| **Penagihan** | Petugas bawa buku tebal | Aplikasi mobile ringan + update status instan |
+| **Layanan Warga** | Datang ke kantor desa | Portal mandiri 24/7 + cetak kwitansi online |
+| **Keamanan Data** | File Excel tanpa proteksi | PIN NOP + rate limiting + XSS/CSRF protection |
+
+---
+
+## 🏗️ Arsitektur & Teknologi
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                        PBB Manager v10.0                        │
+├──────────────────┬──────────────────┬────────────────────────────┤
+│   Web Dashboard  │  Portal Publik   │    PBB Mobile v1.2.0      │
+│   (Admin/Petugas)│  (Warga)         │    (Petugas Lapangan)     │
+│                  │                  │                            │
+│  Next.js 16      │  Turnstile CAPTCHA│  Expo SDK 55             │
+│  React 19        │  PIN NOP 4-Digit │  React Native 0.85        │
+│  Tailwind CSS 4  │  NOP Masking     │  NativeWind               │
+├──────────────────┴──────────────────┴────────────────────────────┤
+│                     API Layer (Next.js App Router)               │
+│            Server Actions · REST API · JWT Auth                  │
+├──────────────────────────────────────────────────────────────────┤
+│                    Prisma 7.8 ORM + SQLite (WAL Mode)            │
+│          PRAGMA synchronous=NORMAL · busy_timeout=5000           │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+| Layer | Teknologi | Keterangan |
+|---|---|---|
+| **Frontend Web** | Next.js 16, React 19, Tailwind CSS 4 | SSR/SSG, React Compiler, App Router |
+| **Mobile** | Expo SDK 55, React Native 0.85 | APK/AAB via EAS Build |
+| **Database** | Prisma 7.8 + SQLite (WAL) | Portabel, zero-config, concurrent reads |
+| **Auth** | NextAuth v4 + JWT (Mobile) | Session-based (web), Bearer token (mobile) |
+| **GIS** | Leaflet + React-Leaflet | GPX ingestion, heatmap, polygon overlay |
+| **Security** | Cloudflare Turnstile, bcrypt, DOMPurify | CAPTCHA, hashing, sanitization |
+
+---
+
+## 🔐 Keamanan (v10.0 — Deep Hardening)
+
+PBB Manager v10.0 menerapkan pengamanan berlapis untuk melindungi privasi data wajib pajak:
+
+- **🔑 PIN NOP 4-Digit** — Akses data sensitif (salin NOP, cetak kwitansi, unduh E-SPPT, pengajuan mutasi) wajib verifikasi 4 digit terakhir NOP dari SPPT fisik
+- **🛡️ NOP Masking** — Semua NOP di portal publik dan peta GIS otomatis disensor (`35.17.XXX.XXX-XXXX.X`)
+- **⏱️ Rate Limiting** — Maks. 5 percobaan PIN salah → blokir IP selama 15 menit
+- **🤖 Cloudflare Turnstile** — Bot protection dengan rendering eksplisit, SPA-safe lifecycle
+- **🔒 Mobile API Guard** — JWT validation ketat di seluruh endpoint petugas
+- **📦 Zip Slip Protection** — Path traversal guard pada restore database
+- **🧹 XSS Protection** — Sanitasi metadata GIS dan input pengguna via DOMPurify
+- **🕵️ Anti-Indexing** — Triple-shield: `X-Robots-Tag` + meta robots + `robots.txt`
+
+> Detail lengkap: [SECURITY.md](./SECURITY.md) · [Wiki Keamanan](./docs/WIKI.md#hardening--keamanan-skala-tinggi-update-v100)
+
+---
+
+## 📦 Fitur Unggulan
+
+<details>
+<summary><strong>🗺️ GIS Command Center</strong></summary>
+
+- Peta interaktif dengan layer Dusun/RT/RW dan citra satelit
+- Heatmap gradasi warna berdasarkan persentase pelunasan wilayah
+- Upload massal file GPX dengan auto-detect metadata dari nama file
+- Detail WP belum bayar langsung dari popup peta
+- NOP tersensor di peta publik, transparan di peta admin
+</details>
+
+<details>
+<summary><strong>📱 PBB Mobile v1.2.0 (Petugas Lapangan)</strong></summary>
+
+- Login dengan JWT Bearer Token & koneksi server fleksibel
+- Pencarian WP cepat dengan lazy loading untuk ribuan data
+- Update status pembayaran real-time dari lapangan
+- Timeline penagihan harian sebagai bukti audit
+- Notifikasi transfer dan pengumuman sistem
+- Build APK/AAB otomatis via EAS Build
+</details>
+
+<details>
+<summary><strong>📄 Smart Scan Arsip Digital</strong></summary>
+
+- Unggah file E-SPPT massal dari Bapenda (ribuan halaman)
+- Algoritma pemecahan otomatis per NOP
+- Pratinjau dan unduh SPPT personal melalui portal
+- Kompresi arsip otomatis untuk efisiensi penyimpanan
+</details>
+
+<details>
+<summary><strong>🏛️ Portal Layanan Warga</strong></summary>
+
+- Cek tagihan mandiri 24/7 tanpa login
+- Cetak kwitansi A6 resmi & unduh E-SPPT PDF
+- Pengajuan mutasi (Waris, Jual Beli, Hibah) dengan generate dokumen .docx
+- Cek status pembayaran Bapenda real-time
+- Redirect pembayaran online EPAY Jombang
+</details>
+
+<details>
+<summary><strong>📊 Dashboard & Laporan</strong></summary>
+
+- Statistik realisasi real-time per Dusun/RT/RW
+- Grafik performa pembayaran dan trend tahunan
+- Export laporan Excel/PDF untuk kebutuhan pelaporan
+- Sinkronisasi data dengan DHKP Bapenda (Smart Sync)
+</details>
+
+---
+
+## 🔒 Hirarki Akses
+
+| Role | Platform | Kemampuan |
+|---|---|---|
+| **ADMIN** | Web Dashboard | Konfigurasi penuh: GIS, arsip, sinkronisasi data, manajemen pengguna, backup/restore |
+| **PETUGAS** | PBB Mobile | Penagihan lapangan: update status bayar, pencarian WP, riwayat transaksi harian |
+| **WARGA** | Portal Publik | Layanan mandiri: cek tagihan, cetak kwitansi, unduh E-SPPT, ajukan mutasi (setelah verifikasi PIN) |
+
+---
+
+## 🚀 Instalasi Cepat
+
+**Prasyarat**: [Node.js v20+](https://nodejs.org) · [Git](https://git-scm.com)
+
+```bash
+# 1. Clone repository
+git clone https://github.com/balongbesuk/pbb-app.git
+cd pbb-app
+
+# 2. Install & setup otomatis (database + seed + env)
+npm install
+
+# 3. Jalankan development server
+npm run dev
+```
+
+Buka `http://localhost:3000` — Login default: `admin` / `admin123`
+
+### Mobile App (Opsional)
+
+```bash
+cd pbb-mobile
+npm install
+npx expo start
+```
+
+> 📘 Panduan lengkap: [Panduan Instalasi](./docs/PANDUAN_INSTALASI.md) · [Checklist Produksi](./docs/CHECKLIST_PRODUCTION.md)
+
+---
+
+## 📚 Dokumentasi
+
+| Dokumen | Deskripsi |
 |---|---|
-| **NOP PIN Protection** | **BARU (v10.0):** Akses salin NOP asli, cetak kwitansi, pratinjau E-SPPT PDF, dan pengajuan LSPOP/Mutasi diwajibkan melewati verifikasi 4-digit terakhir NOP fisik warga dengan proteksi brute-force IP. |
-| **GIS Map Public Hardening** | **BARU (v10.0):** Sensor otomatis NOP pada peta GIS publik, verifikasi PIN dinamis saat warga mengakses opsi pembayaran dari peta, serta *bypass* akses penuh tanpa sensor bagi administrator. |
-| **Turnstile Lifecycle SPA** | **BARU (v10.0):** Widget Cloudflare Turnstile ter-render secara programmatic dan instan saat berpindah tab tanpa perlu refresh peramban secara manual. |
-| **Zip Slip & API Protection** | **BARU (v10.0):** Penambalan celah Broken Authentication pada API Mobile dengan pengamanan token JWT ketat, serta penambalan celah ekstraksi ZIP (Zip Slip) menggunakan `resolveSafeChildPath`. |
-| **PBB Mobile v1.2.0** | Aplikasi petugas dengan otentikasi Bearer Token ketat, dukungan aksi interaktif (Update Status, Transfer Respons), dan integrasi EPAY Jombang. |
-| **Bapenda Sync Resilience** | Sinkronisasi pembayaran Bapenda real-time yang tangguh, penanganan error latensi/SSL, dan integrasi pemicu popup tagihan belum terbayar. |
-| **Portal Mutasi (Self-Service)** | Memungkinkan warga mengajukan perubahan data (Hibah, Waris, Jual Beli) dan mencetak draf dokumen (.docx) setelah lolos verifikasi PIN. |
-| **Smart Scan Archive** | Algoritma ekstraksi otomatis yang memecah ribuan lembar E-SPPT menjadi file personal berdasarkan NOP secara instan dan disajikan melalui tautan aman server-side. |
+| [📖 Panduan Instalasi](./docs/PANDUAN_INSTALASI.md) | Setup server, konfigurasi database, inisialisasi awal |
+| [📘 Wiki Teknis & Keamanan](./docs/WIKI.md) | Arsitektur, hardening, indeks teknis GIS |
+| [📱 Panduan Mobile Build](./pbb-mobile/README.md) | Build APK/AAB dengan EAS Build |
+| [📋 Dokumentasi Penggunaan](./docs/DOKUMENTASI_PENGGUNAAN.md) | Panduan operasional harian admin & petugas |
+| [✅ Checklist Produksi](./docs/CHECKLIST_PRODUCTION.md) | Environment, backup, proxy, hardening sebelum go-live |
+| [📋 Changelog](./CHANGELOG.md) | Riwayat perubahan semua versi |
+| [🔒 Security Policy](./SECURITY.md) | Kebijakan keamanan & cara melaporkan kerentanan |
 
 ---
 
-## Hirarki Akses
+## 🤝 Kontribusi
 
-Sistem keamanan berlapis untuk menjaga integritas data desa:
+Kontribusi dalam bentuk apapun sangat diapresiasi! Silakan buka **Issue** untuk melaporkan bug atau **Pull Request** untuk perbaikan dan fitur baru.
 
-*   **ADMIN (Kepala Desa / Admin IT)**: Memegang kendali penuh atas konfigurasi instansi, GIS, sinkronisasi data pusat, pengelolaan arsip digital, dan manajemen akun pengguna.
-*   **PETUGAS (Kepala Dusun / Penarik)**: Menggunakan **PBB Manager Mobile** untuk pembaruan status bayar di lapangan, manajemen wajib pajak, dan memonitor riwayat penagihan harian.
-*   **PENGGUNA (Warga)**: Akses terbatas untuk cek tagihan mandiri, cetak PDF, pratinjau berkas, dan pengajuan mutasi SPPT setelah melewati verifikasi PIN.
-
----
-
-## Dokumentasi & Panduan
-
-Kami telah menyusun panduan lengkap agar Anda dapat mengoperasikan sistem ini dengan mudah:
-
-1.  **[Wiki Teknis & Keamanan](./docs/WIKI.md)**: Ringkasan arsitektur, hardening keamanan, dan indeks teknis GIS.
-2.  **[Panduan Instalasi Pemula](./docs/PANDUAN_INSTALASI.md)**: Langkah demi langkah instalasi dari nol untuk pengguna baru.
-3.  **[Panduan Mobile App Build](./pbb-mobile/README.md)**: Petunjuk cara build file APK menggunakan EAS Build.
-4.  **[Dokumentasi Penggunaan](./docs/DOKUMENTASI_PENGGUNAAN.md)**: Panduan operasional fitur harian bagi admin dan petugas.
-5.  **[Checklist Produksi](./docs/CHECKLIST_PRODUCTION.md)**: Pemeriksaan environment, backup, proxy, upload, dan hardening sebelum go-live.
+1. Fork repository ini
+2. Buat branch fitur: `git checkout -b fitur/fitur-baru`
+3. Commit perubahan: `git commit -m "feat: tambah fitur baru"`
+4. Push ke branch: `git push origin fitur/fitur-baru`
+5. Buka Pull Request
 
 ---
 
-## Instalasi Cepat (Automated Setup)
+## 📄 Lisensi
 
-Instalasi sekarang sepenuhnya otomatis. Cukup pastikan Anda memiliki **Node.js (v20+)** dan **Git**.
-
-1. **Clone Proyek:**
-   ```bash
-   git clone https://github.com/balongbesuk/pbb-app.git
-   cd pbb-app
-   ```
-
-2. **Setup Otomatis:**
-   Gunakan satu perintah ini untuk menyiapkan konfigurasi `.env`, mendownload library, dan menginisialisasi database:
-   ```bash
-   npm install
-   ```
-
-3. **Jalankan:**
-   ```bash
-   # Mode Pengembangan (Backend)
-   npm run dev
-
-   # Jalankan Mobile (Expo)
-   cd pbb-mobile
-   npx expo start
-   ```
+Proyek ini dilisensikan di bawah [MIT License](./LICENSE) — bebas digunakan, dimodifikasi, dan didistribusikan.
 
 ---
 
-*Dikembangkan untuk kemajuan digitalisasi desa di Indonesia.*
-*Terakhir Diperbarui: Mei 2026*
+<div align="center">
+
+**Dikembangkan untuk kemajuan digitalisasi desa di Indonesia** 🇮🇩
+
+*Dibuat dengan ❤️ oleh [Balongbesuk](https://github.com/balongbesuk) · Terakhir diperbarui: Mei 2026*
+
+</div>
