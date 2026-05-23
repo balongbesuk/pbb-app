@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePublicThemeContext, PublicThemeProvider } from "./public-theme-provider";
 import { cn } from "@/lib/utils";
 import { ParticleBackground } from "../particle-background";
+import { PublicTurnstileProvider, usePublicTurnstile } from "./public-turnstile-provider";
 
 const DARK_CSS_VARS: [string, string][] = [
   ["--background", "#050B14"],
@@ -54,6 +55,7 @@ function PublicThemeInner({
   className?: string;
 }) {
   const { theme } = usePublicThemeContext();
+  const { turnstileContainerRef } = usePublicTurnstile();
   const isDark = theme === "dark";
   const divRef = useRef<HTMLDivElement>(null);
 
@@ -87,6 +89,13 @@ function PublicThemeInner({
       <ParticleBackground isDark={isDark} />
       <div className={cn("relative z-10 w-full flex-grow flex flex-col", className)}>
         {children}
+        
+        {/* Turnstile widget container - absolute positioned, completely out of document flow */}
+        {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+          <div className="absolute bottom-4 right-4 z-50 pointer-events-auto">
+            <div ref={turnstileContainerRef} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -104,7 +113,9 @@ export function PublicThemeWrapper({
 }) {
   return (
     <PublicThemeProvider>
-      <PublicThemeInner className={className}>{children}</PublicThemeInner>
+      <PublicTurnstileProvider>
+        <PublicThemeInner className={className}>{children}</PublicThemeInner>
+      </PublicTurnstileProvider>
     </PublicThemeProvider>
   );
 }

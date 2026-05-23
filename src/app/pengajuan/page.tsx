@@ -2,8 +2,9 @@ import { getVillageConfig } from "@/app/actions/settings-actions";
 import { toTitleCase } from "@/lib/utils";
 import { PublicThemeWrapper } from "@/components/public/public-theme-wrapper";
 import { PublicNav } from "@/components/public/public-nav";
-import { FilePlus2, ArrowLeft, Github } from "lucide-react";
+import { FilePlus2, ArrowLeft } from "lucide-react";
 import { SpptNewForm } from "@/components/public/sppt-new-form";
+import { PublicGithubIcon } from "@/components/public/public-github-icon";
 import Link from "next/link";
 import { Suspense } from "react";
 import "../public.css";
@@ -60,15 +61,7 @@ export default async function PengajuanPage() {
         <p className="public-footer-text text-xs font-bold uppercase tracking-widest mb-1.5">PBB Manager &copy; {new Date().getFullYear()}</p>
         <p className="public-footer-text text-[10px] font-medium mb-3">{namaDesa ? `Pemerintah Desa ${namaDesa}` : "PBB Manager"}</p>
         <div className="flex justify-center mt-3">
-          <a
-            href="https://github.com/balongbesuk/pbb-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors opacity-40 hover:opacity-100"
-            title="GitHub Repository"
-          >
-            <Github className="w-5 h-5 text-foreground" />
-          </a>
+          <PublicGithubIcon />
         </div>
       </footer>
     </PublicThemeWrapper>

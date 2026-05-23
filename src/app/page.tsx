@@ -1,10 +1,11 @@
 import { getVillageConfig } from "@/app/actions/settings-actions";
 import { toTitleCase } from "@/lib/utils";
 import { PublicTabs } from "@/components/public/public-tabs";
-import { Github, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { PublicThemeWrapper } from "@/components/public/public-theme-wrapper";
 import { PublicNav } from "@/components/public/public-nav";
 import { PublicSelfService } from "@/components/public/public-self-service";
+import { PublicGithubIcon } from "@/components/public/public-github-icon";
 import "./public.css";
 
 // Enable caching with revalidation every 30 seconds to support BFCache
@@ -66,15 +67,7 @@ export default async function IndexPage({
         <p className="public-footer-text text-xs font-bold uppercase tracking-widest mb-1.5">PBB Manager &copy; {new Date().getFullYear()}</p>
         <p className="public-footer-text text-[10px] font-medium mb-3">{namaDesa ? `Pemerintah Desa ${namaDesa}` : "PBB Manager"}</p>
         <div className="flex justify-center mt-3">
-          <a
-            href="https://github.com/balongbesuk/pbb-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors opacity-40 hover:opacity-100"
-            title="GitHub Repository"
-          >
-            <Github className="w-5 h-5 text-foreground" />
-          </a>
+          <PublicGithubIcon />
         </div>
       </footer>
     </PublicThemeWrapper>

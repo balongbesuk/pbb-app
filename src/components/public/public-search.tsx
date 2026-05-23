@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Script from "next/script";
 import { searchPublicTaxData, getSecureArsipUrl, getUnmaskedTaxData } from "@/app/actions/public-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +13,7 @@ import {
   Copy, Check, FileText, Printer, FilePlus2
 } from "lucide-react";
 import { usePublicThemeContext } from "@/components/public/public-theme-provider";
+import { usePublicTurnstile } from "@/components/public/public-turnstile-provider";
 import { formatCurrency, formatDate, formatDateNoTime, formatJatuhTempo, cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { UnpaidBillDialog } from "@/components/tax/unpaid-bill-dialog";
@@ -95,7 +95,7 @@ export function PublicSearch({
   const [selectedReceiptItem, setSelectedReceiptItem] = useState<PublicSearchResultItem | null>(null);
 
   // States for Turnstile and PIN Verification (SEC-05)
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const { turnstileToken, resetTurnstile } = usePublicTurnstile();
   const [verifiedNops, setVerifiedNops] = useState<Record<number, boolean>>({});
   const [unmaskedNops, setUnmaskedNops] = useState<Record<number, string>>({});
   const [spptUrls, setSpptUrls] = useState<Record<number, string>>({});
@@ -124,34 +124,6 @@ export function PublicSearch({
       return () => clearInterval(interval);
     }
   }, [pinLockTimer]);
-
-  const turnstileContainerRef = useRef<HTMLDivElement>(null);
-
-  const initTurnstile = useCallback(() => {
-    if (typeof window !== "undefined" && (window as any).turnstile && turnstileContainerRef.current) {
-      try {
-        turnstileContainerRef.current.innerHTML = "";
-        (window as any).turnstile.render(turnstileContainerRef.current, {
-          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-          callback: (token: string) => {
-            setTurnstileToken(token);
-          },
-          "expired-callback": () => {
-            setTurnstileToken(null);
-          },
-          theme: isDark ? "dark" : "light",
-        });
-      } catch (e) {
-        console.error("Turnstile render error:", e);
-      }
-    }
-  }, [isDark]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).turnstile) {
-      initTurnstile();
-    }
-  }, [initTurnstile]);
 
   useEffect(() => {
     setShowNominalPajakState(showNominalPajak);
@@ -260,6 +232,7 @@ export function PublicSearch({
     setPage(1); // Reset to page 1 for new search
     
     const res = await searchPublicTaxData(query, tahunPajak, 1, 10, turnstileToken || undefined);
+    resetTurnstile();
     if (res.success) {
       const data = res.data || [];
       setResults(data);
@@ -319,6 +292,7 @@ export function PublicSearch({
     const nextPage = page + 1;
     
     const res = await searchPublicTaxData(query, tahunPajak, nextPage, 10, turnstileToken || undefined);
+    resetTurnstile();
     if (res.success) {
       setResults(prev => [...prev, ...(res.data || [])]);
       setPage(nextPage);
@@ -357,6 +331,7 @@ export function PublicSearch({
     setPage(1);
     
     const res = await searchPublicTaxData(term, tahunPajak, 1, 10, turnstileToken || undefined);
+    resetTurnstile();
     if (res.success) {
       const data = res.data || [];
       setResults(data);
@@ -672,21 +647,6 @@ export function PublicSearch({
               </Button>
             </div>
 
-            {/* Turnstile Widget */}
-            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-              <div className="flex justify-center mt-1.5 animate-in fade-in duration-300">
-                <div
-                  ref={turnstileContainerRef}
-                  key={isDark ? "dark" : "light"}
-                  className="min-h-[65px]"
-                />
-                <Script
-                  src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-                  strategy="afterInteractive"
-                  onLoad={initTurnstile}
-                />
-              </div>
-            )}
           </form>
 
           {/* Recent Searches */}

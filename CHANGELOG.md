@@ -25,8 +25,15 @@ Pembaruan keamanan skala besar menyeluruh untuk mengamankan seluruh platform PBB
 - **Rekomendasi Rotasi Kredensial (SEC-03)**: Penyusunan saran rotasi kunci rahasia NextAuth (`NEXTAUTH_SECRET`), password admin default, dan pengalihan ke mode `production` di berkas `.env.example` dan Laporan Audit Keamanan resmi.
 
 ### Refaktorisasi Turnstile & Lifecycle SPA
+- **Arsitektur Cloudflare Turnstile Global & Persistent**: Memindahkan widget Turnstile dari komponen pencarian lokal (`PublicSearch`) ke level layout wrapper global (`PublicTurnstileProvider`). Hal ini menjamin widget tetap persisten dan tidak pernah di-*unmount* saat perpindahan tab (Cek Status ↔ Peta GIS), menghilangkan jeda waktu muat ulang, dan secara dramatis mempercepat interaksi pencarian warga.
+- **Auto-Reset Token Asinkron**: Menambahkan pemanggilan `resetTurnstile()` otomatis di latar belakang secara asinkron segera setelah pencarian awal, pencarian riwayat, atau pagination (*load more*) dieksekusi, memecahkan masalah token sekali-pakai (*single-use*) yang kedaluwarsa secara otomatis secara transparan.
+- **Integrasi Visual Status Keamanan pada Ikon GitHub**: Merekayasa ulang tombol repositori GitHub di footer portal publik untuk bertindak sebagai indikator visual status keamanan Turnstile secara real-time di seluruh halaman publik (`/`, `/spop`, `/pengajuan`):
+  - **Memverifikasi (Pulsing Blue Ring 🔵)**: Indikator ring biru berdenyut lembut saat inisialisasi handshake keamanan di latar belakang.
+  - **Lolos Verifikasi (Glowing Emerald Circle 🟢)**: Menampilkan pendaran hijau zamrud premium dengan badge vektor lingkaran hijau solid dan centang putih tebal di pojok kanan atas, dirancang presisi berbasis referensi visual modern.
+  - **Terdeteksi Bot (Rose Red Alert Circle 🔴)**: Memberikan pendaran merah neon, badge lingkaran merah tanda silang putih, serta efek getaran (*shake animation*) dan tameng yang memantul jika terdeteksi bot otomatisasi.
+  - **Sesi Kedaluwarsa (Amber Reload Circle 🟡)**: Memunculkan pendaran kuning/oranye dengan badge lingkaran berisi panah melingkar searah jarum jam (`RotateCw`) yang berputar perlahan untuk menyarankan warga melakukan refresh.
+- **Penempatan Container Invisible Efisien**: Mengatur Turnstile ke mode invisible (`appearance: "interaction-only"`) di latar belakang, dan memosisikan kontainer keluar dari alur dokumen utama (absolute bottom-right), meniadakan total ruang kosong atau pergeseran margin visual.
 - **Penyelarasan Request siteverify**: Refaktor penulisan body fetch Turnstile `siteverify` di server action menggunakan standar `URLSearchParams`. Mengatasi tuntas respons error `invalid-input-secret` dari Cloudflare.
-- **Explicit Programmatic Rendering & Reset Tab**: Mengubah pemuatan widget Turnstile ke mode eksplisit (`?render=explicit`) menggunakan React `ref` dan callback `onLoad` pada berkas `public-search.tsx`. Menjamin widget Turnstile langsung muncul dan ter-render ulang secara instan saat warga berpindah-pindah tab antara Peta GIS dan Cek Status tanpa perlu me-refresh browser secara manual.
 - **Koreksi Kunci Pengujian Lokal**: Menyelaraskan kunci rahasia Turnstile di berkas `.env` dan `.env.example` ke kunci dummy resmi Cloudflare ending `AA` (`1x0000000000000000000000000000000AA`), mempermudah testing lokal yang selalu sukses secara out-of-the-box.
 
 ### UI/UX Polish & Stabilitas Build
