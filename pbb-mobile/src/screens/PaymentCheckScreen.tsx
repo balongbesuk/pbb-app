@@ -22,7 +22,7 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
   const [bapendaConfig, setBapendaConfig] = useState<any>(null);
   const [syncModal, setSyncModal] = useState<{ visible: boolean; type: 'success' | 'unpaid' | 'error'; message: string; wpData?: any }>({ visible: false, type: 'success', message: '' });
   const [isAdmin, setIsAdmin] = useState(false);
-  const [pinModal, setPinModal] = useState<{ visible: boolean; wpData?: any }>({ visible: false });
+  const [pinModal, setPinModal] = useState<{ visible: boolean; wpData?: any; actionType?: 'bapenda' | 'pin' }>({ visible: false });
   const [pin, setPin] = useState('');
   const [pinLoading, setPinLoading] = useState(false);
   const [pinError, setPinError] = useState('');
@@ -92,12 +92,27 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
     } catch (err) { setErrorMsg('Gagal mengambil data. Pastikan server aktif.'); } finally { setLoading(false); }
   };
 
-  const isPinned = (item: any) => pinnedList.some((p) => p.nop === item.nop);
-  const togglePin = async (item: any) => {
+  const isPinned = (item: any) => pinnedList.some((p) => p.nop === item.nop || (item.id && p.nop.replace(/\\D/g, '') === item.nop.replace(/\\D/g, '')));
+  const togglePin = async (item: any, verifiedNop?: string) => {
     if (!item) return;
+    
+    if (!isPinned(item) && !isAdmin && item.nop.includes('X') && !verifiedNop) {
+      setPin(''); setPinError(''); setPinModal({ visible: true, wpData: item, actionType: 'pin' });
+      return;
+    }
+
     try {
-      const newList = isPinned(item) ? pinnedList.filter((p) => p.nop !== item.nop) : [...pinnedList, { nop: item.nop, name: item.namaWp, status: item.status }];
-      await AsyncStorage.setItem('@pinned_nops_v2', JSON.stringify(newList)); setPinnedList(newList);
+      const nopToSave = verifiedNop || item.nop;
+      const newList = isPinned(item) 
+        ? pinnedList.filter((p) => p.nop !== item.nop && p.nop !== nopToSave) 
+        : [...pinnedList, { nop: nopToSave, name: item.namaWp, status: item.status }];
+        
+      await AsyncStorage.setItem('@pinned_nops_v2', JSON.stringify(newList)); 
+      setPinnedList(newList);
+
+      if (verifiedNop && verifiedNop !== item.nop) {
+        setResults(prev => prev.map(r => r.id === item.id ? { ...r, nop: verifiedNop } : r));
+      }
     } catch (e) {}
   };
 
@@ -109,7 +124,7 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
     try {
       const actualNop = verifiedNop || item.nop;
       if (!isAdmin && actualNop.includes('X')) {
-        setPin(''); setPinError(''); setPinModal({ visible: true, wpData: item }); return;
+        setPin(''); setPinError(''); setPinModal({ visible: true, wpData: item, actionType: 'bapenda' }); return;
       }
       setLoading(true);
       const res = await fetch(joinServerUrl(serverUrl, '/api/check-bapenda'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nop: actualNop, tahun: item.tahun }) });
@@ -133,7 +148,11 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
       const data = await res.json();
       if (data.success && data.nop) {
         setPinModal({ visible: false });
-        handleBapendaAction(pinModal.wpData, data.nop);
+        if (pinModal.actionType === 'pin') {
+          togglePin(pinModal.wpData, data.nop);
+        } else {
+          handleBapendaAction(pinModal.wpData, data.nop);
+        }
       } else {
         setPinError(data.message || 'Gagal memverifikasi PIN');
       }
