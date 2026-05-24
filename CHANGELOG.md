@@ -17,6 +17,15 @@ Pembaruan besar-besaran untuk mengukuhkan **PBB Mobile** (sebelumnya berada di v
 
 Pembaruan keamanan skala besar menyeluruh untuk mengamankan seluruh platform PBB App. Mengimplementasikan pembatasan akses data wajib pajak menggunakan Kunci 4-Digit NOP, proteksi brute-force PIN dengan penguncian sesi, perlindungan peta GIS publik, penyelarasan Cloudflare Turnstile, penambalan celah kritis autentikasi API Mobile dan Zip Slip cadangan, serta penyelarasan detail verifikasi pada pengajuan LSPOP/Mutasi, peta publik, dan alur pembayaran online Bapenda.
 
+### Sistem Notifikasi & Real-time UI
+- **Pemberitahuan Instan Lintas Halaman**: Memodifikasi komponen `NotificationBell` untuk memicu pembaruan instan (*immediate fetch*) saat perpindahan halaman terdeteksi via hook `usePathname`. Mengatasi kelambatan notifikasi yang sebelumnya tertunda akibat siklus polling 60 detik.
+- **Sinkronisasi Notifikasi Otomatis**: Memastikan notifikasi penarikan/pembatalan antara Admin dan Penarik muncul secara seketika saat aksi dilakukan pada browser yang sama maupun berbeda.
+
+### Pengamanan Session & Anti-Loop (Self-Healing Session)
+- **Mekanisme Self-Healing Session**: Mengintegrasikan sistem pemulihan otomatis pada callback NextAuth JWT (`src/lib/auth.ts`). Jika database di-seed/reset ulang, sistem akan secara otomatis melacak kecocokan user via `username` yang unik dan mengupdate `userId` yang basi pada JWT token secara senyap tanpa mengganggu kenyamanan pengguna.
+- **Proteksi Detoksifikasi Session & Anti-Loop**: Menyempurnakan layout dasbor utama (`src/app/(dashboard)/layout.tsx`) dengan memverifikasi keberadaan user di database aktif. Jika session basi dan tidak dapat dipulihkan (misal karena tidak ada username di cookie lama), session akan dinonaktifkan secara total (`session.user = null` di NextAuth) untuk memutus rantai *infinite redirect loop* (`/login` ↔ `/dashboard`) dan mengarahkan pengguna secara aman ke halaman login bersih.
+- **Koreksi Exception NEXT_REDIRECT**: Memindahkan fungsi `redirect()` keluar dari blok penanganan error (`try-catch`) pada `DashboardLayout`. Mengatasi masalah error internal Next.js yang menangkap error pengalihan sebagai kegagalan kueri database.
+
 ### Pengamanan Akses Data Wajib Pajak & Kunci 4-Digit NOP (SEC-04 & SEC-05)
 - **NOP Masking di Seluruh Portal Publik**: Sensor otomatis Nomor Objek Pajak (NOP) menjadi format disensor (`35.17.XXX.XXX-XXXX.X`) di hasil pencarian publik warga dan popup Peta GIS wilayah, melindungi akun wajib pajak dari pemindaian massal (*mass data scraping*). Nama dan alamat tetap dibiarkan utuh demi kemudahan pencarian warga desa.
 - **Verifikasi PIN 4-Digit Warga**: Akses salin NOP asli, pembayaran online, unduh/pratinjau E-SPPT PDF secara server-side, serta pencetakan kuitansi modern kini diwajibkan melewati dialog **Verifikasi PIN NOP** yang meminta 4 digit nomor urut atau 4 digit absolut terakhir NOP dari lembar SPPT fisik warga.

@@ -156,13 +156,21 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
 
                   <Text style={{ color: 'rgba(255,255,255,0.5)', ...appTheme.typo.label, marginBottom: 12 }}>ALAMAT WEBSITE DESA</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: appTheme.radius.md, paddingHorizontal: 16, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}>
-                    <Text style={{ color: isHttps ? appTheme.colors.success : appTheme.colors.primary, fontSize: 13, fontWeight: '800' }}>{isHttps ? 'HTTPS://' : 'HTTP://'}</Text>
+                    <ScalableButton onPress={() => setIsHttps(!isHttps)} style={{ marginRight: 4 }}>
+                      <Text style={{ color: isHttps ? appTheme.colors.success : appTheme.colors.primary, fontSize: 13, fontWeight: '800' }}>{isHttps ? 'HTTPS://' : 'HTTP://'}</Text>
+                    </ScalableButton>
                     <TextInput
-                      style={{ flex: 1, color: 'white', paddingHorizontal: 12, paddingVertical: 18, fontSize: 17, fontWeight: '700' }}
+                      style={{ flex: 1, color: 'white', paddingHorizontal: 8, paddingVertical: 18, fontSize: 17, fontWeight: '700' }}
                       placeholder="desa.id"
                       placeholderTextColor="rgba(255,255,255,0.3)"
                       value={serverUrl.replace(/^https?:\/\//, '')}
-                      onChangeText={setServerUrl}
+                      onChangeText={(text) => {
+                        const cleanText = text.replace(/^https?:\/\//, '');
+                        if (cleanText.includes('10.0.2.2') || cleanText.includes('192.168.') || cleanText.includes('localhost')) {
+                          setIsHttps(false);
+                        }
+                        setServerUrl(cleanText);
+                      }}
                       autoCapitalize="none"
                       autoCorrect={false}
                     />

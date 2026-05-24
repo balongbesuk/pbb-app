@@ -23,16 +23,17 @@ export default function GisMapScreen({ route, navigation }: ScreenProps<'GisMap'
   useEffect(() => { 
     const setupMap = async () => {
       const base = normalizeServerUrl(serverUrl);
+      const cacheBuster = `_t=${Date.now()}`;
       try {
         const token = await AsyncStorage.getItem('@admin_magic_token');
         if (token) {
-          setMapUrl(joinServerUrl(base, `/mobile-map.html?token=${encodeURIComponent(token)}`));
+          setMapUrl(joinServerUrl(base, `/mobile-map.html?token=${encodeURIComponent(token)}&${cacheBuster}`));
           return;
         }
       } catch (e) {
         console.error('Failed to get auth token for map', e);
       }
-      setMapUrl(joinServerUrl(base, '/mobile-map.html')); 
+      setMapUrl(joinServerUrl(base, `/mobile-map.html?${cacheBuster}`)); 
     };
     setupMap();
   }, [serverUrl]);

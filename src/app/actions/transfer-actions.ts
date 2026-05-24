@@ -214,7 +214,11 @@ export async function getNotifications() {
   try {
     const session = await getServerSession(authOptions);
     const user = session?.user as SessionUserWithRole | undefined;
-    if (!user) return [];
+    console.log("getNotifications called - session user:", user);
+    if (!user) {
+      console.log("getNotifications: user is not defined in session");
+      return [];
+    }
 
     // Hapus notifikasi yang lebih dari 7 hari (cleanup otomatis)
     const sevenDaysAgo = new Date();
@@ -226,12 +230,15 @@ export async function getNotifications() {
       },
     });
 
-    return await prisma.notification.findMany({
+    const notifs = await prisma.notification.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: 20,
     });
-  } catch {
+    console.log(`getNotifications: found ${notifs.length} notifications for user ${user.id}`);
+    return notifs;
+  } catch (err) {
+    console.error("Error in getNotifications server action:", err);
     return [];
   }
 }
