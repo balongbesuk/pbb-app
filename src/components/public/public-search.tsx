@@ -921,7 +921,7 @@ export function PublicSearch({
                     <CardFooter className={`p-4 sm:p-5 border-t flex items-center justify-between gap-3 ${cardFooterCls}`}>
                       <div className="flex-1 min-w-0 h-11 flex items-center justify-center gap-2 px-4 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 whitespace-nowrap">
                         <CheckCircle2 className="w-5 h-5 shrink-0" />
-                        <span className="truncate">Lunas</span>
+                        <span className="truncate hidden sm:inline">Lunas</span>
                       </div>
 
                       <div className="flex items-center gap-2.5 shrink-0">

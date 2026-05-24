@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Linking, Alert } from 'react-native';
+import { View, Text, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Linking, Alert, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
-import { joinServerUrl } from '../utils/server';
+import { joinServerUrl, authenticatedFetch } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppModalCard } from '../components/AppModalCard';
@@ -21,10 +21,15 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
   const [pinnedList, setPinnedList] = useState<{ nop: string; name: string; status?: string }[]>([]);
   const [bapendaConfig, setBapendaConfig] = useState<any>(null);
   const [syncModal, setSyncModal] = useState<{ visible: boolean; type: 'success' | 'unpaid' | 'error'; message: string; wpData?: any }>({ visible: false, type: 'success', message: '' });
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [pinModal, setPinModal] = useState<{ visible: boolean; wpData?: any }>({ visible: false });
+  const [pin, setPin] = useState('');
+  const [pinLoading, setPinLoading] = useState(false);
+  const [pinError, setPinError] = useState('');
   
   const { health, checkHealth } = useServerHealth(serverUrl);
 
-  useEffect(() => { loadPinnedNopes(); }, []);
+  useEffect(() => { loadPinnedNopes(); AsyncStorage.getItem('@auth_user').then(val => setIsAdmin(!!val)); }, []);
 
   const loadPinnedNopes = async () => { try { const s = await AsyncStorage.getItem('@pinned_nops_v2'); if (s) setPinnedList(JSON.parse(s)); } catch (e) {} };
 
@@ -40,20 +45,43 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
     if (!targetNop.trim()) return;
     setLoading(true); setErrorMsg(''); setResults([]);
     try {
-      const response = await fetch(`${joinServerUrl(serverUrl, '/api/mobile/tax')}?nop=${encodeURIComponent(targetNop.trim())}`);
+      const url = isAdmin ? `/api/mobile/tax?nop=${encodeURIComponent(targetNop.trim())}` : `/api/mobile/public/tax?query=${encodeURIComponent(targetNop.trim())}`;
+      const response = isAdmin ? await authenticatedFetch(serverUrl, url) : await fetch(joinServerUrl(serverUrl, url));
       if (response.ok) {
         const data = await response.json();
         if (data.success && Array.isArray(data.data)) {
           setResults(data.data);
           const updated = pinnedList.map((p) => { const m = data.data.find((d: any) => d.nop === p.nop); return m ? { ...p, status: m.status } : p; });
           if (updated.length > 0) { setPinnedList(updated); AsyncStorage.setItem('@pinned_nops_v2', JSON.stringify(updated)); }
-          if (data.villageConfig) setBapendaConfig(data.villageConfig);
+          if (data.villageConfig) {
+            setBapendaConfig(data.villageConfig);
+          } else if (data.bapendaUrl !== undefined || data.bapendaPaymentUrl !== undefined) {
+            setBapendaConfig({
+              bapendaUrl: data.bapendaUrl,
+              bapendaPaymentUrl: data.bapendaPaymentUrl,
+              enableBapendaPayment: data.enableBapendaPayment,
+              bapendaRegionName: data.bapendaRegionName,
+              isJombangBapenda: data.isJombangBapenda,
+              enableBapendaSync: data.enableBapendaSync,
+            });
+          }
         } else { setErrorMsg(data.error || 'Terjadi kesalahan.'); }
       } else {
         try {
           const data = await response.json();
           setErrorMsg(data.error || `Gagal mengambil data (Status: ${response.status})`);
-          if (data.villageConfig) setBapendaConfig(data.villageConfig);
+          if (data.villageConfig) {
+            setBapendaConfig(data.villageConfig);
+          } else if (data.bapendaUrl !== undefined || data.bapendaPaymentUrl !== undefined) {
+            setBapendaConfig({
+              bapendaUrl: data.bapendaUrl,
+              bapendaPaymentUrl: data.bapendaPaymentUrl,
+              enableBapendaPayment: data.enableBapendaPayment,
+              bapendaRegionName: data.bapendaRegionName,
+              isJombangBapenda: data.isJombangBapenda,
+              enableBapendaSync: data.enableBapendaSync,
+            });
+          }
         } catch (e) {
           setErrorMsg(`Gagal mengambil data (Status: ${response.status})`);
         }
@@ -76,6 +104,42 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
   const modalTone = syncModal.type === 'success' ? { bg: appTheme.colors.successSoft, color: appTheme.colors.success, icon: 'checkmark-circle' as const, title: 'Pembayaran terdeteksi' }
     : syncModal.type === 'unpaid' ? { bg: appTheme.colors.accentSoft, color: appTheme.colors.accent, icon: 'wallet-outline' as const, title: 'Tagihan belum lunas' }
     : { bg: appTheme.colors.dangerSoft, color: appTheme.colors.danger, icon: 'alert-circle' as const, title: 'Gangguan sistem' };
+
+  const handleBapendaAction = async (item: any, verifiedNop?: string) => {
+    try {
+      const actualNop = verifiedNop || item.nop;
+      if (!isAdmin && actualNop.includes('X')) {
+        setPin(''); setPinError(''); setPinModal({ visible: true, wpData: item }); return;
+      }
+      setLoading(true);
+      const res = await fetch(joinServerUrl(serverUrl, '/api/check-bapenda'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nop: actualNop, tahun: item.tahun }) });
+      const data = await res.json();
+      if (res.ok && data?.isPaid) { 
+        if (isAdmin) fetchTaxData(actualNop); 
+        setSyncModal({ visible: true, type: 'success', message: 'Pembayaran terdeteksi lunas.', wpData: { ...item, nop: actualNop } }); 
+      }
+      else { setSyncModal({ visible: true, type: 'unpaid', message: `Tagihan ${item.namaWp} masih belum lunas.`, wpData: { ...item, nop: actualNop } }); setLoading(false); }
+    } catch (e) { setSyncModal({ visible: true, type: 'error', message: 'Gagal sinkronisasi.' }); setLoading(false); }
+  };
+
+  const handlePinSubmit = async () => {
+    if (pin.length !== 4) { setPinError('PIN harus 4 digit'); return; }
+    setPinLoading(true); setPinError('');
+    try {
+      const res = await fetch(joinServerUrl(serverUrl, '/api/mobile/public/unmask'), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: pinModal.wpData.id, pin, tahun: pinModal.wpData.tahun })
+      });
+      const data = await res.json();
+      if (data.success && data.nop) {
+        setPinModal({ visible: false });
+        handleBapendaAction(pinModal.wpData, data.nop);
+      } else {
+        setPinError(data.message || 'Gagal memverifikasi PIN');
+      }
+    } catch (e) { setPinError('Terjadi kesalahan sistem'); }
+    finally { setPinLoading(false); }
+  };
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: appTheme.colors.bg }}>
@@ -158,7 +222,7 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
                 <View style={{ marginTop: 16, flexDirection: 'row' }}>
                   <View style={{ flex: 1, backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 18, padding: 14, marginRight: 8 }}>
                     <Text style={{ color: appTheme.colors.textMuted, fontSize: 11, fontWeight: '600' }}>Objek pajak</Text>
-                    <Text style={{ color: appTheme.colors.text, fontSize: 13, fontWeight: '600', marginTop: 5 }} numberOfLines={2}>{item.alamatObjek || '-'}</Text>
+                    <Text style={{ color: appTheme.colors.text, fontSize: 13, fontWeight: '600', marginTop: 5 }} numberOfLines={2}>{item.alamatObjek || item.alamat || '-'}</Text>
                   </View>
                   <View style={{ width: 100, backgroundColor: appTheme.colors.primaryLight, borderRadius: 18, padding: 14 }}>
                     <Text style={{ color: appTheme.colors.textMuted, fontSize: 11, fontWeight: '600' }}>Tahun</Text>
@@ -168,20 +232,12 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
                 <View style={{ marginTop: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <View>
                     <Text style={{ color: appTheme.colors.textMuted, fontSize: 11, fontWeight: '600' }}>Total tagihan</Text>
-                    <Text style={{ color: t.text, fontSize: 24, fontWeight: '800', marginTop: 3, letterSpacing: -0.3 }}>Rp {item.tagihanPajak.toLocaleString('id-ID')}</Text>
+                    <Text style={{ color: t.text, fontSize: 24, fontWeight: '800', marginTop: 3, letterSpacing: -0.3 }}>Rp {Number(item.tagihanPajak || item.tagihan || item.ketetapan || 0).toLocaleString('id-ID')}</Text>
                   </View>
                   {item.status === 'LUNAS' && <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: appTheme.colors.successSoft, alignItems: 'center', justifyContent: 'center' }}><Ionicons name="checkmark" size={22} color={appTheme.colors.success} /></View>}
                 </View>
                 {item.status !== 'LUNAS' && bapendaConfig?.isJombangBapenda && (bapendaConfig?.enableBapendaPayment ? bapendaConfig?.bapendaPaymentUrl : (bapendaConfig?.enableBapendaSync && bapendaConfig?.bapendaUrl)) ? (
-                  <ScalableButton onPress={async () => {
-                    try {
-                      setLoading(true);
-                      const res = await fetch(joinServerUrl(serverUrl, '/api/check-bapenda'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nop: item.nop, tahun: item.tahun }) });
-                      const data = await res.json();
-                      if (res.ok && data?.isPaid) { fetchTaxData(item.nop); setSyncModal({ visible: true, type: 'success', message: 'Pembayaran terdeteksi lunas.', wpData: item }); }
-                      else { setSyncModal({ visible: true, type: 'unpaid', message: `Tagihan ${item.namaWp} masih belum lunas.`, wpData: item }); setLoading(false); }
-                    } catch (e) { setSyncModal({ visible: true, type: 'error', message: 'Gagal sinkronisasi.' }); setLoading(false); }
-                  }} style={{ marginTop: 16 }}>
+                  <ScalableButton onPress={() => handleBapendaAction(item)} style={{ marginTop: 16 }}>
                     <LinearGradient colors={bapendaConfig?.enableBapendaPayment ? [appTheme.colors.primary, appTheme.colors.primaryDark] : [appTheme.colors.info, '#0e7490']}
                       style={{ borderRadius: 18, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}>
                       <Ionicons name={bapendaConfig?.enableBapendaPayment ? 'card-outline' : 'sync-outline'} size={18} color="white" />
@@ -225,6 +281,39 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
           <View style={{ backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 18, paddingVertical: 15, alignItems: 'center' }}><Text style={{ color: appTheme.colors.textMuted, fontSize: 14, fontWeight: '600' }}>Tutup</Text></View>
         </ScalableButton>
       </AppModalCard>
+      <Modal visible={pinModal.visible} transparent animationType="fade" onRequestClose={() => setPinModal({ visible: false })}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: '85%', backgroundColor: appTheme.colors.surface, borderRadius: 24, padding: 24, ...appTheme.shadow.floating }}>
+            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+              <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: appTheme.colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <Ionicons name="lock-closed" size={28} color={appTheme.colors.primary} />
+              </View>
+              <Text style={{ color: appTheme.colors.text, fontSize: 18, fontWeight: '800', textAlign: 'center' }}>Verifikasi PIN Warga</Text>
+              <Text style={{ color: appTheme.colors.textMuted, fontSize: 13, fontWeight: '500', textAlign: 'center', marginTop: 8 }}>Masukkan 4 digit PIN NOP untuk melihat data pajak yang dilindungi.</Text>
+            </View>
+            <TextInput
+              style={{ backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 16, padding: 18, fontSize: 24, letterSpacing: 8, textAlign: 'center', color: appTheme.colors.text, fontWeight: '800', borderWidth: 1, borderColor: appTheme.colors.borderLight }}
+              placeholder="••••" placeholderTextColor={appTheme.colors.textSoft}
+              keyboardType="number-pad" maxLength={4} secureTextEntry
+              value={pin} onChangeText={setPin}
+            />
+            {pinError ? <Text style={{ color: appTheme.colors.danger, fontSize: 12, fontWeight: '600', textAlign: 'center', marginTop: 12 }}>{pinError}</Text> : null}
+            <View style={{ flexDirection: 'row', marginTop: 24 }}>
+              <ScalableButton onPress={() => setPinModal({ visible: false })} disabled={pinLoading} style={{ flex: 1, marginRight: 8 }}>
+                <View style={{ backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 16, paddingVertical: 16, alignItems: 'center' }}>
+                  <Text style={{ color: appTheme.colors.textMuted, fontSize: 14, fontWeight: '700' }}>Batal</Text>
+                </View>
+              </ScalableButton>
+              <ScalableButton onPress={handlePinSubmit} disabled={pinLoading || pin.length !== 4} style={{ flex: 1, marginLeft: 8 }}>
+                <LinearGradient colors={[appTheme.colors.primary, appTheme.colors.primaryDark]} style={{ borderRadius: 16, paddingVertical: 16, alignItems: 'center' }}>
+                  {pinLoading ? <ActivityIndicator color="white" /> : <Text style={{ color: 'white', fontSize: 14, fontWeight: '700' }}>Verifikasi</Text>}
+                </LinearGradient>
+              </ScalableButton>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
       <StatusBar style="light" />
     </KeyboardAvoidingView>
   );

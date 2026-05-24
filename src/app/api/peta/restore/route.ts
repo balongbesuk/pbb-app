@@ -5,7 +5,7 @@ import AdmZip from "adm-zip";
 import type { AppUser } from "@/types/app";
 import { createMapRestoreJob } from "@/lib/map-restore-job";
 
-const MAX_MAP_RESTORE_ZIP_SIZE = 50 * 1024 * 1024;
+const MAX_MAP_RESTORE_ZIP_SIZE = 200 * 1024 * 1024;
 const ALLOWED_MAP_RESTORE_MIME_TYPES = new Set([
   "application/zip",
   "application/x-zip-compressed",
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (file.size > MAX_MAP_RESTORE_ZIP_SIZE) {
-      return NextResponse.json({ error: "Ukuran ZIP maksimal 50 MB." }, { status: 400 });
+      return NextResponse.json({ error: "Ukuran ZIP maksimal 200 MB." }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());

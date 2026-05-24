@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ActivityIndicator, RefreshControl, FlatList } from 'react-native';
+import { View, Text, TextInput, ActivityIndicator, RefreshControl, FlatList, Switch, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import type { ScreenProps } from '../types/navigation';
@@ -18,6 +18,7 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
   const [taxpayers, setTaxpayers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [tempSearch, setTempSearch] = useState('');
+  const [unpaidOnly, setUnpaidOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -31,12 +32,13 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
     return () => clearTimeout(handler);
   }, [tempSearch]);
 
-  useEffect(() => { setPage(1); fetchTaxpayers(1, search); }, [search]);
+  useEffect(() => { setPage(1); fetchTaxpayers(1, search, unpaidOnly); }, [search, unpaidOnly]);
 
-  const fetchTaxpayers = async (pageNum: number, q: string) => {
+  const fetchTaxpayers = async (pageNum: number, q: string, filterUnpaid: boolean) => {
     if (pageNum > 1) setLoadingMore(true); else setLoading(true);
     try {
       const params = new URLSearchParams({ tahun: tahun.toString(), search: q, page: pageNum.toString(), limit: '20' });
+      if (filterUnpaid) params.append('status', 'BELUM_LUNAS');
       const res = await authenticatedFetch(serverUrl, `/api/mobile/officer/taxpayers?${params.toString()}`);
       
       if (!res.ok) {
@@ -56,8 +58,8 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
     finally { setLoading(false); setRefreshing(false); setLoadingMore(false); }
   };
 
-  const onRefresh = () => { setRefreshing(true); setPage(1); fetchTaxpayers(1, search); };
-  const loadMore = () => { if (hasMore && !loadingMore) { const n = page + 1; setPage(n); fetchTaxpayers(n, search); } };
+  const onRefresh = () => { setRefreshing(true); setPage(1); fetchTaxpayers(1, search, unpaidOnly); };
+  const loadMore = () => { if (hasMore && !loadingMore) { const n = page + 1; setPage(n); fetchTaxpayers(n, search, unpaidOnly); } };
 
   const renderHeader = React.useMemo(() => (
     <AppScreenHeader title="Data wajib pajak" subtitle={villageName} onBack={() => navigation.goBack()}>
@@ -74,8 +76,18 @@ export default function TaxpayerListScreen({ route, navigation }: ScreenProps<'T
         <TextInput style={{ flex: 1, paddingVertical: 15, paddingLeft: 12, color: 'white', fontSize: 15, fontWeight: '600' }} placeholder="Cari nama atau NOP" placeholderTextColor="rgba(255,255,255,0.4)" value={tempSearch} onChangeText={setTempSearch} />
         {loading && <ActivityIndicator color="white" size="small" style={{ marginLeft: 8 }} />}
       </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 14, justifyContent: 'space-between', paddingHorizontal: 4 }}>
+        <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: '600' }}>Hanya tampilkan yang Belum Lunas</Text>
+        <Switch 
+          value={unpaidOnly} 
+          onValueChange={setUnpaidOnly} 
+          trackColor={{ false: 'rgba(255,255,255,0.2)', true: appTheme.colors.primary }}
+          thumbColor={Platform.OS === 'android' ? 'white' : undefined}
+          ios_backgroundColor="rgba(255,255,255,0.2)"
+        />
+      </View>
     </AppScreenHeader>
-  ), [villageName, tempSearch, loading]);
+  ), [villageName, tempSearch, loading, unpaidOnly, health.server]);
 
   const renderItem = ({ item: wp }: { item: any }) => {
     const t = wp.paymentStatus === 'LUNAS' ? statusTone.LUNAS : statusTone.PIUTANG;

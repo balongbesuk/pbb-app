@@ -3,6 +3,24 @@ export const dynamic = "force-dynamic";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getNopVariations } from "@/lib/utils";
+import { requireMobileAuth } from "@/lib/mobile-auth";
+
+function maskNop(nop: string): string {
+  const cleanNop = nop.replace(/\D/g, "");
+  if (cleanNop.length === 18) {
+    const p1 = cleanNop.substring(0, 2);
+    const p2 = cleanNop.substring(2, 4);
+    const p3 = cleanNop.substring(4, 7);
+    const p4 = cleanNop.substring(7, 10);
+    const p5 = cleanNop.substring(10, 13);
+    return `${p1}.${p2}.${p3}.${p4}.${p5}-XXXX.X`;
+  }
+  if (nop.includes("-")) {
+    const parts = nop.split("-");
+    return `${parts[0]}-XXXX.X`;
+  }
+  return nop.substring(0, Math.max(0, nop.length - 5)) + "XXXXX";
+}
 
 export async function GET(req: Request) {
   try {
@@ -18,6 +36,14 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const search = searchParams.get("search") || "";
     const skip = (page - 1) * limit;
+    
+    let isOfficer = false;
+    try {
+      await requireMobileAuth(req);
+      isOfficer = true;
+    } catch (e) {
+      isOfficer = false;
+    }
 
     const where: Prisma.TaxDataWhereInput = { tahun, paymentStatus: "BELUM_LUNAS" };
 
@@ -81,8 +107,13 @@ export async function GET(req: Request) {
       skip,
     });
 
+    const mappedWP = unpaidWP.map(wp => ({
+      ...wp,
+      nop: isOfficer ? wp.nop : maskNop(wp.nop)
+    }));
+
     return NextResponse.json({
-      data: unpaidWP,
+      data: mappedWP,
       totalPiutang,
       totalCount,
       hasMore: skip + unpaidWP.length < totalCount,

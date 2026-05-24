@@ -9,7 +9,7 @@ type SessionUserWithRole = {
 
 export async function POST(req: NextRequest) {
   try {
-    const MAX_ARCHIVE_RESTORE_ZIP_SIZE = 100 * 1024 * 1024;
+    const MAX_ARCHIVE_RESTORE_ZIP_SIZE = 200 * 1024 * 1024;
     const ALLOWED_ARCHIVE_RESTORE_MIME_TYPES = new Set([
       "application/zip",
       "application/x-zip-compressed",
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (file.size > MAX_ARCHIVE_RESTORE_ZIP_SIZE) {
-      return NextResponse.json({ error: "Ukuran ZIP maksimal 100 MB." }, { status: 400 });
+      return NextResponse.json({ error: "Ukuran ZIP maksimal 200 MB." }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());

@@ -6,6 +6,7 @@ import { PublicThemeWrapper } from "@/components/public/public-theme-wrapper";
 import { PublicNav } from "@/components/public/public-nav";
 import { PublicSelfService } from "@/components/public/public-self-service";
 import { PublicGithubIcon } from "@/components/public/public-github-icon";
+import { TurnstileWidget } from "@/components/public/turnstile-widget";
 import "./public.css";
 
 // Enable caching with revalidation every 30 seconds to support BFCache
@@ -37,10 +38,7 @@ export default async function IndexPage({
 
       <main className="w-full max-w-4xl flex-1 flex flex-col items-center justify-center gap-12 mt-12 sm:mt-20">
         <div className="text-center space-y-4 max-w-2xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both">
-          <div className="public-badge inline-flex items-center gap-2 px-3 py-1 rounded-full mb-2">
-            <MapPin className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-black tracking-widest uppercase">Portal Pajak Bumi dan Bangunan</span>
-          </div>
+          <TurnstileWidget />
           <h1 className="public-heading text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.1]">
             Cek Tagihan &amp; Bayar <span className="public-heading-accent block sm:inline mt-1 sm:mt-0 px-2 bg-clip-text text-transparent pb-2 font-black">PBB</span> Lebih Mudah.
           </h1>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ActivityIndicator, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WebView } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 import type { ScreenProps } from '../types/navigation';
@@ -19,7 +20,22 @@ export default function GisMapScreen({ route, navigation }: ScreenProps<'GisMap'
   
   const { health } = useServerHealth(serverUrl);
 
-  useEffect(() => { const base = normalizeServerUrl(serverUrl); setMapUrl(joinServerUrl(base, '/mobile-map.html')); }, []);
+  useEffect(() => { 
+    const setupMap = async () => {
+      const base = normalizeServerUrl(serverUrl);
+      try {
+        const token = await AsyncStorage.getItem('@admin_magic_token');
+        if (token) {
+          setMapUrl(joinServerUrl(base, `/mobile-map.html?token=${encodeURIComponent(token)}`));
+          return;
+        }
+      } catch (e) {
+        console.error('Failed to get auth token for map', e);
+      }
+      setMapUrl(joinServerUrl(base, '/mobile-map.html')); 
+    };
+    setupMap();
+  }, [serverUrl]);
 
   return (
     <View style={{ flex: 1, backgroundColor: appTheme.colors.bg }}>
@@ -55,7 +71,7 @@ export default function GisMapScreen({ route, navigation }: ScreenProps<'GisMap'
           ) : Platform.OS === 'web' ? (
             <iframe src={mapUrl} style={{ width: '100%', height: '100%', border: 'none' }} onLoad={() => setLoading(false)} />
           ) : (
-            <WebView ref={webViewRef} source={{ uri: mapUrl }} style={{ flex: 1 }} onLoad={() => setLoading(false)} javaScriptEnabled domStorageEnabled startInLoadingState={false} originWhitelist={['*']} mixedContentMode="always" allowFileAccess cacheEnabled onError={() => setLoading(false)} />
+            <WebView ref={webViewRef} source={{ uri: mapUrl }} style={{ flex: 1 }} onLoadEnd={() => setLoading(false)} javaScriptEnabled domStorageEnabled startInLoadingState={false} originWhitelist={['*']} mixedContentMode="always" allowFileAccess cacheEnabled onError={() => setLoading(false)} />
           )}
           
           {loading && (

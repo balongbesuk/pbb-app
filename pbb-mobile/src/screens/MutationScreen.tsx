@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
-import { joinServerUrl } from '../utils/server';
+import { joinServerUrl, authenticatedFetch } from '../utils/server';
 import { generateMutationDocxMobile } from '../utils/mutation-docx-gen';
 import type { ScreenProps } from '../types/navigation';
 import { appTheme } from '../theme/app-theme';
@@ -28,7 +28,7 @@ export default function MutationScreen({ route, navigation }: ScreenProps<'Mutat
   const [villageMetadata, setVillageMetadata] = useState({ villageName: "BALONGBESUK", districtName: "DIWEK", regencyName: "JOMBANG", address: "", email: "", zip: "", logoUrl: null as string | null });
   const [drafts, setDrafts] = useState<any[]>([]);
 
-  const fetchVillageConfig = async () => { try { const r = await fetch(joinServerUrl(serverUrl, '/api/village-config')); const d = await r.json(); if (d) { setVillageMetadata({ villageName: d.namaDesa || "BALONGBESUK", districtName: d.kecamatan || "DIWEK", regencyName: d.kabupaten || "JOMBANG", address: d.alamatKantor || "", email: d.email || "", zip: d.kodePos || "", logoUrl: d.logoUrl ? joinServerUrl(serverUrl, d.logoUrl) : null }); if (d.namaKades) setNamaKades(d.namaKades); } } catch (e) {} };
+  const fetchVillageConfig = async () => { try { const r = await authenticatedFetch(serverUrl, '/api/village-config'); const d = await r.json(); if (d) { setVillageMetadata({ villageName: d.namaDesa || "BALONGBESUK", districtName: d.kecamatan || "DIWEK", regencyName: d.kabupaten || "JOMBANG", address: d.alamatKantor || "", email: d.email || "", zip: d.kodePos || "", logoUrl: d.logoUrl ? joinServerUrl(serverUrl, d.logoUrl) : null }); if (d.namaKades) setNamaKades(d.namaKades); } } catch (e) {} };
   const loadDrafts = async () => { try { const s = await AsyncStorage.getItem('@mutation_drafts_v1'); setDrafts(s ? JSON.parse(s) : []); } catch (e) { setDrafts([]); } };
 
   useEffect(() => { loadDrafts(); if (serverUrl) fetchVillageConfig(); }, [serverUrl]);
@@ -39,7 +39,7 @@ export default function MutationScreen({ route, navigation }: ScreenProps<'Mutat
   const handleNopSearch = async () => {
     const cn = oldNop.replace(/[^0-9]/g, ''); if (!oldNop || cn.length < 18) { Alert.alert("Perhatian", "Masukkan 18 digit NOP."); return; }
     setLoadingSearch(true);
-    try { const r = await fetch(`${joinServerUrl(serverUrl, '/api/mobile/tax')}?nop=${encodeURIComponent(oldNop.trim())}`); const d = await r.json();
+    try { const r = await authenticatedFetch(serverUrl, `/api/mobile/tax?nop=${encodeURIComponent(oldNop.trim())}`); const d = await r.json();
       if (d.success && d.data?.length > 0) { const l = d.data[0]; const m: SpptData = { nop: l.nop, namaWp: l.namaWp, alamat: l.alamatObjek, luasTanah: l.luasTanah || 0, luasBangunan: l.luasBangunan || 0 }; setOldData(m); setNewDataList([{ ...m, namaWp: "", alamat: "" }]); }
       else { Alert.alert("Tidak Ditemukan", "NOP tidak terdaftar."); setOldData({ nop: oldNop, namaWp: "", alamat: "", luasTanah: 0, luasBangunan: 0 }); setNewDataList([{ nop: "", namaWp: "", alamat: "", luasTanah: 0, luasBangunan: 0 }]); }
     } catch (e) { Alert.alert("Error", "Gagal menghubungi server."); } finally { setLoadingSearch(false); }

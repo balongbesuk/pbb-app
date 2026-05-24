@@ -37,7 +37,7 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
   const { health, checkHealth } = useServerHealth(serverUrl);
 
   useEffect(() => { fetchConfig(); }, []);
-  const fetchConfig = async () => { try { const r = await fetch(joinServerUrl(serverUrl, `/api/mobile/tax?nop=${encodeURIComponent(taxpayer.nop)}`)); const d = await r.json(); if (d.success && d.villageConfig) setBapendaConfig(d.villageConfig); } catch (e) { } };
+  const fetchConfig = async () => { try { const r = await authenticatedFetch(serverUrl, `/api/mobile/tax?nop=${encodeURIComponent(taxpayer.nop)}`); const d = await r.json(); if (d.success && d.villageConfig) setBapendaConfig(d.villageConfig); } catch (e) { } };
 
   const isLunas = taxpayer.paymentStatus === 'LUNAS';
   const tone = statusTone[taxpayer.paymentStatus as keyof typeof statusTone] || statusTone.PIUTANG;
@@ -64,7 +64,7 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
   const handlePaymentCheck = async () => {
     setUpdating(true);
     try {
-      const r = await fetch(joinServerUrl(serverUrl, '/api/check-bapenda'), {
+      const r = await authenticatedFetch(serverUrl, '/api/check-bapenda', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nop: taxpayer.nop, tahun: taxpayer.tahun || bapendaConfig?.tahunPajak || 2026 })
@@ -73,7 +73,7 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
       if (!r.ok) { setSyncModal({ visible: true, type: 'error', message: d?.error || 'Gagal sinkronisasi data.' }); return; }
       if (d?.isPaid) {
         try {
-          const rr = await fetch(`${joinServerUrl(serverUrl, '/api/mobile/tax')}?nop=${encodeURIComponent(taxpayer.nop)}`);
+          const rr = await authenticatedFetch(serverUrl, `/api/mobile/tax?nop=${encodeURIComponent(taxpayer.nop)}`);
           const dd = await rr.json();
           if (dd.success && dd.data?.[0]) {
             const ref = dd.data[0];

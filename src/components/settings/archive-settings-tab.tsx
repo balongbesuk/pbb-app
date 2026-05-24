@@ -240,28 +240,62 @@ export function ArchiveSettingsTab() {
   };
 
   const [uploadCount, setUploadCount] = useState(0);
+  const [uploadProgressMsg, setUploadProgressMsg] = useState("");
 
   const handleManualUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    
+    // Validasi jumlah file jika dirasa perlu, namun dengan batching kita bisa handle banyak.
+    // Kita batasi max 500 file agar browser tidak nge-hang saat memilih file.
+    if (files.length > 500) {
+      toast.error("Maksimal 500 file dalam satu kali proses untuk menghindari browser hang.");
+      e.target.value = "";
+      return;
+    }
+
     setUploadCount(files.length);
     setUploading(true);
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) formData.append("files", files[i]);
-    formData.append("year", selectedYear.toString());
+    setUploadProgressMsg(`Menyiapkan ${files.length} file...`);
+    
+    // Batch processing to avoid 25MB Next.js limit
+    const BATCH_SIZE = 20; 
+    const fileArray = Array.from(files);
+    let successTotal = 0;
+    let failTotal = 0;
+
     try {
-      const res = await uploadArchives(formData);
-      if (res.success) {
-        toast.success(res.message);
-        router.refresh();
-      } else {
-        toast.error(res.message || "Gagal unggah file.");
+      for (let i = 0; i < fileArray.length; i += BATCH_SIZE) {
+        const batch = fileArray.slice(i, i + BATCH_SIZE);
+        setUploadProgressMsg(`Mengunggah bagian ${Math.floor(i / BATCH_SIZE) + 1} dari ${Math.ceil(fileArray.length / BATCH_SIZE)}...`);
+        
+        const formData = new FormData();
+        for (const file of batch) {
+          formData.append("files", file);
+        }
+        formData.append("year", selectedYear.toString());
+        
+        const res = await uploadArchives(formData);
+        if (res.success) {
+          successTotal += batch.length;
+        } else {
+          failTotal += batch.length;
+        }
       }
+
+      if (failTotal === 0) {
+        toast.success(`${successTotal} file arsip berhasil diunggah secara bertahap.`);
+      } else {
+        toast.warning(`${successTotal} berhasil, ${failTotal} gagal diunggah.`);
+      }
+      router.refresh();
     } catch {
-      toast.error("Terjadi kesalahan sistem.");
+      toast.error("Terjadi kesalahan sistem saat mengunggah file.");
     } finally {
       setUploading(false);
       setUploadCount(0);
+      setUploadProgressMsg("");
+      e.target.value = "";
     }
   };
 
@@ -509,11 +543,17 @@ export function ArchiveSettingsTab() {
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
                     <p className="text-xs font-bold animate-pulse text-blue-600">Mengunggah {uploadCount} file...</p>
+                    {uploadProgressMsg && (
+                      <p className="text-[10px] text-blue-700/80 mt-1">{uploadProgressMsg}</p>
+                    )}
                   </div>
                 ) : (
                   <>
                     <Files className="h-8 w-8 text-blue-500/40" />
-                    <p className="text-xs text-muted-foreground">Mendukung banyak file sekaligus (PDF/Gambar)</p>
+                    <div className="text-center space-y-1 max-w-xs">
+                       <p className="text-xs text-muted-foreground font-medium">Mendukung upload banyak file sekaligus</p>
+                       <p className="text-[10px] text-blue-600/80 font-semibold bg-blue-500/10 px-2 py-1 rounded-md inline-block">Maksimal 500 file per proses</p>
+                    </div>
                     <input type="file" id="tab-manual-upload" className="hidden" multiple accept=".pdf,image/*" onChange={handleManualUpload} />
                     <Button 
                       variant="secondary" 

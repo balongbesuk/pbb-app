@@ -1,5 +1,18 @@
 # Changelog
 
+## PBB Mobile v2.0 - 2026-05-24: Kemitraan Digital & Sinkronisasi Bapenda Lanjutan
+
+Pembaruan besar-besaran untuk mengukuhkan **PBB Mobile** (sebelumnya berada di versi setara portal publik) menjadi entitas tersendiri di versi 2.0. Pembaruan ini menitikberatkan pada kemudahan bagi petugas penagih dan penyelarasan fitur keamanan dengan portal publik v10.0.
+
+### Integrasi Sinkronisasi & Keamanan
+- **Sinkronisasi Tagihan Bapenda Otomatis**: Fitur "Bayar Online / Cek Bapenda" dari versi web kini tersedia langsung di layar cek tagihan aplikasi seluler. Status pembayaran diselaraskan secara *real-time*.
+- **Peta GIS Seluler yang Terproteksi**: Modul `WebView` Peta GIS telah ditingkatkan untuk mengenali profil autentikasi aplikasi. Warga umum wajib menggunakan **PIN 4-Digit NOP** sebelum mengakses detail Bapenda, sedangkan petugas memiliki akses instan.
+- **Saringan Data Penagihan Presisi**: Modul "Data Wajib Pajak" di Panel Petugas kini dibekali *toggle switch* pintar yang bisa langsung memfilter *"Hanya tampilkan yang Belum Lunas"*. Sangat mempermudah pengejaran target lapangan.
+- **Penyempurnaan Stabilitas Lintas Platform**: *Bug* rendering layar putih (Blank Screen) pada fitur filter `Switch` serta anomali komponen `WebView` yang *stuck loading* (*infinite spinner*) telah diperbaiki tuntas untuk pengalaman navigasi yang mulus.
+- **Pemisahan Versi Mandiri**: Proyek seluler `pbb-mobile` kini memiliki alur versi pelacakannya sendiri (v2.0.0) di `package.json` dan `app.json`, menegaskan independensinya dari versi inti dasbor web.
+
+---
+
 ## v10.0 - 2026-05-23: Deep Security Hardening, NOP PIN Protection, GIS Map Security & Cloudflare Turnstile Lifecycle Refactoring
 
 Pembaruan keamanan skala besar menyeluruh untuk mengamankan seluruh platform PBB App. Mengimplementasikan pembatasan akses data wajib pajak menggunakan Kunci 4-Digit NOP, proteksi brute-force PIN dengan penguncian sesi, perlindungan peta GIS publik, penyelarasan Cloudflare Turnstile, penambalan celah kritis autentikasi API Mobile dan Zip Slip cadangan, serta penyelarasan detail verifikasi pada pengajuan LSPOP/Mutasi, peta publik, dan alur pembayaran online Bapenda.
@@ -37,6 +50,9 @@ Pembaruan keamanan skala besar menyeluruh untuk mengamankan seluruh platform PBB
 - **Koreksi Kunci Pengujian Lokal**: Menyelaraskan kunci rahasia Turnstile di berkas `.env` dan `.env.example` ke kunci dummy resmi Cloudflare ending `AA` (`1x0000000000000000000000000000000AA`), mempermudah testing lokal yang selalu sukses secara out-of-the-box.
 
 ### UI/UX Polish & Stabilitas Build
+- **Peningkatan Kapasitas Upload Arsip Masal**: Menaikkan batas ukuran file untuk unggah arsip PDF masal manual dari 50MB menjadi 200MB, dilengkapi dengan deskripsi panduan yang lebih jelas pada halaman pengaturan arsip.
+- **Integrasi Indikator Turnstile Interaktif**: Memindahkan indikator status Cloudflare Turnstile langsung ke *border* lencana "Portal Pajak Bumi dan Bangunan" (ikon diposisikan di sebelah kanan teks) untuk visibilitas keamanan *real-time* tanpa perlu mengecek ikon footer.
+- **Optimalisasi Tombol Aksi Mobile**: Menyembunyikan teks "Lunas" pada barisan tombol aksi di hasil pencarian publik khusus untuk layar *mobile*, menyisakan ikon centang hijau agar antarmuka lebih ringkas dan responsif.
 - **Koreksi Overflow Dialog Button**: Menghapus penggunaan `<DialogFooter>` di dalam tag `<form>` modal PIN dan menggantinya dengan pembungkus flex `div` vertikal yang rapi. Mengatasi masalah tombol submit "Verifikasi & Buka Berkas" yang terlempar keluar modal dan melayang di sisi kiri layar.
 - **TypeScript 100% Compile Pass**: Menambahkan deklarasi properti `hasArsip: boolean` ke antarmuka tipe data `PublicSearchResultItem` pada halaman pencarian, menyelesaikan error typecheck pada `next build` dan `npm run typecheck` sehingga build produksi lulus sukses dengan nol kesalahan.
 

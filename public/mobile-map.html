@@ -272,8 +272,36 @@
       display: flex; align-items: center; justify-content: center;
     }
     .sm-btn-primary { background: #065f46; color: white; box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.2); }
-    .sm-btn-secondary { background: #f1f5f9; color: #64748b; }
-    .sm-btn:active { transform: translateY(2px); }
+    /* PIN Modal */
+    #pin-modal-overlay {
+      position: fixed; inset: 0; z-index: 4000;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center;
+      padding: 24px; opacity: 0; transition: opacity 0.3s;
+    }
+    #pin-modal-overlay.visible { display: flex; opacity: 1; }
+    #pin-modal {
+      background: white; width: 100%; max-width: 320px;
+      border-radius: 24px; padding: 24px; text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .pin-icon { font-size: 32px; margin-bottom: 12px; }
+    .pin-title { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+    .pin-subtitle { font-size: 12px; color: #64748b; margin-bottom: 20px; font-weight: 600; }
+    .pin-input {
+      width: 100%; background: #f1f5f9; border: 1px solid #e2e8f0;
+      border-radius: 16px; padding: 16px; font-size: 24px; letter-spacing: 8px;
+      text-align: center; font-weight: 800; color: #0f172a; margin-bottom: 8px;
+    }
+    .pin-error { color: #ef4444; font-size: 11px; font-weight: 700; min-height: 16px; margin-bottom: 16px; }
+    .pin-actions { display: flex; gap: 10px; }
+    .pin-btn {
+      flex: 1; padding: 14px; border: none; border-radius: 16px;
+      font-size: 13px; font-weight: 800; text-transform: uppercase; cursor: pointer;
+    }
+    .pin-btn-cancel { background: #f1f5f9; color: #64748b; }
+    .pin-btn-verify { background: #3b82f6; color: white; }
+    
   </style>
 </head>
 <body>
@@ -282,6 +310,21 @@
     <div id="status-text">Menghubungkan...</div>
     <div id="error-text"></div>
     <button id="retry-btn" onclick="loadMap()">Coba Lagi</button>
+  </div>
+
+  <!-- PIN Modal for Public Users -->
+  <div id="pin-modal-overlay">
+    <div id="pin-modal">
+      <div class="pin-icon">🔒</div>
+      <div class="pin-title">Verifikasi PIN Warga</div>
+      <div class="pin-subtitle">Masukkan 4 digit NOP untuk akses</div>
+      <input type="password" id="pin-input" class="pin-input" placeholder="••••" maxlength="4" pattern="\d*">
+      <div id="pin-error" class="pin-error"></div>
+      <div class="pin-actions">
+        <button class="pin-btn pin-btn-cancel" onclick="closePinModal()">Batal</button>
+        <button class="pin-btn pin-btn-verify" onclick="submitPin()">Verifikasi</button>
+      </div>
+    </div>
   </div>
 
   <div id="map"></div>
@@ -349,6 +392,13 @@
     var map = null;
     var geoLayer = null;
     var currentTahun = new Date().getFullYear();
+    var authToken = new URLSearchParams(window.location.search).get('token');
+
+    function getAuthHeaders() {
+      var headers = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+      return headers;
+    }
 
     function getColor(pct) {
       if (pct === 0) return '#94a3b8';
@@ -445,7 +495,9 @@
         if (wpPanelParams.dusun) params.set('dusun', wpPanelParams.dusun);
         if (wpPanelSearch) params.set('search', wpPanelSearch);
 
-        var res = await fetch('/api/region-unpaid?' + params.toString() + '&_t=' + Date.now());
+        var res = await fetch('/api/region-unpaid?' + params.toString() + '&_t=' + Date.now(), {
+          headers: getAuthHeaders()
+        });
         var json = await res.json();
 
         wpPanelPage = page;
@@ -643,7 +695,7 @@
       try {
         var res = await fetch('/api/check-bapenda', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({ nop: nop, tahun: currentTahun, _t: Date.now() })
         });
         var data = await res.json();
@@ -685,6 +737,56 @@
       }
     }
 
+    // ========== PIN Modal Logic ==========
+    var pendingWpAction = null;
+    
+    function showPinModal(btn) {
+      pendingWpAction = btn;
+      document.getElementById('pin-input').value = '';
+      document.getElementById('pin-error').textContent = '';
+      document.getElementById('pin-modal-overlay').classList.add('visible');
+      setTimeout(function() { document.getElementById('pin-input').focus(); }, 100);
+    }
+    
+    function closePinModal() {
+      document.getElementById('pin-modal-overlay').classList.remove('visible');
+      pendingWpAction = null;
+    }
+    
+    async function submitPin() {
+      if (!pendingWpAction) return;
+      var pin = document.getElementById('pin-input').value;
+      if (pin.length !== 4) {
+        document.getElementById('pin-error').textContent = 'PIN harus 4 digit';
+        return;
+      }
+      
+      var wpId = pendingWpAction.getAttribute('data-id');
+      document.getElementById('pin-error').textContent = '';
+      
+      try {
+        var res = await fetch('/api/mobile/public/unmask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: wpId, pin: pin, tahun: currentTahun })
+        });
+        var data = await res.json();
+        
+        if (data.success && data.nop) {
+          var btn = pendingWpAction;
+          closePinModal();
+          // Update the button's data-nop with the unmasked NOP
+          btn.setAttribute('data-nop', data.nop);
+          // Proceed to check Bapenda
+          checkAndPay(btn);
+        } else {
+          document.getElementById('pin-error').textContent = data.message || 'PIN tidak valid';
+        }
+      } catch (err) {
+        document.getElementById('pin-error').textContent = 'Terjadi kesalahan sistem';
+      }
+    }
+
     // Simple toast notification
     function showToast(message, color) {
       var existing = document.getElementById('map-toast');
@@ -706,7 +808,12 @@
       var btn = e.target.closest('.wp-btn-check');
       if (btn) {
         e.preventDefault();
-        checkAndPay(btn);
+        var nop = btn.getAttribute('data-nop') || '';
+        if (nop.indexOf('X') !== -1) {
+          showPinModal(btn);
+        } else {
+          checkAndPay(btn);
+        }
       }
     });
     // ========== End WP Panel ==========
@@ -742,7 +849,9 @@
 
         // Step 3: Load Stats
         setStatus('Memuat Data Statistik...');
-        var statsRes = await fetch('/api/region-stats?tahun=' + currentTahun);
+        var statsRes = await fetch('/api/region-stats?tahun=' + currentTahun, {
+          headers: getAuthHeaders()
+        });
         if (statsRes.ok) stats = await statsRes.json();
 
         // Step 4: Render Map

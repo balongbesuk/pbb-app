@@ -85,7 +85,8 @@ export async function searchPublicTaxData(
   tahunPajak: number, 
   page: number = 1, 
   pageSize: number = 10,
-  turnstileToken?: string
+  turnstileToken?: string,
+  skipTurnstile: boolean = false
 ) {
   try {
     // ─── Rate Limiting ──────────────────────────────────────────────
@@ -108,7 +109,7 @@ export async function searchPublicTaxData(
 
     // ─── Turnstile Anti-Bot Verification ────────────────────────────
     const secretKey = process.env.TURNSTILE_SECRET_KEY;
-    if (secretKey) {
+    if (secretKey && !skipTurnstile) {
       if (!turnstileToken) {
         return { success: false, message: "Verifikasi Turnstile diperlukan untuk melakukan pencarian." };
       }
