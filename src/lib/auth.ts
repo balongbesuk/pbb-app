@@ -83,7 +83,6 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           role: user.role,
           mustChangePassword: user.mustChangePassword,
-          username: user.username,
         };
       },
     }),
@@ -93,44 +92,8 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role;
         token.id = user.id!;
-        token.username = (user as any).username;
         token.mustChangePassword = user.mustChangePassword;
       }
-
-      // Self-healing: jika token.id tidak ditemukan di DB (karena DB di-seed/reset ulang),
-      // coba cari berdasarkan token.username untuk menyelaraskan ID secara otomatis
-      if (token.id) {
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: { id: token.id },
-            select: { id: true, role: true, mustChangePassword: true }
-          });
-
-          if (!dbUser && token.username) {
-            const healedUser = await prisma.user.findUnique({
-              where: { username: token.username as string },
-              select: { id: true, role: true, mustChangePassword: true }
-            });
-            if (healedUser) {
-              token.id = healedUser.id;
-              token.role = healedUser.role;
-              token.mustChangePassword = healedUser.mustChangePassword;
-              console.warn(`[NextAuth JWT] Session healed for user "${token.username}". Old ID was invalid, mapped to new ID: ${token.id}`);
-            } else {
-              console.warn(`[NextAuth JWT] User "${token.username}" not found in DB. Invalidating token.`);
-              return {} as any; // Bersihkan token
-            }
-          } else if (!dbUser) {
-            console.warn(`[NextAuth JWT] User ID ${token.id} not found and no username present to heal. Invalidating token.`);
-            return {} as any; // Bersihkan token
-          } else if (dbUser) {
-            token.mustChangePassword = dbUser.mustChangePassword;
-          }
-        } catch (err) {
-          console.error("[NextAuth JWT] Error checking/healing session ID:", err);
-        }
-      }
-
       // Saat session di-update (setelah ganti password), refresh flag dari DB
       if (trigger === "update") {
         const freshUser = await prisma.user.findUnique({
@@ -145,13 +108,6 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        if (!token.id) {
-          // Bersihkan session.user agar NextAuth (baik di server maupun client) tahu user tidak authenticated
-          return {
-            ...session,
-            user: null as any
-          };
-        }
         session.user.role = token.role;
         session.user.id = token.id;
         session.user.mustChangePassword = token.mustChangePassword;

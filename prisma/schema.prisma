@@ -42,7 +42,6 @@ model User {
   receivedTransferRequests TransferRequest[] @relation("Receiver")
   
   auditLogs     AuditLog[]
-  pushSubscriptions PushSubscription[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -199,17 +198,3 @@ model AuditLog {
   @@index([createdAt])
   @@index([userId, createdAt])
 }
-
-model PushSubscription {
-  id        String   @id @default(cuid())
-  token     String   // ExpoPushToken
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  nop       String?  // Untuk langganan khusus wajib pajak
-  createdAt DateTime @default(now())
-  
-  @@index([token])
-  @@index([userId])
-  @@index([nop])
-}
-

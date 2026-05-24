@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { isPbbMobileEnabled } from "@/lib/mobile-access";
 import { createAuditLog } from "@/app/actions/log-actions";
 import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
-import { notifyUser } from "@/lib/push-notification";
 
 export async function POST(req: Request) {
   const headers = {
@@ -62,8 +61,6 @@ export async function POST(req: Request) {
         senderId // Pass mobile senderId explicitly
       );
 
-      notifyUser(receiverId, "Tugas Penagihan Baru", `Admin ${sender.name} menugaskan WP ${taxData.namaWp} kepada Anda.`);
-
       return NextResponse.json({ success: true, message: "Alokasi berhasil dipindahkan" }, { headers });
     }
 
@@ -116,8 +113,6 @@ export async function POST(req: Request) {
           senderId // Pass mobile senderId explicitly
         );
       });
-      
-      notifyUser(receiverId, "Permintaan Pelimpahan", `${sender.name} ingin mengirimkan data WP ${taxData.namaWp} kepada Anda.`);
 
       return NextResponse.json({ success: true, message: "Permintaan pemindahan telah dikirim" }, { headers });
     }

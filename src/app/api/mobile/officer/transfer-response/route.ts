@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { isPbbMobileEnabled } from "@/lib/mobile-access";
 import { createAuditLog } from "@/app/actions/log-actions";
 import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
-import { notifyUser } from "@/lib/push-notification";
 
 export async function POST(req: Request) {
   const headers = {
@@ -90,8 +89,6 @@ export async function POST(req: Request) {
             type: "ACCEPTED",
           },
         });
-        
-        notifyUser(request.senderId, "Permintaan Disetujui", `${request.receiver.name} telah menyetujui ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`);
       } else {
         // REJECTED flow
         await tx.transferRequest.update({
@@ -107,8 +104,6 @@ export async function POST(req: Request) {
             type: "REJECTED",
           },
         });
-        
-        notifyUser(request.senderId, "Permintaan Ditolak", `${request.receiver.name} menolak ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`);
       }
 
       return request;

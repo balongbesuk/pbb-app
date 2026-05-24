@@ -10,7 +10,6 @@ import type { ScreenProps } from '../types/navigation';
 import { joinServerUrl } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { appTheme } from '../theme/app-theme';
-import { usePushNotifications } from '../utils/usePushNotifications';
 
 export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>) {
   const { serverUrl, villageName } = route.params || {};
@@ -18,7 +17,6 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { expoPushToken } = usePushNotifications();
 
   const handleLogin = async () => {
     if (!form.username || !form.password) { setErrorMsg('Username dan password wajib diisi.'); return; }
@@ -35,19 +33,6 @@ export default function LoginScreen({ route, navigation }: ScreenProps<'Login'>)
         if (data.success) {
           if (data.magicToken) await AsyncStorage.setItem('@admin_magic_token', data.magicToken);
           await AsyncStorage.setItem('@auth_user', JSON.stringify(data.user));
-          
-          if (expoPushToken?.data) {
-            try {
-              await fetch(joinServerUrl(serverUrl, '/api/mobile/push/register'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: expoPushToken.data, userId: data.user.id })
-              });
-            } catch (e) {
-              console.log('Push token registration failed', e);
-            }
-          }
-
           navigation.navigate('AdminDashboard', { 
             serverUrl, 
             user: data.user, 

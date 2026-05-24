@@ -11,7 +11,6 @@ import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppModalCard } from '../components/AppModalCard';
 import { useServerHealth } from '../utils/hooks';
 import { appTheme, statusTone } from '../theme/app-theme';
-import { usePushNotifications } from '../utils/usePushNotifications';
 
 export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'PaymentCheck'>) {
   const { serverUrl } = route.params;
@@ -29,7 +28,6 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
   const [pinError, setPinError] = useState('');
   
   const { health, checkHealth } = useServerHealth(serverUrl);
-  const { expoPushToken } = usePushNotifications();
 
   useEffect(() => { loadPinnedNopes(); AsyncStorage.getItem('@auth_user').then(val => setIsAdmin(!!val)); }, []);
 
@@ -104,31 +102,13 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
     }
 
     try {
-      const isCurrentlyPinned = isPinned(item);
       const nopToSave = verifiedNop || item.nop;
-      const newList = isCurrentlyPinned 
+      const newList = isPinned(item) 
         ? pinnedList.filter((p) => p.nop !== item.nop && p.nop !== nopToSave) 
         : [...pinnedList, { nop: nopToSave, name: item.namaWp, status: item.status }];
         
       await AsyncStorage.setItem('@pinned_nops_v2', JSON.stringify(newList)); 
       setPinnedList(newList);
-
-      // Sinkronisasi Push Notification dengan server
-      if (expoPushToken?.data) {
-        try {
-          if (!isCurrentlyPinned) {
-            await fetch(joinServerUrl(serverUrl, '/api/mobile/push/register'), {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ token: expoPushToken.data, nop: nopToSave })
-            });
-          } else {
-            await fetch(joinServerUrl(serverUrl, '/api/mobile/push/unregister'), {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ token: expoPushToken.data, nop: nopToSave })
-            });
-          }
-        } catch (e) { console.log('Push sync error', e); }
-      }
 
       if (verifiedNop && verifiedNop !== item.nop) {
         setResults(prev => prev.map(r => r.id === item.id ? { ...r, nop: verifiedNop } : r));

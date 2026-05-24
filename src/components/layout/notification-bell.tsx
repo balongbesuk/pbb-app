@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import { Bell, Check, X, ArrowRight, Info, CalendarDays, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -46,8 +45,6 @@ export function NotificationBell() {
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const pathname = usePathname();
-
   const fetchAll = async () => {
     try {
       const [notifs, reqs] = await Promise.all([getNotifications(), getPendingRequests()]);
@@ -65,12 +62,6 @@ export function NotificationBell() {
     const interval = setInterval(fetchAll, 60000);
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (mounted) {
-      fetchAll();
-    }
-  }, [pathname, mounted]);
 
   if (!mounted)
     return (

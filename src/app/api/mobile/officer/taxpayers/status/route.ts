@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { createAuditLog } from "@/app/actions/log-actions";
 import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
 import type { PaymentStatus } from "@prisma/client";
-import { notifyUser, notifyNopSubscribers } from "@/lib/push-notification";
 
 export async function POST(req: Request) {
   const headers = {
@@ -85,51 +84,6 @@ export async function POST(req: Request) {
       `Petugas mengubah status pembayaran WP ${result.taxData.namaWp} menjadi ${statusLabels[status] || status}`,
       auth.userId
     );
-
-    // Kirim Notifikasi
-    if (status === "LUNAS" || status === "BELUM_LUNAS") {
-      const isLunas = status === "LUNAS";
-      const penarikName = await prisma.user.findUnique({
-        where: { id: auth.userId },
-        select: { name: true },
-      });
-
-      const title = isLunas ? "✅ Setoran PBB Lunas" : "⚠️ Status Dibatalkan";
-      const message = isLunas
-        ? `${penarikName?.name || "Petugas"} mengkonfirmasi WP ${result.taxData.namaWp} telah membayar.`
-        : `${penarikName?.name || "Petugas"} membatalkan pelunasan WP ${result.taxData.namaWp} menjadi Belum Lunas.`;
-
-      const admins = await prisma.user.findMany({
-        where: { role: { in: ["ADMIN", "PENGGUNA"] } },
-        select: { id: true },
-      });
-
-      if (admins.length > 0) {
-        await prisma.notification.createMany({
-          data: admins.map((admin) => ({
-            userId: admin.id,
-            title,
-            message,
-            type: isLunas ? "ACCEPTED" : "INFO",
-          })),
-        });
-        
-        for (const admin of admins) {
-          notifyUser(admin.id, title, message);
-        }
-      }
-
-      // Notifikasi ke Warga (Push Notification)
-      const cleanNop = result.taxData.nop.replace(/\D/g, "");
-      if (cleanNop.length >= 18) {
-        const maskedNop = `${cleanNop.substring(0, 5)}...${cleanNop.substring(14)}`;
-        const citizenTitle = isLunas ? "Pembayaran Diterima!" : "Pembayaran Dibatalkan";
-        const citizenMessage = isLunas
-          ? `Tagihan PBB Anda untuk NOP ${maskedNop} telah dinyatakan LUNAS di server pusat.`
-          : `Pembayaran PBB untuk NOP ${maskedNop} telah dibatalkan menjadi BELUM LUNAS.`;
-        notifyNopSubscribers(cleanNop, citizenTitle, citizenMessage);
-      }
-    }
 
     return NextResponse.json({ 
       success: true, 
