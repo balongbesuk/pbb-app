@@ -58,6 +58,30 @@
       cursor: pointer;
     }
 
+    /* Custom Controls (Zoom + Layer) */
+    #custom-controls {
+      position: fixed; left: 16px; top: 16px; z-index: 1000;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .control-group {
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(20px);
+      border-radius: 24px; padding: 4px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.5);
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .control-btn {
+      width: 40px; height: 40px; border-radius: 20px;
+      border: none; background: transparent; color: #475569;
+      font-weight: 900; font-size: 11px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .zoom-btn { font-size: 20px; color: #1e293b; font-weight: normal; }
+    .control-btn.active { background: #3b82f6; color: white; }
+    .control-btn.active-emerald { background: #10b981; color: white; }
+    .control-btn:not(:last-child) { margin-bottom: 2px; }
+
     /* Legend */
     .legend {
       position: fixed; top: 16px; right: 16px; z-index: 1000;
@@ -329,6 +353,23 @@
 
   <div id="map"></div>
 
+  <!-- Custom Controls -->
+  <div id="custom-controls">
+    <div class="control-group">
+      <button class="control-btn zoom-btn" onclick="map.zoomIn()" title="Zoom In">+</button>
+      <button class="control-btn zoom-btn" onclick="map.zoomOut()" title="Zoom Out">−</button>
+    </div>
+    <div class="control-group">
+      <button class="control-btn active-emerald" id="btn-layer-BK" onclick="toggleLayer('BLOK')" title="Peta Blok">BK</button>
+    </div>
+    <div class="control-group">
+      <button class="control-btn" id="btn-layer-DS" onclick="toggleLayer('DESA')" title="Desa">DS</button>
+      <button class="control-btn" id="btn-layer-DN" onclick="toggleLayer('DUSUN')" title="Dusun">DN</button>
+      <button class="control-btn" id="btn-layer-RW" onclick="toggleLayer('RW')" title="RW">RW</button>
+      <button class="control-btn" id="btn-layer-RT" onclick="toggleLayer('RT')" title="RT">RT</button>
+    </div>
+  </div>
+
   <!-- Legend -->
   <div class="legend">
     <div class="legend-title">Status Bayar</div>
@@ -393,6 +434,28 @@
     var geoLayer = null;
     var currentTahun = new Date().getFullYear();
     var authToken = new URLSearchParams(window.location.search).get('token');
+    
+    var activeLayerType = 'BLOK';
+    var globalStats = {};
+    var globalGeoData = null;
+
+    function toggleLayer(type) {
+      activeLayerType = type;
+      document.querySelectorAll('#custom-controls .control-btn:not(.zoom-btn)').forEach(function(b) {
+        b.classList.remove('active', 'active-emerald');
+      });
+      var btnMap = { 'BLOK': 'BK', 'DESA': 'DS', 'DUSUN': 'DN', 'RW': 'RW', 'RT': 'RT' };
+      var btn = document.getElementById('btn-layer-' + btnMap[type]);
+      if(btn) {
+        if(type === 'BLOK') btn.classList.add('active-emerald');
+        else btn.classList.add('active');
+      }
+
+      if (geoLayer && globalGeoData) {
+        geoLayer.clearLayers();
+        geoLayer.addData(globalGeoData);
+      }
+    }
 
     function getAuthHeaders() {
       var headers = { 'Content-Type': 'application/json' };
@@ -410,6 +473,7 @@
     }
 
     function getStatsKey(props) {
+      if (props.regionType === 'BLOK') return 'BLOK_' + (props.blok || '').trim();
       if (props.regionType === 'RT') return 'RT_' + parseInt(props.rt || '0') + 'RW_' + parseInt(props.rw || '0');
       if (props.regionType === 'RW') return 'RW_' + parseInt(props.rw || '0');
       if (props.regionType === 'DUSUN') return 'DUSUN_' + (props.dusun || '').toUpperCase();
@@ -441,10 +505,10 @@
     var wpPanelHasMore = false;
     var wpPanelParams = {};
 
-    function openWpPanel(type, rt, rw, dusun, title) {
+    function openWpPanel(type, rt, rw, dusun, blok, title) {
       wpPanelPage = 1;
       wpPanelHasMore = false;
-      wpPanelParams = { type: type, rt: rt, rw: rw, dusun: dusun };
+      wpPanelParams = { type: type, rt: rt, rw: rw, dusun: dusun, blok: blok };
       wpPanelSearch = '';
       
       var searchInput = document.getElementById('wp-search-input');
@@ -493,6 +557,7 @@
         if (wpPanelParams.rt) params.set('rt', wpPanelParams.rt);
         if (wpPanelParams.rw) params.set('rw', wpPanelParams.rw);
         if (wpPanelParams.dusun) params.set('dusun', wpPanelParams.dusun);
+        if (wpPanelParams.blok) params.set('blok', wpPanelParams.blok);
         if (wpPanelSearch) params.set('search', wpPanelSearch);
 
         var res = await fetch('/api/region-unpaid?' + params.toString() + '&_t=' + Date.now(), {
@@ -824,8 +889,8 @@
       document.getElementById('retry-btn').style.display = 'none';
       document.getElementById('loading-overlay').classList.remove('hidden');
 
-      var geoData = null;
-      var stats = {};
+      globalGeoData = null;
+      globalStats = {};
 
       try {
         // Step 1: Load village config
@@ -845,14 +910,14 @@
         setStatus('Memuat Batas Wilayah...');
         var geoRes = await fetch('/maps/village.json?v=' + Date.now());
         if (!geoRes.ok) throw new Error('Gagal memuat peta: ' + geoRes.status);
-        geoData = await geoRes.json();
+        globalGeoData = await geoRes.json();
 
         // Step 3: Load Stats
         setStatus('Memuat Data Statistik...');
         var statsRes = await fetch('/api/region-stats?tahun=' + currentTahun, {
           headers: getAuthHeaders()
         });
-        if (statsRes.ok) stats = await statsRes.json();
+        if (statsRes.ok) globalStats = await statsRes.json();
 
         // Step 4: Render Map
         setStatus('Menggambar Peta...');
@@ -864,8 +929,6 @@
             zoomControl: false
           });
 
-          L.control.zoom({ position: 'topleft' }).addTo(map);
-
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OSM'
           }).addTo(map);
@@ -875,22 +938,14 @@
         if (geoLayer) map.removeLayer(geoLayer);
 
         // Add GeoJSON
-        geoLayer = L.geoJSON(geoData, {
+        geoLayer = L.geoJSON(globalGeoData, {
           style: function(feature) {
             var props = feature.properties;
             var type = props.regionType;
             var key = getStatsKey(props);
-            var s = stats[key] || { percentage: 0 };
+            var s = globalStats[key] || { percentage: 0 };
 
-            var hasRT = geoData.features.some(function(f) { return f.properties.regionType === 'RT'; });
-            var hasRW = geoData.features.some(function(f) { return f.properties.regionType === 'RW'; });
-            var hasDusun = geoData.features.some(function(f) { return f.properties.regionType === 'DUSUN'; });
-
-            var isPrimary = 
-              (type === 'RT') ||
-              (type === 'RW' && !hasRT) ||
-              (type === 'DUSUN' && !hasRW && !hasRT) ||
-              (type === 'DESA' && !hasDusun && !hasRW && !hasRT);
+            var isPrimary = (type === activeLayerType);
 
             return {
               fillColor: isPrimary ? getColor(s.percentage) : 'transparent',
@@ -904,12 +959,13 @@
           onEachFeature: function(feature, layer) {
             var props = feature.properties;
             var key = getStatsKey(props);
-            var s = stats[key] || { total: 0, lunas: 0, percentage: 0 };
+            var s = globalStats[key] || { total: 0, lunas: 0, percentage: 0 };
             var color = getColor(s.percentage);
             var pct = Math.round(s.percentage);
 
             var title = '';
-            if (props.regionType === 'RT') title = 'RT ' + (props.rt || '') + ' RW ' + (props.rw || '');
+            if (props.regionType === 'BLOK') title = 'Blok ' + (props.blok || '');
+            else if (props.regionType === 'RT') title = 'RT ' + (props.rt || '') + ' RW ' + (props.rw || '');
             else if (props.regionType === 'RW') title = 'RW ' + (props.rw || '');
             else if (props.regionType === 'DUSUN') title = 'Dusun ' + (props.dusun || '');
             else if (props.regionType === 'DESA') title = 'Desa Balongbesuk';
@@ -919,6 +975,7 @@
               + ' data-rt="' + (props.rt || '') + '"'
               + ' data-rw="' + (props.rw || '') + '"'
               + ' data-dusun="' + (props.dusun || '') + '"'
+              + ' data-blok="' + (props.blok || '') + '"'
               + ' data-title="' + escapeHtml(title) + '"';
 
             var html = '<div style="min-width:170px">' +
@@ -962,8 +1019,9 @@
         var rt = btn.getAttribute('data-rt');
         var rw = btn.getAttribute('data-rw');
         var dusun = btn.getAttribute('data-dusun');
+        var blok = btn.getAttribute('data-blok');
         var title = btn.getAttribute('data-title');
-        openWpPanel(type, rt, rw, dusun, title);
+        openWpPanel(type, rt, rw, dusun, blok, title);
       }
     });
 
