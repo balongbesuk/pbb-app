@@ -112,8 +112,24 @@ export async function notifyUser(userId: string, title: string, body: string, da
 }
 
 export async function notifyNopSubscribers(nop: string, title: string, body: string, data?: any) {
+  const cleanNop = nop.replace(/\D/g, "");
+  const dp1 = cleanNop.substring(0, 2);
+  const dp2 = cleanNop.substring(2, 4);
+  const dp3 = cleanNop.substring(4, 7);
+  const dp4 = cleanNop.substring(7, 10);
+  const dp5 = cleanNop.substring(10, 13);
+  const dp6 = cleanNop.substring(13, 17);
+  const dp7 = cleanNop.substring(17, 18);
+  const dottedNop = `${dp1}.${dp2}.${dp3}.${dp4}.${dp5}-${dp6}.${dp7}`;
+
   const subs = await prisma.pushSubscription.findMany({
-    where: { nop }
+    where: { 
+      OR: [
+        { nop }, 
+        { nop: cleanNop }, 
+        { nop: dottedNop }
+      ]
+    }
   });
   const tokens = subs.map(s => s.token);
   return sendPushNotification({ tokens, title, body, data });

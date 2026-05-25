@@ -61,7 +61,16 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
         const data = await response.json();
         if (data.success && Array.isArray(data.data)) {
           setResults(data.data);
-          const updated = pinnedList.map((p) => { const m = data.data.find((d: any) => d.nop === p.nop); return m ? { ...p, status: m.status } : p; });
+          const updated = pinnedList.map((p) => { 
+            const pClean = p.nop.replace(/\D/g, '');
+            const m = data.data.find((d: any) => {
+              if (d.nop.includes('X')) {
+                return d.namaWp === p.name && pClean.startsWith(d.nop.replace(/\D/g, ''));
+              }
+              return d.nop === p.nop || d.nop.replace(/\D/g, '') === pClean;
+            }); 
+            return m ? { ...p, status: m.status } : p; 
+          });
           if (updated.length > 0) { setPinnedList(updated); AsyncStorage.setItem('@pinned_nops_v2', JSON.stringify(updated)); }
           if (data.villageConfig) {
             setBapendaConfig(data.villageConfig);
@@ -102,7 +111,14 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
     } catch (err) { setErrorMsg('Gagal mengambil data. Pastikan server aktif.'); } finally { setLoading(false); }
   };
 
-  const isPinned = (item: any) => pinnedList.some((p) => p.nop === item.nop || (item.id && p.nop.replace(/\\D/g, '') === item.nop.replace(/\\D/g, '')));
+  const isPinned = (item: any) => pinnedList.some((p) => {
+    const pClean = p.nop.replace(/\D/g, '');
+    const itemClean = item.nop.replace(/\D/g, '');
+    if (item.nop.includes('X')) {
+      return p.name === item.namaWp && pClean.startsWith(itemClean);
+    }
+    return p.nop === item.nop || pClean === itemClean;
+  });
   const togglePin = async (item: any, verifiedNop?: string) => {
     if (!item) return;
     
@@ -158,7 +174,7 @@ export default function PaymentCheckScreen({ route, navigation }: ScreenProps<'P
       const res = await fetch(joinServerUrl(serverUrl, '/api/check-bapenda'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nop: actualNop, tahun: item.tahun }) });
       const data = await res.json();
       if (res.ok && data?.isPaid) { 
-        if (isAdmin) fetchTaxData(actualNop); 
+        fetchTaxData(actualNop); 
         setSyncModal({ visible: true, type: 'success', message: 'Pembayaran terdeteksi lunas.', wpData: { ...item, nop: actualNop } }); 
       }
       else { setSyncModal({ visible: true, type: 'unpaid', message: `Tagihan ${item.namaWp} masih belum lunas.`, wpData: { ...item, nop: actualNop } }); setLoading(false); }
