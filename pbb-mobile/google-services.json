@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "47228197062",
+    "project_id": "pbb-app-68273",
+    "storage_bucket": "pbb-app-68273.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:47228197062:android:773030600eca1c9d7e1fc7",
+        "android_client_info": {
+          "package_name": "com.balongbesuk.pbbmobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDz6hjCdp-pU7CZ2qcU7Fcdf4uVBcOLvtE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -42,6 +42,8 @@ model User {
   receivedTransferRequests TransferRequest[] @relation("Receiver")
   
   auditLogs     AuditLog[]
+  pushSubscriptions PushSubscription[]
+  webPushSubscriptions WebPushSubscription[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -198,3 +200,29 @@ model AuditLog {
   @@index([createdAt])
   @@index([userId, createdAt])
 }
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  token     String   // ExpoPushToken
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nop       String?  // Untuk langganan khusus wajib pajak
+  createdAt DateTime @default(now())
+  
+  @@index([token])
+  @@index([userId])
+  @@index([nop])
+}
+
+model WebPushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+

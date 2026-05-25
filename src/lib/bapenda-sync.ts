@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { notifyUser, notifyNopSubscribers } from "@/lib/push-notification";
 import axios from "axios";
 
 const PUBLIC_BAPENDA_RATE_LIMIT = {
@@ -276,7 +277,17 @@ export async function syncBapendaStatus({
         }));
 
         await prisma.notification.createMany({ data: notifData });
+
+        // Kirim Push Notification ke petugas
+        for (const userId of Array.from(targetUsers)) {
+          notifyUser(userId, "Lunas Bapenda Otomatis", `Wajib Pajak ${taxRecords[0]?.namaWp || "N/A"} (NOP ${cleanNop}) baru saja lunas.`);
+        }
       }
+      
+      // Kirim Push Notification ke warga yang mensubscribe NOP ini (tanpa full NOP)
+      const maskedNop = `${cleanNop.substring(0, 5)}...${cleanNop.substring(14)}`;
+      notifyNopSubscribers(cleanNop, "Pembayaran Diterima!", `Tagihan PBB Anda untuk NOP ${maskedNop} telah dinyatakan LUNAS di server pusat.`);
+      
     } catch (notifErr) {
       console.error("Gagal mengirim notifikasi:", notifErr);
     }

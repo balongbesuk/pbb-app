@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isPbbMobileEnabled } from "@/lib/mobile-access";
 import { createAuditLog } from "@/app/actions/log-actions";
 import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
+import { notifyUser } from "@/lib/push-notification";
 
 export async function POST(req: Request) {
   const headers = {
@@ -53,6 +54,27 @@ export async function POST(req: Request) {
         data: { penarikId: receiverId }
       });
 
+      await prisma.notification.create({
+        data: {
+          userId: receiverId,
+          title: "Tugas Penagihan Baru",
+          message: `Admin ${sender.name} menugaskan WP ${taxData.namaWp} kepada Anda.`,
+          type: "INFO",
+        }
+      });
+
+      if (taxData.penarikId && taxData.penarikId !== receiverId) {
+        await prisma.notification.create({
+          data: {
+            userId: taxData.penarikId,
+            title: "Pembatalan Tugas Penagihan",
+            message: `Admin ${sender.name} telah memindahkan WP ${taxData.namaWp} dari daftar tugas Anda.`,
+            type: "INFO",
+          }
+        });
+        notifyUser(taxData.penarikId, "Pembatalan Tugas Penagihan", `Admin ${sender.name} telah memindahkan WP ${taxData.namaWp} dari daftar tugas Anda.`);
+      }
+
       await createAuditLog(
         "TRANSFER_DIRECT",
         "TaxData",
@@ -60,6 +82,8 @@ export async function POST(req: Request) {
         `Admin ${sender.name} memindahkan alokasi WP ${taxData.namaWp} kepada petugas: ${receiver.name}`,
         senderId // Pass mobile senderId explicitly
       );
+
+      notifyUser(receiverId, "Tugas Penagihan Baru", `Admin ${sender.name} menugaskan WP ${taxData.namaWp} kepada Anda.`);
 
       return NextResponse.json({ success: true, message: "Alokasi berhasil dipindahkan" }, { headers });
     }
@@ -113,6 +137,8 @@ export async function POST(req: Request) {
           senderId // Pass mobile senderId explicitly
         );
       });
+      
+      notifyUser(receiverId, "Permintaan Pelimpahan", `${sender.name} ingin mengirimkan data WP ${taxData.namaWp} kepada Anda.`);
 
       return NextResponse.json({ success: true, message: "Permintaan pemindahan telah dikirim" }, { headers });
     }

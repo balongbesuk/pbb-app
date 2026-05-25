@@ -2,19 +2,36 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { ClientLayout } from "./ClientLayout";
+import { prisma } from "@/lib/prisma";
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   
-  if (!session) {
+  if (!session || !session.user) {
     redirect("/login");
   }
 
-  // Force password change if needed
-  // Note: we let them access the ganti-password page itself
-  // Actually, layout doesn't know the exact path easily in server components, 
-  // but we can check the session flag. Next.js App Router layout wraps children.
-  // The ganti-password page is INSIDE this layout group.
+  let shouldRedirect = false;
 
+  // Verifikasi apakah user id dari session benar-benar ada di database aktif.
+  // Ini krusial jika database sempat di-seed/reset ulang agar tidak memakai ID lama yang basi.
+  try {
+    const userExists = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true }
+    });
+
+    if (!userExists) {
+      console.warn(`[DashboardLayout] User ID ${session.user.id} dari session tidak ditemukan di DB baru. Mengarahkan ke halaman login.`);
+      shouldRedirect = true;
+    }
+  } catch (err) {
+    console.error("[DashboardLayout] Gagal memverifikasi user di DB:", err);
+  }
+
+  if (shouldRedirect) {
+    redirect("/login");
+  }
 
   return <ClientLayout>{children}</ClientLayout>;
 }

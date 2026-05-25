@@ -22,12 +22,16 @@ import TaxpayerDetailScreen from './src/screens/TaxpayerDetailScreen';
 import SelectOfficerScreen from './src/screens/SelectOfficerScreen';
 import UserAuthScreen from './src/screens/UserAuthScreen';
 import type { RootStackParamList } from './src/types/navigation';
+import { usePushNotifications } from './src/utils/usePushNotifications';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
   const [initialParams, setInitialParams] = useState<RootStackParamList['Dashboard'] | undefined>(undefined);
+  
+  // Inisialisasi global push notification listener
+  usePushNotifications();
 
   useEffect(() => {
     loadInitialSession();

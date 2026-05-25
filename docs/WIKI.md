@@ -38,6 +38,10 @@ Kami secara aktif melakukan audit keamanan menyeluruh dan menerapkan pengamanan 
 ### 3. Integrasi Cloudflare Turnstile & Lifecycle SPA
 *   **Explicit Dynamic Rendering**: Turnstile dipasang dengan mode rendering eksplisit (`?render=explicit`) di sisi klien. Widget diinisialisasi secara programmatik pada React `ref` kontainer, menjamin Turnstile selalu muncul kembali secara instan dan siap divalidasi ketika warga berpindah-pindah tab antara Peta GIS dan Cek Status tanpa perlu menyegarkan peramban (*SPA-safe lifecycle*).
 
+### 4. Sistem Push Notification Ganda (Double-Strike)
+*   **Web Push (VAPID & Service Worker)**: Dashboard admin/petugas dilengkapi dengan *Service Worker* yang mendaftarkan browser desktop (Chrome/Edge/Safari) ke database. Memungkinkan pengiriman *pop-up* notifikasi OS native (seperti Windows/Mac) secara instan (*real-time push*).
+*   **Mobile Push (Expo/Firebase)**: Berjalan berdampingan dengan Web Push. Setiap tugas, delegasi, atau pemindahan Wajib Pajak baru akan secara serentak dikirimkan ke aplikasi seluler petugas di lapangan dan ke browser desktop mereka tanpa jeda.
+
 ---
 
 ## Indeks Dokumentasi Lengkap

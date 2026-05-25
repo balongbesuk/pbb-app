@@ -137,6 +137,7 @@ PBB Manager v10.0 menerapkan pengamanan berlapis untuk melindungi privasi data w
 - Grafik performa pembayaran dan trend tahunan
 - Export laporan Excel/PDF untuk kebutuhan pelaporan
 - Sinkronisasi data dengan DHKP Bapenda (Smart Sync)
+- **Web Push Notifications Asli** untuk info delegasi tugas real-time di layar Desktop/Browser
 </details>
 
 ---

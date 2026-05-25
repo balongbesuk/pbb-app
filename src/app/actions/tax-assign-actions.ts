@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/server-auth";
 import { createAuditLog } from "./log-actions";
 import { formatZodError } from "@/lib/validations/schemas";
 import { buildTaxWhereInput } from "@/lib/tax-query";
+import { notifyUser } from "@/lib/push-notification";
 
 async function syncTaxMappingsForRecords(
   records: Array<{
@@ -70,6 +71,7 @@ export async function assignPenarikByFilter(
         dusun: true,
         rt: true,
         rw: true,
+        penarikId: true,
       },
     });
 
@@ -103,6 +105,38 @@ export async function assignPenarikByFilter(
       `Alokasi filter (${res.count} data) ke petugas: ${penarik?.name || "Dikosongkan"}`
     );
 
+    if (penarikId) {
+      await prisma.notification.create({
+        data: {
+          userId: penarikId,
+          title: "Tugas Penagihan Baru",
+          message: `Admin telah mengalokasikan ${res.count} data WP kepada Anda berdasarkan filter wilayah.`,
+          type: "INFO",
+        }
+      });
+      notifyUser(penarikId, "Tugas Penagihan Baru", `Admin telah mengalokasikan ${res.count} data WP kepada Anda berdasarkan filter wilayah.`);
+    }
+
+    // Notify old penariks
+    const oldPenarikMap = new Map<string, number>();
+    matchingRecords.forEach((record) => {
+      if (record.penarikId && record.penarikId !== penarikId) {
+        oldPenarikMap.set(record.penarikId, (oldPenarikMap.get(record.penarikId) || 0) + 1);
+      }
+    });
+
+    for (const [oldPenarikId, count] of Array.from(oldPenarikMap.entries())) {
+      await prisma.notification.create({
+        data: {
+          userId: oldPenarikId,
+          title: "Pembatalan Tugas Penagihan",
+          message: `Admin telah memindahkan ${count} data WP dari daftar tugas Anda berdasarkan filter wilayah.`,
+          type: "INFO",
+        }
+      });
+      notifyUser(oldPenarikId, "Pembatalan Tugas Penagihan", `Admin telah memindahkan ${count} data WP dari daftar tugas Anda berdasarkan filter wilayah.`);
+    }
+
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");
     return { success: true, count: res.count };
@@ -123,6 +157,7 @@ export async function assignPenarik(taxId: string, penarikId: string | null) {
         dusun: true,
         rt: true,
         rw: true,
+        penarikId: true,
       },
     });
     if (!data) throw new Error("Not found");
@@ -156,6 +191,30 @@ export async function assignPenarik(taxId: string, penarikId: string | null) {
       `Ubah penugasan objek WP ${data.namaWp} ke petugas: ${penarik?.name || "Dikosongkan"}`
     );
 
+    if (penarikId) {
+      await prisma.notification.create({
+        data: {
+          userId: penarikId,
+          title: "Tugas Penagihan Baru",
+          message: `Admin menugaskan WP ${data.namaWp} kepada Anda.`,
+          type: "INFO",
+        }
+      });
+      notifyUser(penarikId, "Tugas Penagihan Baru", `Admin menugaskan WP ${data.namaWp} kepada Anda.`);
+    }
+
+    if (data.penarikId && data.penarikId !== penarikId) {
+      await prisma.notification.create({
+        data: {
+          userId: data.penarikId,
+          title: "Pembatalan Tugas Penagihan",
+          message: `Admin telah memindahkan WP ${data.namaWp} dari daftar tugas Anda.`,
+          type: "INFO",
+        }
+      });
+      notifyUser(data.penarikId, "Pembatalan Tugas Penagihan", `Admin telah memindahkan WP ${data.namaWp} dari daftar tugas Anda.`);
+    }
+
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");
     return { success: true };
@@ -174,6 +233,7 @@ export async function assignPenarikBulk(taxIds: number[], penarikId: string | nu
         dusun: true,
         rt: true,
         rw: true,
+        penarikId: true,
       },
     });
 
@@ -205,6 +265,38 @@ export async function assignPenarikBulk(taxIds: number[], penarikId: string | nu
       null,
       `Alokasi masal ${taxIds.length} WP ke petugas: ${penarik?.name || "Dikosongkan"}`
     );
+
+    if (penarikId) {
+      await prisma.notification.create({
+        data: {
+          userId: penarikId,
+          title: "Tugas Penagihan Baru",
+          message: `Admin telah mengalokasikan ${taxIds.length} data WP kepada Anda secara masal.`,
+          type: "INFO",
+        }
+      });
+      notifyUser(penarikId, "Tugas Penagihan Baru", `Admin telah mengalokasikan ${taxIds.length} data WP kepada Anda secara masal.`);
+    }
+
+    // Notify old penariks
+    const oldPenarikMapBulk = new Map<string, number>();
+    records.forEach((record) => {
+      if (record.penarikId && record.penarikId !== penarikId) {
+        oldPenarikMapBulk.set(record.penarikId, (oldPenarikMapBulk.get(record.penarikId) || 0) + 1);
+      }
+    });
+
+    for (const [oldPenarikId, count] of Array.from(oldPenarikMapBulk.entries())) {
+      await prisma.notification.create({
+        data: {
+          userId: oldPenarikId,
+          title: "Pembatalan Tugas Penagihan",
+          message: `Admin telah memindahkan ${count} data WP dari daftar tugas Anda secara masal.`,
+          type: "INFO",
+        }
+      });
+      notifyUser(oldPenarikId, "Pembatalan Tugas Penagihan", `Admin telah memindahkan ${count} data WP dari daftar tugas Anda secara masal.`);
+    }
 
     revalidatePath("/data-pajak");
     revalidatePath("/dashboard");

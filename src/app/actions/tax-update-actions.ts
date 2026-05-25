@@ -8,6 +8,7 @@ import { createAuditLog } from "./log-actions";
 import { TaxRegionUpdateSchema, formatZodError } from "@/lib/validations/schemas";
 import { z } from "zod";
 import { buildTaxWhereInput } from "@/lib/tax-query";
+import { notifyUser, notifyNopSubscribers } from "@/lib/push-notification";
 
 const statusSchema = z.object({
   id: z.union([z.string(), z.number()]),
@@ -60,30 +61,65 @@ export async function updatePaymentStatus(
       `Ubah status pembayaran menjadi ${paymentStatus} (ID: ${numId})`
     );
 
-    // Kirim notifikasi ke semua Admin jika status berubah ke LUNAS
+    // Notifikasi dan Push Notification
     if (paymentStatus === "LUNAS" || paymentStatus === "BELUM_LUNAS") {
+      const isLunas = paymentStatus === "LUNAS";
       const penarikName = await prisma.user.findUnique({
         where: { id: userId },
         select: { name: true },
       });
 
-      const admins = await prisma.user.findMany({
-        where: { role: { in: ["ADMIN", "PENGGUNA"] } },
-        select: { id: true },
-      });
+      // Siapkan pesan notifikasi
+      const title = isLunas ? "✅ Setoran PBB Lunas" : "⚠️ Status Dibatalkan";
+      const message = isLunas
+        ? `${penarikName?.name || (role === "ADMIN" ? "Admin" : "Penarik")} mengkonfirmasi WP ${data.namaWp} telah membayar.`
+        : `${penarikName?.name || (role === "ADMIN" ? "Admin" : "Penarik")} membatalkan pelunasan WP ${data.namaWp} menjadi Belum Lunas.`;
 
-      if (admins.length > 0) {
-        const isLunas = paymentStatus === "LUNAS";
-        await prisma.notification.createMany({
-          data: admins.map((admin) => ({
-            userId: admin.id,
-            title: isLunas ? "✅ Setoran PBB Lunas" : "⚠️ Status Dibatalkan",
-            message: isLunas
-              ? `${penarikName?.name || "Penarik"} mengkonfirmasi WP ${data.namaWp} (${data.dusun || ""}, RT ${data.rt || "-"}/RW ${data.rw || "-"}) telah membayar.`
-              : `${penarikName?.name || "Penarik"} membatalkan pelunasan WP ${data.namaWp} (${data.dusun || ""}, RT ${data.rt || "-"}/RW ${data.rw || "-"}) menjadi Belum Lunas.`,
-            type: isLunas ? "ACCEPTED" : "INFO",
-          })),
+      // 1. Notifikasi ke Admin
+      if (role !== "ADMIN") {
+        const admins = await prisma.user.findMany({
+          where: { role: { in: ["ADMIN", "PENGGUNA"] } },
+          select: { id: true },
         });
+
+        if (admins.length > 0) {
+          await prisma.notification.createMany({
+            data: admins.map((admin) => ({
+              userId: admin.id,
+              title,
+              message,
+              type: isLunas ? "ACCEPTED" : "INFO",
+            })),
+          });
+          
+          for (const admin of admins) {
+            notifyUser(admin.id, title, message);
+          }
+        }
+      }
+
+      // 2. Notifikasi ke Penarik (jika diubah oleh Admin)
+      if (role === "ADMIN" && data.penarikId && data.penarikId !== userId) {
+        await prisma.notification.create({
+          data: {
+            userId: data.penarikId,
+            title,
+            message,
+            type: isLunas ? "ACCEPTED" : "INFO",
+          }
+        });
+        notifyUser(data.penarikId, title, message);
+      }
+      
+      // 3. Notifikasi ke Warga (Push Notification saja, tidak ada tabel User untuk warga)
+      const cleanNop = data.nop.replace(/\D/g, "");
+      if (cleanNop.length >= 18) {
+        const maskedNop = `${cleanNop.substring(0, 5)}...${cleanNop.substring(14)}`;
+        const citizenTitle = isLunas ? "Pembayaran Diterima!" : "Pembayaran Dibatalkan";
+        const citizenMessage = isLunas
+          ? `Tagihan PBB Anda untuk NOP ${maskedNop} telah dinyatakan LUNAS di server pusat.`
+          : `Pembayaran PBB untuk NOP ${maskedNop} telah dibatalkan menjadi BELUM LUNAS.`;
+        notifyNopSubscribers(cleanNop, citizenTitle, citizenMessage);
       }
     }
 
@@ -157,29 +193,77 @@ export async function bulkUpdatePaymentStatus(
       `Ubah status pembayaran ${updatedCount} data WP menjadi ${paymentStatus}`
     );
 
-    if ((paymentStatus === "LUNAS" || paymentStatus === "BELUM_LUNAS") && (role === "PENARIK" || role === "ADMIN")) {
+    if ((paymentStatus === "LUNAS" || paymentStatus === "BELUM_LUNAS")) {
+      const isLunas = paymentStatus === "LUNAS";
       const penarikName = await prisma.user.findUnique({
         where: { id: userId },
         select: { name: true },
       });
+      
+      const title = isLunas ? "📦 Setoran Massal WP Lunas" : "⚠️ Pembatalan Massal";
+      const message = isLunas
+        ? `${penarikName?.name || (role === "ADMIN" ? "Admin" : "Penarik")} mengkonfirmasi ${updatedCount} data WP sekaligus telah lunas.`
+        : `${penarikName?.name || (role === "ADMIN" ? "Admin" : "Penarik")} membatalkan pelunasan ${updatedCount} data WP sekaligus.`;
 
-      const admins = await prisma.user.findMany({
-        where: { role: { in: ["ADMIN", "PENGGUNA"] } },
-        select: { id: true },
-      });
-
-      if (admins.length > 0) {
-        const isLunas = paymentStatus === "LUNAS";
-        await prisma.notification.createMany({
-          data: admins.map((admin) => ({
-            userId: admin.id,
-            title: isLunas ? "📦 Setoran Massal WP Lunas" : "⚠️ Pembatalan Massal",
-            message: isLunas
-              ? `${penarikName?.name || "Penarik"} mengkonfirmasi ${updatedCount} data WP sekaligus telah lunas.`
-              : `${penarikName?.name || "Penarik"} membatalkan pelunasan ${updatedCount} data WP sekaligus.`,
-            type: isLunas ? "ACCEPTED" : "INFO",
-          })),
+      // 1. Notifikasi ke Admin
+      if (role !== "ADMIN") {
+        const admins = await prisma.user.findMany({
+          where: { role: { in: ["ADMIN", "PENGGUNA"] } },
+          select: { id: true },
         });
+
+        if (admins.length > 0) {
+          await prisma.notification.createMany({
+            data: admins.map((admin) => ({
+              userId: admin.id,
+              title,
+              message,
+              type: isLunas ? "ACCEPTED" : "INFO",
+            })),
+          });
+          
+          for (const admin of admins) {
+            notifyUser(admin.id, title, message);
+          }
+        }
+      }
+
+      // 2. Notifikasi ke masing-masing Penarik (jika diubah oleh Admin)
+      if (role === "ADMIN") {
+        const penarikIdsToNotify = new Set<string>();
+        taxDataRecords.forEach(d => {
+          if (d.penarikId && d.penarikId !== userId) {
+            penarikIdsToNotify.add(d.penarikId);
+          }
+        });
+
+        if (penarikIdsToNotify.size > 0) {
+          await prisma.notification.createMany({
+            data: Array.from(penarikIdsToNotify).map(pid => ({
+              userId: pid,
+              title,
+              message,
+              type: isLunas ? "ACCEPTED" : "INFO",
+            }))
+          });
+          
+          for (const pid of Array.from(penarikIdsToNotify)) {
+            notifyUser(pid, title, message);
+          }
+        }
+      }
+      
+      // 3. Notifikasi ke Warga yang berlangganan masing-masing NOP
+      const citizenTitle = isLunas ? "Pembayaran Diterima!" : "Pembayaran Dibatalkan";
+      for (const d of taxDataRecords) {
+        const cleanNop = d.nop.replace(/\D/g, "");
+        if (cleanNop.length >= 18) {
+          const maskedNop = `${cleanNop.substring(0, 5)}...${cleanNop.substring(14)}`;
+          const citizenMessage = isLunas
+            ? `Tagihan PBB Anda untuk NOP ${maskedNop} telah dinyatakan LUNAS di server pusat.`
+            : `Pembayaran PBB untuk NOP ${maskedNop} telah dibatalkan menjadi BELUM LUNAS.`;
+          notifyNopSubscribers(cleanNop, citizenTitle, citizenMessage);
+        }
       }
     }
 

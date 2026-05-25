@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createAuditLog } from "./log-actions";
 import { TransferRequestSchema, formatZodError } from "@/lib/validations/schemas";
+import { notifyUser } from "@/lib/push-notification";
 
 type SessionUserWithRole = {
   id: string;
@@ -86,7 +87,7 @@ export async function sendTransferRequest(
     }
 
     // 3. Create request
-    await prisma.transferRequest.create({
+    const tr = await prisma.transferRequest.create({
       data: {
         taxId,
         senderId,
@@ -96,6 +97,18 @@ export async function sendTransferRequest(
         status: "PENDING",
       },
     });
+
+    await prisma.notification.create({
+      data: {
+        userId: receiverId,
+        title: "Permintaan Pemindahan Alokasi",
+        message: `${sessionUser.name} ingin ${type === "GIVE" ? "mengirimkan" : "meminta"} data WP ${taxData.namaWp} kepada Anda.`,
+        type: "REQUEST",
+        link: tr.id,
+      },
+    });
+
+    notifyUser(receiverId, "Permintaan Pelimpahan", `${sessionUser.name} ingin ${type === "GIVE" ? "mengirimkan" : "meminta"} data WP ${taxData.namaWp} kepada Anda.`);
 
     const typeLabel = type === "GIVE" ? "penyerahan" : "pengambilan";
     await createAuditLog(
@@ -170,6 +183,7 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
             type: "ACCEPTED",
           },
         });
+        notifyUser(request.senderId, "Permintaan Disetujui", `${sessionUser.name} telah menyetujui ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`);
       } else {
         // REJECTED flow
         await tx.transferRequest.update({
@@ -185,6 +199,7 @@ export async function handleTransferResponse(requestId: string, status: "ACCEPTE
             type: "REJECTED",
           },
         });
+        notifyUser(request.senderId, "Permintaan Ditolak", `${sessionUser.name} menolak ${request.type === "GIVE" ? "penyerahan" : "pengambilan"} data WP ${request.taxData.namaWp}.`);
       }
       
       return request;
@@ -214,7 +229,11 @@ export async function getNotifications() {
   try {
     const session = await getServerSession(authOptions);
     const user = session?.user as SessionUserWithRole | undefined;
-    if (!user) return [];
+    console.log("getNotifications called - session user:", user);
+    if (!user) {
+      console.log("getNotifications: user is not defined in session");
+      return [];
+    }
 
     // Hapus notifikasi yang lebih dari 7 hari (cleanup otomatis)
     const sevenDaysAgo = new Date();
@@ -226,12 +245,15 @@ export async function getNotifications() {
       },
     });
 
-    return await prisma.notification.findMany({
+    const notifs = await prisma.notification.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: 20,
     });
-  } catch {
+    console.log(`getNotifications: found ${notifs.length} notifications for user ${user.id}`);
+    return notifs;
+  } catch (err) {
+    console.error("Error in getNotifications server action:", err);
     return [];
   }
 }

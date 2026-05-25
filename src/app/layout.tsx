@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import QueryProvider from "@/components/query-provider";
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import { WebPushProvider } from "@/components/web-push-provider";
 
 import { getVillageConfig } from "@/app/actions/settings-actions";
 
@@ -78,12 +79,14 @@ export default function RootLayout({
         >
           <QueryProvider>
             <AuthProvider>
-              <NuqsAdapter>
-                <div className="gradient-bg min-h-screen print:h-auto print:min-h-0 print:bg-white" style={{ position: "relative", zIndex: 2 }}>
-                  {children}
-                </div>
-                <Toaster position="top-right" />
-              </NuqsAdapter>
+              <WebPushProvider>
+                <NuqsAdapter>
+                  <div className="gradient-bg min-h-screen print:h-auto print:min-h-0 print:bg-white" style={{ position: "relative", zIndex: 2 }}>
+                    {children}
+                  </div>
+                  <Toaster position="top-right" />
+                </NuqsAdapter>
+              </WebPushProvider>
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>
