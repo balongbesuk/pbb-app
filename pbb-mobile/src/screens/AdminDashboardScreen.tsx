@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ScreenProps } from '../types/navigation';
-import { authenticatedFetch, formatCurrency } from '../utils/server';
+import { authenticatedFetch, formatCurrency, joinServerUrl } from '../utils/server';
 import { ScalableButton } from '../components/ScalableButton';
 import { AppScreenHeader } from '../components/AppScreenHeader';
 import { AppActionCard } from '../components/AppActionCard';
@@ -18,6 +18,7 @@ import { AppEmptyState } from '../components/AppEmptyState';
 import { AppSkeletonCard } from '../components/AppSkeletonCard';
 import { useServerHealth } from '../utils/hooks';
 import { appTheme } from '../theme/app-theme';
+import { usePushNotifications } from '../utils/usePushNotifications';
 
 export default function AdminDashboardScreen({ route, navigation }: ScreenProps<'AdminDashboard'>) {
   const { serverUrl, user, villageName } = route.params;
@@ -28,11 +29,30 @@ export default function AdminDashboardScreen({ route, navigation }: ScreenProps<
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
   const { health } = useServerHealth(serverUrl);
+  const { expoPushToken } = usePushNotifications();
 
   const firstName = user?.name?.trim()?.split(/\s+/)[0] || 'Petugas';
   const currentYear = dashboardData?.tahunPajak || new Date().getFullYear();
 
   useEffect(() => { fetchDashboard(); }, []);
+
+  useEffect(() => {
+    if (expoPushToken?.data && user?.id) {
+      const registerPush = async () => {
+        try {
+          await fetch(joinServerUrl(serverUrl, '/api/mobile/push/register'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: expoPushToken.data, userId: user.id })
+          });
+          console.log('✅ Registered/Updated push token on dashboard mount:', expoPushToken.data);
+        } catch (e) {
+          console.warn('❌ Failed to register push token on dashboard mount:', e);
+        }
+      };
+      registerPush();
+    }
+  }, [expoPushToken, user?.id]);
 
   const fetchDashboard = async () => {
     try {

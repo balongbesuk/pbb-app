@@ -39,6 +39,7 @@ export async function sendPushNotification({
       title,
       body,
       data,
+      channelId: 'default',
     });
   }
 
@@ -49,6 +50,20 @@ export async function sendPushNotification({
     try {
       const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
       tickets.push(...ticketChunk);
+      
+      // Log details of each ticket to diagnose credential or token issues
+      for (let i = 0; i < ticketChunk.length; i++) {
+        const ticket = ticketChunk[i];
+        const message = chunk[i];
+        if (ticket.status === 'error') {
+          console.error(`❌ Expo Push Error for token ${message.to}:`, ticket.message);
+          if (ticket.details) {
+            console.error(`   Error details:`, JSON.stringify(ticket.details));
+          }
+        } else {
+          console.log(`✅ Expo Push Success for token ${message.to}: Ticket ID ${ticket.id}`);
+        }
+      }
     } catch (error) {
       console.error('Error sending push notification chunk:', error);
     }
