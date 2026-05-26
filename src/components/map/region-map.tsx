@@ -581,7 +581,7 @@ export function RegionMap({
       <style dangerouslySetInnerHTML={{ __html: mapStyles }} />
       {/* Peta Tanpa Batas */}
       <div id="map-container-root" ref={mapRef} className="absolute inset-0 z-0 bg-[#f1f5f9]">
-        <MapContainer center={center} zoom={zoom} scrollWheelZoom={true} style={{ height: "100%", width: "100%", background: "#f1f5f9" }} zoomControl={false}>
+        <MapContainer center={center} zoom={zoom} minZoom={14} scrollWheelZoom={true} style={{ height: "100%", width: "100%", background: "#f1f5f9" }} zoomControl={false}>
           {showSatellite ? (
             <TileLayer 
               attribution='&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'

@@ -48,6 +48,7 @@ export function MapPickerLeaflet({
         <MapContainer
             center={[tempLoc.lat, tempLoc.lng]}
             zoom={15}
+            minZoom={14}
             style={{ width: "100%", height: "100%", zIndex: 0 }}
             scrollWheelZoom
         >

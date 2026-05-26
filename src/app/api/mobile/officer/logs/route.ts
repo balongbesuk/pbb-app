@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { requireMobileAuth, unauthorizedMobileResponse } from "@/lib/mobile-auth";
 
@@ -26,7 +27,7 @@ export async function GET(req: Request) {
       prisma.auditLog.findMany({
         where: { 
           userId: auth.userId,
-          action: "UPDATE_PAYMENT",
+          action: { in: ["UPDATE_PAYMENT", "UPDATE_STATUS_MOBILE"] },
         },
         orderBy: { createdAt: "desc" },
         take: limit,
@@ -35,7 +36,7 @@ export async function GET(req: Request) {
       prisma.auditLog.count({
         where: { 
           userId: auth.userId,
-          action: "UPDATE_PAYMENT"
+          action: { in: ["UPDATE_PAYMENT", "UPDATE_STATUS_MOBILE"] }
         }
       })
     ]);

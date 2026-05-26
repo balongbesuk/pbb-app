@@ -197,6 +197,7 @@ export function SpptMutationDialog({
     if (open) {
       setStep(1);
       setPreviewHtml("");
+      setNewDataList([{ ...oldData }]);
       
       // Auto-detect village config
       fetch("/api/village-config")
@@ -214,7 +215,7 @@ export function SpptMutationDialog({
         })
         .catch(err => console.error("Gagal load config desa:", err));
     }
-  }, [open]);
+  }, [open, oldData.nop]);
 
   const totalLuasTanahBaru = useMemo(() => 
     newDataList.reduce((acc, curr) => acc + Number(curr.luasTanah || 0), 0)

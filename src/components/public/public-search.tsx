@@ -99,6 +99,7 @@ export function PublicSearch({
   const [verifiedNops, setVerifiedNops] = useState<Record<number, boolean>>({});
   const [unmaskedNops, setUnmaskedNops] = useState<Record<number, string>>({});
   const [spptUrls, setSpptUrls] = useState<Record<number, string>>({});
+  const [verifiedPins, setVerifiedPins] = useState<Record<number, string>>({});
   
   // State for PIN modal
   const [pinModalOpen, setPinModalOpen] = useState(false);
@@ -506,55 +507,56 @@ export function PublicSearch({
     setPinError("");
 
     try {
-      if (pinActionType === "view_pdf") {
-        const res = await getSecureArsipUrl(pinTargetItem.id, pinValue.trim(), tahunPajak);
-        if (res.success && res.arsipUrl) {
-          setSpptUrls(prev => ({ ...prev, [pinTargetItem.id]: res.arsipUrl! }));
-          setVerifiedNops(prev => ({ ...prev, [pinTargetItem.id]: true }));
-          setUnmaskedNops(prev => ({ ...prev, [pinTargetItem.id]: pinTargetItem.nop }));
-          
-          setOpenPdfMap(prev => ({ ...prev, [pinTargetItem.nop]: true }));
-          
-          toast.success("PIN Terverifikasi! Dokumen E-SPPT dibuka.");
-          setPinModalOpen(false);
-        } else {
-          setPinError(res.message || "PIN Salah.");
-          if (res.rateLimited) {
-            setPinLockTimer(900);
-          }
-        }
-      } else {
-        const res = await getUnmaskedTaxData(pinTargetItem.id, pinValue.trim(), tahunPajak);
-        if (res.success && res.nop) {
-          setUnmaskedNops(prev => ({ ...prev, [pinTargetItem.id]: res.nop! }));
-          setVerifiedNops(prev => ({ ...prev, [pinTargetItem.id]: true }));
-          
-          toast.success("PIN Terverifikasi! Fitur terbuka.");
-          setPinModalOpen(false);
+      const cleanPin = pinValue.trim();
+      
+      // 1. Validasi PIN & Dapatkan NOP Asli
+      const resUnmask = await getUnmaskedTaxData(pinTargetItem.id, cleanPin, tahunPajak);
+      if (!resUnmask.success || !resUnmask.nop) {
+        setPinError(resUnmask.message || "PIN Salah.");
+        if (resUnmask.rateLimited) setPinLockTimer(900);
+        return;
+      }
 
-          if (pinActionType === "copy_nop") {
-            const cleanNop = res.nop!.replace(/\D/g, "");
-            navigator.clipboard.writeText(cleanNop);
-            setCopiedNop(pinTargetItem.nop);
-            toast.success(`NOP asli ${cleanNop} disalin`);
-            setTimeout(() => setCopiedNop(null), 2000);
-          } else if (pinActionType === "print_receipt") {
-            const unmaskedItem = { ...pinTargetItem, nop: res.nop! };
-            setSelectedReceiptItem(unmaskedItem);
-          } else if (pinActionType === "pay_online") {
-            handleCheckBapenda(res.nop!, pinTargetItem.id);
-          } else if (pinActionType === "mutation") {
-            setMutationItem(pinTargetItem);
-          } else if (pinActionType === "spop") {
-            setSpopItem(pinTargetItem);
-          }
-        } else {
-          setPinError(res.message || "PIN Salah.");
-          if (res.rateLimited) {
-            setPinLockTimer(900);
-          }
+      // 2. Jika ada arsip E-SPPT, selalu ambil URL-nya sekalian untuk jaga-jaga user mau lihat E-SPPT nanti
+      let arsipUrl = "";
+      if (pinTargetItem.hasArsip) {
+        const resPdf = await getSecureArsipUrl(pinTargetItem.id, cleanPin, tahunPajak);
+        if (resPdf.success && resPdf.arsipUrl) {
+          arsipUrl = resPdf.arsipUrl;
         }
       }
+
+      // 3. Simpan semua state yang dibutuhkan secara global
+      setVerifiedPins(prev => ({ ...prev, [pinTargetItem.id]: cleanPin }));
+      setVerifiedNops(prev => ({ ...prev, [pinTargetItem.id]: true }));
+      setUnmaskedNops(prev => ({ ...prev, [pinTargetItem.id]: resUnmask.nop! }));
+      if (arsipUrl) {
+        setSpptUrls(prev => ({ ...prev, [pinTargetItem.id]: arsipUrl }));
+      }
+
+      toast.success("PIN Terverifikasi! Akses dibuka.");
+      setPinModalOpen(false);
+
+      // 4. Eksekusi aksi yang diminta pertama kali
+      if (pinActionType === "view_pdf") {
+        setOpenPdfMap(prev => ({ ...prev, [pinTargetItem.nop]: true }));
+      } else if (pinActionType === "copy_nop") {
+        const unmaskedClean = resUnmask.nop!.replace(/\D/g, "");
+        navigator.clipboard.writeText(unmaskedClean);
+        setCopiedNop(pinTargetItem.nop);
+        toast.success(`NOP asli ${unmaskedClean} disalin`);
+        setTimeout(() => setCopiedNop(null), 2000);
+      } else if (pinActionType === "print_receipt") {
+        const unmaskedItem = { ...pinTargetItem, nop: resUnmask.nop! };
+        setSelectedReceiptItem(unmaskedItem);
+      } else if (pinActionType === "pay_online") {
+        handleCheckBapenda(resUnmask.nop!, pinTargetItem.id);
+      } else if (pinActionType === "mutation") {
+        setMutationItem(pinTargetItem);
+      } else if (pinActionType === "spop") {
+        setSpopItem(pinTargetItem);
+      }
+
     } catch (err) {
       setPinError("Gagal menghubungi server.");
     } finally {

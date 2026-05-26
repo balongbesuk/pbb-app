@@ -206,22 +206,16 @@ export function SpopFormDialog({
 
 
   useEffect(() => {
-    if (!taxItem) return;
-    const defaults = buildSpopFormDefaults(taxItem);
-    if (villageConfig) {
-      defaults.desaObjek = villageConfig.namaDesa || defaults.desaObjek || "";
+    if (open && taxItem) {
+      const defaults = buildSpopFormDefaults(taxItem);
+      if (villageConfig) {
+        defaults.desaObjek = villageConfig.namaDesa || defaults.desaObjek || "";
+      }
+      setForm(defaults);
+      setStep(1);
+      clearPreview();
     }
-    
-    setForm(defaults);
-    setStep(1);
-    clearPreview();
-  }, [taxItem, villageConfig]);
-
-  useEffect(() => {
-    if (open) return;
-    clearPreview();
-    setStep(1);
-  }, [open]);
+  }, [open, taxItem?.nop, villageConfig?.namaDesa]);
 
 
 

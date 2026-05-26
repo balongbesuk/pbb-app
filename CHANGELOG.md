@@ -13,6 +13,12 @@ Pembaruan ganda untuk platform web (v10.1) dan aplikasi seluler (v2.1) yang berf
 - **Perombakan Layout Dashboard Profil (`/settings/profile`)**: Merombak struktur halaman profil dari tumpukan panel vertikal menjadi desain **Grid Glassmorphism 2 Kolom** yang seimbang dan elegan layaknya dashboard premium modern. Kolom kiri difokuskan penuh untuk identitas visual (Foto & Tanda Tangan), sementara kolom kanan didedikasikan untuk pengaturan informasi personal dan keamanan kata sandi.
 - **Panduan Cerdas Upload Gambar**: Menambahkan kotak informasi panduan *(Tips and Tricks)* yang ramah pengguna, menyarankan penggunaan format PNG transparan, crop rapat, dan rasio proporsional, guna menghasilkan cetakan tanda tangan pada kuitansi yang sempurna.
 
+### Perbaikan Bug & Stabilitas Sistem (v10.1 & v2.1)
+- **Stabilitas Dialog SPOP & Mutasi**: Menyelesaikan _bug_ _infinite re-render_ (loop reset terus menerus) pada form E-SPOP yang memicu kehilangan isian secara tiba-tiba, serta memperbaiki _bug_ tampilan data usang pada dialog Mutasi E-SPPT dengan memaksa pembaruan data (_reset_) ketika jendela dibuka.
+- **Tampilan Push Notification Sempurna**: Memperbaiki logo PBB (_Push Icon_) yang terpotong pada _Push Notification_ (baik di web maupun PBB Mobile) dengan menyiapkan gambar berukuran presisi serta _padding_ yang sesuai pedoman antarmuka.
+- **Visibilitas Super Admin di PBB Mobile**: Mengatasi _bug_ di mana Super Admin tidak bisa menerima notifikasi Permintaan Pengalihan (Transfer) WP karena disembunyikan dari daftar pilihan tujuan transfer. Akun berstatus `ADMIN` kini dapat dipilih secara normal di aplikasi penagih.
+- **Riwayat Notifikasi & Aktivitas Akurat**: Menambahkan `force-dynamic` pada _API Route_ Next.js untuk mencegah mekanisme _caching_ statis yang membuat daftar notifikasi PBB Mobile menjadi kosong/kadaluarsa, serta memperbaiki sistem filter _Audit Log_ agar pelunasan dari HP petugas tercatat rapi di Riwayat Aktivitas Super Admin.
+
 ---
 
 ## PBB Mobile v2.0 - 2026-05-24: Kemitraan Digital & Sinkronisasi Bapenda Lanjutan
