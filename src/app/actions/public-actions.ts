@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { findArchiveFilenameByNop, getArchiveDir, getCachedArchiveIndex } from "@/lib/archive-utils";
+import { generateArchiveToken } from "@/lib/archive-token";
 import { getNopVariations } from "@/lib/utils";
 import { getClientIp } from "@/lib/request-ip";
 
@@ -309,7 +310,9 @@ export async function getSecureArsipUrl(id: number, pin: string, tahun: number) 
       return { success: false, message: "Berkas PDF E-SPPT untuk NOP ini tidak ditemukan di server pusat." };
     }
 
-    const secureUrl = `/arsip-pbb/${tahun}/${matchedArchive}?pin=${cleanPin}`;
+    // Generate one-time token (sekali pakai, expired 5 menit)
+    const token = generateArchiveToken(String(tahun), matchedArchive);
+    const secureUrl = `/arsip-pbb/download?token=${token}`;
 
     return {
       success: true,

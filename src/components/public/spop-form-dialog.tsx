@@ -111,70 +111,70 @@ const buildingCategories: Array<{
   label: string;
   options: Array<{ value: BuildingCategoryValueMap[BuildingCategoryKey]; label: string }>;
 }> = [
-  {
-    id: "kondisi",
-    label: "Kondisi Pada Umumnya",
-    options: [
-      { value: "SANGAT_BAIK", label: "Sangat Baik" },
-      { value: "BAIK", label: "Baik" },
-      { value: "SEDANG", label: "Sedang" },
-      { value: "JELEK", label: "Jelek" },
-    ],
-  },
-  {
-    id: "konstruksi",
-    label: "Konstruksi",
-    options: [
-      { value: "BAJA", label: "Baja" },
-      { value: "BETON", label: "Beton" },
-      { value: "BATU_BATA", label: "Batu Bata" },
-      { value: "KAYU", label: "Kayu" },
-    ],
-  },
-  {
-    id: "atap",
-    label: "Atap",
-    options: [
-      { value: "DECRABON", label: "Decrabor/Beton" },
-      { value: "GENTENG_BETON", label: "Gtg Beton" },
-      { value: "GENTENG_BIASA", label: "Gtg Biasa/Sirap" },
-      { value: "ASBES", label: "Asbes" },
-      { value: "SENG", label: "Seng" },
-    ],
-  },
-  {
-    id: "dinding",
-    label: "Dinding",
-    options: [
-      { value: "KACA", label: "Kaca/Alumunium" },
-      { value: "BETON", label: "Beton" },
-      { value: "BATA", label: "Bata/Conblok" },
-      { value: "KAYU", label: "Kayu" },
-      { value: "SENG", label: "Seng" },
-      { value: "TANPA_DINDING", label: "Tanpa Dinding" },
-    ],
-  },
-  {
-    id: "lantai",
-    label: "Lantai",
-    options: [
-      { value: "MARMER", label: "Marmer" },
-      { value: "KERAMIK", label: "Keramik" },
-      { value: "TERASO", label: "Teraso" },
-      { value: "UBIN", label: "Ubin PC/Papan" },
-      { value: "SEMEN", label: "Semen" },
-    ],
-  },
-  {
-    id: "langitLangit",
-    label: "Langit-langit",
-    options: [
-      { value: "AKUSTIK", label: "Akustik/Jati" },
-      { value: "TRIPLEK", label: "Triplek/Asbes/Bambu" },
-      { value: "TANPA_LANGIT", label: "Tidak Ada" },
-    ],
-  },
-];
+    {
+      id: "kondisi",
+      label: "Kondisi Pada Umumnya",
+      options: [
+        { value: "SANGAT_BAIK", label: "Sangat Baik" },
+        { value: "BAIK", label: "Baik" },
+        { value: "SEDANG", label: "Sedang" },
+        { value: "JELEK", label: "Jelek" },
+      ],
+    },
+    {
+      id: "konstruksi",
+      label: "Konstruksi",
+      options: [
+        { value: "BAJA", label: "Baja" },
+        { value: "BETON", label: "Beton" },
+        { value: "BATU_BATA", label: "Batu Bata" },
+        { value: "KAYU", label: "Kayu" },
+      ],
+    },
+    {
+      id: "atap",
+      label: "Atap",
+      options: [
+        { value: "DECRABON", label: "Decrabor/Beton" },
+        { value: "GENTENG_BETON", label: "Gtg Beton" },
+        { value: "GENTENG_BIASA", label: "Gtg Biasa/Sirap" },
+        { value: "ASBES", label: "Asbes" },
+        { value: "SENG", label: "Seng" },
+      ],
+    },
+    {
+      id: "dinding",
+      label: "Dinding",
+      options: [
+        { value: "KACA", label: "Kaca/Alumunium" },
+        { value: "BETON", label: "Beton" },
+        { value: "BATA", label: "Bata/Conblok" },
+        { value: "KAYU", label: "Kayu" },
+        { value: "SENG", label: "Seng" },
+        { value: "TANPA_DINDING", label: "Tanpa Dinding" },
+      ],
+    },
+    {
+      id: "lantai",
+      label: "Lantai",
+      options: [
+        { value: "MARMER", label: "Marmer" },
+        { value: "KERAMIK", label: "Keramik" },
+        { value: "TERASO", label: "Teraso" },
+        { value: "UBIN", label: "Ubin PC/Papan" },
+        { value: "SEMEN", label: "Semen" },
+      ],
+    },
+    {
+      id: "langitLangit",
+      label: "Langit-langit",
+      options: [
+        { value: "AKUSTIK", label: "Akustik/Jati" },
+        { value: "TRIPLEK", label: "Triplek/Asbes/Bambu" },
+        { value: "TANPA_LANGIT", label: "Tidak Ada" },
+      ],
+    },
+  ];
 
 export function SpopFormDialog({
   open,
@@ -283,7 +283,7 @@ export function SpopFormDialog({
 
     win.document.write(sanitizedHtml);
     win.document.close();
-    
+
     // Auto trigger print for convenience
     setTimeout(() => {
       win.print();
@@ -374,12 +374,12 @@ export function SpopFormDialog({
           isDark ? "dark text-white" : "text-slate-900",
         )}
       >
-        <div 
-          className="absolute inset-0 -z-50 !opacity-100" 
-          style={{ 
+        <div
+          className="absolute inset-0 -z-50 !opacity-100"
+          style={{
             backgroundColor: isDark ? '#050B14' : '#ffffff',
-            opacity: 1, 
-          }} 
+            opacity: 1,
+          }}
         />
         <DialogHeader className={cn(
           "border-b px-4 py-4 sm:px-6",
@@ -426,13 +426,13 @@ export function SpopFormDialog({
         <div ref={scrollAreaRef} className="flex-1 overflow-y-auto p-4 sm:p-6">
           {step === 1 && (
             <div className="space-y-6 xl:grid xl:grid-cols-[360px_minmax(0,1fr)] xl:items-start xl:gap-8 xl:space-y-0 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div 
+              <div
                 className={cn("rounded-3xl border p-5 xl:sticky xl:top-0 shadow-sm transition-all hover:shadow-md", isDark ? "border-white/10 text-white" : "border-slate-200 text-slate-900")}
                 style={{ backgroundColor: isDark ? '#0F172A' : '#f8fafc' }}
               >
                 <div className="flex items-center gap-2 mb-4">
-                   <div className="h-1.5 w-6 rounded-full bg-primary" />
-                   <p className="text-xs font-black uppercase tracking-widest opacity-60">Data Terdeteksi</p>
+                  <div className="h-1.5 w-6 rounded-full bg-primary" />
+                  <p className="text-xs font-black uppercase tracking-widest opacity-60">Data Terdeteksi</p>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                   {detectedSummary.map((item) => (
@@ -473,43 +473,43 @@ export function SpopFormDialog({
 
                 <div className="space-y-2 xl:col-span-6">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">NOP</Label>
-                  <Input 
+                  <Input
                     id="f-nop"
-                    value={form.nop} 
-                    onChange={(e) => setField("nop", e.target.value.replace(/\D/g, "").slice(0, 18))} 
-                    className={cn("h-11 rounded-xl font-mono text-base tracking-widest", styles.input)} 
+                    value={form.nop}
+                    onChange={(e) => setField("nop", e.target.value.replace(/\D/g, "").slice(0, 18))}
+                    className={cn("h-11 rounded-xl font-mono text-base tracking-widest", styles.input)}
                     placeholder="Contoh: 351501000100100100"
                   />
                 </div>
 
                 <div className="space-y-2 xl:col-span-6">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Nama Jalan Objek</Label>
-                   <Input 
-                     id="f-jalan-obj"
-                     value={form.namaJalanObjek} 
-                     onChange={(e) => setField("namaJalanObjek", e.target.value.slice(0, 21))} 
-                     className={cn("h-11 rounded-xl font-bold uppercase", styles.input)} 
-                     placeholder="Contoh: JL. RAYA MAKMUR / DUSUN MAKMUR"
-                   />
+                  <Input
+                    id="f-jalan-obj"
+                    value={form.namaJalanObjek}
+                    onChange={(e) => setField("namaJalanObjek", e.target.value.slice(0, 21))}
+                    className={cn("h-11 rounded-xl font-bold uppercase", styles.input)}
+                    placeholder="Contoh: JL. RAYA MAKMUR / DUSUN MAKMUR"
+                  />
                 </div>
 
                 <div className="space-y-2 xl:col-span-3">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Nomor / KAV / Blok</Label>
-                  <Input 
-                    value={form.nomorBlokObjek} 
-                    onChange={(e) => setField("nomorBlokObjek", e.target.value.slice(0, 12))} 
-                    className={cn("h-11 rounded-xl font-bold uppercase", styles.input)} 
+                  <Input
+                    value={form.nomorBlokObjek}
+                    onChange={(e) => setField("nomorBlokObjek", e.target.value.slice(0, 12))}
+                    className={cn("h-11 rounded-xl font-bold uppercase", styles.input)}
                     placeholder="Contoh: BLOK A / 12"
                   />
                 </div>
 
                 <div className="space-y-2 xl:col-span-4">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Desa / Kelurahan Objek</Label>
-                  <Input 
+                  <Input
                     id="f-desa-obj"
-                    value={form.desaObjek} 
-                    onChange={(e) => setField("desaObjek", e.target.value.slice(0, 21))} 
-                    className={cn("h-11 rounded-xl font-bold uppercase", styles.input)} 
+                    value={form.desaObjek}
+                    onChange={(e) => setField("desaObjek", e.target.value.slice(0, 21))}
+                    className={cn("h-11 rounded-xl font-bold uppercase", styles.input)}
                     placeholder="Contoh: NAMA DESA"
                   />
                 </div>
@@ -517,21 +517,21 @@ export function SpopFormDialog({
                 <div className="grid grid-cols-2 gap-4 xl:col-span-2">
                   <div className="space-y-2">
                     <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">RW Objek</Label>
-                    <Input 
+                    <Input
                       id="f-rw-obj"
-                      value={form.rwObjek} 
-                      onChange={(e) => setField("rwObjek", e.target.value.replace(/\D/g, "").slice(0, 2))} 
-                      className={cn("h-11 rounded-xl font-bold text-center", styles.input)} 
+                      value={form.rwObjek}
+                      onChange={(e) => setField("rwObjek", e.target.value.replace(/\D/g, "").slice(0, 2))}
+                      className={cn("h-11 rounded-xl font-bold text-center", styles.input)}
                       placeholder="01"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">RT Objek</Label>
-                    <Input 
+                    <Input
                       id="f-rt-obj"
-                      value={form.rtObjek} 
-                      onChange={(e) => setField("rtObjek", e.target.value.replace(/\D/g, "").slice(0, 2))} 
-                      className={cn("h-11 rounded-xl font-bold text-center", styles.input)} 
+                      value={form.rtObjek}
+                      onChange={(e) => setField("rtObjek", e.target.value.replace(/\D/g, "").slice(0, 2))}
+                      className={cn("h-11 rounded-xl font-bold text-center", styles.input)}
                       placeholder="01"
                     />
                   </div>
@@ -539,25 +539,25 @@ export function SpopFormDialog({
 
                 <div className="space-y-2 xl:col-span-3">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Luas Tanah (m2)</Label>
-                  <Input 
+                  <Input
                     id="f-luas-tanah"
-                    value={form.luasTanah} 
-                    onChange={(e) => setField("luasTanah", e.target.value.replace(/\D/g, "").slice(0, 10))} 
-                    className={cn("h-11 rounded-xl font-black text-primary", styles.input)} 
+                    value={form.luasTanah}
+                    onChange={(e) => setField("luasTanah", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    className={cn("h-11 rounded-xl font-black text-primary", styles.input)}
                     placeholder="Contoh: 100"
                   />
                 </div>
 
                 <div className="space-y-4 xl:col-span-12 mt-2">
                   <div className="flex items-center justify-between px-1">
-                     <Label className="text-[11px] font-black uppercase tracking-widest opacity-60">Sket / Denah Lokasi (Opsional)</Label>
-                     {form.sketImage && (
-                       <button onClick={removeImage} className="text-[10px] font-black text-rose-500 uppercase flex items-center gap-1 hover:opacity-80">
-                          <X className="w-3 h-3" /> Hapus Gambar
-                       </button>
-                     )}
+                    <Label className="text-[11px] font-black uppercase tracking-widest opacity-60">Sket / Denah Lokasi (Opsional)</Label>
+                    {form.sketImage && (
+                      <button onClick={removeImage} className="text-[10px] font-black text-rose-500 uppercase flex items-center gap-1 hover:opacity-80">
+                        <X className="w-3 h-3" /> Hapus Gambar
+                      </button>
+                    )}
                   </div>
-                  
+
                   {!form.sketImage ? (
                     <label className={cn(
                       "flex flex-col items-center justify-center w-full h-44 rounded-[2rem] border-2 border-dashed transition-all cursor-pointer group",
@@ -565,7 +565,7 @@ export function SpopFormDialog({
                     )}>
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <div className={cn("p-4 rounded-2xl mb-3 transition-transform group-hover:scale-110", isDark ? "bg-blue-500/10 text-blue-400" : "bg-primary/10 text-primary")}>
-                           <Upload className="w-6 h-6" />
+                          <Upload className="w-6 h-6" />
                         </div>
                         <p className="mb-1 text-xs font-black uppercase tracking-widest text-center">Klik untuk unggah denah</p>
                         <p className="text-[10px] opacity-50 font-medium">PNG, JPG atau WEBP (Maks. 2MB)</p>
@@ -574,14 +574,14 @@ export function SpopFormDialog({
                     </label>
                   ) : (
                     <div className={cn("relative w-full h-64 rounded-[2rem] border-2 overflow-hidden", isDark ? "border-white/10" : "border-slate-200")}>
-                       {/* eslint-disable-next-line @next/next/no-img-element -- Data URL preview dari file lokal pengguna. */}
-                       <img src={form.sketImage} alt="Sket Lokasi" className="w-full h-full object-contain bg-white" />
-                       <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <label className="p-4 bg-white rounded-2xl cursor-pointer text-slate-900 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 active:scale-95 transition-transform">
-                             <ImageIcon className="w-4 h-4" /> Ganti Gambar
-                             <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                          </label>
-                       </div>
+                      {/* eslint-disable-next-line @next/next/no-img-element -- Data URL preview dari file lokal pengguna. */}
+                      <img src={form.sketImage} alt="Sket Lokasi" className="w-full h-full object-contain bg-white" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <label className="p-4 bg-white rounded-2xl cursor-pointer text-slate-900 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 active:scale-95 transition-transform">
+                          <ImageIcon className="w-4 h-4" /> Ganti Gambar
+                          <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -614,16 +614,16 @@ export function SpopFormDialog({
             <div className="grid gap-6 xl:grid-cols-12 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-2 xl:col-span-12">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Nama Subjek Pajak</Label>
-                <Input 
+                <Input
                   id="f-nama-wp"
-                  value={form.namaSubjekPajak} 
+                  value={form.namaSubjekPajak}
                   onChange={(e) => {
                     const val = e.target.value.toUpperCase().slice(0, 21);
                     setForm(prev => prev ? { ...prev, namaSubjekPajak: val, namaPenandatangan: val } : prev);
                     clearPreview();
-                  }} 
-                  className={cn("h-12 rounded-2xl font-black text-base uppercase", styles.input)} 
-                  placeholder="BUDI SANTOSO"
+                  }}
+                  className={cn("h-12 rounded-2xl font-black text-base uppercase", styles.input)}
+                  placeholder=""
                 />
               </div>
 
@@ -667,76 +667,76 @@ export function SpopFormDialog({
 
               <div className="space-y-2 xl:col-span-3">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">NPWP (Jika Ada)</Label>
-                <Input 
-                  value={form.npwp} 
-                  onChange={(e) => setField("npwp", e.target.value.replace(/\D/g, "").slice(0, 14))} 
-                  className={cn("h-11 rounded-xl font-mono", styles.input)} 
-                  placeholder="01234567891234"
+                <Input
+                  value={form.npwp}
+                  onChange={(e) => setField("npwp", e.target.value.replace(/\D/g, "").slice(0, 14))}
+                  className={cn("h-11 rounded-xl font-mono", styles.input)}
+                  placeholder=""
                 />
               </div>
 
               <div className="space-y-2 xl:col-span-3">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Nomor KTP</Label>
-                <Input 
-                  id="f-ktp-wp" 
-                  value={form.nomorKtp} 
-                  onChange={(e) => setField("nomorKtp", e.target.value.replace(/\D/g, "").slice(0, 16))} 
-                  className={cn("h-11 rounded-xl font-mono tracking-widest", styles.input)} 
-                  placeholder="3515011234567890" 
+                <Input
+                  id="f-ktp-wp"
+                  value={form.nomorKtp}
+                  onChange={(e) => setField("nomorKtp", e.target.value.replace(/\D/g, "").slice(0, 16))}
+                  className={cn("h-11 rounded-xl font-mono tracking-widest", styles.input)}
+                  placeholder=""
                 />
               </div>
 
               <div className="space-y-2 xl:col-span-6">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Nama Jalan Subjek</Label>
-                <Input 
+                <Input
                   id="f-jalan-wp"
-                  value={form.namaJalanSubjek} 
-                  onChange={(e) => setField("namaJalanSubjek", e.target.value.toUpperCase().slice(0, 21))} 
-                  className={cn("h-11 rounded-xl font-bold uppercase", styles.input)} 
-                  placeholder="JL. MELATI NO. 5"
+                  value={form.namaJalanSubjek}
+                  onChange={(e) => setField("namaJalanSubjek", e.target.value.toUpperCase().slice(0, 21))}
+                  className={cn("h-11 rounded-xl font-bold uppercase", styles.input)}
+                  placeholder=""
                 />
               </div>
 
-               <div className="space-y-2 xl:col-span-4">
+              <div className="space-y-2 xl:col-span-4">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Blok / Kav / Nomor</Label>
-                <Input 
-                  value={form.blokSubjek} 
-                  onChange={(e) => setField("blokSubjek", e.target.value.toUpperCase().slice(0, 12))} 
-                  className={cn("h-11 rounded-xl font-bold uppercase", styles.input)} 
-                  placeholder="BLOK B / 05"
+                <Input
+                  value={form.blokSubjek}
+                  onChange={(e) => setField("blokSubjek", e.target.value.toUpperCase().slice(0, 12))}
+                  className={cn("h-11 rounded-xl font-bold uppercase", styles.input)}
+                  placeholder=""
                 />
               </div>
 
               <div className="space-y-2 xl:col-span-4">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Desa / Kelurahan Subjek</Label>
-                <Input 
+                <Input
                   id="f-desa-wp"
-                  value={form.desaSubjek} 
-                  onChange={(e) => setField("desaSubjek", e.target.value.toUpperCase().slice(0, 21))} 
-                  className={cn("h-11 rounded-xl font-bold uppercase", styles.input)} 
-                  placeholder="NAMA DESA"
+                  value={form.desaSubjek}
+                  onChange={(e) => setField("desaSubjek", e.target.value.toUpperCase().slice(0, 21))}
+                  className={cn("h-11 rounded-xl font-bold uppercase", styles.input)}
+                  placeholder=""
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4 xl:col-span-2">
                 <div className="space-y-2">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">RW</Label>
-                  <Input 
+                  <Input
                     id="f-rw-wp"
-                    value={form.rwSubjek} 
-                    onChange={(e) => setField("rwSubjek", e.target.value.replace(/\D/g, "").slice(0, 2))} 
-                    className={cn("h-11 rounded-xl font-bold text-center", styles.input)} 
-                    placeholder="02"
+                    value={form.rwSubjek}
+                    onChange={(e) => setField("rwSubjek", e.target.value.replace(/\D/g, "").slice(0, 2))}
+                    className={cn("h-11 rounded-xl font-bold text-center", styles.input)}
+                    placeholder=""
                   />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">RT</Label>
-                  <Input 
+                  <Input
                     id="f-rt-wp"
-                    value={form.rtSubjek} 
-                    onChange={(e) => setField("rtSubjek", e.target.value.replace(/\D/g, "").slice(0, 2))} 
-                    className={cn("h-11 rounded-xl font-bold text-center", styles.input)} 
-                    placeholder="05"
+                    value={form.rtSubjek}
+                    onChange={(e) => setField("rtSubjek", e.target.value.replace(/\D/g, "").slice(0, 2))}
+                    className={cn("h-11 rounded-xl font-bold text-center", styles.input)}
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -744,29 +744,29 @@ export function SpopFormDialog({
               <div className="grid grid-cols-4 gap-4 xl:col-span-4">
                 <div className="col-span-3 space-y-2">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Kabupaten / Kota</Label>
-                  <Input 
+                  <Input
                     id="f-kab-wp"
-                    value={form.kabupaten} 
-                    onChange={(e) => setField("kabupaten", e.target.value.toUpperCase().slice(0, 12))} 
-                    className={cn("h-11 rounded-xl font-bold uppercase", styles.input)} 
-                    placeholder="NAMA KABUPATEN"
+                    value={form.kabupaten}
+                    onChange={(e) => setField("kabupaten", e.target.value.toUpperCase().slice(0, 12))}
+                    className={cn("h-11 rounded-xl font-bold uppercase", styles.input)}
+                    placeholder=""
                   />
                 </div>
                 <div className="col-span-1 space-y-2">
                   <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Pos</Label>
-                  <Input 
-                    id="f-pos-wp" 
-                    value={form.kodePosSubjek} 
-                    onChange={(e) => setField("kodePosSubjek", e.target.value.replace(/\D/g, "").slice(0, 5))} 
-                    className={cn("h-11 rounded-xl font-bold text-center", styles.input)} 
-                    placeholder="61471" 
+                  <Input
+                    id="f-pos-wp"
+                    value={form.kodePosSubjek}
+                    onChange={(e) => setField("kodePosSubjek", e.target.value.replace(/\D/g, "").slice(0, 5))}
+                    className={cn("h-11 rounded-xl font-bold text-center", styles.input)}
+                    placeholder=""
                   />
                 </div>
               </div>
 
               <div className="space-y-2 xl:col-span-4">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Nama Penandatangan</Label>
-                <Input id="f-sig-wp" value={form.namaPenandatangan} onChange={(e) => setField("namaPenandatangan", e.target.value.toUpperCase())} className={cn("h-12 rounded-2xl font-black uppercase", styles.input)} placeholder="BUDI SANTOSO" />
+                <Input id="f-sig-wp" value={form.namaPenandatangan} onChange={(e) => setField("namaPenandatangan", e.target.value.toUpperCase())} className={cn("h-12 rounded-2xl font-black uppercase", styles.input)} placeholder="" />
               </div>
 
               <div className="space-y-2 xl:col-span-4">
@@ -781,24 +781,24 @@ export function SpopFormDialog({
             <div className="grid gap-6 xl:grid-cols-12 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-2 xl:col-span-3">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Jumlah Bangunan</Label>
-                  <Input 
-                    id="f-jml-bng"
-                    value={form.jumlahBangunan} 
-                    onChange={(e) => setField("jumlahBangunan", e.target.value.replace(/\D/g, ""))} 
-                    className={cn("h-11 rounded-xl font-black", styles.input)} 
-                    placeholder="1"
-                  />
+                <Input
+                  id="f-jml-bng"
+                  value={form.jumlahBangunan}
+                  onChange={(e) => setField("jumlahBangunan", e.target.value.replace(/\D/g, ""))}
+                  className={cn("h-11 rounded-xl font-black", styles.input)}
+                  placeholder="1"
+                />
               </div>
 
               <div className="space-y-2 xl:col-span-3">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Bangunan Ke-</Label>
-                  <Input 
-                    id="f-bng-ke"
-                    value={form.bangunanKe} 
-                    onChange={(e) => setField("bangunanKe", e.target.value.replace(/\D/g, ""))} 
-                    className={cn("h-11 rounded-xl font-black", styles.input)} 
-                    placeholder="1"
-                  />
+                <Input
+                  id="f-bng-ke"
+                  value={form.bangunanKe}
+                  onChange={(e) => setField("bangunanKe", e.target.value.replace(/\D/g, ""))}
+                  className={cn("h-11 rounded-xl font-black", styles.input)}
+                  placeholder="1"
+                />
               </div>
 
               <div id="f-jenis-bng" className="space-y-3 xl:col-span-12">
@@ -822,55 +822,55 @@ export function SpopFormDialog({
 
               <div className="space-y-2 xl:col-span-3">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Luas Bangunan (m2)</Label>
-                  <Input 
-                    id="f-luas-bng"
-                    value={form.luasBangunan} 
-                    onChange={(e) => setField("luasBangunan", e.target.value.replace(/\D/g, ""))} 
-                    className={cn("h-11 rounded-xl font-black text-rose-500", styles.input)} 
-                    placeholder="80"
-                  />
+                <Input
+                  id="f-luas-bng"
+                  value={form.luasBangunan}
+                  onChange={(e) => setField("luasBangunan", e.target.value.replace(/\D/g, ""))}
+                  className={cn("h-11 rounded-xl font-black text-rose-500", styles.input)}
+                  placeholder="80"
+                />
               </div>
 
               <div className="space-y-2 xl:col-span-3">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Jumlah Lantai</Label>
-                  <Input 
-                    id="f-lt-bng"
-                    value={form.jumlahLantai} 
-                    onChange={(e) => setField("jumlahLantai", e.target.value.replace(/\D/g, ""))} 
-                    className={cn("h-11 rounded-xl font-bold", styles.input)} 
-                    placeholder="1"
-                  />
+                <Input
+                  id="f-lt-bng"
+                  value={form.jumlahLantai}
+                  onChange={(e) => setField("jumlahLantai", e.target.value.replace(/\D/g, ""))}
+                  className={cn("h-11 rounded-xl font-bold", styles.input)}
+                  placeholder="1"
+                />
               </div>
 
               <div className="space-y-2 xl:col-span-3">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Tahun Dibangun</Label>
-                  <Input 
-                    id="f-thn-bng"
-                    value={form.tahunDibangun} 
-                    onChange={(e) => setField("tahunDibangun", e.target.value.replace(/\D/g, "").slice(0, 4))} 
-                    className={cn("h-11 rounded-xl font-bold", styles.input)} 
-                    placeholder="2010"
-                  />
+                <Input
+                  id="f-thn-bng"
+                  value={form.tahunDibangun}
+                  onChange={(e) => setField("tahunDibangun", e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  className={cn("h-11 rounded-xl font-bold", styles.input)}
+                  placeholder=""
+                />
               </div>
 
               <div className="space-y-2 xl:col-span-3">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Tahun Renovasi</Label>
-                <Input 
-                  value={form.tahunRenovasi} 
-                  onChange={(e) => setField("tahunRenovasi", e.target.value.replace(/\D/g, "").slice(0, 4))} 
-                  className={cn("h-11 rounded-xl font-bold", styles.input)} 
-                  placeholder="2024"
+                <Input
+                  value={form.tahunRenovasi}
+                  onChange={(e) => setField("tahunRenovasi", e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  className={cn("h-11 rounded-xl font-bold", styles.input)}
+                  placeholder=""
                 />
               </div>
 
               <div className="space-y-2 xl:col-span-4">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Daya Listrik (Watt)</Label>
-                <Input 
+                <Input
                   id="f-daya-listrik"
-                  value={form.dayaListrik} 
-                  onChange={(e) => setField("dayaListrik", e.target.value.replace(/\D/g, "").slice(0, 7))} 
-                  className={cn("h-11 rounded-xl font-bold", styles.input)} 
-                  placeholder="1300"
+                  value={form.dayaListrik}
+                  onChange={(e) => setField("dayaListrik", e.target.value.replace(/\D/g, "").slice(0, 7))}
+                  className={cn("h-11 rounded-xl font-bold", styles.input)}
+                  placeholder=""
                 />
               </div>
 
@@ -902,8 +902,8 @@ export function SpopFormDialog({
             <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
               <div className={cn("rounded-3xl border p-6 shadow-sm", styles.panel)}>
                 <div className="flex items-center gap-3 mb-3">
-                   <div className="h-2 w-8 rounded-full bg-emerald-500" />
-                   <p className="text-sm font-black uppercase tracking-widest opacity-80">Siap Untuk Dicetak</p>
+                  <div className="h-2 w-8 rounded-full bg-emerald-500" />
+                  <p className="text-sm font-black uppercase tracking-widest opacity-80">Siap Untuk Dicetak</p>
                 </div>
                 <p className="text-sm leading-relaxed opacity-70">
                   Data telah kami validasi dan preview dokumen SPOP / LSPOP sudah dibuat. Silakan periksa kembali sebelum melakukan pencetakan.
@@ -913,10 +913,10 @@ export function SpopFormDialog({
 
               <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 dark:border-white/10 dark:bg-white/5">
                 {previewHtml ? (
-                  <iframe 
-                    title="Preview SPOP LSPOP" 
+                  <iframe
+                    title="Preview SPOP LSPOP"
                     srcDoc={previewHtml}
-                    className="h-[58vh] w-full bg-white opacity-100" 
+                    className="h-[58vh] w-full bg-white opacity-100"
                   />
                 ) : (
                   <div className="flex h-[58vh] items-center justify-center text-sm opacity-60">
@@ -931,15 +931,15 @@ export function SpopFormDialog({
         <div className={cn("border-t px-5 py-6 sm:px-8", isDark ? "border-white/10 bg-[#0D1F3D]" : "border-slate-100 bg-white")}>
           <div className="flex flex-row items-center gap-4">
             {step > 1 && (
-              <button 
+              <button
                 onClick={() => {
                   if (step === 4 && form.jenisTanah === "TANAH_KOSONG") setStep(2);
                   else setStep((prev) => prev - 1);
-                }} 
+                }}
                 className={cn(
                   "h-14 flex-1 flex items-center justify-center rounded-2xl sm:flex-initial sm:min-w-36 font-black uppercase tracking-widest text-xs transition-all active:scale-95 group border-2",
-                  isDark 
-                    ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white" 
+                  isDark
+                    ? "border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
                     : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
                 )}
               >
@@ -947,10 +947,10 @@ export function SpopFormDialog({
                 Kembali
               </button>
             )}
-            
+
             <div className={cn("flex flex-1 items-center gap-4 sm:justify-end", step === 1 ? "justify-center" : "")}>
               {step < 4 ? (
-                <button 
+                <button
                   onClick={validateAndProceed}
                   className={cn(
                     "h-14 w-full flex items-center justify-center sm:w-auto sm:min-w-56 px-4 font-black uppercase tracking-widest text-xs shadow-lg transition-all active:scale-[0.98] rounded-2xl",
@@ -970,8 +970,8 @@ export function SpopFormDialog({
                   )}
                 </button>
               ) : (
-                <button 
-                  onClick={handleHtmlPrint} 
+                <button
+                  onClick={handleHtmlPrint}
                   className="h-14 w-full flex items-center justify-center sm:w-auto rounded-2xl sm:min-w-72 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest shadow-xl shadow-emerald-500/30 active:scale-[0.98] transition-all group"
                 >
                   <Printer className="mr-3 h-6 w-6 transition-transform group-hover:rotate-12" />

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import path from "path";
 import fs from "fs";
 import { getArchivePath } from "@/lib/storage";
@@ -95,82 +94,17 @@ export async function GET(
       });
     }
 
-    // 3. Jika BUKAN ADMIN, cek database
-    // Ambil NOP dari nama file (misal 3517...pdf -> 3517...)
-    const cleanNop = file.replace(/\.pdf$/i, "").replace(/\D/g, "");
-    
-    // Format ulang ke standar NOP dengan titik (XX.XX.XXX.XXX.XXX-XXXX.X) untuk pencarian di DB
-    let dottedNop = cleanNop;
-    if (cleanNop.length === 18) {
-      dottedNop = `${cleanNop.substring(0,2)}.${cleanNop.substring(2,4)}.${cleanNop.substring(4,7)}.${cleanNop.substring(7,10)}.${cleanNop.substring(10,13)}-${cleanNop.substring(13,17)}.${cleanNop.substring(17,18)}`;
-    }
-
-    const tahunPajak = parseInt(year);
-
-    const [taxData, config] = await Promise.all([
-       prisma.taxData.findFirst({
-         where: { 
-            OR: [
-              { nop: cleanNop },
-              { nop: dottedNop }
-            ],
-            tahun: tahunPajak 
-         },
-         select: { paymentStatus: true }
-       }),
-       prisma.villageConfig.findFirst({ where: { id: 1 } })
-    ]);
-
-    const isArchiveEnabled = config?.enableDigitalArchive ?? true;
-    const onlyLunas = config?.archiveOnlyLunas ?? true;
-
-    if (!isArchiveEnabled) {
-      return new NextResponse(
-        createErrorPage("Layanan Nonaktif", "Akses arsip digital sedang ditangguhkan oleh Admin Desa untuk sementara waktu."), 
-        { headers: { "Content-Type": "text/html" }, status: 403 }
-      );
-    }
-
-    if (!taxData) {
-      return new NextResponse(
-        createErrorPage("Akses Terbatas", "Hanya arsip yang terdaftar secara resmi di database dan berstatus LUNAS yang dapat diakses oleh publik."), 
-        { headers: { "Content-Type": "text/html" }, status: 403 }
-      );
-    }
-
-    // Perketat pengecekan pembayaran
-    const statusPajak = String(taxData.paymentStatus || "").toUpperCase().trim();
-    
-    // Jika archiveOnlyLunas diaktifkan, maka WAJIB "LUNAS"
-    // Pengecekan ini di-skip khusus untuk ADMIN
-    if (onlyLunas && statusPajak !== "LUNAS") {
-       return new NextResponse(
-        createErrorPage("Belum Lunas", "E-SPPT Digital hanya tersedia bagi Wajib Pajak yang sudah melakukan pelunasan dan telah terverifikasi sinkron dengan Bapenda.", "amber"), 
-        { headers: { "Content-Type": "text/html" }, status: 403 }
-      );
-    }
-
-    // --- VERIFIKASI PIN 4-DIGIT UNTUK PENGGUNA NON-ADMIN ---
-    const userPin = (searchParams.get("pin") || "").trim();
-    if (cleanNop.length === 18) {
-      const standardPin = cleanNop.substring(13, 17);
-      const absolutePin = cleanNop.substring(14, 18);
-      if (userPin !== standardPin && userPin !== absolutePin) {
-        return new NextResponse(
-          createErrorPage("Akses Ditolak: PIN Salah", "Akses ditolak. Anda harus memasukkan Kode PIN 4-digit NOP yang tertera pada dokumen fisik Anda untuk melihat/mengunduh dokumen ini.", "rose"), 
-          { headers: { "Content-Type": "text/html" }, status: 403 }
-        );
-      }
-    }
-
-    // OK, Kirim Filenya!
-    const fileBuffer = fs.readFileSync(storagePath);
-    return new NextResponse(fileBuffer, {
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `${disposition}; filename="${file}"`,
-      },
-    });
+    // 3. BUKAN ADMIN → Tolak akses langsung.
+    // Pengguna publik WAJIB menggunakan route /arsip-pbb/download?token=xxx
+    // yang token-nya di-generate oleh server (one-time, expired 5 menit).
+    return new NextResponse(
+      createErrorPage(
+        "Akses Ditolak",
+        "Dokumen arsip digital hanya dapat diakses melalui portal resmi PBB Digital. Silakan gunakan fitur pencarian di halaman utama, masukkan PIN Anda, lalu buka dokumen dari sana.",
+        "rose"
+      ),
+      { headers: { "Content-Type": "text/html" }, status: 403 }
+    );
 
   } catch (error) {
     console.error("[arsip-pbb-api-error]", error);

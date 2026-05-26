@@ -1016,20 +1016,21 @@ export function PublicSearch({
                         <Button
                           variant="default"
                           size="icon"
-                          nativeButton={false}
                           className={cn(
                             "h-11 w-11 rounded-2xl transition-all shadow-lg shadow-primary/20 active:scale-95",
                           )}
                           title="Unduh PDF"
-                          render={
-                            <a 
-                              href={`${spptUrls[item.id]}&dl=1`} 
-                              download={`${unmaskedNops[item.id] || item.nop}-${tahunPajak}.pdf`}
-                            >
-                              <Download className="w-5.25 h-5.25" />
-                            </a>
-                          }
-                        />
+                          onClick={() => {
+                            const link = document.createElement("a");
+                            link.href = `${spptUrls[item.id]}&dl=1`;
+                            link.setAttribute("download", `${unmaskedNops[item.id] || item.nop}-${tahunPajak}.pdf`);
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                        >
+                          <Download className="w-5.25 h-5.25" />
+                        </Button>
                       </div>
                     </div>
                   )}
