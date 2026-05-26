@@ -24,8 +24,8 @@ async function getLocalImageBase64(urlPath: string) {
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const taxId = id;
-  if (!taxId) return new Response("Not Found", { status: 404 });
+  const taxId = parseInt(id, 10);
+  if (!taxId || isNaN(taxId)) return new Response("Invalid ID", { status: 400 });
 
   try {
     const tax = await prisma.taxData.findUnique({ where: { id: taxId } });
