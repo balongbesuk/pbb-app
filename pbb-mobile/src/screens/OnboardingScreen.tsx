@@ -14,7 +14,7 @@ import { appTheme } from '../theme/app-theme';
 import { version } from '../../package.json';
 
 export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding'>) {
-  const [serverUrl, setServerUrl] = useState('pbb.galaxynet.my.id');
+  const [serverUrl, setServerUrl] = useState('');
   const [isHttps, setIsHttps] = useState(true);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
