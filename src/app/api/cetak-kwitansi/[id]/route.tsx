@@ -22,8 +22,9 @@ async function getLocalImageBase64(urlPath: string) {
   }
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const taxId = params.id;
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const taxId = id;
   if (!taxId) return new Response("Not Found", { status: 404 });
 
   try {
