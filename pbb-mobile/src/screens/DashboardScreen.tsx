@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableWithoutFeedback, ImageBackground, Platform, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, Image, Pressable, ImageBackground, Platform, RefreshControl } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { BlurView } from 'expo-blur';
@@ -211,9 +211,9 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
 
       {/* Modern Bottom Sheet */}
       {menuVisible && (
-        <TouchableWithoutFeedback onPress={() => setMenuVisible(false)}>
+        <Pressable onPress={() => setMenuVisible(false)} style={{ flex: 1, backgroundColor: appTheme.colors.overlay, justifyContent: 'flex-start', alignItems: 'flex-end', paddingTop: Platform.OS === 'ios' ? 60 : 40, paddingRight: 20 }}>
           <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: appTheme.colors.overlay, justifyContent: 'flex-end' }}>
-            <TouchableWithoutFeedback>
+            <Pressable>
               <Animated.View entering={FadeInDown} style={{ backgroundColor: appTheme.colors.surface, borderTopLeftRadius: 40, borderTopRightRadius: 40, padding: 32, ...appTheme.shadow.floating, paddingBottom: Platform.OS === 'ios' ? 48 : 32 }}>
                 <View style={{ width: 48, height: 5, backgroundColor: appTheme.colors.surfaceStrong, borderRadius: 3, alignSelf: 'center', marginBottom: 24 }} />
                 <Text style={{ color: appTheme.colors.text, ...appTheme.typo.heading, marginBottom: 6 }}>Pengaturan</Text>
@@ -247,9 +247,9 @@ export default function DashboardScreen({ route, navigation }: ScreenProps<'Dash
 
 
               </Animated.View>
-            </TouchableWithoutFeedback>
+            </Pressable>
           </View>
-        </TouchableWithoutFeedback>
+        </Pressable>
       )}
       <StatusBar style="light" />
     </View>

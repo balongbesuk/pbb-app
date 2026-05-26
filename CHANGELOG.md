@@ -1,5 +1,20 @@
 # Changelog
 
+## v10.1 & PBB Mobile v2.1 - 2026-05-26: Sinkronisasi Identitas Kwitansi & Perombakan Profil
+
+Pembaruan ganda untuk platform web (v10.1) dan aplikasi seluler (v2.1) yang berfokus pada kelengkapan administrasi bukti pembayaran dan pemolesan pengalaman pengguna.
+
+### Kelengkapan Administrasi Kwitansi
+- **Integrasi Tanda Tangan Kasir**: Kwitansi digital dan cetak kini secara otomatis menyematkan nama lengkap petugas (kasir) yang memproses pembayaran beserta dengan gambar tanda tangannya secara langsung di bagian bawah kwitansi.
+- **Dukungan Unduhan next/og Resolusi Tinggi**: Mengatasi limitasi pembacaan _URL edge runtime_ pada generator gambar `next/og`, sehingga logo wilayah dan tanda tangan petugas kini ter-render dengan mulus dan tajam saat wajib pajak maupun petugas mengunduh gambar bukti pelunasan.
+- **Koreksi Tata Letak Layout Unduhan**: Menyelesaikan _bug_ pemotongan piksel bawah pada _preview_ cetak dan hasil konversi HTML ke PNG (`html-to-image`) menggunakan teknik _absolute positioning_ yang menjaga keutuhan struktur batas kwitansi.
+
+### Penyempurnaan Pengalaman Pengguna (Web)
+- **Perombakan Layout Dashboard Profil (`/settings/profile`)**: Merombak struktur halaman profil dari tumpukan panel vertikal menjadi desain **Grid Glassmorphism 2 Kolom** yang seimbang dan elegan layaknya dashboard premium modern. Kolom kiri difokuskan penuh untuk identitas visual (Foto & Tanda Tangan), sementara kolom kanan didedikasikan untuk pengaturan informasi personal dan keamanan kata sandi.
+- **Panduan Cerdas Upload Gambar**: Menambahkan kotak informasi panduan *(Tips and Tricks)* yang ramah pengguna, menyarankan penggunaan format PNG transparan, crop rapat, dan rasio proporsional, guna menghasilkan cetakan tanda tangan pada kuitansi yang sempurna.
+
+---
+
 ## PBB Mobile v2.0 - 2026-05-24: Kemitraan Digital & Sinkronisasi Bapenda Lanjutan
 
 Pembaruan besar-besaran untuk mengukuhkan **PBB Mobile** (sebelumnya berada di versi setara portal publik) menjadi entitas tersendiri di versi 2.0. Pembaruan ini menitikberatkan pada kemudahan bagi petugas penagih dan penyelarasan fitur keamanan dengan portal publik v10.0.

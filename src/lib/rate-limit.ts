@@ -205,14 +205,8 @@ async function checkRedisRateLimit(key: string, options: RateLimitOptions): Prom
 }
 
 export async function checkRateLimit(key: string, options: RateLimitOptions): Promise<RateLimitResult> {
-  // 1. Coba Redis jika ada konfigurasi
-  if (process.env.REDIS_URL && !redisFailed) {
-    const redisResult = await checkRedisRateLimit(key, options);
-    if (redisResult !== null) {
-      return redisResult;
-    }
-  }
-
+  // 1. Redis dinonaktifkan untuk edisi STB HG680p (Hemat RAM)
+  
   // 2. Fallback SQLite
   try {
     return checkSqliteRateLimit(key, options);

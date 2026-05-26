@@ -31,6 +31,7 @@ model User {
   rt            String?
   rw            String?
   avatarUrl     String?
+  signatureUrl  String?
   mustChangePassword Boolean @default(true)
   
   taxData       TaxData[] @relation("PenarikPajak")

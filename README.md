@@ -14,7 +14,7 @@
 [![SQLite](https://img.shields.io/badge/SQLite_WAL-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS_4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/v10.0.0-blue)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/v10.1.0-blue)](./CHANGELOG.md)
 
 [📖 Panduan Instalasi](./docs/PANDUAN_INSTALASI.md) · [📘 Wiki Teknis](./docs/WIKI.md) · [📋 Changelog](./CHANGELOG.md) · [🔒 Security](./SECURITY.md)
 
@@ -43,9 +43,9 @@ PBB Manager dibangun khusus untuk menyelesaikan masalah nyata pengelolaan pajak 
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                        PBB Manager v10.0                        │
+│                        PBB Manager v10.1.0                       │
 ├──────────────────┬──────────────────┬────────────────────────────┤
-│   Web Dashboard  │  Portal Publik   │    PBB Mobile v1.2.0      │
+│   Web Dashboard  │  Portal Publik   │    PBB Mobile v2.1.0       │
 │   (Admin/Petugas)│  (Warga)         │    (Petugas Lapangan)     │
 │                  │                  │                            │
 │  Next.js 16      │  Turnstile CAPTCHA│  Expo SDK 55             │

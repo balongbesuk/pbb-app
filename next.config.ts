@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // Allow local images to use query strings for cache busting
   // Configured specifically for the /uploads directory where Logos are stored
   images: {

@@ -1,6 +1,6 @@
 {
   "name": "pbb-app",
-  "version": "10.0.0",
+  "version": "10.1.0",
   "private": false,
   "license": "MIT",
   "scripts": {
@@ -15,7 +15,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "typecheck": "tsc --noEmit",
     "verify": "npm run lint && npm run typecheck && npm run build",
-    "verify:security": "npm audit --audit-level=moderate"
+    "verify:security": "npm audit --audit-level=moderate",
+    "db:vacuum": "node scripts/vacuum.mjs"
   },
   "browserslist": [
     "> 0.5%",

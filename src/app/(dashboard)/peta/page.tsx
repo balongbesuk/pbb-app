@@ -1,6 +1,7 @@
 "use client";
 
-import { RegionMap } from "@/components/map/region-map";
+import dynamic from "next/dynamic";
+const RegionMap = dynamic(() => import("@/components/map/region-map").then((mod) => mod.RegionMap), { ssr: false, loading: () => <div className="h-full w-full flex items-center justify-center bg-white dark:bg-zinc-950 rounded-3xl"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div> });
 import { MapPin, Layers } from "lucide-react";
 import { useEffect, useState } from "react";
 

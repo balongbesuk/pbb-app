@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Modal, ActivityIndicator, Linking, Alert, Platform, TouchableWithoutFeedback, TextInput } from 'react-native';
+import { View, Text, ScrollView, Modal, ActivityIndicator, Linking, Alert, Platform, Pressable, TextInput, Share } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import type { ScreenProps } from '../types/navigation';
 import { authenticatedFetch, joinServerUrl, formatCurrency } from '../utils/server';
@@ -112,6 +114,30 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
       } else { tu = cu.replace(/\{nop\}/gi, cn); }
       await Linking.openURL(tu);
     } catch (e) { Alert.alert('Error', 'Gagal membuka portal eksternal.'); }
+  };
+
+  const handleShareKwitansi = async () => {
+    setUpdating(true);
+    try {
+      const url = joinServerUrl(serverUrl, `/api/cetak-kwitansi/${taxpayer.id}?officerId=${user?.id || ''}`);
+      const fileUri = `${FileSystem.documentDirectory}kwitansi_${taxpayer.nop}.png`;
+
+      const { uri } = await FileSystem.downloadAsync(url, fileUri);
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: 'image/png',
+          dialogTitle: 'Bagikan Bukti Pembayaran',
+          UTI: 'public.png',
+        });
+      } else {
+        Alert.alert('Gagal', 'Fitur berbagi tidak tersedia di perangkat ini.');
+      }
+    } catch (error: any) {
+      Alert.alert('Gagal', 'Tidak dapat membagikan gambar kwitansi. Pastikan server aktif.');
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const Info = ({ label, value, icon }: { label: string; value: string; icon: keyof typeof Ionicons.glyphMap }) => (
@@ -226,13 +252,23 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 24, paddingTop: 16, paddingBottom: Platform.OS === 'ios' ? 44 : 32, backgroundColor: appTheme.colors.surface, borderTopWidth: 1, borderTopColor: appTheme.colors.borderLight, ...appTheme.shadow.floating }}>
         <View style={{ flexDirection: 'row' }}>
           <View style={{ flex: 1, marginRight: 10 }}>
-            <ScalableButton disabled={updating} onPress={() => handleStatusUpdate(isLunas ? 'BELUM_LUNAS' : 'LUNAS')}>
-              <LinearGradient colors={isLunas ? [appTheme.colors.accent, '#4338ca'] : [appTheme.colors.primary, appTheme.colors.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                style={{ borderRadius: 20, paddingVertical: 18, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', ...appTheme.shadow.floating }}>
-                <Ionicons name={isLunas ? 'refresh-outline' : 'checkmark-circle-outline'} size={22} color="white" />
-                <Text style={{ color: 'white', ...appTheme.typo.bodyBold, marginLeft: 10 }}>{isLunas ? 'Batalkan Lunas' : 'Tandai Lunas'}</Text>
-              </LinearGradient>
-            </ScalableButton>
+            {isLunas ? (
+              <ScalableButton disabled={updating} onPress={handleShareKwitansi}>
+                <LinearGradient colors={[appTheme.colors.success, '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={{ borderRadius: 20, paddingVertical: 18, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', ...appTheme.shadow.floating }}>
+                  <Ionicons name="share-social-outline" size={22} color="white" />
+                  <Text style={{ color: 'white', ...appTheme.typo.bodyBold, marginLeft: 10 }}>Bagikan Kwitansi</Text>
+                </LinearGradient>
+              </ScalableButton>
+            ) : (
+              <ScalableButton disabled={updating} onPress={() => handleStatusUpdate('LUNAS')}>
+                <LinearGradient colors={[appTheme.colors.primary, appTheme.colors.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={{ borderRadius: 20, paddingVertical: 18, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', ...appTheme.shadow.floating }}>
+                  <Ionicons name="checkmark-circle-outline" size={22} color="white" />
+                  <Text style={{ color: 'white', ...appTheme.typo.bodyBold, marginLeft: 10 }}>Tandai Lunas</Text>
+                </LinearGradient>
+              </ScalableButton>
+            )}
           </View>
           <ScalableButton disabled={updating} onPress={() => setActionSheetVisible(true)}>
             <View style={{ width: 62, height: 62, backgroundColor: appTheme.colors.surfaceMuted, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: appTheme.colors.borderLight }}>
@@ -246,12 +282,22 @@ export default function TaxpayerDetailScreen({ route, navigation }: ScreenProps<
 
       <Modal animationType="slide" transparent visible={actionSheetVisible} onRequestClose={() => setActionSheetVisible(false)}>
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: appTheme.colors.overlay }}>
-          <TouchableWithoutFeedback onPress={() => setActionSheetVisible(false)}><View style={{ flex: 1 }} /></TouchableWithoutFeedback>
+          <Pressable onPress={() => setActionSheetVisible(false)} style={{ flex: 1 }}><View style={{ flex: 1 }} /></Pressable>
           <Animated.View entering={FadeInDown} style={{ backgroundColor: appTheme.colors.surface, borderTopLeftRadius: 40, borderTopRightRadius: 40, padding: 32, paddingBottom: Platform.OS === 'ios' ? 48 : 32 }}>
             <View style={{ width: 48, height: 5, backgroundColor: appTheme.colors.surfaceStrong, borderRadius: 3, alignSelf: 'center', marginBottom: 24 }} />
             <Text style={{ color: appTheme.colors.text, ...appTheme.typo.heading, marginBottom: 6 }}>Aksi Lanjutan</Text>
             <Text style={{ color: appTheme.colors.textMuted, ...appTheme.typo.body, marginBottom: 28 }}>Opsi alternatif untuk penanganan kasus khusus.</Text>
 
+            {isLunas && (
+              <ScalableButton onPress={() => handleStatusUpdate('BELUM_LUNAS')} style={{ marginBottom: 12 }}>
+                <View style={{ backgroundColor: appTheme.colors.dangerSoft, borderRadius: 24, padding: 22, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.1)' }}>
+                  <View style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: 'rgba(239, 68, 68, 0.1)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="close-circle-outline" size={20} color={appTheme.colors.danger} />
+                  </View>
+                  <View style={{ marginLeft: 16 }}><Text style={{ color: appTheme.colors.danger, ...appTheme.typo.bodyBold }}>Batalkan Status Lunas</Text><Text style={{ color: appTheme.colors.textMuted, ...appTheme.typo.caption, marginTop: 2 }}>Ubah kembali menjadi Belum Lunas</Text></View>
+                </View>
+              </ScalableButton>
+            )}
 
             <ScalableButton onPress={() => handleStatusUpdate('SUSPEND')} style={{ marginBottom: 12 }}>
               <View style={{ backgroundColor: appTheme.colors.warningSoft, borderRadius: 24, padding: 22, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.1)' }}>

@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Printer, X, CreditCard, User, Check, Loader2, Award, Landmark, Calendar, MapPin, Receipt, Download } from "lucide-react";
 import { formatCurrency, formatDateNoTime } from "@/lib/utils";
 import { getVillageConfig } from "@/app/actions/settings-actions";
+import { getCurrentUserSignature } from "@/app/actions/user-actions";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 // Terbilang Bahasa Indonesia Helper
 function terbilang(angka: number): string {
@@ -60,8 +62,10 @@ interface ReceiptDialogProps {
 }
 
 export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee, publicMode = false }: ReceiptDialogProps) {
+  const { data: session } = useSession();
   const [adminFee, setAdminFee] = useState<number>(2000);
   const [cashierName, setCashierName] = useState<string>("");
+  const [cashierSignatureUrl, setCashierSignatureUrl] = useState<string | null>(null);
   const [villageConfig, setVillageConfig] = useState<any>(null);
   const [isLoadingConfig, setIsLoadingConfig] = useState<boolean>(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -89,8 +93,18 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
         .finally(() => {
           setIsLoadingConfig(false);
         });
+
+      if (!publicMode && session?.user?.id) {
+        setCashierName(session.user.name || "");
+        getCurrentUserSignature(session.user.id).then((url) => {
+          setCashierSignatureUrl(url);
+        });
+      } else {
+        setCashierName("");
+        setCashierSignatureUrl(null);
+      }
     }
-  }, [open, propAdminFee, publicMode]);
+  }, [open, propAdminFee, publicMode, session]);
 
   useEffect(() => {
     if (propAdminFee !== undefined && !publicMode) {
@@ -99,13 +113,8 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
   }, [propAdminFee, publicMode]);
 
   useEffect(() => {
-    if (item) {
-      setCashierName(""); // Di-kosongkan agar nama penerima kosong untuk tanda tangan manual
-    }
-  }, [item]);
-
-  useEffect(() => {
     if (!open) return;
+
     
     const handleResize = () => {
       if (containerRef.current) {
@@ -394,13 +403,28 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
           .footer-right {
             text-align: center;
             width: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
           }
           .receipt-date {
             font-size: 7.5px;
             font-weight: 600;
             color: #64748b;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             text-transform: uppercase;
+          }
+          .cashier-sig {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            pointer-events: none;
           }
           .cashier-name {
             font-size: 8.5px;
@@ -524,6 +548,7 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
               
               <div class="footer-right">
                 <div class="receipt-date">${desa}, ${tglBayarFormatted}</div>
+                ${cashierSignatureUrl ? `<img src="${cashierSignatureUrl}" class="cashier-sig" alt="TTD" />` : ''}
                 <span class="cashier-name">${cashierName ? cashierName : "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}</span>
                 <div class="cashier-title">KASIR / PETUGAS DESA</div>
               </div>
@@ -758,17 +783,26 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
                         </div>
                       </div>
 
-                      <div className="text-center" style={{ width: "160px" }}>
-                        <div className="font-bold text-zinc-400 uppercase tracking-wider mb-3.5" style={{ fontSize: "7.5px" }}>
+                      <div className="text-center flex flex-col items-center relative" style={{ width: "160px" }}>
+                        <div className="font-bold text-zinc-400 uppercase tracking-wider mb-4" style={{ fontSize: "7.5px" }}>
                           {desa}, {tglBayarFormatted}
                         </div>
-                        <span className="font-bold text-slate-800 border-b border-zinc-400 pb-0.5 uppercase tracking-wide px-4 inline-block text-center" style={{ fontSize: "9px", minWidth: "120px" }}>
+                        {cashierSignatureUrl && (
+                          <img 
+                            src={cashierSignatureUrl} 
+                            alt="TTD" 
+                            className="object-contain absolute pointer-events-none"
+                            style={{ width: "60px", height: "60px", top: "-8px", left: "50%", transform: "translateX(-50%)", zIndex: 10 }} 
+                          />
+                        )}
+                        <span className="font-bold text-slate-800 border-b border-zinc-400 pb-0.5 uppercase tracking-wide px-4 inline-block text-center mt-2" style={{ fontSize: "9px", minWidth: "120px" }}>
                           {cashierName || <span className="opacity-0">KASIR / PETUGAS DESA</span>}
                         </span>
                         <div className="font-black text-zinc-400 uppercase tracking-widest mt-1" style={{ fontSize: "6.5px" }}>
                           Kasir / Petugas Desa
                         </div>
                       </div>
+
                     </div>
 
                   </div>
@@ -798,6 +832,7 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
               disabled={isLoadingConfig || isDownloading}
               variant="outline"
               className="flex-1 h-12 font-black uppercase text-xs tracking-widest gap-2.5 rounded-2xl border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+
             >
               {isDownloading ? (
                 <Loader2 className="w-4.5 h-4.5 animate-spin" />

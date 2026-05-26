@@ -4,6 +4,8 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getNopVariations } from "@/lib/utils";
 import { requireMobileAuth } from "@/lib/mobile-auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 function maskNop(nop: string): string {
   const cleanNop = nop.replace(/\D/g, "");
@@ -36,11 +38,22 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const search = searchParams.get("search") || "";
     const skip = (page - 1) * limit;
+    const source = searchParams.get("source");
     
     let isOfficer = false;
     try {
-      await requireMobileAuth(req);
-      isOfficer = true;
+      if (source === "mobile") {
+        await requireMobileAuth(req);
+        isOfficer = true;
+      } else {
+        const session = await getServerSession(authOptions);
+        if (session?.user) {
+          isOfficer = true;
+        } else {
+          await requireMobileAuth(req);
+          isOfficer = true;
+        }
+      }
     } catch (e) {
       isOfficer = false;
     }

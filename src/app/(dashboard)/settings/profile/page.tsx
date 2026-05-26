@@ -6,6 +6,7 @@ import { KeyRound, MapPin } from "lucide-react";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { Badge } from "@/components/ui/badge";
 import { ProfileAvatarCard } from "@/components/settings/profile-avatar-card";
+import { SignatureUpload } from "@/components/settings/signature-upload";
 import { EditableProfileRow } from "@/components/settings/editable-profile-row";
 import { User as UserIcon } from "lucide-react";
 import type { AppUser } from "@/types/app";
@@ -34,6 +35,7 @@ export default async function ProfilePage() {
       rt: true,
       rw: true,
       avatarUrl: true,
+      signatureUrl: true,
     },
   });
 
@@ -61,91 +63,109 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Kartu Informasi + Foto Profil */}
-        <Card className="glass border-none shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between uppercase tracking-tight">
-              Informasi Pengguna
-              <Badge variant="outline" className="ml-2 uppercase">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        
+        {/* Kolom Kiri: Tampilan Profil & TTD */}
+        <div className="space-y-6 lg:col-span-4">
+          <Card className="glass border-none shadow-lg">
+            <CardHeader className="text-center pb-2">
+              <CardTitle className="uppercase tracking-tight text-lg">Foto Profil</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center">
+              <div className="mb-4">
+                <ProfileAvatarCard
+                  name={user.name}
+                  username={user.username}
+                  avatarUrl={user.avatarUrl ?? null}
+                />
+              </div>
+              <Badge variant="outline" className="uppercase tracking-widest text-[10px] mb-6">
                 {user.role}
               </Badge>
-            </CardTitle>
-            <CardDescription>Detail profil dan area tugas Anda.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Avatar Upload Section */}
-            <div className="pb-4">
-              <ProfileAvatarCard
-                name={user.name}
-                username={user.username}
-                avatarUrl={user.avatarUrl ?? null}
-              />
-            </div>
 
-            <div className="space-y-1 divide-y divide-zinc-50 border-t border-zinc-100 dark:divide-zinc-900 dark:border-zinc-800">
-              {/* Field Editable (Inline Edit) */}
-              <EditableProfileRow 
-                label="Nama Lengkap" 
-                value={user.name} 
-                fieldName="name" 
-                iconName="user" 
-                userData={userData}
-              />
-              
-              <EditableProfileRow 
-                label="Alamat Email" 
-                value={user.email} 
-                fieldName="email" 
-                iconName="mail" 
-                userData={userData}
-              />
-              
-              <EditableProfileRow 
-                label="Nomor HP / WhatsApp" 
-                value={user.phoneNumber} 
-                fieldName="phoneNumber" 
-                iconName="phone" 
-                userData={userData}
-              />
+              <div className="w-full pt-6 border-t border-zinc-100 dark:border-zinc-800 flex flex-col items-center">
+                <h3 className="text-sm font-bold tracking-tight mb-4 uppercase">Tanda Tangan Digital</h3>
+                <SignatureUpload initialSignatureUrl={user.signatureUrl ?? null} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-              {/* Area Tugas (Read-only, assigned by Admin) */}
-              <div className="flex items-center justify-between py-3">
-                <div className="flex-1 space-y-1">
-                   <span className="text-muted-foreground flex items-center gap-2 text-[10px] font-black tracking-widest uppercase">
-                    <MapPin className="h-3 w-3 text-primary/60" />
-                    Area Penugasan Pajak
-                  </span>
-                  <p className="text-foreground text-sm font-bold tracking-tight">
-                    {user.role === "PENARIK" 
-                      ? `${user.dusun || "Dusun (N/A)"}, RT ${user.rt || "(N/A)"}/${user.rw || "(N/A)"}`
-                      : "Seluruh Area Desa"}
-                  </p>
+        {/* Kolom Kanan: Data Pribadi & Keamanan */}
+        <div className="space-y-6 lg:col-span-8">
+          {/* Informasi Pengguna */}
+          <Card className="glass border-none shadow-lg">
+            <CardHeader>
+              <CardTitle className="uppercase tracking-tight flex items-center gap-2 text-lg">
+                <UserIcon className="h-5 w-5 text-primary" />
+                Informasi Pribadi
+              </CardTitle>
+              <CardDescription>Sesuaikan data profil dan kontak Anda.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1 divide-y divide-zinc-50 border-t border-zinc-100 dark:divide-zinc-900 dark:border-zinc-800">
+                <EditableProfileRow 
+                  label="Nama Lengkap" 
+                  value={user.name} 
+                  fieldName="name" 
+                  iconName="user" 
+                  userData={userData}
+                />
+                
+                <EditableProfileRow 
+                  label="Alamat Email" 
+                  value={user.email} 
+                  fieldName="email" 
+                  iconName="mail" 
+                  userData={userData}
+                />
+                
+                <EditableProfileRow 
+                  label="Nomor HP / WhatsApp" 
+                  value={user.phoneNumber} 
+                  fieldName="phoneNumber" 
+                  iconName="phone" 
+                  userData={userData}
+                />
+
+                {/* Area Tugas (Read-only) */}
+                <div className="flex items-center justify-between py-3">
+                  <div className="flex-1 space-y-1">
+                    <span className="text-muted-foreground flex items-center gap-2 text-[10px] font-black tracking-widest uppercase">
+                      <MapPin className="h-3 w-3 text-primary/60" />
+                      Area Penugasan Pajak
+                    </span>
+                    <p className="text-foreground text-sm font-bold tracking-tight">
+                      {user.role === "PENARIK" 
+                        ? `${user.dusun || "Dusun (N/A)"}, RT ${user.rt || "(N/A)"}/${user.rw || "(N/A)"}`
+                        : "Seluruh Area Desa"}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <p className="text-muted-foreground/40 text-center text-[10px] font-medium italic">
-              Arahkan ke baris atau klik icon edit untuk mengubah data.
-            </p>
-          </CardContent>
-        </Card>
+              
+              <p className="text-muted-foreground/40 text-center text-[10px] font-medium italic">
+                Arahkan ke baris data atau klik ikon edit untuk mengubahnya.
+              </p>
+            </CardContent>
+          </Card>
 
-        {/* Keamanan Password */}
-        <Card className="border-amber-200 bg-amber-50/10 shadow-lg dark:border-amber-900 dark:bg-amber-900/10">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-500">
-              <KeyRound className="h-5 w-5" />
-              Keamanan Password
-            </CardTitle>
-            <CardDescription>
-              Ubah kata sandi secara berkala untuk menjaga keamanan akun Anda.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChangePasswordForm />
-          </CardContent>
-        </Card>
+          {/* Keamanan Password */}
+          <Card className="glass border-none shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg uppercase tracking-tight">
+                <KeyRound className="h-5 w-5 text-primary" />
+                Keamanan Password
+              </CardTitle>
+              <CardDescription>
+                Ubah kata sandi Anda secara berkala untuk menjaga keamanan.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChangePasswordForm />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -130,3 +130,16 @@ export async function resetPassword(id: string) {
     return { success: false, message: formatZodError(error) };
   }
 }
+
+export async function getCurrentUserSignature(id: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { signatureUrl: true }
+    });
+    return user?.signatureUrl || null;
+  } catch (e) {
+    return null;
+  }
+}
+
