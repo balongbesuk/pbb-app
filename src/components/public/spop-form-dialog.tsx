@@ -489,7 +489,7 @@ export function SpopFormDialog({
                      value={form.namaJalanObjek} 
                      onChange={(e) => setField("namaJalanObjek", e.target.value.slice(0, 21))} 
                      className={cn("h-11 rounded-xl font-bold uppercase", styles.input)} 
-                     placeholder="Contoh: JL. RAYA BALONGBESUK"
+                     placeholder="Contoh: JL. RAYA MAKMUR / DUSUN MAKMUR"
                    />
                 </div>
 
@@ -510,7 +510,7 @@ export function SpopFormDialog({
                     value={form.desaObjek} 
                     onChange={(e) => setField("desaObjek", e.target.value.slice(0, 21))} 
                     className={cn("h-11 rounded-xl font-bold uppercase", styles.input)} 
-                    placeholder="Contoh: BALONGBESUK"
+                    placeholder="Contoh: NAMA DESA"
                   />
                 </div>
 
@@ -714,7 +714,7 @@ export function SpopFormDialog({
                   value={form.desaSubjek} 
                   onChange={(e) => setField("desaSubjek", e.target.value.toUpperCase().slice(0, 21))} 
                   className={cn("h-11 rounded-xl font-bold uppercase", styles.input)} 
-                  placeholder="BALONGBESUK"
+                  placeholder="NAMA DESA"
                 />
               </div>
 
@@ -749,7 +749,7 @@ export function SpopFormDialog({
                     value={form.kabupaten} 
                     onChange={(e) => setField("kabupaten", e.target.value.toUpperCase().slice(0, 12))} 
                     className={cn("h-11 rounded-xl font-bold uppercase", styles.input)} 
-                    placeholder="JOMBANG"
+                    placeholder="NAMA KABUPATEN"
                   />
                 </div>
                 <div className="col-span-1 space-y-2">

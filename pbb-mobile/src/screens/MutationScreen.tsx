@@ -25,10 +25,10 @@ export default function MutationScreen({ route, navigation }: ScreenProps<'Mutat
   const [pemohon, setPemohon] = useState(""); const [nikPemohon, setNikPemohon] = useState(""); const [telpPemohon, setTelpPemohon] = useState("");
   const [oldNop, setOldNop] = useState(""); const [oldData, setOldData] = useState<SpptData | null>(null);
   const [newDataList, setNewDataList] = useState<SpptData[]>([]); const [luasSebenarnya, setLuasSebenarnya] = useState(""); const [sisa, setSisa] = useState("HABIS");
-  const [villageMetadata, setVillageMetadata] = useState({ villageName: "BALONGBESUK", districtName: "DIWEK", regencyName: "JOMBANG", address: "", email: "", zip: "", logoUrl: null as string | null });
+  const [villageMetadata, setVillageMetadata] = useState({ villageName: "", districtName: "", regencyName: "", address: "", email: "", zip: "", logoUrl: null as string | null });
   const [drafts, setDrafts] = useState<any[]>([]);
 
-  const fetchVillageConfig = async () => { try { const r = await authenticatedFetch(serverUrl, '/api/village-config'); const d = await r.json(); if (d) { setVillageMetadata({ villageName: d.namaDesa || "BALONGBESUK", districtName: d.kecamatan || "DIWEK", regencyName: d.kabupaten || "JOMBANG", address: d.alamatKantor || "", email: d.email || "", zip: d.kodePos || "", logoUrl: d.logoUrl ? joinServerUrl(serverUrl, d.logoUrl) : null }); if (d.namaKades) setNamaKades(d.namaKades); } } catch (e) {} };
+  const fetchVillageConfig = async () => { try { const r = await authenticatedFetch(serverUrl, '/api/village-config'); const d = await r.json(); if (d) { setVillageMetadata({ villageName: d.namaDesa || "", districtName: d.kecamatan || "", regencyName: d.kabupaten || "", address: d.alamatKantor || "", email: d.email || "", zip: d.kodePos || "", logoUrl: d.logoUrl ? joinServerUrl(serverUrl, d.logoUrl) : null }); if (d.namaKades) setNamaKades(d.namaKades); } } catch (e) {} };
   const loadDrafts = async () => { try { const s = await AsyncStorage.getItem('@mutation_drafts_v1'); setDrafts(s ? JSON.parse(s) : []); } catch (e) { setDrafts([]); } };
 
   useEffect(() => { loadDrafts(); if (serverUrl) fetchVillageConfig(); }, [serverUrl]);

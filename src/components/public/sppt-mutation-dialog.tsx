@@ -165,9 +165,9 @@ export function SpptMutationDialog({
   onOpenChange,
   oldData,
   isDark = false,
-  villageName = "BALONGBESUK",
-  districtName = "DIWEK",
-  regencyName = "JOMBANG",
+  villageName = "",
+  districtName = "",
+  regencyName = "",
 }: SpptMutationDialogProps) {
   const [step, setStep] = useState(1);
   const [dasar, setDasar] = useState<MutationReason>("JUAL_BELI");
@@ -698,7 +698,7 @@ export function SpptMutationDialog({
 
                <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-[10px] opacity-60 leading-relaxed italic">Catatan: Format dokumen di atas mengikuti standar pengajuan mutasi SPPT PBB Kabupaten Jombang. Pastikan printer Anda menggunakan ukuran kertas Folio/F4 atau A4 dengan margin yang sesuai.</p>
+                  <p className="text-[10px] opacity-60 leading-relaxed italic">Catatan: Format dokumen di atas mengikuti standar pengajuan mutasi SPPT PBB Bapenda setempat. Pastikan printer Anda menggunakan ukuran kertas Folio/F4 atau A4 dengan margin yang sesuai.</p>
                </div>
             </div>
           )}

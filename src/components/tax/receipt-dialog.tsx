@@ -157,9 +157,9 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verificationUrl)}`;
 
   // Generate dynamic formatted text values
-  const kab = (villageConfig?.kabupaten || "Jombang").toUpperCase();
-  const kec = (villageConfig?.kecamatan || "Diwek").toUpperCase();
-  const desa = (villageConfig?.namaDesa || "Balongbesuk").toUpperCase();
+  const kab = (villageConfig?.kabupaten || "NAMA KABUPATEN").toUpperCase();
+  const kec = (villageConfig?.kecamatan || "NAMA KECAMATAN").toUpperCase();
+  const desa = (villageConfig?.namaDesa || "NAMA DESA").toUpperCase();
   const alamat = villageConfig?.alamatKantor || "";
   const tglBayarFormatted = item.tanggalBayar ? formatDateNoTime(item.tanggalBayar).toUpperCase() : "-";
   const dusunFormatted = (item.dusun || "-").toUpperCase();

@@ -16,8 +16,10 @@ Pembaruan ganda untuk platform web (v10.1) dan aplikasi seluler (v2.1) yang berf
 ### Perbaikan Bug & Stabilitas Sistem (v10.1 & v2.1)
 - **Stabilitas Dialog SPOP & Mutasi**: Menyelesaikan _bug_ _infinite re-render_ (loop reset terus menerus) pada form E-SPOP yang memicu kehilangan isian secara tiba-tiba, serta memperbaiki _bug_ tampilan data usang pada dialog Mutasi E-SPPT dengan memaksa pembaruan data (_reset_) ketika jendela dibuka.
 - **Tampilan Push Notification Sempurna**: Memperbaiki logo PBB (_Push Icon_) yang terpotong pada _Push Notification_ (baik di web maupun PBB Mobile) dengan menyiapkan gambar berukuran presisi serta _padding_ yang sesuai pedoman antarmuka.
+- **Deduplikasi Notifikasi Ganda**: Memperbaiki masalah sistem pengiriman _push notification_ yang mengirimkan dua pesan identik apabila petugas _login_ menggunakan dua akun berbeda (misalnya Super Admin dan Penarik) di perangkat HP yang sama. Sistem kini menyaring token duplikat melalui logika _Set deduplication_.
 - **Visibilitas Super Admin di PBB Mobile**: Mengatasi _bug_ di mana Super Admin tidak bisa menerima notifikasi Permintaan Pengalihan (Transfer) WP karena disembunyikan dari daftar pilihan tujuan transfer. Akun berstatus `ADMIN` kini dapat dipilih secara normal di aplikasi penagih.
 - **Riwayat Notifikasi & Aktivitas Akurat**: Menambahkan `force-dynamic` pada _API Route_ Next.js untuk mencegah mekanisme _caching_ statis yang membuat daftar notifikasi PBB Mobile menjadi kosong/kadaluarsa, serta memperbaiki sistem filter _Audit Log_ agar pelunasan dari HP petugas tercatat rapi di Riwayat Aktivitas Super Admin.
+- **Kesiapan Open-Source (Pembersihan Hardcode)**: Menghapus seluruh _hardcode_ bawaan yang masih menyematkan nama wilayah spesifik ("Balongbesuk", "Diwek", "Jombang", "pbb.galaxynet.my.id") pada Form Publik, Fallback Kwitansi, Peta GIS, serta Aplikasi Mobile. Semua data statis telah diganti menjadi _placeholder_ dinamis (`"NAMA DESA"`, dll) agar aplikasi ini sepenuhnya siap dirilis secara *open-source* untuk seluruh desa di Indonesia.
 
 ---
 

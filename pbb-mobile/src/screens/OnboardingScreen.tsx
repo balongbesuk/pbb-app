@@ -78,7 +78,7 @@ export default function OnboardingScreen({ navigation }: ScreenProps<'Onboarding
   const finishSync = async (data: any) => {
     try {
       if (!data?.success) { setSyncing(false); setErrorMsg('Sinkronisasi gagal.'); return; }
-      const villageName = data.village?.namaDesa || 'Balongbesuk';
+      const villageName = data.village?.namaDesa || 'Desa Digital';
       const villageLogo = data.village?.logoUrl || null;
       const fullUrl = getResolvedServerUrl();
       if (!fullUrl) { setSyncing(false); setErrorMsg('Alamat server tidak valid.'); return; }

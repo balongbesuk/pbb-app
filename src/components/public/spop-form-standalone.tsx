@@ -415,7 +415,7 @@ export function SpopFormStandalone({
 
               <div className="space-y-2 md:col-span-6">
                 <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">Nama Jalan Objek</Label>
-                <Input value={form.namaJalanObjek} onChange={(e) => setField("namaJalanObjek", sanitizeInput(e.target.value, MAX_ADDR))} className={cn("h-12 rounded-2xl font-bold uppercase", styles.input)} placeholder="Contoh: JL. RAYA BALONGBESUK / DUSUN" maxLength={MAX_ADDR} />
+                <Input value={form.namaJalanObjek} onChange={(e) => setField("namaJalanObjek", sanitizeInput(e.target.value, MAX_ADDR))} className={cn("h-12 rounded-2xl font-bold uppercase", styles.input)} placeholder="Contoh: JL. RAYA MAKMUR / DUSUN" maxLength={MAX_ADDR} />
               </div>
 
               <div className="grid grid-cols-2 gap-4 md:col-span-4">

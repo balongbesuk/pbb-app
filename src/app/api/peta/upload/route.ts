@@ -151,7 +151,7 @@ export async function POST(req: Request) {
             } else if (blokMatch) {
                 regionType = "BLOK";
                 blok = blokMatch[1].padStart(3, "0");
-            } else if (name.toUpperCase().includes("BALONGBESUK") || name.toUpperCase().includes("DESA")) {
+            } else if (name.toUpperCase().includes("DESA") && !name.toUpperCase().includes("BLOK")) {
                 regionType = "DESA";
             }
 

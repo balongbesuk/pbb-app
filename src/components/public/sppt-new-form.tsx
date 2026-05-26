@@ -181,9 +181,9 @@ export function SpptNewForm({
   const [luasTanah, setLuasTanah] = useState<number>(0);
   const [luasBangunan, setLuasBangunan] = useState<number>(0);
 
-  const [vName, setVName] = useState("BALONGBESUK");
-  const [dName, setDName] = useState("DIWEK");
-  const [rName, setRName] = useState("JOMBANG");
+  const [vName, setVName] = useState("");
+  const [dName, setDName] = useState("");
+  const [rName, setRName] = useState("");
   const [vAddress, setVAddress] = useState("");
   const [vEmail, setVEmail] = useState("");
   const [vZip, setVZip] = useState("");
@@ -505,7 +505,7 @@ export function SpptNewForm({
              <div className={cn("p-8 rounded-[2rem] border-2 shadow-sm", isDark ? "border-white/5 bg-[#0D1F3D]" : "border-slate-100 bg-slate-100")}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="sm:col-span-2 space-y-2"><Label className="text-[11px] font-black uppercase opacity-60 px-1">Nama Wajib Pajak (Sesuai KTP/Sertifikat)</Label><Input value={objekNama} onChange={(e) => setObjekNama(sanitizeText(e.target.value.toUpperCase(), 30))} className={cn("h-12 rounded-2xl font-black uppercase", styles.input)} /></div>
-                  <div className="sm:col-span-2 space-y-2"><Label className="text-[11px] font-black uppercase opacity-60 px-1">Alamat Objek (Jalan/Dusun/RT/RW)</Label><Input value={objekAlamat} onChange={(e) => setObjekAlamat(sanitizeText(e.target.value.toUpperCase(), 100))} className={cn("h-12 rounded-2xl font-bold", styles.input)} placeholder="MISAL: DUSUN BALONGBESUK, RT 004 RW 001" /></div>
+                  <div className="sm:col-span-2 space-y-2"><Label className="text-[11px] font-black uppercase opacity-60 px-1">Alamat Objek (Jalan/Dusun/RT/RW)</Label><Input value={objekAlamat} onChange={(e) => setObjekAlamat(sanitizeText(e.target.value.toUpperCase(), 100))} className={cn("h-12 rounded-2xl font-bold", styles.input)} placeholder="MISAL: DUSUN MAKMUR, RT 004 RW 001" /></div>
                   <div className="space-y-2">
                     <Label className="text-[11px] font-black uppercase opacity-60 px-1">Luas Tanah (m²)</Label>
                     <Input type="number" value={luasTanah} onChange={(e) => setLuasTanah(Number(e.target.value))} className={cn("h-12 rounded-2xl font-black text-primary text-lg", styles.input)} />

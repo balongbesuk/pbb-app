@@ -472,7 +472,7 @@ export function RegionMap({
     else if (props.regionType === "RW") title = `RW ${escapeHtml(props.rw ?? "")}`;
     else if (props.regionType === "DUSUN") title = `Dusun ${escapeHtml(props.dusun ?? "")}`;
     else if (props.regionType === "BLOK") title = `Blok ${escapeHtml(props.blok ?? "")}`;
-    else if (props.regionType === "DESA") title = `Desa Balongbesuk`;
+    else if (props.regionType === "DESA") title = `Batas Desa`;
 
     const color = s.percentage >= 90 ? '#10b981' : s.percentage >= 75 ? '#84cc16' : s.percentage >= 50 ? '#eab308' : '#ef4444';
 
