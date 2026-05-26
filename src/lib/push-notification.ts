@@ -27,8 +27,8 @@ export async function sendPushNotification({
   data?: any;
   sound?: 'default' | null;
 }) {
-  // Filter out invalid tokens
-  const validTokens = tokens.filter(token => Expo.isExpoPushToken(token));
+  // Filter out invalid tokens and remove duplicates
+  const validTokens = Array.from(new Set(tokens.filter(token => Expo.isExpoPushToken(token))));
   if (validTokens.length === 0) return;
 
   const messages: ExpoPushMessage[] = [];
