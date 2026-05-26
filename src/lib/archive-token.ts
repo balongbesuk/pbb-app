@@ -13,6 +13,7 @@ interface TokenData {
   year: string;
   file: string;
   expiresAt: number;
+  ip?: string; // Menyimpan IP pembuat token
 }
 
 // Simpan di globalThis agar Server Actions dan Route Handlers (Next.js bundle terpisah)
@@ -30,7 +31,7 @@ if (process.env.NODE_ENV !== "production") {
 let lastCleanup = Date.now();
 
 const CLEANUP_INTERVAL_MS = 60 * 1000; // Bersihkan setiap 1 menit
-const DEFAULT_TTL_MS = 1 * 60 * 1000; // Token valid 1 menit (sesuai instruksi USER)
+const DEFAULT_TTL_MS = 5 * 60 * 1000; // Token valid 5 menit (5-minute token TTL)
 
 /**
  * Bersihkan token yang sudah expired (lazy, dipanggil saat generate/consume)
@@ -52,12 +53,14 @@ function cleanupExpired() {
  * @param year - Tahun arsip (misal "2026")
  * @param file - Nama file PDF (misal "351704001900602240.pdf")
  * @param ttlMs - Masa berlaku token dalam milidetik (default 1 menit)
+ * @param ip - IP address pembuat token (opsional, untuk IP-binding)
  * @returns Token string (UUID)
  */
 export function generateArchiveToken(
   year: string,
   file: string,
-  ttlMs: number = DEFAULT_TTL_MS
+  ttlMs: number = DEFAULT_TTL_MS,
+  ip?: string
 ): string {
   cleanupExpired();
 
@@ -66,34 +69,43 @@ export function generateArchiveToken(
     year,
     file,
     expiresAt: Date.now() + ttlMs,
+    ip,
   });
 
   return token;
 }
 
+export type ConsumeTokenResult = 
+  | { success: true; data: TokenData }
+  | { success: false; error: "NOT_FOUND" | "EXPIRED" | "IP_MISMATCH" };
+
 /**
- * Konsumsi token akses.
- * Token bersifat reusable (bisa dipakai berulang) selama masa aktifnya (1 menit).
- * Ini mendukung peramban memuat preview di iframe serta memicu cetak & unduh sekaligus.
+ * Konsumsi token akses dengan pengecekan IP pengakses.
  *
  * @param token - Token string yang akan divalidasi
- * @returns Data token jika valid, null jika tidak valid/expired
+ * @param currentIp - IP address pengakses saat ini
+ * @returns Struktur hasil validasi asinkron
  */
-export function consumeArchiveToken(token: string): TokenData | null {
+export function consumeArchiveToken(token: string, currentIp?: string): ConsumeTokenResult {
   cleanupExpired();
 
   const data = tokenStore.get(token);
-  if (!data) return null;
+  if (!data) return { success: false, error: "NOT_FOUND" };
 
   const now = Date.now();
 
   // Cek apakah sudah kedaluwarsa
   if (now > data.expiresAt) {
     tokenStore.delete(token);
-    return null;
+    return { success: false, error: "EXPIRED" };
   }
 
-  return data;
+  // Pengamanan IP-Binding: Tolak jika token diakses dari IP berbeda
+  if (data.ip && currentIp && data.ip !== currentIp) {
+    return { success: false, error: "IP_MISMATCH" };
+  }
+
+  return { success: true, data };
 }
 
 /**

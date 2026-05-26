@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { consumeArchiveToken } from "@/lib/archive-token";
 import { getArchivePath } from "@/lib/storage";
+import { getClientIp } from "@/lib/request-ip";
 import fs from "fs";
 
 /**
@@ -8,8 +9,8 @@ import fs from "fs";
  *
  * URL: /arsip-pbb/download?token=<uuid>&dl=1
  *
- * - Token hanya bisa dipakai 1x (sekali akses, langsung hangus)
- * - Token expired otomatis dalam 5 menit
+ * - Token bersifat reusable selama masa aktifnya (1 menit)
+ * - Token terikat dengan IP Address peramban yang melakukan verifikasi PIN
  * - Tidak perlu tahu NOP atau nama file — semua tersembunyi di balik token
  * - Admin tidak memakai route ini (mereka pakai /arsip-pbb/[year]/[file] langsung)
  */
@@ -66,19 +67,33 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Konsumsi token (sekali pakai — langsung hangus)
-    const tokenData = consumeArchiveToken(token);
+    // Konsumsi token (terikat IP)
+    const clientIp = getClientIp(req);
+    const result = consumeArchiveToken(token, clientIp);
 
-    if (!tokenData) {
+    if (!result.success) {
+      if (result.error === "IP_MISMATCH") {
+        return new NextResponse(
+          createErrorPage(
+            "Perangkat Berbeda Ditolak",
+            "Sistem Keamanan mendeteksi bahwa tautan ini diakses dari perangkat atau jaringan internet (IP) yang berbeda dari yang melakukan verifikasi PIN awal. Akses langsung di luar sesi yang sah diblokir secara otomatis.",
+            "rose"
+          ),
+          { headers: { "Content-Type": "text/html" }, status: 403 }
+        );
+      }
+
       return new NextResponse(
         createErrorPage(
           "Tautan Kedaluwarsa",
-          "Tautan ini sudah tidak berlaku. Tautan arsip digital hanya berlaku selama 5 menit dan hanya bisa digunakan 1 kali. Silakan kembali ke portal dan buka ulang dokumen Anda.",
+          "Tautan ini sudah tidak berlaku. Tautan arsip digital hanya berlaku selama 5 menit dan hanya bisa digunakan di perangkat yang sama. Silakan kembali ke portal dan buka ulang dokumen Anda.",
           "amber"
         ),
         { headers: { "Content-Type": "text/html" }, status: 403 }
       );
     }
+
+    const tokenData = result.data;
 
     // Dapatkan path file yang aman
     const storagePath = getArchivePath(tokenData.year, tokenData.file);

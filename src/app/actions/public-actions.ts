@@ -310,8 +310,8 @@ export async function getSecureArsipUrl(id: number, pin: string, tahun: number) 
       return { success: false, message: "Berkas PDF E-SPPT untuk NOP ini tidak ditemukan di server pusat." };
     }
 
-    // Generate one-time token (sekali pakai, expired 5 menit)
-    const token = generateArchiveToken(String(tahun), matchedArchive);
+    // Generate one-time token (sekali pakai, expired 1 menit, terikat IP)
+    const token = generateArchiveToken(String(tahun), matchedArchive, undefined, ip);
     const secureUrl = `/arsip-pbb/download?token=${token}`;
 
     return {

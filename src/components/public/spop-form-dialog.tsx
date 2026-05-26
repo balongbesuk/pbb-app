@@ -516,7 +516,7 @@ export function SpopFormDialog({
 
                 <div className="grid grid-cols-2 gap-4 xl:col-span-2">
                   <div className="space-y-2">
-                    <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">RW Objek</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">RW</Label>
                     <Input
                       id="f-rw-obj"
                       value={form.rwObjek}
@@ -526,7 +526,7 @@ export function SpopFormDialog({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">RT Objek</Label>
+                    <Label className="text-[11px] font-black uppercase tracking-widest opacity-60 px-1">RT</Label>
                     <Input
                       id="f-rt-obj"
                       value={form.rtObjek}
