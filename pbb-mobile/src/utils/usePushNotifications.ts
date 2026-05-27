@@ -3,6 +3,7 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform } from 'react-native';
+import { navigationRef } from './navigationRef';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
@@ -74,9 +75,14 @@ export const usePushNotifications = (): PushNotificationState => {
           projectId,
         });
       } catch (e) {
-        token = await Notifications.getExpoPushTokenAsync({
-          projectId: '70796467-cde3-42b9-823e-1b561f801523', // Fallback to your actual project ID
-        });
+        try {
+          token = await Notifications.getExpoPushTokenAsync({
+            projectId: '70796467-cde3-42b9-823e-1b561f801523', // Fallback to your actual project ID
+          });
+        } catch (innerError) {
+          console.warn('⚠️ Push notifications could not be initialized (Expo token request failed):', innerError);
+          return undefined;
+        }
       }
     } else {
       console.log('Must use physical device for Push Notifications');
@@ -101,7 +107,20 @@ export const usePushNotifications = (): PushNotificationState => {
 
       responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
         console.log('Notification tapped:', response);
-        // Handle tap action here if needed
+        
+        try {
+          const data = response.notification.request.content.data;
+          if (data && data.screen) {
+            if (navigationRef.isReady()) {
+              navigationRef.navigate(data.screen as any, data.params);
+              console.log(`🚀 Navigated directly to ${data.screen} via push notification tap`);
+            } else {
+              console.warn('⚠️ Navigation is not ready to handle notification tap');
+            }
+          }
+        } catch (err) {
+          console.error('Failed to handle notification tap navigation:', err);
+        }
       });
     } catch (e) {
       console.log('Error adding notification listeners', e);

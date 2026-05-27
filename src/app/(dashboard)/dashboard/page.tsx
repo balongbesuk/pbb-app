@@ -286,7 +286,7 @@ export default async function DashboardPage({
             </div>
           )}
           <div className="space-y-1">
-            <h1 className="text-primary text-4xl font-extrabold tracking-tight">
+            <h1 className="text-primary text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight">
               Ringkasan Progress
             </h1>
             <p className="text-muted-foreground flex items-center gap-2">
@@ -306,7 +306,7 @@ export default async function DashboardPage({
         <div className="bg-primary/5 border-primary/20 animate-in slide-in-from-top-4 relative overflow-hidden rounded-3xl border p-6 shadow-xl sm:p-8">
           <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
-              <h2 className="text-primary text-2xl font-black tracking-tight">Halo, {currentUser?.name}! 👋</h2>
+              <h2 className="text-primary text-xl sm:text-2xl font-black tracking-tight">Halo, {currentUser?.name}! 👋</h2>
               <p className="text-muted-foreground text-sm font-medium">
                 Ini adalah progress penagihan PBB Anda untuk tahun <strong>{currentYear}</strong>. Semangat berkeliling!
               </p>
@@ -314,21 +314,21 @@ export default async function DashboardPage({
             
             <div className="flex flex-wrap items-center gap-4 lg:gap-8">
               <div className="space-y-1">
-                <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Target Kelunasan</p>
-                <div className="text-foreground text-2xl font-black">{formatCurrency(personalStats.totalTarget)}</div>
+                <p className="text-muted-foreground text-[11px] font-bold tracking-widest uppercase">Target Kelunasan</p>
+                <div className="text-foreground text-xl sm:text-2xl lg:text-xl xl:text-2xl font-black">{formatCurrency(personalStats.totalTarget)}</div>
                 <div className="flex flex-col gap-0.5">
-                  <p className="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-tighter">
+                  <p className="text-[11px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-tight">
                     Tagihan Aktif: {personalStats.totalWp - personalStats.wpLunas - personalStats.wpSengketa - personalStats.wpTdkTerbit} WP
                   </p>
                   {(personalStats.wpSengketa > 0 || personalStats.wpTdkTerbit > 0) && (
                     <div className="flex items-center gap-2 opacity-80">
                       {personalStats.wpSengketa > 0 && (
-                        <p className="text-[9px] font-bold text-orange-600 dark:text-orange-400 bg-orange-500/10 px-1.5 rounded uppercase">
+                        <p className="text-[10px] font-bold text-orange-600 dark:text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded uppercase">
                           {personalStats.wpSengketa} Sengketa
                         </p>
                       )}
                       {personalStats.wpTdkTerbit > 0 && (
-                        <p className="text-[9px] font-bold text-zinc-500 dark:text-zinc-400 bg-zinc-500/10 px-1.5 rounded uppercase">
+                        <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 bg-zinc-500/10 px-2 py-0.5 rounded uppercase">
                           {personalStats.wpTdkTerbit} Tdk Terbit
                         </p>
                       )}
@@ -340,8 +340,8 @@ export default async function DashboardPage({
               <div className="hidden h-12 w-px bg-primary/20 sm:block"></div>
 
               <div className="space-y-1">
-                <p className="text-primary text-[10px] font-bold tracking-widest uppercase">Telah Terkumpul</p>
-                <div className="text-emerald-600 dark:text-emerald-400 text-2xl font-black">{formatCurrency(personalStats.totalLunas)}</div>
+                <p className="text-primary text-[11px] font-bold tracking-widest uppercase">Telah Terkumpul</p>
+                <div className="text-emerald-600 dark:text-emerald-400 text-xl sm:text-2xl lg:text-xl xl:text-2xl font-black">{formatCurrency(personalStats.totalLunas)}</div>
                 <p className="text-xs font-medium text-emerald-600 dark:text-emerald-500">{personalStats.wpLunas} WP Lunas</p>
               </div>
 
@@ -585,19 +585,19 @@ export default async function DashboardPage({
 
 function PhysicalStatsCard({ title, value, description, icon }: PhysicalStatsCardProps) {
   return (
-    <Card className="hover:border-primary/20 overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300">
+    <Card className="hover:border-primary/30 hover:-translate-y-1 hover:shadow-md dark:hover:shadow-black/20 overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300">
       <CardContent className="flex items-center gap-4 p-5">
         <div className="text-foreground/50 rounded-xl border border-border bg-muted/30 p-2.5">
           {icon}
         </div>
         <div className="space-y-0.5">
-          <p className="text-muted-foreground text-[10px] font-bold tracking-[0.1em] uppercase">
+          <p className="text-muted-foreground text-[11px] font-bold tracking-[0.1em] uppercase">
             {title}
           </p>
-          <div className="text-foreground text-lg leading-none font-black tracking-tight">
+          <div className="text-foreground text-base sm:text-lg leading-none font-black tracking-tight">
             {value}
           </div>
-          <p className="text-muted-foreground/60 text-[9px] font-medium">{description}</p>
+          <p className="text-muted-foreground/60 text-[10px] font-medium">{description}</p>
         </div>
       </CardContent>
     </Card>
@@ -606,16 +606,16 @@ function PhysicalStatsCard({ title, value, description, icon }: PhysicalStatsCar
 
 function StatsHeroCard({ title, value, icon, description, percent, color }: StatsHeroCardProps) {
   const colors: Record<StatsHeroCardProps["color"], string> = {
-    indigo: "bg-indigo-500/5 text-indigo-600 border-indigo-100 dark:border-indigo-900/40",
-    emerald: "bg-emerald-500/5 text-emerald-600 border-emerald-100 dark:border-emerald-900/40",
-    rose: "bg-rose-500/5 text-rose-600 border-rose-100 dark:border-rose-900/40",
-    blue: "bg-blue-500/5 text-blue-600 border-blue-100 dark:border-blue-900/40",
+    indigo: "bg-indigo-500/5 text-indigo-600 border-indigo-100 dark:border-indigo-900/40 group-hover:bg-indigo-500/10 group-hover:shadow-[0_0_15px_rgba(99,102,241,0.15)]",
+    emerald: "bg-emerald-500/5 text-emerald-600 border-emerald-100 dark:border-emerald-900/40 group-hover:bg-emerald-500/10 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.15)]",
+    rose: "bg-rose-500/5 text-rose-600 border-rose-100 dark:border-rose-900/40 group-hover:bg-rose-500/10 group-hover:shadow-[0_0_15px_rgba(239,68,68,0.15)]",
+    blue: "bg-blue-500/5 text-blue-600 border-blue-100 dark:border-blue-900/40 group-hover:bg-blue-500/10 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.15)]",
   };
 
   return (
-    <Card className="hover:border-primary/20 group space-y-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300">
+    <Card className="hover:border-primary/30 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-black/40 group space-y-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300">
       <div className="flex items-start justify-between">
-        <div className={cn("rounded-xl border p-2.5", colors[color])}>{icon}</div>
+        <div className={cn("rounded-xl border p-2.5 transition-all duration-300", colors[color])}>{icon}</div>
         {percent !== undefined && (
           <Badge
             variant="outline"
@@ -626,13 +626,13 @@ function StatsHeroCard({ title, value, icon, description, percent, color }: Stat
         )}
       </div>
       <div className="space-y-1">
-        <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+        <p className="text-muted-foreground text-[11px] font-bold tracking-widest uppercase">
           {title}
         </p>
-        <div className="text-foreground text-2xl leading-none font-black tracking-tighter">
+        <div className="text-foreground text-xl sm:text-2xl lg:text-xl xl:text-2xl leading-none font-black tracking-tighter">
           {value}
         </div>
-        <p className="text-muted-foreground flex items-center gap-1.5 pt-1 text-[10px] leading-relaxed">
+        <p className="text-muted-foreground flex items-center gap-1.5 pt-1 text-[11px] leading-relaxed">
           <span className="h-1 w-1 rounded-full bg-zinc-200" />
           {description}
         </p>

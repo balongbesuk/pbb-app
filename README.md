@@ -14,9 +14,10 @@
 [![SQLite](https://img.shields.io/badge/SQLite_WAL-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS_4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![Firebase](https://img.shields.io/badge/Firebase_FCM-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
 [![Version](https://img.shields.io/badge/v10.1.0-blue)](./CHANGELOG.md)
 
-[📖 Panduan Instalasi](./docs/PANDUAN_INSTALASI.md) · [📘 Wiki Teknis](./docs/WIKI.md) · [📋 Changelog](./CHANGELOG.md) · [🔒 Security](./SECURITY.md)
+[📖 Panduan Instalasi](./docs/PANDUAN_INSTALASI.md) · [📲 Panduan Notifikasi](./docs/PANDUAN_NOTIFIKASI.md) · [📘 Wiki Teknis](./docs/WIKI.md) · [📋 Changelog](./CHANGELOG.md) · [🔒 Security](./SECURITY.md)
 
 </div>
 
@@ -101,13 +102,14 @@ PBB Manager v10.0 menerapkan pengamanan berlapis untuk melindungi privasi data w
 </details>
 
 <details>
-<summary><strong>📱 PBB Mobile v1.2.0 (Petugas Lapangan)</strong></summary>
+<summary><strong>📱 PBB Mobile v2.1.0 (Petugas Lapangan)</strong></summary>
 
-- Login dengan JWT Bearer Token & koneksi server fleksibel
+- Login dengan JWT Bearer Token & koneksi server dinamis berbasis domain VPS desa
 - Pencarian WP cepat dengan lazy loading untuk ribuan data
 - Update status pembayaran real-time dari lapangan
 - Timeline penagihan harian sebagai bukti audit
-- Notifikasi transfer dan pengumuman sistem
+- **Push Notification Instan (Double-Strike FCM/Expo)** dengan prioritas Doze Mode Android
+- **Deep Linking Navigasi Cerdas**: Ketuk notifikasi untuk langsung menuju detail WP
 - Build APK/AAB otomatis via EAS Build
 </details>
 
@@ -187,6 +189,7 @@ npx expo start
 | Dokumen | Deskripsi |
 |---|---|
 | [📖 Panduan Instalasi](./docs/PANDUAN_INSTALASI.md) | Setup server, konfigurasi database, inisialisasi awal |
+| [📲 Panduan Push Notifikasi](./docs/PANDUAN_NOTIFIKASI.md) | Setup notifikasi ganda FCM + Web VAPID untuk desa |
 | [📘 Wiki Teknis & Keamanan](./docs/WIKI.md) | Arsitektur, hardening, indeks teknis GIS |
 | [📱 Panduan Mobile Build](./pbb-mobile/README.md) | Build APK/AAB dengan EAS Build |
 | [📋 Dokumentasi Penggunaan](./docs/DOKUMENTASI_PENGGUNAAN.md) | Panduan operasional harian admin & petugas |

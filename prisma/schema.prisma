@@ -183,6 +183,7 @@ model VillageConfig {
   enablePbbMobile      Boolean @default(true)
   adminFee             Int     @default(2000)
   showReceiptPublic    Boolean @default(true)
+  enablePushNotifications Boolean @default(true)
   updatedAt         DateTime @default(now()) @updatedAt
 }
 

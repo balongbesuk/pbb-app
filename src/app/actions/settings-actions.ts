@@ -128,6 +128,7 @@ export const getVillageConfig = cache(async () => {
         showUnpaidDetailsGis: false,
         adminFee: 2000,
         showReceiptPublic: true,
+        enablePushNotifications: true,
         ...(supportsEnablePbbMobile ? { enablePbbMobile: true } : {}),
       },
     });
@@ -159,6 +160,7 @@ export const getVillageConfig = cache(async () => {
       enablePbbMobile: true,
       adminFee: 2000,
       showReceiptPublic: true,
+      enablePushNotifications: true,
       updatedAt: new Date() 
     };
   }
@@ -220,6 +222,10 @@ export async function updateVillageConfig(raw: VillageConfigInput) {
 
     if (data.showReceiptPublic !== undefined) {
       updateData.showReceiptPublic = data.showReceiptPublic;
+    }
+
+    if (data.enablePushNotifications !== undefined) {
+      updateData.enablePushNotifications = data.enablePushNotifications;
     }
 
     if (data.enableDigitalArchive !== undefined) {

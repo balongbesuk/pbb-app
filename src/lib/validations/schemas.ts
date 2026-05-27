@@ -49,6 +49,7 @@ export const VillageConfigSchema = z.object({
   enablePbbMobile: z.boolean().optional(),
   adminFee: z.number().int().min(0).optional(),
   showReceiptPublic: z.boolean().optional(),
+  enablePushNotifications: z.boolean().optional(),
   mapCenterLat: z.number().optional(),
   mapCenterLng: z.number().optional(),
   mapDefaultZoom: z.number().int().min(1).max(22).optional(),

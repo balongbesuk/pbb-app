@@ -12,7 +12,9 @@ if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY &&
 
 // Create a new Expo SDK client
 // optionally providing an access token if you have enabled push security
-const expo = new Expo();
+const expo = new Expo({
+  accessToken: process.env.EXPO_ACCESS_TOKEN || undefined,
+});
 
 export async function sendPushNotification({
   tokens,
@@ -27,6 +29,17 @@ export async function sendPushNotification({
   data?: any;
   sound?: 'default' | null;
 }) {
+  // Check if push notifications are enabled globally in the village configuration
+  try {
+    const config = await prisma.villageConfig.findFirst({ where: { id: 1 } });
+    if (config && config.enablePushNotifications === false) {
+      console.log("ℹ️ Push notifications are disabled globally in VillageConfig.");
+      return;
+    }
+  } catch (err) {
+    console.error("Failed to query enablePushNotifications config:", err);
+  }
+
   // Filter out invalid tokens and remove duplicates
   const validTokens = Array.from(new Set(tokens.filter(token => Expo.isExpoPushToken(token))));
   if (validTokens.length === 0) return;
@@ -40,6 +53,7 @@ export async function sendPushNotification({
       body,
       data,
       channelId: 'default',
+      priority: 'high',
     });
   }
 
@@ -57,6 +71,19 @@ export async function sendPushNotification({
         const message = chunk[i];
         if (ticket.status === 'error') {
           console.error(`❌ Expo Push Error for token ${message.to}:`, ticket.message);
+          
+          if (ticket.details?.error === 'DeviceNotRegistered') {
+            try {
+              const tokensToDelete = Array.isArray(message.to) ? message.to : [message.to];
+              await prisma.pushSubscription.deleteMany({
+                where: { token: { in: tokensToDelete } }
+              });
+              console.log(`🧹 Cleaned up stale token(s) from database: ${tokensToDelete.join(', ')}`);
+            } catch (dbErr) {
+              console.error('Failed to delete stale token from database:', dbErr);
+            }
+          }
+
           if (ticket.details) {
             console.error(`   Error details:`, JSON.stringify(ticket.details));
           }

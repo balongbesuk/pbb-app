@@ -28,7 +28,10 @@ import UserAuthScreen from './src/screens/UserAuthScreen';
 import type { RootStackParamList } from './src/types/navigation';
 import { usePushNotifications } from './src/utils/usePushNotifications';
 
+import { navigationRef } from './src/utils/navigationRef';
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
 
 export default function App() {
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
@@ -93,7 +96,7 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Dashboard" component={DashboardScreen} initialParams={initialParams} />
