@@ -8,8 +8,11 @@ import { createAuditLog } from "./log-actions";
 import { UserSchema, formatZodError } from "@/lib/validations/schemas";
 import { requireAdmin } from "@/lib/server-auth";
 
+import { formatSignatureUrl } from "@/lib/utils";
+
 type UserInput = Parameters<typeof UserSchema.parse>[0];
 type UserUpdateInput = Partial<UserInput>;
+
 
 export async function createUser(raw: UserInput) {
   try {
@@ -137,9 +140,10 @@ export async function getCurrentUserSignature(id: string) {
       where: { id },
       select: { signatureUrl: true }
     });
-    return user?.signatureUrl || null;
+    return formatSignatureUrl(user?.signatureUrl);
   } catch (e) {
     return null;
   }
 }
+
 

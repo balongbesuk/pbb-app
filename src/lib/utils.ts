@@ -155,3 +155,53 @@ export function getNopVariations(searchQuery: string): string[] {
 
   return Array.from(new Set(variations.filter(v => v.length >= 3)));
 }
+
+/** Format a signature URL to ensure it starts with /uploads/signatures/ */
+export function formatSignatureUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  // If it's a base64 data url, keep it as is
+  if (url.startsWith("data:")) return url;
+  // If it's a full http/https url, keep it as is
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+
+  let cleanUrl = url.trim();
+
+  // If it's just the filename (e.g. signature-xxxx.png)
+  if (!cleanUrl.includes("/")) {
+    return `/uploads/signatures/${cleanUrl}`;
+  }
+
+  // If it contains a path, but does not start with /
+  if (!cleanUrl.startsWith("/")) {
+    cleanUrl = "/" + cleanUrl;
+  }
+
+  // If it has public/ prefix, remove it
+  if (cleanUrl.startsWith("/public/")) {
+    cleanUrl = cleanUrl.replace("/public/", "/");
+  }
+
+  // Ensure it starts with /uploads/signatures/
+  if (!cleanUrl.startsWith("/uploads/signatures/")) {
+    const idx = cleanUrl.indexOf("/uploads/signatures/");
+    if (idx !== -1) {
+      cleanUrl = cleanUrl.substring(idx);
+    } else {
+      const sigIdx = cleanUrl.indexOf("/signatures/");
+      if (sigIdx !== -1) {
+        cleanUrl = "/uploads" + cleanUrl.substring(sigIdx);
+      } else {
+        if (cleanUrl.startsWith("/uploads/")) {
+          const filename = cleanUrl.split("/").pop();
+          cleanUrl = `/uploads/signatures/${filename}`;
+        } else {
+          const filename = cleanUrl.split("/").pop();
+          cleanUrl = `/uploads/signatures/${filename}`;
+        }
+      }
+    }
+  }
+
+  return cleanUrl;
+}
+

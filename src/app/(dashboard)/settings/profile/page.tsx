@@ -10,6 +10,8 @@ import { SignatureUpload } from "@/components/settings/signature-upload";
 import { EditableProfileRow } from "@/components/settings/editable-profile-row";
 import { User as UserIcon } from "lucide-react";
 import type { AppUser } from "@/types/app";
+import { formatSignatureUrl } from "@/lib/utils";
+
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
@@ -85,7 +87,7 @@ export default async function ProfilePage() {
 
               <div className="w-full pt-6 border-t border-zinc-100 dark:border-zinc-800 flex flex-col items-center">
                 <h3 className="text-sm font-bold tracking-tight mb-4 uppercase">Tanda Tangan Digital</h3>
-                <SignatureUpload initialSignatureUrl={user.signatureUrl ?? null} />
+                <SignatureUpload initialSignatureUrl={formatSignatureUrl(user.signatureUrl)} />
               </div>
             </CardContent>
           </Card>

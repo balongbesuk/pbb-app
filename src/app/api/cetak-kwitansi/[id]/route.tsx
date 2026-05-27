@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
+import { formatSignatureUrl } from "@/lib/utils";
+
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +46,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       if (officer) {
         officerName = officer.name || officer.username;
         if (officer.signatureUrl) {
-          officerSignatureUrl = await getLocalImageBase64(officer.signatureUrl);
+          officerSignatureUrl = await getLocalImageBase64(formatSignatureUrl(officer.signatureUrl)!);
         }
       }
     }
