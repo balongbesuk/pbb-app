@@ -129,6 +129,7 @@ export const getVillageConfig = cache(async (): Promise<VillageConfig> => {
         adminFee: 2000,
         showReceiptPublic: true,
         enablePushNotifications: true,
+        useBumdesFormat: false,
         ...(supportsEnablePbbMobile ? { enablePbbMobile: true } : {}),
       },
     });
@@ -164,6 +165,7 @@ export const getVillageConfig = cache(async (): Promise<VillageConfig> => {
       adminFee: 2000,
       showReceiptPublic: true,
       enablePushNotifications: true,
+      useBumdesFormat: false,
       updatedAt: new Date() 
     } as VillageConfig;
   }
@@ -229,6 +231,10 @@ export async function updateVillageConfig(raw: VillageConfigInput) {
 
     if (data.enablePushNotifications !== undefined) {
       updateData.enablePushNotifications = data.enablePushNotifications;
+    }
+
+    if (data.useBumdesFormat !== undefined) {
+      updateData.useBumdesFormat = data.useBumdesFormat;
     }
 
     if (data.enableDigitalArchive !== undefined) {

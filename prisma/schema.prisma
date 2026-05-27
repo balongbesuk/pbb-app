@@ -184,6 +184,7 @@ model VillageConfig {
   adminFee             Int     @default(2000)
   showReceiptPublic    Boolean @default(true)
   enablePushNotifications Boolean @default(true)
+  useBumdesFormat      Boolean @default(false)
   updatedAt         DateTime @default(now()) @updatedAt
 }
 

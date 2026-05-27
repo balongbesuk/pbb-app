@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Printer, X, CreditCard, User, Check, Loader2, Award, Landmark, Calendar, MapPin, Receipt, Download } from "lucide-react";
 import { formatCurrency, formatDateNoTime } from "@/lib/utils";
 import { getVillageConfig } from "@/app/actions/settings-actions";
@@ -165,6 +164,9 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
   const dusunFormatted = (item.dusun || "-").toUpperCase();
   const rtFormatted = item.rt || "00";
   const rwFormatted = item.rw || "00";
+
+  // BUMDes Format Toggle
+  const isBumdes = villageConfig?.useBumdesFormat || false;
 
   // Build the print HTML template (1/4 A4 Landscape on A4 Portrait paper)
   const getReceiptHtml = () => {
@@ -476,12 +478,12 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
                   : `<div style="width: 36px; height: 36px; background-color: #059669; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px;">PBB</div>`}
                 <div class="header-text">
                   <h5 class="gov-title">PEMERINTAH KABUPATEN ${kab}</h5>
-                  <h4 class="village-title">KANTOR DESA ${desa}</h4>
+                  <h4 class="village-title">${isBumdes ? 'BUMDES' : 'KANTOR DESA'} ${desa}</h4>
                   <p class="village-address">${alamat}</p>
                 </div>
               </div>
               <div class="receipt-number">
-                <h4 class="doc-type">KWITANSI</h4>
+                <h4 class="doc-type">KWITANSI${isBumdes ? ' BUMDES' : ''}</h4>
                 <span class="doc-ref">NO: PBB-${cleanNop.substring(10, 13)}-${cleanNop.substring(13, 17)}-${item.tahun}</span>
               </div>
             </div>
@@ -550,7 +552,7 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
                 <div class="receipt-date">${desa}, ${tglBayarFormatted}</div>
                 ${cashierSignatureUrl ? `<img src="${cashierSignatureUrl}" class="cashier-sig" alt="TTD" />` : ''}
                 <span class="cashier-name">${cashierName ? cashierName : "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}</span>
-                <div class="cashier-title">KASIR / PETUGAS DESA</div>
+                <div class="cashier-title">KASIR / PETUGAS ${isBumdes ? 'BUMDES' : 'DESA'}</div>
               </div>
             </div>
           </div>
@@ -709,12 +711,12 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
                         )}
                         <div className="text-left leading-none">
                           <span className="font-bold text-zinc-400 uppercase tracking-widest" style={{ fontSize: "8px" }}>Pemerintah Kabupaten {kab}</span>
-                          <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight mt-0.5">KANTOR DESA {desa}</h3>
+                          <h3 className="text-sm font-black text-slate-800 uppercase tracking-tight mt-0.5">{isBumdes ? 'BUMDES' : 'KANTOR DESA'} {desa}</h3>
                           <p className="text-zinc-500 font-medium mt-0.5" style={{ fontSize: "7.5px" }}>{alamat}</p>
                         </div>
                       </div>
                       <div className="text-right leading-none">
-                        <h4 className="text-base font-black text-emerald-600 tracking-wider">KWITANSI</h4>
+                        <h4 className="text-base font-black text-emerald-600 tracking-wider">KWITANSI{isBumdes ? ' BUMDES' : ''}</h4>
                         <span className="text-zinc-400 font-bold uppercase" style={{ fontSize: "7.5px" }}>NO: PBB-{cleanNop.substring(10, 13)}-{cleanNop.substring(13, 17)}-{item.tahun}</span>
                       </div>
                     </div>
@@ -796,10 +798,10 @@ export function ReceiptDialog({ open, onOpenChange, item, adminFee: propAdminFee
                           />
                         )}
                         <span className="font-bold text-slate-800 border-b border-zinc-400 pb-0.5 uppercase tracking-wide px-4 inline-block text-center mt-2" style={{ fontSize: "9px", minWidth: "120px" }}>
-                          {cashierName || <span className="opacity-0">KASIR / PETUGAS DESA</span>}
+                          {cashierName || <span className="opacity-0">KASIR / PETUGAS {isBumdes ? 'BUMDES' : 'DESA'}</span>}
                         </span>
                         <div className="font-black text-zinc-400 uppercase tracking-widest mt-1" style={{ fontSize: "6.5px" }}>
-                          Kasir / Petugas Desa
+                          Kasir / Petugas {isBumdes ? 'BUMDes' : 'Desa'}
                         </div>
                       </div>
 

@@ -31,6 +31,7 @@ export function TaxConfigForm() {
   const [adminFee, setAdminFee] = useState(2000);
   const [showReceiptPublic, setShowReceiptPublic] = useState(true);
   const [enablePushNotifications, setEnablePushNotifications] = useState(true);
+  const [useBumdesFormat, setUseBumdesFormat] = useState(false);
 
   const DEFAULT_JOMBANG_URL = "https://bapenda.jombangkab.go.id/cek-bayar/ceknopbayar-jmb.kab?module=pbb";
 
@@ -54,6 +55,7 @@ export function TaxConfigForm() {
       setAdminFee(data.adminFee ?? 2000);
       setShowReceiptPublic(data.showReceiptPublic ?? true);
       setEnablePushNotifications(data.enablePushNotifications ?? true);
+      setUseBumdesFormat(data.useBumdesFormat ?? false);
       setLoading(false);
     }
     load();
@@ -85,6 +87,7 @@ export function TaxConfigForm() {
       adminFee: adminFee,
       showReceiptPublic: showReceiptPublic,
       enablePushNotifications: !!enablePushNotifications,
+      useBumdesFormat: !!useBumdesFormat,
     });
     if (res.success) {
       toast.success("Konfigurasi sistem diperbarui");
@@ -186,6 +189,22 @@ export function TaxConfigForm() {
                   <Checkbox
                     checked={!!showReceiptPublic}
                     onCheckedChange={(checked) => setShowReceiptPublic(!!checked)}
+                    className="size-5 rounded-lg border-2"
+                  />
+                </div>
+
+                <div className="bg-primary/5 border-primary/10 flex items-center justify-between rounded-2xl border p-5 min-h-[108px] dark:bg-primary/10">
+                  <div className="space-y-1">
+                    <Label className="flex items-center gap-2 text-sm font-bold">
+                      Gunakan Format Kwitansi BUMDes
+                    </Label>
+                    <p className="text-muted-foreground text-[10px] leading-relaxed">
+                      Jika diaktifkan, cetakan kwitansi pelunasan pajak akan menggunakan kop dan tanda tangan atas nama BUMDes alih-alih Pemerintah Desa.
+                    </p>
+                  </div>
+                  <Checkbox
+                    checked={!!useBumdesFormat}
+                    onCheckedChange={(checked) => setUseBumdesFormat(!!checked)}
                     className="size-5 rounded-lg border-2"
                   />
                 </div>

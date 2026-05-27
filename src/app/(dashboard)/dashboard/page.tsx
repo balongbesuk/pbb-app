@@ -243,7 +243,7 @@ export default async function DashboardPage({
   const currentYear = parseInt(params.tahun || new Date().getFullYear().toString());
   const session = await getServerSession(authOptions);
   const currentUser = session?.user as SessionUser | undefined;
-  if (!currentUser || currentUser.role === "PENGGUNA") {
+  if (!currentUser) {
     redirect("/");
   }
 

@@ -29,7 +29,7 @@ export default async function DataPajakPage({
 }) {
   const session = await getServerSession(authOptions);
   const currentUser = session?.user as AppUser | undefined;
-  if (!currentUser || currentUser.role === "PENGGUNA") {
+  if (!currentUser) {
     redirect("/");
   }
 

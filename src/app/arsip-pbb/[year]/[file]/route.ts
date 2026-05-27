@@ -78,13 +78,12 @@ export async function GET(
     const isDownload = searchParams.get("dl") === "1" || searchParams.get("download") === "1";
     const disposition = isDownload ? "attachment" : "inline";
 
-    // 2. Cek apakah yang akses adalah ADMIN
+    // 2. Cek apakah yang akses adalah user terautentikasi (ADMIN/PENARIK/PENGGUNA)
     const session = await getServerSession(authOptions);
     const currentUser = session?.user as AppUser | undefined;
-    const isAdmin = currentUser?.role === "ADMIN";
 
-    if (isAdmin) {
-      // Admin bebas buka semua file
+    if (currentUser) {
+      // User yang login bebas buka semua file
       const fileBuffer = fs.readFileSync(storagePath);
       return new NextResponse(fileBuffer, {
         headers: {
