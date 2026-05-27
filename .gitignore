@@ -75,6 +75,8 @@ build_log.txt
 /public/pbb_process_log.txt
 /temp_extracted.txt
 test_qr.js
+test-notif.js
+implementation_plan.md
 /storage/
 /backups/
 map-data/
