@@ -84,4 +84,5 @@ public/maps/
 *.ps1
 /scratch/
 /tmp/
-
+.agent/
+design-system/
