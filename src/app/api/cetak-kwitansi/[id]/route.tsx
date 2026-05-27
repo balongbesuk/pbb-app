@@ -61,6 +61,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
     };
 
+    const isBumdes = config?.useBumdesFormat || false;
+    const adminFee = config?.adminFee || 0;
+    const ketetapan = tax.ketetapan || tax.tagihan || 0;
+    const totalBayar = ketetapan + adminFee;
+
     return new ImageResponse(
       (
         <div
@@ -115,10 +120,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
               )}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '32px', fontWeight: '800', color: '#0f172a' }}>
-                  Kwitansi Pembayaran PBB
+                  Kwitansi Pembayaran PBB{isBumdes ? ' BUMDes' : ''}
                 </span>
                 <span style={{ fontSize: '20px', fontWeight: '500', color: '#64748b', marginTop: '4px' }}>
-                  Pemerintah Desa {config?.namaDesa || 'Belum Diatur'}
+                  {isBumdes ? 'BUMDes' : 'Pemerintah Desa'} {config?.namaDesa || 'Belum Diatur'}
                 </span>
                 <span style={{ fontSize: '16px', color: '#94a3b8', marginTop: '4px' }}>
                   Kecamatan {config?.kecamatan || '-'}, Kabupaten {config?.kabupaten || '-'}
@@ -154,9 +159,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
             {/* Total Area */}
             <div style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#f8fafc', padding: '30px', borderRadius: '16px', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #e2e8f0', marginTop: 'auto' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Total Ketetapan</span>
-                <span style={{ fontSize: '40px', fontWeight: '900', color: '#0f172a', marginTop: '4px' }}>{formatCurrency(tax.ketetapan)}</span>
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '40px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Ketetapan PBB</span>
+                  <span style={{ fontSize: '32px', fontWeight: '700', color: '#334155', marginTop: '4px' }}>{formatCurrency(ketetapan)}</span>
+                </div>
+                {adminFee > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Biaya Admin</span>
+                    <span style={{ fontSize: '32px', fontWeight: '700', color: '#334155', marginTop: '4px' }}>{formatCurrency(adminFee)}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#047857', textTransform: 'uppercase' }}>Total Bayar</span>
+                  <span style={{ fontSize: '40px', fontWeight: '900', color: '#0f172a', marginTop: '4px' }}>{formatCurrency(totalBayar)}</span>
+                </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
@@ -169,10 +186,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
             {/* Footer with Officer */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '30px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
-              <span style={{ fontSize: '14px', color: '#94a3b8' }}>Kwitansi digital ini sah diterbitkan oleh PBB-App Desa {config?.namaDesa || ''}</span>
+              <span style={{ fontSize: '14px', color: '#94a3b8' }}>Kwitansi digital ini sah diterbitkan oleh PBB-App {isBumdes ? 'BUMDes' : 'Desa'} {config?.namaDesa || ''}</span>
               {officerName && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '150px' }}>
-                  <span style={{ fontSize: '14px', color: '#64748b', marginBottom: officerSignatureUrl ? '0px' : '40px' }}>Petugas,</span>
+                  <span style={{ fontSize: '14px', color: '#64748b', marginBottom: officerSignatureUrl ? '0px' : '40px' }}>{isBumdes ? 'Petugas BUMDes,' : 'Petugas,'}</span>
                   {officerSignatureUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={officerSignatureUrl} width={100} height={100} style={{ objectFit: 'contain' }} alt="TTD" />
