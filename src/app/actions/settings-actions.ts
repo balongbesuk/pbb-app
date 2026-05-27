@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/server-auth";
 import { VillageConfigSchema, formatZodError } from "@/lib/validations/schemas";
-import { Prisma } from "@prisma/client";
+import { Prisma, VillageConfig } from "@prisma/client";
 
 type VillageConfigInput = Parameters<typeof VillageConfigSchema.parse>[0];
 
@@ -92,7 +92,7 @@ export async function deleteAllTaxData() {
   }
 }
 
-export const getVillageConfig = cache(async () => {
+export const getVillageConfig = cache(async (): Promise<VillageConfig> => {
   try {
     const config = await prisma.villageConfig.findFirst({
       where: { id: 1 },
@@ -152,6 +152,9 @@ export const getVillageConfig = cache(async () => {
       isJombangBapenda: true, 
       enableBapendaSync: true,
       logoUrl: null, 
+      mapCenterLat: -7.5744,
+      mapCenterLng: 112.235,
+      mapDefaultZoom: 15,
       showNominalPajak: false, 
       enableDigitalArchive: true,
       archiveOnlyLunas: true,
@@ -162,7 +165,7 @@ export const getVillageConfig = cache(async () => {
       showReceiptPublic: true,
       enablePushNotifications: true,
       updatedAt: new Date() 
-    };
+    } as VillageConfig;
   }
 });
 
