@@ -63,7 +63,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const isBumdes = config?.useBumdesFormat || false;
     const adminFee = config?.adminFee || 0;
-    const ketetapan = tax.ketetapan || tax.tagihan || 0;
+    const ketetapan = tax.ketetapan || 0;
     const totalBayar = ketetapan + adminFee;
 
     return new ImageResponse(
