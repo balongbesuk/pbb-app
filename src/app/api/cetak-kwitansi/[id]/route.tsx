@@ -158,29 +158,33 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             </div>
 
             {/* Total Area */}
-            <div style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#f8fafc', padding: '24px', borderRadius: '16px', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #e2e8f0', marginTop: 'auto' }}>
-              <div style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', backgroundColor: '#f8fafc', padding: '24px 32px', borderRadius: '16px', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #e2e8f0', marginTop: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', marginRight: '32px' }}>
                   <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Ketetapan PBB</span>
                   <span style={{ fontSize: '24px', fontWeight: '700', color: '#334155', marginTop: '4px' }}>{formatCurrency(ketetapan)}</span>
                 </div>
+                
                 {adminFee > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', marginRight: '32px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Biaya Admin</span>
                     <span style={{ fontSize: '24px', fontWeight: '700', color: '#334155', marginTop: '4px' }}>{formatCurrency(adminFee)}</span>
                   </div>
                 )}
+
+                <div style={{ width: '2px', height: '48px', backgroundColor: '#cbd5e1', marginRight: '32px' }} />
+
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#047857', textTransform: 'uppercase' }}>Total Bayar</span>
                   <span style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', marginTop: '4px' }}>{formatCurrency(totalBayar)}</span>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: '120px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#10b981', padding: '6px 14px', borderRadius: '100px', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '120px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#10b981', padding: '8px 24px', borderRadius: '100px', marginBottom: '8px' }}>
                   <span style={{ fontSize: '16px', fontWeight: '800', color: '#ffffff', letterSpacing: '1px' }}>LUNAS</span>
                 </div>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>{dateStr} {timeStr}</span>
+                <span style={{ fontSize: '12px', fontWeight: '500', color: '#64748b' }}>{dateStr} {timeStr}</span>
               </div>
             </div>
 
