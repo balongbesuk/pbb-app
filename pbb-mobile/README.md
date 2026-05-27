@@ -1,4 +1,4 @@
-# PBB Mobile v2.0.0 — Panduan Build APK & Development
+# PBB Mobile v2.1.0 — Panduan Build APK & Development
 <img width="100%" alt="PBB Mobile Banner" src="https://github.com/user-attachments/assets/1cc7b3c6-030e-49c1-a388-33af515376bc" />
 
 
@@ -6,7 +6,10 @@ Dokumen ini berisi panduan teknis untuk melakukan build aplikasi **PBB Mobile** 
 
 ---
 
-## 🌟 Sorotan Fitur v2.0
+## 🌟 Sorotan Fitur Baru v2.1
+- **Dukungan Deep-Linking Notifikasi**: Mengetuk *push notification* otomatis mengarahkan petugas langsung menuju halaman rincian detail Wajib Pajak bersangkutan secara instan.
+- **Ketahanan Startup Simulator (Anti-Crash)**: Logika pendaftaran token perangkat dibalut *nested try-catch* yang menjamin kestabilan aplikasi agar tidak mengalami *crash* saat dijalankan di emulator Android / perangkat tanpa Google Play Services terpasang.
+- **Pengesampingan Doze Mode & Shared Gateway**: Penyelarasan notifikasi prioritas tinggi (`priority: 'high'`) agar tetap berbunyi saat HP tertidur dalam mode Doze, serta toleransi pendelegasian push via gerbang bersama (*shared gateway*) untuk arsitektur server desa mandiri (*self-hosted*).
 - **Sinkronisasi Tagihan Bapenda Otomatis**: Mengecek tagihan ke Bapenda pusat langsung dari aplikasi.
 - **Keamanan Peta GIS NOP PIN**: Sistem proteksi warga yang memblokir NOP dengan PIN 4-digit untuk menghindari pencurian privasi.
 - **Data Wajib Pajak Presisi**: Dilengkapi saringan (filter) pintar untuk mendeteksi status "Belum Lunas" dengan satu tombol.
@@ -88,4 +91,4 @@ Kemudian tekan `a` untuk membuka di emulator Android atau scan QR code dengan ap
 ---
 
 *Terakhir diperbarui: Mei 2026*
-*Dibuat untuk ekosistem PBB App v10.0.0 (PBB Mobile v2.0.0)*
+*Dibuat untuk ekosistem PBB App v10.1.0 (PBB Mobile v2.1.0)*
