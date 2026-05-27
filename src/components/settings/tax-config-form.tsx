@@ -269,7 +269,7 @@ export function TaxConfigForm() {
                   <div className="space-y-0.5 max-w-lg">
                     <Label htmlFor="enable-payment" className="font-bold text-sm">Aktifkan Fitur Pembayaran Online (EPAY)</Label>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Munculkan tombol "Bayar Online" di detail tagihan wajib pajak pada portal pencarian warga dan peta GIS publik.
+                      Munculkan tombol &quot;Bayar Online&quot; di detail tagihan wajib pajak pada portal pencarian warga dan peta GIS publik.
                     </p>
                   </div>
                   <Checkbox 
