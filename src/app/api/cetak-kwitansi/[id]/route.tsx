@@ -146,22 +146,24 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             }}
           >
             {/* Header */}
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', borderBottom: '2px dashed #cbd5e1', paddingBottom: '30px', marginBottom: '30px' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', borderBottom: '2px dashed #cbd5e1', paddingBottom: '32px', marginBottom: '24px' }}>
               {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} width={80} height={80} style={{ objectFit: 'contain', marginRight: '24px' }} alt="Logo" />
+                <div style={{ display: 'flex', marginRight: '32px' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={logoUrl} height={90} style={{ objectFit: 'contain' }} alt="Logo" />
+                </div>
               ) : (
-                <div style={{ width: '80px', height: '80px', backgroundColor: '#e2e8f0', borderRadius: '40px', marginRight: '24px' }} />
+                <div style={{ width: '80px', height: '90px', backgroundColor: '#e2e8f0', borderRadius: '12px', marginRight: '32px' }} />
               )}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '32px', fontWeight: '800', color: '#0f172a' }}>
-                  Kwitansi Pembayaran PBB{isBumdes ? ' BUMDes' : ''}
+                <span style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', letterSpacing: '1px' }}>
+                  BUKTI PEMBAYARAN PBB-P2
                 </span>
-                <span style={{ fontSize: '20px', fontWeight: '500', color: '#64748b', marginTop: '4px' }}>
-                  {isBumdes ? 'BUMDes' : 'Pemerintah Desa'} {config?.namaDesa || 'Belum Diatur'}
+                <span style={{ fontSize: '22px', fontWeight: '700', color: '#475569', marginTop: '8px', textTransform: 'uppercase' }}>
+                  {isBumdes ? 'BUMDES' : 'PEMERINTAH DESA'} {config?.namaDesa || 'Belum Diatur'}
                 </span>
-                <span style={{ fontSize: '16px', color: '#94a3b8', marginTop: '4px' }}>
-                  Kecamatan {config?.kecamatan || '-'}, Kabupaten {config?.kabupaten || '-'}
+                <span style={{ fontSize: '16px', fontWeight: '600', color: '#94a3b8', marginTop: '6px', textTransform: 'uppercase' }}>
+                  KECAMATAN {config?.kecamatan || '-'}, KABUPATEN {config?.kabupaten || '-'}
                 </span>
               </div>
             </div>
