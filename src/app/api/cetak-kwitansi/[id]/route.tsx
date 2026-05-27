@@ -5,6 +5,29 @@ import { readFile } from "fs/promises";
 import path from "path";
 import { formatSignatureUrl } from "@/lib/utils";
 
+// Terbilang Bahasa Indonesia Helper
+function terbilang(angka: number): string {
+  const bilne = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
+
+  if (angka < 12) {
+    return bilne[angka];
+  } else if (angka < 20) {
+    return (terbilang(angka - 10) + " Belas").trim();
+  } else if (angka < 100) {
+    return (terbilang(Math.floor(angka / 10)) + " Puluh " + terbilang(angka % 10)).trim();
+  } else if (angka < 200) {
+    return ("Seratus " + terbilang(angka - 100)).trim();
+  } else if (angka < 1000) {
+    return (terbilang(Math.floor(angka / 100)) + " Ratus " + terbilang(angka % 100)).trim();
+  } else if (angka < 2000) {
+    return ("Seribu " + terbilang(angka - 1000)).trim();
+  } else if (angka < 1000000) {
+    return (terbilang(Math.floor(angka / 1000)) + " Ribu " + terbilang(angka % 1000)).trim();
+  } else if (angka < 1000000000) {
+    return (terbilang(Math.floor(angka / 1000000)) + " Juta " + terbilang(angka % 1000000)).trim();
+  }
+  return "";
+}
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +88,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const adminFee = config?.adminFee || 0;
     const ketetapan = tax.ketetapan || 0;
     const totalBayar = ketetapan + adminFee;
+
+    const spellingText = terbilang(totalBayar) ? `${terbilang(totalBayar)} Rupiah` : "Nol Rupiah";
+    const cleanNop = tax.nop.replace(/\D/g, "");
+    
+    // Fallback to domain if origin is localhost or something similar, or just trust nextUrl.origin
+    // Since this is server side, req.nextUrl.origin contains the request's origin.
+    let baseOrigin = req.nextUrl.origin;
+    if (baseOrigin.includes("localhost")) {
+      // In local dev, verification goes to local. In production, goes to the production domain.
+    }
+    const verificationUrl = `${baseOrigin}/?q=${cleanNop}`;
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verificationUrl)}`;
 
     return new ImageResponse(
       (
@@ -132,28 +167,36 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             </div>
 
             {/* Content */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: 1 }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Nama Wajib Pajak</span>
-                <span style={{ fontSize: '28px', fontWeight: '700', color: '#0f172a', marginTop: '4px' }}>{tax.namaWp}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, backgroundColor: '#f8fafc', padding: '32px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                <span style={{ width: '220px', fontSize: '16px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Telah Terima Dari</span>
+                <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#64748b', marginRight: '16px' }}>:</span>
+                <span style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', textTransform: 'uppercase' }}>{tax.namaWp}</span>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Nomor Objek Pajak (NOP)</span>
-                <span style={{ fontSize: '24px', fontWeight: '600', color: '#334155', marginTop: '4px', fontFamily: 'monospace' }}>{tax.nop}</span>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'row', gap: '40px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Tahun Pajak</span>
-                  <span style={{ fontSize: '24px', fontWeight: '600', color: '#334155', marginTop: '4px' }}>{tax.tahun || new Date().getFullYear()}</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Letak Objek Pajak</span>
-                  <span style={{ fontSize: '20px', fontWeight: '500', color: '#334155', marginTop: '4px' }}>
-                    {tax.alamatObjek || `Desa ${config?.namaDesa}`}
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start' }}>
+                <span style={{ width: '220px', fontSize: '16px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '8px' }}>Uang Sejumlah</span>
+                <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#64748b', marginRight: '16px', marginTop: '8px' }}>:</span>
+                <div style={{ display: 'flex', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', padding: '10px 20px', borderRadius: '10px' }}>
+                  <span style={{ fontSize: '20px', fontWeight: '800', color: '#047857', fontStyle: 'italic' }}>
+                    == {spellingText} ==
                   </span>
                 </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                <span style={{ width: '220px', fontSize: '16px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Untuk Pembayaran</span>
+                <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#64748b', marginRight: '16px' }}>:</span>
+                <span style={{ fontSize: '20px', fontWeight: '600', color: '#334155' }}>Pelunasan Pajak Bumi & Bangunan (PBB-P2)</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: '12px', paddingTop: '24px', borderTop: '2px dashed #cbd5e1' }}>
+                <span style={{ width: '220px', fontSize: '14px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Rincian Objek</span>
+                <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#94a3b8', marginRight: '16px' }}>:</span>
+                <span style={{ fontSize: '16px', fontWeight: '500', color: '#475569', lineHeight: 1.6 }}>
+                  <strong style={{ color: '#0f172a' }}>NOP: {tax.nop}</strong> &nbsp;|&nbsp; TAHUN: {tax.tahun || new Date().getFullYear()} <br/>
+                  Letak: {tax.alamatObjek || `Desa ${config?.namaDesa}`}
+                </span>
               </div>
             </div>
 
@@ -188,9 +231,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
               </div>
             </div>
 
-            {/* Footer with Officer */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '30px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
-              <span style={{ fontSize: '14px', color: '#94a3b8' }}>Kwitansi digital ini sah diterbitkan oleh PBB-App {isBumdes ? 'BUMDes' : 'Desa'} {config?.namaDesa || ''}</span>
+            {/* Footer with QR and Officer */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                <div style={{ display: 'flex', backgroundColor: '#ffffff', padding: '6px', border: '1px solid #e2e8f0', borderRadius: '8px', marginRight: '16px' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={qrImageUrl} width={64} height={64} alt="QR Code" />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#475569', textTransform: 'uppercase' }}>Bukti Pelunasan Resmi</span>
+                  <span style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>Sah diterbitkan oleh sistem PBB-App {isBumdes ? 'BUMDes' : 'Desa'} {config?.namaDesa || ''}</span>
+                  <span style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>Pindai QR Code untuk verifikasi portal</span>
+                </div>
+              </div>
               {officerName && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '150px' }}>
                   <span style={{ fontSize: '14px', color: '#64748b', marginBottom: officerSignatureUrl ? '0px' : '40px' }}>{isBumdes ? 'Petugas BUMDes,' : 'Petugas,'}</span>
