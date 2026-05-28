@@ -94,7 +94,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     
     // Fallback to domain if origin is localhost or something similar, or just trust nextUrl.origin
     // Since this is server side, req.nextUrl.origin contains the request's origin.
-    let baseOrigin = req.nextUrl.origin;
+    const baseOrigin = req.nextUrl.origin;
     if (baseOrigin.includes("localhost")) {
       // In local dev, verification goes to local. In production, goes to the production domain.
     }
