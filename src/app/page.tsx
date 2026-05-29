@@ -7,6 +7,7 @@ import { PublicNav } from "@/components/public/public-nav";
 import { PublicSelfService } from "@/components/public/public-self-service";
 import { PublicGithubIcon } from "@/components/public/public-github-icon";
 import { TurnstileWidget } from "@/components/public/turnstile-widget";
+import { SocialProofNotification } from "@/components/public/social-proof-notification";
 import "./public.css";
 
 // Enable caching with revalidation every 30 seconds to support BFCache
@@ -68,6 +69,7 @@ export default async function IndexPage({
           <PublicGithubIcon />
         </div>
       </footer>
+      <SocialProofNotification />
     </PublicThemeWrapper>
   );
 }
