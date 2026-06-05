@@ -48,6 +48,21 @@ export async function createDatabaseBackup(): Promise<string | null> {
       });
     }
 
+    // Auto-prune audit logs older than 180 days (approx. 6 months)
+    try {
+      const cutOffDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
+      const deleteResult = await prisma.auditLog.deleteMany({
+        where: {
+          createdAt: { lt: cutOffDate }
+        }
+      });
+      if (deleteResult.count > 0) {
+        console.warn(`[Backup Cleanup] Automatically pruned ${deleteResult.count} audit logs older than 180 days.`);
+      }
+    } catch (pruneError) {
+      console.error("[Backup Cleanup] Failed to prune old audit logs:", pruneError);
+    }
+
     console.warn(`Database backup created at ${backupPath}`);
     return backupPath;
   } catch (error) {

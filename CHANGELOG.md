@@ -2,7 +2,7 @@
 
 ## v10.2 - 2026-06-06: Code Refactoring, CI/CD Hardening, Testing Setup & Performance Optimizations
 
-Pemberuan teknis (Technical Debt, DX & Performance) yang berfokus pada kualitas kode, kestabilan pipeline CI, keamanan package, serta efisiensi database. Total 18 perbaikan telah diselesaikan.
+Pemberuan teknis (Technical Debt, DX & Performance) yang berfokus pada kualitas kode, kestabilan pipeline CI, keamanan package, serta efisiensi database. Total 20 perbaikan telah diselesaikan.
 
 ### Performance & Database Optimizations
 - **Rate Limiter Disk I/O Throttling**: Mengoptimalkan fungsi pembersihan bucket rate limiter di SQLite agar hanya berjalan berkala maksimal sekali setiap 5 menit (throttling), memangkas transaksi write (`DELETE` query) berlebih pada setiap hit API.
@@ -12,6 +12,8 @@ Pemberuan teknis (Technical Debt, DX & Performance) yang berfokus pada kualitas 
 - **Safe Database Backup (VACUUM INTO)**: Menggantikan fungsi penyalinan file langsung `fs.copyFileSync` pada pencadangan basis data dengan kueri native SQLite `VACUUM INTO` untuk menjamin berkas cadangan database yang dihasilkan selalu bersih, konsisten, dan terhindar dari kerusakan berkas (*WAL hot journal corruption*).
 - **Asynchronous Auto-Vacuum**: Memicu perintah pembersihan basis data `VACUUM` secara otomatis dan asinkron di latar belakang setelah proses impor Excel data pajak berskala besar selesai dilakukan, guna menjaga efisiensi ruang penyimpanan disk server.
 - **Health Check Endpoint (/api/health)**: Membuat rute API baru untuk pemantauan server mandiri desa secara real-time, menampilkan status basis data SQLite beserta latensinya, sisa ruang penyimpanan kosong disk (disk space), serta status keterhubungan jaringan ke server Bapenda.
+- **Audit Log Retention Policy**: Mengintegrasikan pembersihan otomatis berkala log audit aktivitas yang berumur lebih dari 180 hari (6 bulan) setiap kali backup database sukses dibuat untuk mencegah database bloatware.
+- **Automated Cron Backup API (/api/cron/backup)**: Menyediakan rute API baru terproteksi token keamanan `CRON_SECRET` untuk memicu backup database mandiri desa secara otomatis lewat penjadwalan eksternal (cron-job).
 
 ### Security & CI/CD
 - **Turnstile Secret Key Logging Fix**: Mengamankan console log dengan menyembunyikan panjang dan isi Secret Key Cloudflare Turnstile saat verifikasi token, guna mencegah kebocoran secret di log production.
