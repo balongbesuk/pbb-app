@@ -1,5 +1,28 @@
 # Changelog
 
+## v10.2 - 2026-06-05: Code Refactoring, CI/CD Hardening & Testing Setup
+
+Pembaruan teknis (Technical Debt & DX) yang berfokus pada kualitas kode, kestabilan pipeline CI, serta keamanan package. Total 11 perbaikan telah diselesaikan.
+
+### Security & CI/CD
+- **Turnstile Secret Key Logging Fix**: Mengamankan console log dengan menyembunyikan panjang dan isi Secret Key Cloudflare Turnstile saat verifikasi token, guna mencegah kebocoran secret di log production.
+- **NPM Audit Registry Bypass**: Menambahkan berkas `.npmrc` agar npm dapat menggunakan registry mirror secara stabil, dan memperbarui alur GitHub Actions CI (`verify.yml`) agar memaksa penggunaan registry resmi `https://registry.npmjs.org` khusus untuk perintah `npm audit` guna bypass kelemahan API pada mirror.
+- **Node.js CI Matrix**: Menambahkan matriks pengujian Node.js versi 20 dan 22 pada GitHub Actions CI Pipeline.
+- **CI Verification Steps**: Menambahkan langkah `typecheck`, `build`, dan `test` ke dalam pipeline CI untuk mencegah kode bermasalah masuk ke *main branch*.
+- **Dependabot Integration**: Menambahkan konfigurasi `.github/dependabot.yml` untuk memantau dependensi secara berkala (mingguan), memisahkan *production* dan *dev-dependencies*, serta mengabaikan bump versi mayor yang berpotensi memutus kompabilitas.
+
+### Code Quality & Refactoring
+- **PIN Verification Helper**: Mengekstraksi logika validasi 4-digit PIN NOP dan sensor NOP publik (`maskNop`) ke dalam utilitas terpusat di `src/lib/pin-verification.ts`, menghilangkan 60 baris kode duplikat pada `public-actions.ts`.
+- **SPOP Print Module Split**: Memecah file cetak `src/lib/spop-print.ts` yang tadinya sangat besar menjadi tiga modul independen: `spop-print-helpers.ts` (fungsi format teks, tanggal, dan escape XSS), `spop-print-styles.ts` (konstanta CSS cetak), dan file utama khusus untuk merender komponen HTML cetak, guna meningkatkan keterbacaan (readability) kode.
+- **Dead Code Cleanup**: Menghapus `ioredis` dari `package.json` dan memangkas semua inisialisasi / fungsi Redis pembatas kecepatan (Rate Limiter) usang pada `src/lib/rate-limit.ts` yang sudah digantikan dengan fallback SQLite/Memory yang lebih tangguh dan efisien untuk skenario PBB.
+- **Dependency Cleanups**: Memindahkan `lucide-react` dari `devDependencies` ke `dependencies` agar icon *render* secara aman saat proses build production di Next.js.
+- **TypeScript Narrowing Fix**: Menambal celah *type checking* TypeScript pada return object multi-state dari aksi `getUnmaskedTaxData` yang sebelumnya menyebabkan union type tidak terbaca di komponen dialog interaktif (`region-unpaid-dialog.tsx` dan `public-search.tsx`).
+
+### Testing & Verification
+- **Vitest Integration**: Menambahkan framework pengujian modern `vitest` sebagai pondasi *unit test*.
+- **Automated Test Suites**: Menambahkan 46 unit test komprehensif yang meng-cover fungsi-fungsi keamanan krusial: proteksi *Path Traversal* (File Security), mekanisme sensor PIN (PIN Verification), dan perlindungan XSS Injection pada helper percetakan SPOP.
+
+---
 ## v10.1 & PBB Mobile v2.1 - 2026-05-26: Sinkronisasi Identitas Kwitansi & Perombakan Profil
 
 Pembaruan ganda untuk platform web (v10.1) dan aplikasi seluler (v2.1) yang berfokus pada kelengkapan administrasi bukti pembayaran dan pemolesan pengalaman pengguna.

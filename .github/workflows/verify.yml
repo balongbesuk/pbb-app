@@ -13,14 +13,18 @@ jobs:
   verify:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [20, 22]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: npm
 
       - name: Install dependencies
@@ -29,5 +33,14 @@ jobs:
       - name: Lint
         run: npm run lint -- --quiet
 
+      - name: Type Check
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test --if-present
+
       - name: Verify security hardening
-        run: npm run verify:security
+        run: npm audit --audit-level=moderate --registry=https://registry.npmjs.org

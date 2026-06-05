@@ -511,9 +511,13 @@ export function PublicSearch({
       
       // 1. Validasi PIN & Dapatkan NOP Asli
       const resUnmask = await getUnmaskedTaxData(pinTargetItem.id, cleanPin, tahunPajak);
-      if (!resUnmask.success || !resUnmask.nop) {
-        setPinError(resUnmask.message || "PIN Salah.");
-        if (resUnmask.rateLimited) setPinLockTimer(900);
+      if (!resUnmask.success) {
+        setPinError("message" in resUnmask ? resUnmask.message || "PIN Salah." : "PIN Salah.");
+        if ("rateLimited" in resUnmask && resUnmask.rateLimited) setPinLockTimer(900);
+        return;
+      }
+      if (!resUnmask.nop) {
+        setPinError("PIN Salah.");
         return;
       }
 

@@ -2,7 +2,12 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { getStorageRoot } from "@/lib/storage";
-import Redis from "ioredis";
+
+// ─── NOTE ──────────────────────────────────────────────────────────────────────
+// Redis rate limiter telah dihapus karena tidak digunakan (edisi STB HG680p).
+// Jika di masa depan perlu Redis, tambahkan kembali `ioredis` ke dependencies
+// dan implementasikan fungsi `checkRedisRateLimit()` di sini.
+// ────────────────────────────────────────────────────────────────────────────────
 
 interface TokenBucket {
   tokens: number;
@@ -23,37 +28,6 @@ interface RateLimitResult {
 }
 
 let rateLimitDb: Database.Database | null = null;
-let redisClient: Redis | null = null;
-let redisFailed = false;
-
-function getRedisClient(): Redis | null {
-  if (redisFailed) return null;
-  if (redisClient) return redisClient;
-
-  const redisUrl = process.env.REDIS_URL;
-  if (!redisUrl) return null;
-
-  try {
-    console.log("[rate-limit] Menginisialisasi klien Redis...");
-    redisClient = new Redis(redisUrl, {
-      maxRetriesPerRequest: 1, // Fail fast to not block actions
-      connectTimeout: 2000,   // Connection timeout 2s
-      reconnectOnError: () => false,
-    });
-
-    redisClient.on("error", (err) => {
-      console.error("[rate-limit] Redis error, fallback SQLite/Memory diaktifkan:", err);
-      redisFailed = true;
-      redisClient = null;
-    });
-
-    return redisClient;
-  } catch (err) {
-    console.error("[rate-limit] Gagal membuat klien Redis:", err);
-    redisFailed = true;
-    return null;
-  }
-}
 
 function getRateLimitDb() {
   if (rateLimitDb) {
@@ -157,62 +131,13 @@ function checkSqliteRateLimit(key: string, options: RateLimitOptions): RateLimit
   return { allowed: true, remaining: nextTokens };
 }
 
-async function checkRedisRateLimit(key: string, options: RateLimitOptions): Promise<RateLimitResult | null> {
-  const client = getRedisClient();
-  if (!client) return null;
-
-  const now = Date.now();
-  const { limit, windowMs } = options;
-  const redisKey = `rate_limit_bucket:${key}`;
-
-  try {
-    const bucket = await client.hgetall(redisKey);
-    let tokens = limit;
-    let lastRefill = now;
-
-    if (bucket && bucket.tokens !== undefined && bucket.lastRefill !== undefined) {
-      tokens = parseInt(bucket.tokens, 10);
-      lastRefill = parseInt(bucket.lastRefill, 10);
-    }
-
-    if (now - lastRefill >= windowMs) {
-      tokens = limit;
-      lastRefill = now;
-    }
-
-    if (tokens <= 0) {
-      const retryAfter = Math.ceil((lastRefill + windowMs - now) / 1000);
-      return { allowed: false, retryAfter, remaining: 0 };
-    }
-
-    const nextTokens = tokens - 1;
-
-    const pipeline = client.pipeline();
-    pipeline.hset(redisKey, {
-      tokens: String(nextTokens),
-      lastRefill: String(lastRefill),
-    });
-    pipeline.pexpire(redisKey, windowMs * 2);
-    await pipeline.exec();
-
-    return { allowed: true, remaining: nextTokens };
-  } catch (err) {
-    console.error("[rate-limit] Gagal melakukan pengecekan Redis rate-limit, memicu fallback:", err);
-    redisFailed = true;
-    redisClient = null;
-    return null;
-  }
-}
-
 export async function checkRateLimit(key: string, options: RateLimitOptions): Promise<RateLimitResult> {
-  // 1. Redis dinonaktifkan untuk edisi STB HG680p (Hemat RAM)
-  
-  // 2. Fallback SQLite
+  // 1. SQLite (primary)
   try {
     return checkSqliteRateLimit(key, options);
   } catch (error) {
     console.error("[rate-limit] SQLite rate-limit gagal, fallback ke Memory:", error);
-    // 3. Fallback Memory
+    // 2. Fallback Memory
     return checkMemoryRateLimit(key, options);
   }
 }

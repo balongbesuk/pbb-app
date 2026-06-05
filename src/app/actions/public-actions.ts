@@ -7,6 +7,7 @@ import { findArchiveFilenameByNop, getArchiveDir, getCachedArchiveIndex } from "
 import { generateArchiveToken } from "@/lib/archive-token";
 import { getNopVariations } from "@/lib/utils";
 import { getClientIp } from "@/lib/request-ip";
+import { verifyTaxPin, maskNop } from "@/lib/pin-verification";
 
 /**
  * Konfigurasi Rate Limit untuk pencarian publik.
@@ -38,22 +39,7 @@ type PublicVillageConfig = {
   showNominalPajak: boolean | null;
 };
 
-function maskNop(nop: string): string {
-  const cleanNop = nop.replace(/\D/g, "");
-  if (cleanNop.length === 18) {
-    const p1 = cleanNop.substring(0, 2);
-    const p2 = cleanNop.substring(2, 4);
-    const p3 = cleanNop.substring(4, 7);
-    const p4 = cleanNop.substring(7, 10);
-    const p5 = cleanNop.substring(10, 13);
-    return `${p1}.${p2}.${p3}.${p4}.${p5}-XXXX.X`;
-  }
-  if (nop.includes("-")) {
-    const parts = nop.split("-");
-    return `${parts[0]}-XXXX.X`;
-  }
-  return nop.substring(0, Math.max(0, nop.length - 5)) + "XXXXX";
-}
+// maskNop dipindahkan ke @/lib/pin-verification.ts
 
 async function verifyTurnstileToken(token: string): Promise<boolean> {
   let secretKey = process.env.TURNSTILE_SECRET_KEY;
@@ -61,7 +47,7 @@ async function verifyTurnstileToken(token: string): Promise<boolean> {
 
   // Hapus kutipan jika Next.js/Turbopack membacanya secara literal
   secretKey = secretKey.replace(/['"]/g, "").trim();
-  console.log("[Turnstile Request SecretKey]:", `"${secretKey}"`, "Length:", secretKey.length);
+  console.warn("[Turnstile] Verifying token, key configured (length:", secretKey.length, ")");
 
   try {
     const params = new URLSearchParams();
@@ -135,7 +121,7 @@ export async function searchPublicTaxData(
       where: {
         tahun: tahunPajak,
         OR: [
-          ...finalVariations.map(v => ({ nop: { contains: v } })),
+          ...finalVariations.map(v => ({ nop: { startsWith: v } })),
           { namaWp: { contains: searchQuery } },
           { namaWp: { contains: searchQuery.toUpperCase() } }
         ]
@@ -256,50 +242,14 @@ export async function searchPublicTaxData(
  */
 export async function getSecureArsipUrl(id: number, pin: string, tahun: number) {
   try {
+    const pinResult = await verifyTaxPin(id, pin, tahun);
+    if (!pinResult.success) {
+      return pinResult;
+    }
+
+    const { cleanNop } = pinResult;
     const headersList = await headers();
     const ip = getClientIp({ headers: headersList });
-
-    // Pembatasan total percobaan PIN: maksimal 5 kali dalam 15 menit per IP + ID
-    const rateLimitKey = `pin-attempt:${ip}:${id}`;
-    const pinRateLimit = await checkRateLimit(rateLimitKey, {
-      limit: 5,
-      windowMs: 15 * 60 * 1000,
-    });
-
-    if (!pinRateLimit.allowed) {
-      return {
-        success: false,
-        message: `Terlalu banyak percobaan salah PIN. Sesi Anda dikunci selama ${pinRateLimit.retryAfter} detik.`,
-        rateLimited: true,
-      };
-    }
-
-    const taxData = await prisma.taxData.findFirst({
-      where: { id: Number(id), tahun: Number(tahun) }
-    });
-
-    if (!taxData) {
-      return { success: false, message: "Data pajak tidak ditemukan." };
-    }
-
-    const cleanNop = taxData.nop.replace(/\D/g, "");
-    if (cleanNop.length < 18) {
-      return { success: false, message: "Data NOP pada database tidak valid." };
-    }
-
-    // 4 digit nomor urut NOP (karakter index 13 s.d 17)
-    const standardPin = cleanNop.substring(13, 17);
-    // 4 digit absolut terakhir NOP (karakter index 14 s.d 18)
-    const absolutePin = cleanNop.substring(14, 18);
-
-    const cleanPin = pin.trim();
-    if (cleanPin !== standardPin && cleanPin !== absolutePin) {
-      const remainingAttempts = pinRateLimit.remaining;
-      return { 
-        success: false, 
-        message: `PIN yang dimasukkan salah. Sisa kesempatan mencoba: ${remainingAttempts} kali.` 
-      };
-    }
 
     // PIN Benar, dapatkan nama berkas arsip PDF
     const archiveDir = getArchiveDir(tahun);
@@ -307,7 +257,7 @@ export async function getSecureArsipUrl(id: number, pin: string, tahun: number) 
     const matchedArchive = findArchiveFilenameByNop(archiveIndex, cleanNop);
 
     if (!matchedArchive) {
-      return { success: false, message: "Berkas PDF E-SPPT untuk NOP ini tidak ditemukan di server pusat." };
+      return { success: false as const, message: "Berkas PDF E-SPPT untuk NOP ini tidak ditemukan di server pusat." };
     }
 
     // Generate one-time token (sekali pakai, expired 1 menit, terikat IP)
@@ -315,12 +265,12 @@ export async function getSecureArsipUrl(id: number, pin: string, tahun: number) 
     const secureUrl = `/arsip-pbb/download?token=${token}`;
 
     return {
-      success: true,
+      success: true as const,
       arsipUrl: secureUrl
     };
   } catch (error) {
     console.error("getSecureArsipUrl Error:", error);
-    return { success: false, message: "Terjadi kesalahan sistem saat mengambil berkas." };
+    return { success: false as const, message: "Terjadi kesalahan sistem saat mengambil berkas." };
   }
 }
 
@@ -330,56 +280,18 @@ export async function getSecureArsipUrl(id: number, pin: string, tahun: number) 
  */
 export async function getUnmaskedTaxData(id: number, pin: string, tahun: number) {
   try {
-    const headersList = await headers();
-    const ip = getClientIp({ headers: headersList });
-
-    // Pembatasan total percobaan PIN serupa
-    const rateLimitKey = `pin-attempt:${ip}:${id}`;
-    const pinRateLimit = await checkRateLimit(rateLimitKey, {
-      limit: 5,
-      windowMs: 15 * 60 * 1000,
-    });
-
-    if (!pinRateLimit.allowed) {
-      return {
-        success: false,
-        message: `Terlalu banyak percobaan salah PIN. Sesi Anda dikunci selama ${pinRateLimit.retryAfter} detik.`,
-        rateLimited: true,
-      };
-    }
-
-    const taxData = await prisma.taxData.findFirst({
-      where: { id: Number(id), tahun: Number(tahun) }
-    });
-
-    if (!taxData) {
-      return { success: false, message: "Data pajak tidak ditemukan." };
-    }
-
-    const cleanNop = taxData.nop.replace(/\D/g, "");
-    if (cleanNop.length < 18) {
-      return { success: false, message: "Data NOP pada database tidak valid." };
-    }
-
-    const standardPin = cleanNop.substring(13, 17);
-    const absolutePin = cleanNop.substring(14, 18);
-
-    const cleanPin = pin.trim();
-    if (cleanPin !== standardPin && cleanPin !== absolutePin) {
-      const remainingAttempts = pinRateLimit.remaining;
-      return { 
-        success: false, 
-        message: `PIN yang dimasukkan salah. Sisa kesempatan mencoba: ${remainingAttempts} kali.` 
-      };
+    const pinResult = await verifyTaxPin(id, pin, tahun);
+    if (!pinResult.success) {
+      return pinResult;
     }
 
     // Kembalikan NOP asli
     return {
-      success: true,
-      nop: taxData.nop
+      success: true as const,
+      nop: pinResult.taxData.nop
     };
   } catch (error) {
     console.error("getUnmaskedTaxData Error:", error);
-    return { success: false, message: "Terjadi kesalahan sistem." };
+    return { success: false as const, message: "Terjadi kesalahan sistem." };
   }
 }

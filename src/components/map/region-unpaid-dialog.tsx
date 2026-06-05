@@ -334,9 +334,9 @@ export function RegionUnpaidDialog({
           const targetUrl = bapendaPaymentUrl!.replace(/\{nop\}/gi, cleanNop);
           window.open(targetUrl, "_blank");
         }
-      } else {
+      } else if (!res.success) {
         setPinError(res.message || "PIN Salah.");
-        if (res.rateLimited) {
+        if ("rateLimited" in res && res.rateLimited) {
           setPinLockTimer(900);
         }
       }

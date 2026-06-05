@@ -75,7 +75,7 @@ export async function GET(req: Request) {
     if (search) {
       const variations = getNopVariations(search);
       where.OR = [
-        ...variations.map((v) => ({ nop: { contains: v } })),
+        ...variations.map((v) => ({ nop: { startsWith: v } })),
         { namaWp: { contains: search } },
       ];
     }
