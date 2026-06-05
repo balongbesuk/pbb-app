@@ -10,12 +10,15 @@ Pembaruan teknis (Technical Debt & DX) yang berfokus pada kualitas kode, kestabi
 - **Node.js CI Matrix**: Menambahkan matriks pengujian Node.js versi 20 dan 22 pada GitHub Actions CI Pipeline.
 - **CI Verification Steps**: Menambahkan langkah `typecheck`, `build`, dan `test` ke dalam pipeline CI untuk mencegah kode bermasalah masuk ke *main branch*.
 - **Dependabot Integration**: Menambahkan konfigurasi `.github/dependabot.yml` untuk memantau dependensi secara berkala (mingguan), memisahkan *production* dan *dev-dependencies*, serta mengabaikan bump versi mayor yang berpotensi memutus kompabilitas.
-
+- **VAPID Key Build Fix**: Menambahkan `try-catch` pada inisialisasi `webpush.setVapidDetails` untuk mencegah kegagalan kompilasi statis (static build) Next.js di lingkungan CI/CD yang menggunakan kunci rahasia VAPID *dummy*.
+- **TypeScript CI Fix**: Mengecualikan direktori `tmp/` pada `tsconfig.json` untuk menjamin proses pengecekan tipe (`npm run typecheck`) tidak gagal di lingkungan CI/CD akibat berkas modul sementara.
+- **ESLint Compatibility**: Mempertahankan versi stabil `eslint` pada `v9` dan menolak bump Dependabot ke `v10` untuk mencegah konflik kompabilitas *peer dependency* dengan *ecosystem* `eslint-config-next` bawaan Next.js.
 ### Code Quality & Refactoring
 - **PIN Verification Helper**: Mengekstraksi logika validasi 4-digit PIN NOP dan sensor NOP publik (`maskNop`) ke dalam utilitas terpusat di `src/lib/pin-verification.ts`, menghilangkan 60 baris kode duplikat pada `public-actions.ts`.
 - **SPOP Print Module Split**: Memecah file cetak `src/lib/spop-print.ts` yang tadinya sangat besar menjadi tiga modul independen: `spop-print-helpers.ts` (fungsi format teks, tanggal, dan escape XSS), `spop-print-styles.ts` (konstanta CSS cetak), dan file utama khusus untuk merender komponen HTML cetak, guna meningkatkan keterbacaan (readability) kode.
 - **Dead Code Cleanup**: Menghapus `ioredis` dari `package.json` dan memangkas semua inisialisasi / fungsi Redis pembatas kecepatan (Rate Limiter) usang pada `src/lib/rate-limit.ts` yang sudah digantikan dengan fallback SQLite/Memory yang lebih tangguh dan efisien untuk skenario PBB.
 - **Dependency Cleanups**: Memindahkan `lucide-react` dari `devDependencies` ke `dependencies` agar icon *render* secara aman saat proses build production di Next.js.
+- **Lucide Icon Migration**: Mengganti ikon GitHub dari `lucide-react` dengan SVG *inline* kustom secara mandiri. Ini bertujuan untuk menambal *error typecheck* (`has no exported member 'Github'`) yang disebabkan oleh penghapusan logo *brand* secara permanen oleh pengembang paket pada versi v1.17.
 - **TypeScript Narrowing Fix**: Menambal celah *type checking* TypeScript pada return object multi-state dari aksi `getUnmaskedTaxData` yang sebelumnya menyebabkan union type tidak terbaca di komponen dialog interaktif (`region-unpaid-dialog.tsx` dan `public-search.tsx`).
 
 ### Testing & Verification
