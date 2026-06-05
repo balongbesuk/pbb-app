@@ -2,13 +2,15 @@
 
 ## v10.2 - 2026-06-06: Code Refactoring, CI/CD Hardening, Testing Setup & Performance Optimizations
 
-Pemberuan teknis (Technical Debt, DX & Performance) yang berfokus pada kualitas kode, kestabilan pipeline CI, keamanan package, serta efisiensi database. Total 15 perbaikan telah diselesaikan.
+Pemberuan teknis (Technical Debt, DX & Performance) yang berfokus pada kualitas kode, kestabilan pipeline CI, keamanan package, serta efisiensi database. Total 17 perbaikan telah diselesaikan.
 
 ### Performance & Database Optimizations
 - **Rate Limiter Disk I/O Throttling**: Mengoptimalkan fungsi pembersihan bucket rate limiter di SQLite agar hanya berjalan berkala maksimal sekali setiap 5 menit (throttling), memangkas transaksi write (`DELETE` query) berlebih pada setiap hit API.
 - **Bapenda Sync Bypass Write**: Menghilangkan I/O tulis (`updateMany` pada `updatedAt`) dan pembuatan audit log `PUBLIC_BAPENDA_CHECK` ketika pengecekan status tagihan warga masih menghasilkan status belum lunas (read-only), menghemat ruang disk dan mencegah database lock.
 - **Single-Query Bulk Payment Update**: Menggantikan perulangan update individual di dalam transaksi Prisma dengan kueri SQL Native tunggal (`$executeRawUnsafe`) menggunakan ekspresi `CASE WHEN`, memangkas waktu eksekusi perubahan status massal dari beberapa detik menjadi milidetik.
 - **Memory Caching for GIS APIs**: Mengimplementasikan Map caching memori backend pada rute `/api/region-stats` (TTL 5 menit) dan `/api/region-unpaid` (TTL 2 menit) untuk mempercepat loading peta heatmap GIS dan pencarian publik warga.
+- **Safe Database Backup (VACUUM INTO)**: Menggantikan fungsi penyalinan file langsung `fs.copyFileSync` pada pencadangan basis data dengan kueri native SQLite `VACUUM INTO` untuk menjamin berkas cadangan database yang dihasilkan selalu bersih, konsisten, dan terhindar dari kerusakan berkas (*WAL hot journal corruption*).
+- **Asynchronous Auto-Vacuum**: Memicu perintah pembersihan basis data `VACUUM` secara otomatis dan asinkron di latar belakang setelah proses impor Excel data pajak berskala besar selesai dilakukan, guna menjaga efisiensi ruang penyimpanan disk server.
 
 ### Security & CI/CD
 - **Turnstile Secret Key Logging Fix**: Mengamankan console log dengan menyembunyikan panjang dan isi Secret Key Cloudflare Turnstile saat verifikasi token, guna mencegah kebocoran secret di log production.

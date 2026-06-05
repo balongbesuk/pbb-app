@@ -315,6 +315,18 @@ export async function processTaxData(rows: ExcelRow[], tahun: number) {
     }
   }
 
+  if (toUpdate.length > 50 || toCreate.length > 50) {
+    (async () => {
+      try {
+        console.log("[Excel Processor] Running VACUUM to reclaim space...");
+        await prisma.$executeRawUnsafe("VACUUM;");
+        console.log("[Excel Processor] Database VACUUM completed successfully.");
+      } catch (err) {
+        console.error("[Excel Processor] Failed to vacuum database:", err);
+      }
+    })();
+  }
+
   return toCreate.length + toUpdate.length;
 }
 

@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { resolveSqliteDatabasePath } from "@/lib/database-path";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Creates a backup of the SQLite database file in the backups directory.
@@ -25,7 +26,12 @@ export async function createDatabaseBackup(): Promise<string | null> {
     const backupFileName = `backup-${timestamp}.db`;
     const backupPath = path.join(backupDir, backupFileName);
 
-    fs.copyFileSync(dbPath, backupPath);
+    if (fs.existsSync(backupPath)) {
+      fs.unlinkSync(backupPath);
+    }
+
+    // Use raw SQLite VACUUM INTO for a safe, non-blocking backup of a live DB in WAL mode
+    await prisma.$executeRawUnsafe(`VACUUM INTO '${backupPath.replace(/'/g, "''")}';`);
     
     // Cleanup old backups (keep only last 10)
     const files = fs.readdirSync(backupDir)
