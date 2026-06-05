@@ -7,6 +7,8 @@ import { requireMobileAuth } from "@/lib/mobile-auth";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+const unpaidCache = new Map<string, { data: any; expiry: number }>();
+
 function maskNop(nop: string): string {
   const cleanNop = nop.replace(/\D/g, "");
   if (cleanNop.length === 18) {
@@ -56,6 +58,13 @@ export async function GET(req: Request) {
       }
     } catch (e) {
       isOfficer = false;
+    }
+
+    const cacheKey = `region-unpaid:${tahun}:${type}:${rt}:${rw}:${dusun}:${blok}:${page}:${limit}:${search}:${source}:${isOfficer}`;
+    const cached = unpaidCache.get(cacheKey);
+    const nowTime = Date.now();
+    if (cached && cached.expiry > nowTime) {
+      return NextResponse.json(cached.data);
     }
 
     const where: Prisma.TaxDataWhereInput = { tahun, paymentStatus: "BELUM_LUNAS" };
@@ -125,7 +134,7 @@ export async function GET(req: Request) {
       nop: isOfficer ? wp.nop : maskNop(wp.nop)
     }));
 
-    return NextResponse.json({
+    const responsePayload = {
       data: mappedWP,
       totalPiutang,
       totalCount,
@@ -138,7 +147,11 @@ export async function GET(req: Request) {
         bapendaRegionName: config?.bapendaRegionName || "Bapenda",
         isJombangBapenda: config?.isJombangBapenda ?? false,
       }
-    });
+    };
+
+    unpaidCache.set(cacheKey, { data: responsePayload, expiry: Date.now() + 2 * 60 * 1000 });
+
+    return NextResponse.json(responsePayload);
   } catch (error) {
     console.error("Gagal mengambil data WP belum bayar:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

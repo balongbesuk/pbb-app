@@ -153,34 +153,24 @@ export async function bulkUpdatePaymentStatus(
 
     const now = new Date();
 
-    // Grouping by status action to batch update easily 
-    let updatedCount = 0;
-    
-    // Using transaction for atomic mass update
-    await prisma.$transaction(
-      taxDataRecords.map(data => {
-        let sisa = data.sisaTagihan;
-        let pembayaran = data.pembayaran;
+    const idsList = ids.join(",");
+    const isLunas = paymentStatus === "LUNAS";
+    const nowStr = now.toISOString();
 
-        if (paymentStatus === "LUNAS") {
-          pembayaran = data.ketetapan;
-          sisa = 0;
-        } else {
-          pembayaran = 0;
-          sisa = data.ketetapan;
-        }
-
-        updatedCount++;
-        return prisma.taxData.update({
-          where: { id: data.id },
-          data: {
-            paymentStatus,
-            pembayaran,
-            sisaTagihan: sisa,
-            tanggalBayar: paymentStatus === "LUNAS" ? now : null,
-          },
-        });
-      })
+    const updatedCount = await prisma.$executeRawUnsafe(
+      `UPDATE TaxData
+       SET 
+         paymentStatus = ?,
+         pembayaran = CASE WHEN ? = 'LUNAS' THEN ketetapan ELSE 0 END,
+         sisaTagihan = CASE WHEN ? = 'LUNAS' THEN 0 ELSE ketetapan END,
+         tanggalBayar = ?,
+         updatedAt = ?
+       WHERE id IN (${idsList})`,
+      paymentStatus,
+      paymentStatus,
+      paymentStatus,
+      isLunas ? nowStr : null,
+      nowStr
     );
 
     const wpNames = taxDataRecords.map(d => d.namaWp).join(", ");

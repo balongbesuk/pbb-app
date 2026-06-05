@@ -303,19 +303,6 @@ export async function syncBapendaStatus({
     };
   }
 
-  await prisma.taxData.updateMany({
-    where: { id: { in: unpaidRecords.map((record) => record.id) } },
-    data: { updatedAt: new Date() },
-  });
-
-  await prisma.auditLog.create({
-    data: {
-      action: "PUBLIC_BAPENDA_CHECK",
-      entity: "TaxData",
-      details: `Sync Bapenda: Pengecekan status NOP ${cleanNop} (Hasil: Masih Belum Lunas)`,
-    },
-  });
-
   return {
     status: 200,
     body: {

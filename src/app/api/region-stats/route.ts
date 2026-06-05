@@ -9,10 +9,23 @@ type AggregateRow = {
   lunas: number | bigint | null;
 };
 
+const statsCache = new Map<string, { data: any; expiry: number }>();
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const tahun = parseInt(searchParams.get("tahun") || new Date().getFullYear().toString());
+
+    const cacheKey = `region-stats:${tahun}`;
+    const cached = statsCache.get(cacheKey);
+    const nowTime = Date.now();
+    if (cached && cached.expiry > nowTime) {
+      return NextResponse.json(cached.data, {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        },
+      });
+    }
 
     const stats: Record<string, { total: number; lunas: number; percentage: number }> = {};
 
@@ -129,6 +142,8 @@ export async function GET(req: Request) {
       const s = stats[key];
       s.percentage = s.total > 0 ? (s.lunas / s.total) * 100 : 0;
     }
+
+    statsCache.set(cacheKey, { data: stats, expiry: Date.now() + 5 * 60 * 1000 });
 
     return NextResponse.json(stats, {
       headers: {

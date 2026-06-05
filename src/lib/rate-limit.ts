@@ -90,6 +90,8 @@ function checkMemoryRateLimit(key: string, options: RateLimitOptions): RateLimit
   return { allowed: true, remaining: bucket.tokens };
 }
 
+let lastCleanupTime = 0;
+
 function cleanupSqliteBuckets(db: Database.Database, now: number, windowMs: number) {
   db.prepare("DELETE FROM rate_limit_buckets WHERE last_refill < ?").run(now - windowMs * 5);
 }
@@ -99,7 +101,10 @@ function checkSqliteRateLimit(key: string, options: RateLimitOptions): RateLimit
   const now = Date.now();
   const { limit, windowMs } = options;
 
-  cleanupSqliteBuckets(db, now, windowMs);
+  if (now - lastCleanupTime > 5 * 60 * 1000) {
+    cleanupSqliteBuckets(db, now, windowMs);
+    lastCleanupTime = now;
+  }
 
   const selectStmt = db.prepare(
     "SELECT tokens, last_refill FROM rate_limit_buckets WHERE key = ?"
