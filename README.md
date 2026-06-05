@@ -15,7 +15,7 @@
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS_4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![Firebase](https://img.shields.io/badge/Firebase_FCM-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
-[![Version](https://img.shields.io/badge/v10.1.0-blue)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/v10.2.0-blue)](./CHANGELOG.md)
 
 [📖 Panduan Instalasi](./docs/PANDUAN_INSTALASI.md) · [📲 Panduan Notifikasi](./docs/PANDUAN_NOTIFIKASI.md) · [📘 Wiki Teknis](./docs/WIKI.md) · [📋 Changelog](./CHANGELOG.md) · [🔒 Security](./SECURITY.md)
 
@@ -44,7 +44,7 @@ PBB Manager dibangun khusus untuk menyelesaikan masalah nyata pengelolaan pajak 
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                        PBB Manager v10.1.0                       │
+│                        PBB Manager v10.2.0                       │
 ├──────────────────┬──────────────────┬────────────────────────────┤
 │   Web Dashboard  │  Portal Publik   │    PBB Mobile v2.1.0       │
 │   (Admin/Petugas)│  (Warga)         │    (Petugas Lapangan)     │
@@ -168,6 +168,9 @@ npm install
 
 # 3. Jalankan development server
 npm run dev
+
+# 4. Jalankan unit testing
+npm run test
 ```
 
 Buka `http://localhost:3000` — Login default: `admin` / `admin123`
@@ -221,6 +224,6 @@ Proyek ini dilisensikan di bawah [MIT License](./LICENSE) — bebas digunakan, d
 
 **Dikembangkan untuk kemajuan digitalisasi desa di Indonesia** 🇮🇩
 
-*Dibuat dengan ❤️ oleh [Balongbesuk](https://github.com/balongbesuk) · Terakhir diperbarui: Mei 2026*
+*Dibuat dengan ❤️ oleh [Balongbesuk](https://github.com/balongbesuk) · Terakhir diperbarui: Juni 2026*
 
 </div>
