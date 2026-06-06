@@ -145,16 +145,26 @@ async function processMapRestoreJob(jobId: string) {
       status: `Mengekstrak ${entries.length} file...`,
     }));
 
+    let lastWriteTime = 0;
     for (let i = 0; i < entries.length; i++) {
       zip.extractEntryTo(entries[i], stagingDir, false, true);
-      updateJob(jobId, (current) => ({
-        ...current,
-        phase: "extracting",
-        current: i + 1,
-        total: entries.length,
-        percent: Math.round(((i + 1) / entries.length) * 40) + 10,
-        status: `Ekstrak ${i + 1}/${entries.length} file...`,
-      }));
+      const nowTime = Date.now();
+      const isFirst = i === 0;
+      const isLast = i === entries.length - 1;
+      const isInterval = (i + 1) % 20 === 0;
+      const isTimePassed = nowTime - lastWriteTime > 1000;
+
+      if (isFirst || isLast || isInterval || isTimePassed) {
+        updateJob(jobId, (current) => ({
+          ...current,
+          phase: "extracting",
+          current: i + 1,
+          total: entries.length,
+          percent: Math.round(((i + 1) / entries.length) * 40) + 10,
+          status: `Ekstrak ${i + 1}/${entries.length} file...`,
+        }));
+        lastWriteTime = nowTime;
+      }
     }
 
     try {
@@ -193,18 +203,28 @@ async function processMapRestoreJob(jobId: string) {
       status: `Memindahkan ${allFiles.length} file peta...`,
     }));
 
+    let lastMoveWriteTime = 0;
     for (let i = 0; i < allFiles.length; i++) {
       const src = allFiles[i];
       fs.copyFileSync(src, path.join(mapDir, path.basename(src)));
 
-      updateJob(jobId, (current) => ({
-        ...current,
-        phase: "moving",
-        current: i + 1,
-        total: allFiles.length,
-        percent: Math.round(((i + 1) / Math.max(allFiles.length, 1)) * 45) + 50,
-        status: `Menyusun ${i + 1}/${allFiles.length} file...`,
-      }));
+      const nowTime = Date.now();
+      const isFirst = i === 0;
+      const isLast = i === allFiles.length - 1;
+      const isInterval = (i + 1) % 20 === 0;
+      const isTimePassed = nowTime - lastMoveWriteTime > 1000;
+
+      if (isFirst || isLast || isInterval || isTimePassed) {
+        updateJob(jobId, (current) => ({
+          ...current,
+          phase: "moving",
+          current: i + 1,
+          total: allFiles.length,
+          percent: Math.round(((i + 1) / Math.max(allFiles.length, 1)) * 45) + 50,
+          status: `Menyusun ${i + 1}/${allFiles.length} file...`,
+        }));
+        lastMoveWriteTime = nowTime;
+      }
     }
 
     updateJob(jobId, (current) => ({

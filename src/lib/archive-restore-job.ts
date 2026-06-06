@@ -145,18 +145,28 @@ async function processArchiveRestoreJob(jobId: string) {
       status: `Mengekstrak ${totalEntries} file...`,
     }));
 
+    let lastWriteTime = 0;
     for (let i = 0; i < totalEntries; i++) {
       const entry = zipEntries[i];
       zip.extractEntryTo(entry, stagingDir, false, true);
 
-      updateJob(jobId, (current) => ({
-        ...current,
-        phase: "extracting",
-        current: i + 1,
-        total: totalEntries,
-        percent: Math.round(((i + 1) / totalEntries) * 40) + 10,
-        status: `Ekstrak ${i + 1}/${totalEntries} file...`,
-      }));
+      const nowTime = Date.now();
+      const isFirst = i === 0;
+      const isLast = i === totalEntries - 1;
+      const isInterval = (i + 1) % 50 === 0;
+      const isTimePassed = nowTime - lastWriteTime > 1000;
+
+      if (isFirst || isLast || isInterval || isTimePassed) {
+        updateJob(jobId, (current) => ({
+          ...current,
+          phase: "extracting",
+          current: i + 1,
+          total: totalEntries,
+          percent: Math.round(((i + 1) / totalEntries) * 40) + 10,
+          status: `Ekstrak ${i + 1}/${totalEntries} file...`,
+        }));
+        lastWriteTime = nowTime;
+      }
     }
 
     try {
@@ -195,6 +205,7 @@ async function processArchiveRestoreJob(jobId: string) {
       status: `Memindahkan ${allFiles.length} file ke arsip...`,
     }));
 
+    let lastMoveWriteTime = 0;
     for (let i = 0; i < allFiles.length; i++) {
       const src = allFiles[i];
       const name = path.basename(src);
@@ -204,14 +215,23 @@ async function processArchiveRestoreJob(jobId: string) {
 
       fs.copyFileSync(src, path.join(archiveDir, name));
 
-      updateJob(jobId, (current) => ({
-        ...current,
-        phase: "moving",
-        current: i + 1,
-        total: allFiles.length,
-        percent: Math.round(((i + 1) / Math.max(allFiles.length, 1)) * 45) + 50,
-        status: `Menyusun ${i + 1}/${allFiles.length} file...`,
-      }));
+      const nowTime = Date.now();
+      const isFirst = i === 0;
+      const isLast = i === allFiles.length - 1;
+      const isInterval = (i + 1) % 50 === 0;
+      const isTimePassed = nowTime - lastMoveWriteTime > 1000;
+
+      if (isFirst || isLast || isInterval || isTimePassed) {
+        updateJob(jobId, (current) => ({
+          ...current,
+          phase: "moving",
+          current: i + 1,
+          total: allFiles.length,
+          percent: Math.round(((i + 1) / Math.max(allFiles.length, 1)) * 45) + 50,
+          status: `Menyusun ${i + 1}/${allFiles.length} file...`,
+        }));
+        lastMoveWriteTime = nowTime;
+      }
     }
 
     updateJob(jobId, (current) => ({

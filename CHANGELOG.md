@@ -5,6 +5,8 @@
 Pemberuan teknis (Technical Debt, DX & Performance) yang berfokus pada kualitas kode, kestabilan pipeline CI, keamanan package, serta efisiensi database. Total 20 perbaikan telah diselesaikan.
 
 ### Performance & Database Optimizations
+- **Background Job Disk Write Throttling**: Mengurangi frekuensi penulisan status progress ke disk pada proses smart scan, restore arsip, dan restore peta dengan menerapkan mekanisme *throttling* (hanya menulis status ke file JSON per jeda 1 detik atau kelipatan file/halaman tertentu) untuk menghemat I/O disk di server STB/eMMC.
+- **Auto-Cleanup Temporary Files**: Menambahkan fungsi pembersihan otomatis folder `tmp/` untuk menghapus file temporer dan folder staging usang yang berumur lebih dari 24 jam setiap kali backup database dijalankan.
 - **Rate Limiter Disk I/O Throttling**: Mengoptimalkan fungsi pembersihan bucket rate limiter di SQLite agar hanya berjalan berkala maksimal sekali setiap 5 menit (throttling), memangkas transaksi write (`DELETE` query) berlebih pada setiap hit API.
 - **Bapenda Sync Bypass Write**: Menghilangkan I/O tulis (`updateMany` pada `updatedAt`) dan pembuatan audit log `PUBLIC_BAPENDA_CHECK` ketika pengecekan status tagihan warga masih menghasilkan status belum lunas (read-only), menghemat ruang disk dan mencegah database lock.
 - **Single-Query Bulk Payment Update**: Menggantikan perulangan update individual di dalam transaksi Prisma dengan kueri SQL Native tunggal (`$executeRawUnsafe`) menggunakan ekspresi `CASE WHEN`, memangkas waktu eksekusi perubahan status massal dari beberapa detik menjadi milidetik.
@@ -14,6 +16,7 @@ Pemberuan teknis (Technical Debt, DX & Performance) yang berfokus pada kualitas 
 - **Health Check Endpoint (/api/health)**: Membuat rute API baru untuk pemantauan server mandiri desa secara real-time, menampilkan status basis data SQLite beserta latensinya, sisa ruang penyimpanan kosong disk (disk space), serta status keterhubungan jaringan ke server Bapenda.
 - **Audit Log Retention Policy**: Mengintegrasikan pembersihan otomatis berkala log audit aktivitas yang berumur lebih dari 180 hari (6 bulan) setiap kali backup database sukses dibuat untuk mencegah database bloatware.
 - **Automated Cron Backup API (/api/cron/backup)**: Menyediakan rute API baru terproteksi token keamanan `CRON_SECRET` untuk memicu backup database mandiri desa secara otomatis lewat penjadwalan eksternal (cron-job).
+- **Disable Standalone Mode**: Menonaktifkan output mode `standalone` pada `next.config.ts` untuk mengembalikan kompilasi build produksi Next.js ke mode standar menggunakan server Next.js bawaan.
 
 ### Security & CI/CD
 - **Turnstile Secret Key Logging Fix**: Mengamankan console log dengan menyembunyikan panjang dan isi Secret Key Cloudflare Turnstile saat verifikasi token, guna mencegah kebocoran secret di log production.

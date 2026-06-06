@@ -132,8 +132,10 @@ async function processSmartScanJob(jobId: string) {
 
     let detectedCount = 0;
     let skippedCount = 0;
+    let lastWriteTime = 0;
 
     for (let i = 0; i < totalPages; i++) {
+      let nop: string | undefined = undefined;
       try {
         const subPdfDoc = await PDFDocument.create();
         const [copiedPage] = await subPdfDoc.copyPages(mainPdfDoc, [i]);
@@ -148,14 +150,26 @@ async function processSmartScanJob(jobId: string) {
           rawText = "";
         }
 
-        const nop = extractNopFromText(rawText);
+        nop = extractNopFromText(rawText);
         if (nop) {
           fs.writeFileSync(path.join(archiveDir, `${nop}.pdf`), subPdfBytes);
           detectedCount++;
         } else {
           skippedCount++;
         }
+      } catch {
+        skippedCount++;
+      }
 
+      // Throttle JSON status write to disk
+      const percent = Math.min(99, Math.round(((i + 1) / totalPages) * 100));
+      const nowTime = Date.now();
+      const isFirst = i === 0;
+      const isLast = i === totalPages - 1;
+      const isInterval = (i + 1) % 5 === 0;
+      const isTimePassed = nowTime - lastWriteTime > 1000;
+
+      if (isFirst || isLast || isInterval || isTimePassed) {
         updateSmartScanJob(jobId, (job) => ({
           ...job,
           current: i + 1,
@@ -163,21 +177,10 @@ async function processSmartScanJob(jobId: string) {
           detectedCount,
           skippedCount,
           nopLast: nop || "Tidak terdeteksi",
-          percent: Math.min(99, Math.round(((i + 1) / totalPages) * 100)),
+          percent,
           status: `Halaman ${i + 1}/${totalPages} diproses`,
         }));
-      } catch {
-        skippedCount++;
-        updateSmartScanJob(jobId, (job) => ({
-          ...job,
-          current: i + 1,
-          total: totalPages,
-          detectedCount,
-          skippedCount,
-          nopLast: "Tidak terdeteksi",
-          percent: Math.min(99, Math.round(((i + 1) / totalPages) * 100)),
-          status: `Halaman ${i + 1}/${totalPages} diproses`,
-        }));
+        lastWriteTime = nowTime;
       }
     }
 

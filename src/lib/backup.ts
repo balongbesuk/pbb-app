@@ -63,10 +63,64 @@ export async function createDatabaseBackup(): Promise<string | null> {
       console.error("[Backup Cleanup] Failed to prune old audit logs:", pruneError);
     }
 
+    // Pembersihan file sampah dan folder staging di folder tmp
+    cleanupTempDirectory();
+
     console.warn(`Database backup created at ${backupPath}`);
     return backupPath;
   } catch (error) {
     console.error("Failed to create database backup:", error);
     return null;
+  }
+}
+
+/**
+ * Cleans up temporary files and staging directories in the tmp/ directory
+ * that are older than 24 hours.
+ */
+function cleanupTempDirectory() {
+  try {
+    const tmpDir = path.join(process.cwd(), "tmp");
+    if (!fs.existsSync(tmpDir)) return;
+
+    const items = fs.readdirSync(tmpDir);
+    const now = Date.now();
+    const maxAge = 24 * 60 * 60 * 1000; // 24 jam
+
+    for (const item of items) {
+      const fullPath = path.join(tmpDir, item);
+      const stat = fs.statSync(fullPath);
+
+      if (stat.isDirectory()) {
+        // Bersihkan file di dalam folder status job persisten
+        if (
+          item === "archive-smart-scan-jobs" ||
+          item === "archive-restore-jobs" ||
+          item === "map-restore-jobs"
+        ) {
+          const subItems = fs.readdirSync(fullPath);
+          for (const subItem of subItems) {
+            const subPath = path.join(fullPath, subItem);
+            const subStat = fs.statSync(subPath);
+            if (now - subStat.mtime.getTime() > maxAge) {
+              fs.rmSync(subPath, { recursive: true, force: true });
+            }
+          }
+        } else if (item.startsWith("restore-archive-") || item.startsWith("restore-map-")) {
+          // Folder staging ekstraksi bisa dihapus seutuhnya jika sudah usang
+          if (now - stat.mtime.getTime() > maxAge) {
+            fs.rmSync(fullPath, { recursive: true, force: true });
+          }
+        }
+      } else {
+        // File biasa di folder tmp dihapus jika sudah usang
+        if (now - stat.mtime.getTime() > maxAge) {
+          fs.rmSync(fullPath, { force: true });
+        }
+      }
+    }
+    console.warn("[Temp Cleanup] Cleaned up temporary files and staging directories older than 24 hours.");
+  } catch (error) {
+    console.error("[Temp Cleanup] Failed to cleanup temp directory:", error);
   }
 }
