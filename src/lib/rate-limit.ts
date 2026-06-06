@@ -96,6 +96,9 @@ function cleanupSqliteBuckets(db: Database.Database, now: number, windowMs: numb
   db.prepare("DELETE FROM rate_limit_buckets WHERE last_refill < ?").run(now - windowMs * 5);
 }
 
+let cachedSelectStmt: Database.Statement<[string]> | null = null;
+let cachedUpsertStmt: Database.Statement<[string, number, number]> | null = null;
+
 function checkSqliteRateLimit(key: string, options: RateLimitOptions): RateLimitResult {
   const db = getRateLimitDb();
   const now = Date.now();
@@ -106,20 +109,24 @@ function checkSqliteRateLimit(key: string, options: RateLimitOptions): RateLimit
     lastCleanupTime = now;
   }
 
-  const selectStmt = db.prepare(
-    "SELECT tokens, last_refill FROM rate_limit_buckets WHERE key = ?"
-  );
-  const upsertStmt = db.prepare(
-    `
+  if (!cachedSelectStmt) {
+    cachedSelectStmt = db.prepare(
+      "SELECT tokens, last_refill FROM rate_limit_buckets WHERE key = ?"
+    );
+  }
+  if (!cachedUpsertStmt) {
+    cachedUpsertStmt = db.prepare(
+      `
       INSERT INTO rate_limit_buckets (key, tokens, last_refill)
       VALUES (?, ?, ?)
       ON CONFLICT(key) DO UPDATE SET
         tokens = excluded.tokens,
         last_refill = excluded.last_refill
     `
-  );
+    );
+  }
 
-  const selectedBucket = selectStmt.get(key) as { tokens: number; last_refill: number } | undefined;
+  const selectedBucket = cachedSelectStmt.get(key) as { tokens: number; last_refill: number } | undefined;
   let bucket = selectedBucket;
   if (!bucket || now - bucket.last_refill >= windowMs) {
     bucket = { tokens: limit, last_refill: now };
@@ -127,12 +134,12 @@ function checkSqliteRateLimit(key: string, options: RateLimitOptions): RateLimit
 
   if (bucket.tokens <= 0) {
     const retryAfter = Math.ceil((bucket.last_refill + windowMs - now) / 1000);
-    upsertStmt.run(key, bucket.tokens, bucket.last_refill);
+    cachedUpsertStmt.run(key, bucket.tokens, bucket.last_refill);
     return { allowed: false, retryAfter, remaining: 0 };
   }
 
   const nextTokens = bucket.tokens - 1;
-  upsertStmt.run(key, nextTokens, bucket.last_refill);
+  cachedUpsertStmt.run(key, nextTokens, bucket.last_refill);
   return { allowed: true, remaining: nextTokens };
 }
 

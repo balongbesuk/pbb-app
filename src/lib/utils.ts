@@ -205,3 +205,17 @@ export function formatSignatureUrl(url: string | null | undefined): string | nul
   return cleanUrl;
 }
 
+/**
+ * Format NOP 18-digit mentah menjadi format bertitik standar.
+ * Contoh: "351704001900600930" → "35.17.040.019.006-0093.0"
+ */
+export function formatDottedNop(cleanNop: string): string {
+  const p1 = cleanNop.substring(0, 2);
+  const p2 = cleanNop.substring(2, 4);
+  const p3 = cleanNop.substring(4, 7);
+  const p4 = cleanNop.substring(7, 10);
+  const p5 = cleanNop.substring(10, 13);
+  const p6 = cleanNop.substring(13, 17);
+  const p7 = cleanNop.substring(17, 18);
+  return `${p1}.${p2}.${p3}.${p4}.${p5}-${p6}.${p7}`;
+}

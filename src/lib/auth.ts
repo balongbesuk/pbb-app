@@ -95,11 +95,16 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id!;
         token.username = (user as any).username;
         token.mustChangePassword = user.mustChangePassword;
+        token.lastDbCheck = Math.floor(Date.now() / 1000);
       }
 
-      // Self-healing: jika token.id tidak ditemukan di DB (karena DB di-seed/reset ulang),
-      // coba cari berdasarkan token.username untuk menyelaraskan ID secara otomatis
-      if (token.id) {
+      // Self-healing: periodik cek DB setiap 5 menit (bukan setiap request)
+      // untuk memverifikasi user masih ada dan sinkronisasi flag mustChangePassword
+      const now = Math.floor(Date.now() / 1000);
+      const lastCheck = (token.lastDbCheck as number) || 0;
+      const DB_CHECK_INTERVAL = 5 * 60; // 5 menit
+
+      if (token.id && (now - lastCheck > DB_CHECK_INTERVAL || trigger === "update")) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id },
@@ -124,23 +129,15 @@ export const authOptions: NextAuthOptions = {
             console.warn(`[NextAuth JWT] User ID ${token.id} not found and no username present to heal. Invalidating token.`);
             return {} as any; // Bersihkan token
           } else if (dbUser) {
+            token.role = dbUser.role;
             token.mustChangePassword = dbUser.mustChangePassword;
           }
         } catch (err) {
           console.error("[NextAuth JWT] Error checking/healing session ID:", err);
         }
+        token.lastDbCheck = now;
       }
 
-      // Saat session di-update (setelah ganti password), refresh flag dari DB
-      if (trigger === "update") {
-        const freshUser = await prisma.user.findUnique({
-          where: { id: token.id },
-          select: { mustChangePassword: true },
-        });
-        if (freshUser) {
-          token.mustChangePassword = freshUser.mustChangePassword;
-        }
-      }
       return token;
     },
     async session({ session, token }) {

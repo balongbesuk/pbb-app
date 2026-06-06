@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio";
 import { prisma } from "@/lib/prisma";
+import { formatDottedNop } from "@/lib/utils";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { notifyUser, notifyNopSubscribers } from "@/lib/push-notification";
 import axios from "axios";
@@ -107,14 +108,7 @@ export async function syncBapendaStatus({
   }
 
   // Bangun format NOP bertitik (karena di DB Jombang tersimpan "35.17.040.019.006-0093.0")
-  const dp1 = cleanNop.substring(0, 2);
-  const dp2 = cleanNop.substring(2, 4);
-  const dp3 = cleanNop.substring(4, 7);
-  const dp4 = cleanNop.substring(7, 10);
-  const dp5 = cleanNop.substring(10, 13);
-  const dp6 = cleanNop.substring(13, 17);
-  const dp7 = cleanNop.substring(17, 18);
-  const dottedNop = `${dp1}.${dp2}.${dp3}.${dp4}.${dp5}-${dp6}.${dp7}`;
+  const dottedNop = formatDottedNop(cleanNop);
 
   const taxRecords = await prisma.taxData.findMany({
     where: {

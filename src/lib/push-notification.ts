@@ -1,6 +1,7 @@
 import { Expo, ExpoPushMessage } from 'expo-server-sdk';
 import { prisma } from './prisma'; // pastikan path ini benar
 import webpush from 'web-push';
+import { formatDottedNop } from '@/lib/utils';
 
 if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_SUBJECT) {
   try {
@@ -20,6 +21,23 @@ const expo = new Expo({
   accessToken: process.env.EXPO_ACCESS_TOKEN || undefined,
 });
 
+// Cache push notification config to avoid querying DB on every notification
+let pushConfigCache: { enabled: boolean; expiry: number } | null = null;
+
+async function isPushEnabled(): Promise<boolean> {
+  const now = Date.now();
+  if (pushConfigCache && pushConfigCache.expiry > now) return pushConfigCache.enabled;
+  try {
+    const config = await prisma.villageConfig.findFirst({ where: { id: 1 } });
+    const enabled = config?.enablePushNotifications !== false;
+    pushConfigCache = { enabled, expiry: now + 60_000 }; // Cache 60 detik
+    return enabled;
+  } catch (err) {
+    console.error("Failed to query enablePushNotifications config:", err);
+    return true; // Default: aktif
+  }
+}
+
 export async function sendPushNotification({
   tokens,
   title,
@@ -33,15 +51,11 @@ export async function sendPushNotification({
   data?: any;
   sound?: 'default' | null;
 }) {
-  // Check if push notifications are enabled globally in the village configuration
-  try {
-    const config = await prisma.villageConfig.findFirst({ where: { id: 1 } });
-    if (config && config.enablePushNotifications === false) {
-      console.log("ℹ️ Push notifications are disabled globally in VillageConfig.");
-      return;
-    }
-  } catch (err) {
-    console.error("Failed to query enablePushNotifications config:", err);
+  // Check if push notifications are enabled globally (cached)
+  const enabled = await isPushEnabled();
+  if (!enabled) {
+    console.log("ℹ️ Push notifications are disabled globally in VillageConfig.");
+    return;
   }
 
   // Filter out invalid tokens and remove duplicates
@@ -144,14 +158,7 @@ export async function notifyUser(userId: string, title: string, body: string, da
 
 export async function notifyNopSubscribers(nop: string, title: string, body: string, data?: any) {
   const cleanNop = nop.replace(/\D/g, "");
-  const dp1 = cleanNop.substring(0, 2);
-  const dp2 = cleanNop.substring(2, 4);
-  const dp3 = cleanNop.substring(4, 7);
-  const dp4 = cleanNop.substring(7, 10);
-  const dp5 = cleanNop.substring(10, 13);
-  const dp6 = cleanNop.substring(13, 17);
-  const dp7 = cleanNop.substring(17, 18);
-  const dottedNop = `${dp1}.${dp2}.${dp3}.${dp4}.${dp5}-${dp6}.${dp7}`;
+  const dottedNop = formatDottedNop(cleanNop);
 
   const subs = await prisma.pushSubscription.findMany({
     where: { 
