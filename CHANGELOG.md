@@ -1,5 +1,18 @@
 # Changelog
 
+## v10.3 - 2026-06-23: CI/CD Pipeline Fixes & Security Dependency Updates
+
+Pembaruan teknis berfokus pada perbaikan pipeline CI di GitHub Actions, pembaruan keamanan (security updates) dari Dependabot, dan penyesuaian versi pustaka inti untuk kompatibilitas.
+
+### CI/CD & GitHub Actions
+- **Node.js 24 Migration**: Memperbarui matriks pengujian di GitHub Actions (`verify.yml`) untuk secara eksklusif menggunakan Node.js versi 24, menghapus versi 20 yang sudah usang (*deprecated*).
+- **ESLint Compatibility Fix**: Melakukan *downgrade* `eslint` dari `10.5.0` kembali ke `9.39.0` untuk mengatasi error `getFilename is not a function` dari `eslint-plugin-react` yang menyebabkan pipeline CI selalu gagal.
+- **VAPID Keys Warning Suppression**: Memodifikasi kode inisialisasi agar otomatis mengabaikan log peringatan Web Push VAPID saat berjalan di lingkungan CI (`process.env.CI`) atau saat menggunakan *dummy keys* pendek, untuk membersihkan log CI dari peringatan usang.
+
+### Security & Dependencies
+- **Security Updates (pbb-app)**: Menyelesaikan peringatan keamanan Dependabot dengan memperbarui versi pustaka `dompurify` (3.4.11), `form-data` (4.0.6), `undici` (7.28.0), dan `hono` (4.12.25) di aplikasi utama.
+- **Mobile App Security & Peer Dependencies (pbb-mobile)**: Memperbarui pustaka `@babel/core`, `js-yaml`, dan `react-native` (melalui Dependabot) di aplikasi mobile. Menyesuaikan versi pustaka `react` dan `react-dom` ke `^19.2.3` untuk mengatasi konflik *peer dependency* dengan `react-native@0.86.0`.
+
 ## v10.2 - 2026-06-06: Code Refactoring, CI/CD Hardening, Testing Setup & Performance Optimizations
 
 Pemberuan teknis (Technical Debt, DX & Performance) yang berfokus pada kualitas kode, kestabilan pipeline CI, keamanan package, serta efisiensi database. Total 20 perbaikan telah diselesaikan.
