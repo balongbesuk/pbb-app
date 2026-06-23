@@ -4,14 +4,19 @@ import webpush from 'web-push';
 import { formatDottedNop } from '@/lib/utils';
 
 if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_SUBJECT) {
-  try {
-    webpush.setVapidDetails(
-      process.env.VAPID_SUBJECT,
-      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-      process.env.VAPID_PRIVATE_KEY
-    );
-  } catch (error: any) {
-    console.warn("⚠️ Peringatan: Gagal inisialisasi Web Push VAPID (Key mungkin tidak valid):", error.message);
+  // Hanya inisialisasi jika key terlihat seperti base64 string yang cukup panjang (bukan dummy)
+  if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY.length > 50) {
+    try {
+      webpush.setVapidDetails(
+        process.env.VAPID_SUBJECT,
+        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+      );
+    } catch (error: any) {
+      if (!process.env.CI) {
+        console.warn("⚠️ Peringatan: Gagal inisialisasi Web Push VAPID (Key mungkin tidak valid):", error.message);
+      }
+    }
   }
 }
 
