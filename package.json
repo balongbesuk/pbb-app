@@ -65,7 +65,7 @@
     "nprogress": "^0.2.0",
     "nuqs": "^2.8.9",
     "pdf-lib": "^1.17.1",
-    "pdf-parse": "^2.4.5",
+    "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^6.0.227",
     "pngjs": "^7.0.0",
     "react": "^19.2.7",

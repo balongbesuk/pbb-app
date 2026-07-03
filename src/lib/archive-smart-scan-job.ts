@@ -146,7 +146,8 @@ async function processSmartScanJob(jobId: string) {
         try {
           const data = await parsePdf(Buffer.from(subPdfBytes));
           rawText = data.text || "";
-        } catch {
+        } catch (err) {
+          console.error(`[SmartScan] Error parsing page ${i + 1}:`, err);
           rawText = "";
         }
 
