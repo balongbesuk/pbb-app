@@ -830,35 +830,51 @@ export function RegionMap({
         return String(unsafe || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     };
 
-    const linkHtml = `<div style="margin-top: 8px; text-align: right; border-top: 1px solid #f1f5f9; padding-top: 6px;">
-      <a href="/data-pajak?q=${cleanNop}&tahun=${tahun}" style="color: #2563eb; text-decoration: underline; font-weight: 700; font-size: 10px;" target="_blank">Detail Data Pajak ➔</a>
-    </div>`;
-
     const deleteButton = (!isPublic) ? `
         <button 
           class="delete-wp-btn" 
           data-nop="${escapeHtml(props.fullNop)}"
-          style="margin-top: 6px; width: 100%; background: #fef2f2; border: 1px solid #fee2e2; color: #ef4444; border-radius: 8px; padding: 6px 8px; font-weight: 700; font-size: 10px; cursor: pointer; text-align: center; transition: all 0.2s;"
+          style="display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: #fef2f2; border: 1px solid #fee2e2; color: #ef4444; border-radius: 8px; padding: 7px; font-weight: 700; font-size: 10px; cursor: pointer; transition: all 0.2s;"
         >
-          Hapus Batas Peta 🗑️
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          Hapus Batas Peta
         </button>
     ` : "";
 
     const label = `
-      <div style="min-width: 180px; font-family: sans-serif;">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <div style="background: ${statusColor}20; color: ${statusColor}; width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px;">🏠</div>
-          <span style="font-size: 12px; font-weight: 800; color: #0f172a;">${escapeHtml(props.name)}</span>
+      <div style="min-width: 210px; font-family: sans-serif; padding: 2px;">
+        <!-- Header -->
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+          <div style="background: ${statusColor}15; color: ${statusColor}; width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <span style="font-size: 13px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">${escapeHtml(props.name)}</span>
         </div>
-        <div style="background: #f8fafc; border-radius: 8px; padding: 8px; border: 1px solid #f1f5f9; font-size: 10px; color: #475569;">
-          <div>NOP: <strong style="color: #0f172a;">${escapeHtml(props.fullNop)}</strong></div>
-          <div>Blok: <strong>${escapeHtml(props.blok)}</strong></div>
-          <div style="margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-            Status: <span style="background: ${statusColor}20; color: ${statusColor}; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 9px;">${statusText}</span>
+        
+        <!-- Info Card -->
+        <div style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px; padding: 10px; margin-bottom: 10px; font-size: 10.5px; display: flex; flex-direction: column; gap: 6px; color: #475569;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: #64748b; font-weight: 600;">NOP</span>
+            <strong style="color: #0f172a; font-family: monospace; font-size: 11px;">${escapeHtml(props.fullNop)}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 5px; margin-top: 2px;">
+            <span style="color: #64748b; font-weight: 600;">Blok</span>
+            <strong style="color: #0f172a;">${escapeHtml(props.blok)}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 5px; margin-top: 2px;">
+            <span style="color: #64748b; font-weight: 600;">Status</span>
+            <span style="background: ${statusColor}15; color: ${statusColor}; padding: 2px 8px; border-radius: 6px; font-weight: 800; font-size: 9px; letter-spacing: 0.02em;">${statusText}</span>
           </div>
         </div>
-        ${deleteButton}
-        ${linkHtml}
+
+        <!-- Action Buttons -->
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <a href="/data-pajak?q=${cleanNop}&tahun=${tahun}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 6px; background: #2563eb; color: white; border-radius: 8px; padding: 8px; font-weight: 700; font-size: 10px; text-decoration: none; text-align: center; box-shadow: 0 2px 4px rgba(37,99,235,0.15);">
+            Detail Data Pajak
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+          ${deleteButton}
+        </div>
       </div>
     `;
     
