@@ -122,6 +122,9 @@ type DialogConfig = {
 function MapWatcher({ center, zoom }: { center: [number, number], zoom: number }) {
   const map = useMap();
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as any).leafletMap = map;
+    }
     map.setView(center, zoom);
   }, [center, zoom, map]);
   return null;
@@ -543,22 +546,27 @@ export function RegionMap({
     let active = true;
     if (showWp && !wpData && !isPublic) {
       setLoadingWp(true);
-      Promise.all([
-        fetch(`/maps/wp.json?v=${Date.now()}`).then((res) => {
-          if (!res.ok) throw new Error("Gagal memuat peta bidang");
-          return res.json();
-        }),
-        fetch(`/api/region-unpaid?tahun=${tahun}&allStatus=true`).then((res) => {
-          if (!res.ok) throw new Error("Gagal mengambil status tagihan");
-          return res.json();
-        }),
-        fetch(`/api/gis-sync-report?tahun=${tahun}`).then((res) => {
-          if (!res.ok) return null;
-          return res.json();
-        }).catch(() => null),
-      ])
-        .then(([geoJson, statusMap, syncReport]) => {
+      ensureGeoman()
+        .then(() => {
           if (!active) return;
+          return Promise.all([
+            fetch(`/maps/wp.json?v=${Date.now()}`).then((res) => {
+              if (!res.ok) throw new Error("Gagal memuat peta bidang");
+              return res.json();
+            }),
+            fetch(`/api/region-unpaid?tahun=${tahun}&allStatus=true`).then((res) => {
+              if (!res.ok) throw new Error("Gagal mengambil status tagihan");
+              return res.json();
+            }),
+            fetch(`/api/gis-sync-report?tahun=${tahun}`).then((res) => {
+              if (!res.ok) return null;
+              return res.json();
+            }).catch(() => null),
+          ]);
+        })
+        .then((result) => {
+          if (!active || !result) return;
+          const [geoJson, statusMap, syncReport] = result;
           setWpData(geoJson);
           setWpStatusMap(statusMap);
           if (syncReport?.summary) {
@@ -950,6 +958,10 @@ export function RegionMap({
     
     const regionLayer = layer as LeafletGeoJSON;
     wpLayersRef.current[cleanNop] = regionLayer;
+    if (typeof window !== "undefined") {
+      if (!(window as any).wpLayers) (window as any).wpLayers = {};
+      (window as any).wpLayers[cleanNop] = regionLayer;
+    }
 
     if (!isMobile) {
       regionLayer.bindTooltip(label, { sticky: true });
