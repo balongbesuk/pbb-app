@@ -16,12 +16,16 @@ import { WpDigitizePanel } from "./wp-digitize-panel";
 let geomanLoaded = false;
 async function ensureGeoman() {
   if (geomanLoaded || typeof window === "undefined") return;
+  const L = await import("leaflet");
+  (window as any).L = L.default || L;
   await import("@geoman-io/leaflet-geoman-free");
   await import("@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css");
   geomanLoaded = true;
 }
 // Pre-load di background agar map.pm sudah siap saat Mode Digitasi pertama kali dibuka
-if (typeof window !== "undefined") ensureGeoman();
+if (typeof window !== "undefined") {
+  ensureGeoman().catch((err) => console.error("Gagal inisialisasi Geoman:", err));
+}
 
 // CSS khusus untuk desain premium
 const mapStyles = `
