@@ -330,8 +330,6 @@ export default async function LaporanGisPage({
               page={currentPage}
               totalPages={totalPages}
               totalItems={totalItems}
-              startIndex={startIndex + 1}
-              endIndex={Math.min(startIndex + limit, totalItems)}
             />
           </CardContent>
         </Card>
