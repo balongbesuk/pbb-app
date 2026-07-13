@@ -15,6 +15,11 @@ Pembaruan teknis berfokus pada pemulihan kualitas visual peta batas GIS Blok dar
 - **Tautan Popup Detail Pajak**: Menambahkan tombol tautan interaktif **"Detail Data Pajak ➔"** di bagian bawah popup bidang tanah (mengarah ke `/data-pajak?q=[NOP]&tahun=[tahun]` dengan target `_blank`). Warga/admin kini dapat berpindah ke baris tabel data pajak yang terfilter secara instan langsung dari peta.
 - **Optimasi API `allStatus`**: Menambahkan parameter kueri `allStatus=true` pada endpoint `/api/region-unpaid` di [route.ts](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/app/api/region-unpaid/route.ts) untuk mengembalikan pemetaan langsung seluruh NOP terhadap status pembayarannya secara efisien.
 
+### GIS Synchronization Laporan & Mode Digitasi (Admin)
+- **Laporan Sinkronisasi GIS (`/laporan-gis`)**: Membuat halaman laporan komprehensif bagi admin untuk membandingkan NOP di database aktif dengan NOP di berkas peta `wp.json`. Laporan ini menampilkan daftar lengkap 48 NOP yang belum terpetakan beserta detail wajib pajak, dan counter jumlah bidang di peta yang tidak memiliki kecocokan data pajak di database (warna abu-abu).
+- **Floating Panel Info Peta**: Menyediakan widget overlay dinamis di bawah peta saat layer WP diaktifkan, berisi statistik sinkronisasi real-time dan akses cepat ke laporan GIS.
+- **Mode Digitasi Bidang Baru**: Mengintegrasikan alat gambar Leaflet-Geoman (polygon & rectangle) ke dalam peta wilayah. Admin dapat memilih NOP yang belum terpetakan dari panel pencarian, menggambarkan bidang tanahnya di atas peta satelit secara presisi, lalu menyimpannya langsung ke berkas `public/maps/wp.json` melalui API `/api/peta/wp-digitize` yang baru.
+
 ### Dependency Security Upgrades
 - **Upgraded Packages**: Memperbarui paket `hono` ke versi `4.12.26`, `form-data` ke versi `4.0.6`, dan `undici` ke versi `7.28.0` untuk menerapkan tambalan keamanan terbaru (Security Patches) dari Dependabot.
 
