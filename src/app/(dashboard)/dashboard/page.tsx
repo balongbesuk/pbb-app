@@ -19,22 +19,11 @@ import {
   UserCheck,
   XCircle,
 } from "lucide-react";
-import dynamic from "next/dynamic";
-
-const RWBarChart = dynamic(
-  () => import("@/components/dashboard/dashboard-charts").then((mod) => mod.RWBarChart),
-  { ssr: false, loading: () => <ChartSkeleton /> }
-);
-
-const StatusPieChart = dynamic(
-  () => import("@/components/dashboard/dashboard-charts").then((mod) => mod.StatusPieChart),
-  { ssr: false, loading: () => <SidebarCardSkeleton /> }
-);
-
-const TrendAnalysisChart = dynamic(
-  () => import("@/components/dashboard/dashboard-charts").then((mod) => mod.TrendAnalysisChart),
-  { ssr: false, loading: () => <ChartSkeleton /> }
-);
+import {
+  RWBarChart,
+  StatusPieChart,
+  TrendAnalysisChart,
+} from "@/components/dashboard/dashboard-charts-lazy";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

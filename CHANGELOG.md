@@ -17,7 +17,8 @@ Pembaruan teknis berfokus pada optimalisasi pemindaian PDF pintar (Smart Scan), 
 
 ### Dashboard Performance (Streaming & Suspense)
 - **Next.js Suspense Containers**: Memecah query monolitik `getDashboardStats()` pada `page.tsx` menjadi Server Component asinkron mandiri (`StatsHeroGridContainer`, `RWBarChartContainer`, `TrendAnalysisChartContainer`, `StatusPieChartContainer`, `TopPenariksContainer`, `PhysicalStatsGridContainer`) yang dibungkus batas `<Suspense>` dengan *skeleton loader* yang halus. Dashboard Shell kini termuat instan dalam < 50ms.
-- **Client-Side Lazy Loading**: Memodifikasi impor komponen grafik Recharts (`RWBarChart`, `StatusPieChart`, `TrendAnalysisChart`) agar menggunakan `next/dynamic` dengan opsi `{ ssr: false }`. Langkah ini mengurangi ukuran bundel awal JavaScript di sisi klien sebesar **~200KB** dan meniadakan potensi galat inkonsistensi hidrasi (*hydration mismatch*).
+- **Client-Side Lazy Loading**: Memodifikasi impor komponen grafik Recharts (`RWBarChart`, `StatusPieChart`, `TrendAnalysisChart`) dengan memindahkannya ke dalam wrapper Client Component (`dashboard-charts-lazy.tsx`) menggunakan `next/dynamic` dengan opsi `{ ssr: false }` untuk memotong ukuran bundel awal JavaScript di sisi klien sebesar **~200KB** sekaligus meloloskan proses kompilasi build produksi Next.js.
+
 
 ### Database Repair & Maintenance
 - **Database Restoration**: Memulihkan database lokal `dev.db` yang sempat mengalami korupsi data (`SQLITE_CORRUPT`) dari cadangan otomatis terakhir yang sehat (`backups/pre-restore-1783930072240.db`) untuk menjaga kontinuitas data 11 user terdaftar.
