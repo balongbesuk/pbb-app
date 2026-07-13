@@ -95,3 +95,45 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Gagal menghapus data" }, { status: 500 });
   }
 }
+
+// PUT - Update geometry polygon di wp.json berdasarkan fullNop
+export async function PUT(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || (session.user as any).role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { geometry, fullNop } = await req.json();
+
+    if (!geometry || !fullNop) {
+      return NextResponse.json({ error: "geometry dan fullNop diperlukan" }, { status: 400 });
+    }
+
+    const wpData = readWpJson();
+    const cleanNop = fullNop.replace(/\D/g, "");
+    
+    let found = false;
+    wpData.features = wpData.features.map((f: any) => {
+      if ((f.properties?.fullNop || "").replace(/\D/g, "") === cleanNop) {
+        found = true;
+        return {
+          ...f,
+          geometry
+        };
+      }
+      return f;
+    });
+
+    if (!found) {
+      return NextResponse.json({ error: "NOP tidak ditemukan di peta" }, { status: 404 });
+    }
+
+    writeWpJson(wpData);
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("[wp-digitize] Put Error:", err);
+    return NextResponse.json({ error: "Gagal memperbarui data" }, { status: 500 });
+  }
+}
+

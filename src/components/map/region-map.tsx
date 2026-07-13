@@ -447,6 +447,8 @@ export function RegionMap({
   showUnpaidDetailsGis?: boolean
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const [editingWp, setEditingWp] = useState<{ name: string; fullNop: string; cleanNop: string } | null>(null);
+  const wpLayersRef = useRef<{ [nop: string]: any }>({});
   const [geoData, setGeoData] = useState<RegionFeatureCollection | null>(null);
   const [stats, setStats] = useState<Record<string, RegionStat>>({});
   const [loading, setLoading] = useState(true);
@@ -488,6 +490,45 @@ export function RegionMap({
   const [pendingGeometry, setPendingGeometry] = useState<any | null>(null);
   const [selectedDigitizeNop, setSelectedDigitizeNop] = useState<any | null>(null);
   const [wpRefreshCount, setWpRefreshCount] = useState(0);
+
+  const handleCancelEdit = () => {
+    if (!editingWp) return;
+    const layer = wpLayersRef.current[editingWp.cleanNop];
+    if (layer) {
+      layer.pm.disable();
+    }
+    setEditingWp(null);
+    setWpData(null); // reload layers to revert any unsaved drag changes
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingWp) return;
+    const layer = wpLayersRef.current[editingWp.cleanNop];
+    if (layer) {
+      const geometry = layer.toGeoJSON().geometry;
+      
+      fetch("/api/peta/wp-digitize", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ geometry, fullNop: editingWp.fullNop })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert("Batas bidang tanah berhasil diperbarui.");
+          layer.pm.disable();
+          setEditingWp(null);
+          setWpData(null); // reload layers to fetch the updated geometry
+        } else {
+          alert("Gagal menyimpan: " + (data.error || "error tidak diketahui"));
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Terjadi kesalahan koneksi.");
+      });
+    }
+  };
 
 
   useEffect(() => {
@@ -634,6 +675,22 @@ export function RegionMap({
             console.error(err);
             alert("Terjadi kesalahan koneksi.");
           });
+        }
+      }
+
+      if (target.classList.contains("edit-wp-btn")) {
+        const nop = target.dataset.nop;
+        const name = target.dataset.name || "Wajib Pajak";
+        if (nop) {
+          const cleanNop = nop.replace(/\D/g, "");
+          const layer = wpLayersRef.current[cleanNop];
+          if (layer) {
+            layer.closePopup();
+            layer.pm.enable({ snappable: true, snapDistance: 20 });
+            setEditingWp({ name, fullNop: nop, cleanNop });
+          } else {
+            alert("Batas bidang tanah tidak ditemukan.");
+          }
         }
       }
     };
@@ -830,6 +887,18 @@ export function RegionMap({
         return String(unsafe || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     };
 
+    const editButton = (!isPublic) ? `
+        <button 
+          class="edit-wp-btn" 
+          data-nop="${escapeHtml(props.fullNop)}"
+          data-name="${escapeHtml(props.name)}"
+          style="display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: #f0fdf4; border: 1px solid #dcfce7; color: #16a34a; border-radius: 8px; padding: 7px; font-weight: 700; font-size: 10px; cursor: pointer; transition: all 0.2s;"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Edit Batas Peta
+        </button>
+    ` : "";
+
     const deleteButton = (!isPublic) ? `
         <button 
           class="delete-wp-btn" 
@@ -873,12 +942,15 @@ export function RegionMap({
             Detail Data Pajak
             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>
+          ${editButton}
           ${deleteButton}
         </div>
       </div>
     `;
     
     const regionLayer = layer as LeafletGeoJSON;
+    wpLayersRef.current[cleanNop] = regionLayer;
+
     if (!isMobile) {
       regionLayer.bindTooltip(label, { sticky: true });
     }
@@ -1059,6 +1131,30 @@ export function RegionMap({
 
 
 
+
+      {editingWp && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] bg-white dark:bg-zinc-950 border-2 border-indigo-500 shadow-2xl rounded-2xl p-4 flex items-center gap-4 animate-in fade-in slide-in-from-bottom-5 w-[calc(100%-3rem)] max-w-md">
+          <div className="flex-1 flex flex-col min-w-0">
+            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-wider">Mode Edit Batas</span>
+            <span className="text-sm font-bold truncate">{editingWp.name}</span>
+            <span className="text-[10px] text-zinc-500 font-mono truncate">{editingWp.fullNop}</span>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={handleCancelEdit}
+              className="px-3 py-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleSaveEdit}
+              className="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors shadow-md hover:shadow-indigo-500/10 cursor-pointer"
+            >
+              Simpan
+            </button>
+          </div>
+        </div>
+      )}
 
       {(!isPublic || showUnpaidDetailsGis) && dialogConfig && (
         <RegionUnpaidDialog
