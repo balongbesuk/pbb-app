@@ -11,6 +11,18 @@ import "leaflet/dist/leaflet.css";
 import { RegionUnpaidDialog } from "./region-unpaid-dialog";
 import { WpDigitizePanel } from "./wp-digitize-panel";
 
+// Inisialisasi Geoman sekali di sisi client — mengaugment Leaflet.Map.prototype dengan .pm
+// Harus diimport SEBELUM MapContainer dibuat agar addInitHook berjalan.
+let geomanLoaded = false;
+async function ensureGeoman() {
+  if (geomanLoaded || typeof window === "undefined") return;
+  await import("@geoman-io/leaflet-geoman-free");
+  await import("@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css");
+  geomanLoaded = true;
+}
+// Pre-load di background agar map.pm sudah siap saat Mode Digitasi pertama kali dibuka
+if (typeof window !== "undefined") ensureGeoman();
+
 // CSS khusus untuk desain premium
 const mapStyles = `
   .leaflet-interactive:focus {
@@ -116,15 +128,31 @@ function GeomanController({ active, onCreated }: { active: boolean; onCreated: (
   const map = useMap();
 
   useEffect(() => {
-    let cleanup: (() => void) | null = null;
+    let handler: ((e: any) => void) | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let mounted = true;
+
     async function setup() {
-      if (typeof window === "undefined") return;
-      const L = await import("leaflet");
-      await import("@geoman-io/leaflet-geoman-free");
-      await import("@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css");
+      // Pastikan Geoman sudah diload
+      await ensureGeoman();
+      if (!mounted) return;
+
+      // pm mungkin belum tersedia langsung setelah import — coba 3x dengan interval 100ms
+      let pm = (map as any).pm;
+      for (let i = 0; i < 3 && !pm; i++) {
+        await new Promise<void>((resolve) => {
+          retryTimer = setTimeout(() => { resolve(); }, 150);
+        });
+        pm = (map as any).pm;
+      }
+
+      if (!pm || !mounted) {
+        console.warn("[Geoman] map.pm tidak tersedia.");
+        return;
+      }
 
       if (active) {
-        (map as any).pm.addControls({
+        pm.addControls({
           position: "topleft",
           drawMarker: false,
           drawCircle: false,
@@ -140,7 +168,7 @@ function GeomanController({ active, onCreated }: { active: boolean; onCreated: (
           drawPolygon: true,
         });
 
-        const handler = (e: any) => {
+        handler = (e: any) => {
           const layer = e.layer;
           const geometry = layer.toGeoJSON().geometry;
           map.removeLayer(layer);
@@ -148,16 +176,19 @@ function GeomanController({ active, onCreated }: { active: boolean; onCreated: (
         };
 
         (map as any).on("pm:create", handler);
-        cleanup = () => {
-          (map as any).pm.removeControls();
-          (map as any).off("pm:create", handler);
-        };
       } else {
-        (map as any).pm?.removeControls?.();
+        pm.removeControls?.();
       }
     }
+
     setup();
-    return () => { cleanup?.(); };
+
+    return () => {
+      mounted = false;
+      if (retryTimer) clearTimeout(retryTimer);
+      if (handler) (map as any).off("pm:create", handler);
+      (map as any).pm?.removeControls?.();
+    };
   }, [active, map, onCreated]);
 
   return null;
