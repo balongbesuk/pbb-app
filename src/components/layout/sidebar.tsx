@@ -18,6 +18,7 @@ import {
   History,
   Archive,
   MapPin,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -48,6 +49,12 @@ const menuItems = [
     label: "Laporan",
     href: "/laporan",
     allowedRoles: ["ADMIN", "PENARIK", "PENGGUNA"],
+  },
+  {
+    icon: BarChart3,
+    label: "Laporan GIS",
+    href: "/laporan-gis",
+    allowedRoles: ["ADMIN"],
   },
   { icon: History, label: "Riwayat Penagihan", href: "/riwayat", allowedRoles: ["PENARIK"] },
   { icon: Settings, label: "Pengaturan", href: "/settings", allowedRoles: ["ADMIN"] },

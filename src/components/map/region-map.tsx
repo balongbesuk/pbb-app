@@ -349,6 +349,7 @@ export function RegionMap({
   const [showWp, setShowWp] = useState(false);
   const [wpData, setWpData] = useState<any | null>(null);
   const [wpStatusMap, setWpStatusMap] = useState<Record<string, string>>({});
+  const [wpSyncStats, setWpSyncStats] = useState<{ missingFromGis: number; gisOnlyCount: number } | null>(null);
   const [loadingWp, setLoadingWp] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -372,12 +373,22 @@ export function RegionMap({
         fetch(`/api/region-unpaid?tahun=${tahun}&allStatus=true`).then((res) => {
           if (!res.ok) throw new Error("Gagal mengambil status tagihan");
           return res.json();
-        })
+        }),
+        fetch(`/api/gis-sync-report?tahun=${tahun}`).then((res) => {
+          if (!res.ok) return null;
+          return res.json();
+        }).catch(() => null),
       ])
-        .then(([geoJson, statusMap]) => {
+        .then(([geoJson, statusMap, syncReport]) => {
           if (!active) return;
           setWpData(geoJson);
           setWpStatusMap(statusMap);
+          if (syncReport?.summary) {
+            setWpSyncStats({
+              missingFromGis: syncReport.summary.missingFromGis,
+              gisOnlyCount: syncReport.summary.gisOnlyCount,
+            });
+          }
         })
         .catch((err) => {
           console.error("Gagal memuat data bidang WP:", err);
@@ -785,6 +796,42 @@ export function RegionMap({
         <div className="absolute top-6 right-6 z-[500] bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-slate-200 dark:border-white/10 transition-all duration-300">
           <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
           <span className="text-[10px] font-bold tracking-tight text-slate-600 dark:text-white">Memuat Bidang WP...</span>
+        </div>
+      )}
+
+      {/* Panel GIS Sync Notification */}
+      {showWp && !loadingWp && wpSyncStats && !isPublic && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[500] max-w-sm w-[calc(100%-3rem)] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
+          <div className="px-4 py-2.5 bg-slate-50 dark:bg-zinc-800 border-b border-slate-100 dark:border-zinc-700 flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">Info Sinkronisasi GIS</span>
+          </div>
+          <div className="px-4 py-3 flex gap-4">
+            {wpSyncStats.missingFromGis > 0 && (
+              <div className="flex-1">
+                <div className="text-rose-600 font-black text-lg leading-none">{wpSyncStats.missingFromGis}</div>
+                <div className="text-[9px] font-bold text-rose-500 uppercase tracking-wider mt-0.5">NOP belum terpetakan</div>
+              </div>
+            )}
+            {wpSyncStats.gisOnlyCount > 0 && (
+              <div className="flex-1">
+                <div className="text-slate-500 font-black text-lg leading-none">{wpSyncStats.gisOnlyCount}</div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Bidang tanpa data (abu-abu)</div>
+              </div>
+            )}
+          </div>
+          {wpSyncStats.missingFromGis > 0 && (
+            <div className="px-4 pb-3">
+              <a
+                href={`/laporan-gis?tahun=${tahun}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-xl transition-colors"
+              >
+                Lihat Laporan GIS →
+              </a>
+            </div>
+          )}
         </div>
       )}
 
