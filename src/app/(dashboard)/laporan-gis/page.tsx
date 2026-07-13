@@ -14,13 +14,23 @@ import {
 } from "@/components/ui/table";
 import { MapPin, AlertTriangle, CheckCircle2, Info, Database } from "lucide-react";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
+import { LaporanGisFilters } from "./laporan-gis-filters";
+import { LaporanGisPagination } from "./laporan-gis-pagination";
 import fs from "fs";
 import path from "path";
 
 export default async function LaporanGisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tahun?: string }>;
+  searchParams: Promise<{
+    tahun?: string;
+    q?: string;
+    dusun?: string;
+    blok?: string;
+    rw?: string;
+    rt?: string;
+    page?: string;
+  }>;
 }) {
   const session = await getServerSession(authOptions);
   const currentUser = session?.user as AppUser | undefined;
@@ -30,6 +40,13 @@ export default async function LaporanGisPage({
 
   const params = await searchParams;
   const tahun = parseInt(params.tahun || new Date().getFullYear().toString());
+  const q = params.q || "";
+  const filterDusun = params.dusun || "";
+  const filterBlok = params.blok || "";
+  const filterRw = params.rw || "";
+  const filterRt = params.rt || "";
+  const page = parseInt(params.page || "1");
+  const limit = 25; // items per page
 
   // Baca NOP dari wp.json
   const wpJsonPath = path.join(process.cwd(), "public/maps/wp.json");
@@ -66,11 +83,68 @@ export default async function LaporanGisPage({
 
   const dbNopSet = new Set(dbWps.map((w) => w.nop.replace(/\D/g, "")));
 
+  // Ambil opsi filter unik dari data database
+  const uniqueDusuns = [...new Set(dbWps.map((w) => w.dusun).filter(Boolean))].sort() as string[];
+  const uniqueRws = [...new Set(dbWps.map((w) => w.rw).filter(Boolean))].sort() as string[];
+  const uniqueRts = [...new Set(dbWps.map((w) => w.rt).filter(Boolean))].sort() as string[];
+  const uniqueBloks = [
+    ...new Set(
+      dbWps
+        .map((w) => {
+          const clean = w.nop.replace(/\D/g, "");
+          return clean.length >= 13 ? clean.substring(10, 13) : "";
+        })
+        .filter(Boolean)
+    ),
+  ].sort() as string[];
+
   // NOP database yang tidak ada di peta
   const missingFromGis = dbWps.filter((w) => !gisNops.has(w.nop.replace(/\D/g, "")));
 
   // NOP di peta yang tidak ada di database
   const gisOnlyCount = [...gisNops].filter((n) => !dbNopSet.has(n)).length;
+
+  // Filter list missingFromGis berdasarkan query & select parameters
+  let filteredMissing = missingFromGis;
+
+  if (q) {
+    const searchLower = q.toLowerCase();
+    filteredMissing = filteredMissing.filter(
+      (w) =>
+        w.namaWp.toLowerCase().includes(searchLower) ||
+        w.nop.replace(/\D/g, "").includes(searchLower) ||
+        (w.alamatObjek || "").toLowerCase().includes(searchLower)
+    );
+  }
+
+  if (filterDusun) {
+    filteredMissing = filteredMissing.filter(
+      (w) => (w.dusun || "").toUpperCase() === filterDusun.toUpperCase()
+    );
+  }
+
+  if (filterBlok) {
+    filteredMissing = filteredMissing.filter((w) => {
+      const clean = w.nop.replace(/\D/g, "");
+      const b = clean.length >= 13 ? clean.substring(10, 13) : "";
+      return b === filterBlok;
+    });
+  }
+
+  if (filterRw) {
+    filteredMissing = filteredMissing.filter((w) => parseInt(w.rw || "0") === parseInt(filterRw));
+  }
+
+  if (filterRt) {
+    filteredMissing = filteredMissing.filter((w) => parseInt(w.rt || "0") === parseInt(filterRt));
+  }
+
+  // Paginate list
+  const totalItems = filteredMissing.length;
+  const totalPages = Math.ceil(totalItems / limit);
+  const currentPage = Math.min(Math.max(1, page), totalPages || 1);
+  const startIndex = (currentPage - 1) * limit;
+  const paginatedMissing = filteredMissing.slice(startIndex, startIndex + limit);
 
   const statusLabel: Record<string, { label: string; color: string }> = {
     LUNAS: { label: "Lunas", color: "text-emerald-600 bg-emerald-50" },
@@ -155,15 +229,25 @@ export default async function LaporanGisPage({
         </Card>
       </div>
 
+      {/* Filter GIS */}
+      <LaporanGisFilters
+        dusuns={uniqueDusuns}
+        bloks={uniqueBloks}
+        rws={uniqueRws}
+        rts={uniqueRts}
+      />
+
       {/* Info box */}
-      {missingFromGis.length === 0 ? (
+      {totalItems === 0 ? (
         <Card className="rounded-2xl border border-emerald-100 bg-emerald-50 p-6 shadow-sm">
           <div className="flex items-center gap-4">
             <CheckCircle2 className="w-10 h-10 text-emerald-500 shrink-0" />
             <div>
-              <p className="font-bold text-emerald-700 text-lg">Semua NOP sudah terpetakan!</p>
+              <p className="font-bold text-emerald-700 text-lg">Semua NOP sesuai filter sudah terpetakan!</p>
               <p className="text-emerald-600 text-sm mt-1">
-                Seluruh {dbWps.length} NOP di database tahun {tahun} telah memiliki koordinat bidang tanah di peta GIS.
+                {q || filterDusun || filterBlok || filterRw || filterRt
+                  ? "Tidak ada NOP belum terpetakan yang cocok dengan filter aktif Anda."
+                  : `Seluruh NOP di database tahun ${tahun} telah memiliki koordinat bidang tanah di peta GIS.`}
               </p>
             </div>
           </div>
@@ -172,14 +256,14 @@ export default async function LaporanGisPage({
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
-            <p className="font-bold mb-1">Terdapat {missingFromGis.length} NOP yang belum memiliki koordinat GIS.</p>
+            <p className="font-bold mb-1">Terdapat {totalItems} NOP sesuai filter yang belum memiliki koordinat GIS.</p>
             <p>Bidang-bidang ini tidak akan tampil di Peta Bidang WP. Untuk menampilkannya, bidang tanah perlu didigitasi dan ditambahkan ke berkas <code className="bg-amber-100 px-1 rounded">public/maps/wp.json</code> menggunakan fitur Geoman pada halaman Peta Wilayah.</p>
           </div>
         </div>
       )}
 
       {/* Table */}
-      {missingFromGis.length > 0 && (
+      {totalItems > 0 && (
         <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
           <CardHeader className="border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
             <CardTitle className="flex items-center gap-3 text-xl font-bold tracking-tight">
@@ -204,11 +288,11 @@ export default async function LaporanGisPage({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {missingFromGis.map((wp, index) => {
+                  {paginatedMissing.map((wp, index) => {
                     const st = statusLabel[wp.paymentStatus] ?? { label: wp.paymentStatus, color: "text-zinc-500 bg-zinc-100" };
                     return (
                       <TableRow key={wp.nop} className="hover:bg-muted/30">
-                        <TableCell className="text-muted-foreground text-xs">{index + 1}</TableCell>
+                        <TableCell className="text-muted-foreground text-xs">{startIndex + index + 1}</TableCell>
                         <TableCell className="font-mono text-xs font-bold">{wp.nop}</TableCell>
                         <TableCell className="font-medium text-sm">{wp.namaWp}</TableCell>
                         <TableCell className="hidden md:table-cell text-xs text-muted-foreground max-w-[180px] truncate">
@@ -241,6 +325,14 @@ export default async function LaporanGisPage({
                 </TableBody>
               </Table>
             </div>
+            
+            <LaporanGisPagination
+              page={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              startIndex={startIndex + 1}
+              endIndex={Math.min(startIndex + limit, totalItems)}
+            />
           </CardContent>
         </Card>
       )}
