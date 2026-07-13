@@ -2,13 +2,14 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState, useRef } from "react";
-import { Maximize, Plus, Minus, Layers, Map as MapIcon } from "lucide-react";
+import { Maximize, Plus, Minus, Layers, Map as MapIcon, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMap } from "react-leaflet";
 import type { Feature, FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
 import type { GeoJSON as LeafletGeoJSON, Layer } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { RegionUnpaidDialog } from "./region-unpaid-dialog";
+import { WpDigitizePanel } from "./wp-digitize-panel";
 
 // CSS khusus untuk desain premium
 const mapStyles = `
@@ -110,6 +111,58 @@ function MapWatcher({ center, zoom }: { center: [number, number], zoom: number }
   return null;
 }
 
+// Komponen Geoman untuk mode digitasi
+function GeomanController({ active, onCreated }: { active: boolean; onCreated: (geometry: any) => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    let cleanup: (() => void) | null = null;
+    async function setup() {
+      if (typeof window === "undefined") return;
+      const L = await import("leaflet");
+      await import("@geoman-io/leaflet-geoman-free");
+      await import("@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css");
+
+      if (active) {
+        (map as any).pm.addControls({
+          position: "topleft",
+          drawMarker: false,
+          drawCircle: false,
+          drawCircleMarker: false,
+          drawPolyline: false,
+          drawText: false,
+          editMode: false,
+          dragMode: false,
+          cutPolygon: false,
+          rotateMode: false,
+          removalMode: false,
+          drawRectangle: true,
+          drawPolygon: true,
+        });
+
+        const handler = (e: any) => {
+          const layer = e.layer;
+          const geometry = layer.toGeoJSON().geometry;
+          map.removeLayer(layer);
+          onCreated(geometry);
+        };
+
+        (map as any).on("pm:create", handler);
+        cleanup = () => {
+          (map as any).pm.removeControls();
+          (map as any).off("pm:create", handler);
+        };
+      } else {
+        (map as any).pm?.removeControls?.();
+      }
+    }
+    setup();
+    return () => { cleanup?.(); };
+  }, [active, map, onCreated]);
+
+  return null;
+}
+
 // Custom Map Controls (Zoom + Fullscreen + Satellite + Regions)
 function MapControls({ 
   showSatellite, setShowSatellite,
@@ -119,7 +172,8 @@ function MapControls({
   showRT, setShowRT,
   showBlok, setShowBlok,
   showWp, setShowWp,
-  isPublic = false
+  isPublic = false,
+  digitizeMode, setDigitizeMode,
 }: { 
   showSatellite: boolean; 
   setShowSatellite: (v: boolean) => void;
@@ -130,6 +184,7 @@ function MapControls({
   showBlok: boolean; setShowBlok: (v: boolean) => void;
   showWp: boolean; setShowWp: (v: boolean) => void;
   isPublic?: boolean;
+  digitizeMode: boolean; setDigitizeMode: (v: boolean) => void;
 }) {
   const map = useMap();
 
@@ -259,6 +314,8 @@ function MapControls({
                       setShowRW(false);
                       setShowRT(false);
                       setShowBlok(false);
+                  } else {
+                      setDigitizeMode(false);
                   }
               }}
               className={cn(
@@ -272,6 +329,22 @@ function MapControls({
               <span className={cn(
                   "text-[10px] font-black tracking-widest transition-colors uppercase",
               )}>WP</span>
+          </button>
+        )}
+
+        {/* Digitize Mode Button (Admin Only, WP Layer Active) */}
+        {!isPublic && showWp && (
+          <button
+              onClick={() => setDigitizeMode(!digitizeMode)}
+              className={cn(
+                  "flex flex-col items-center justify-center p-3 backdrop-blur-3xl rounded-2xl shadow-2xl transition-all active:scale-95 group mt-1",
+                  digitizeMode
+                    ? "bg-amber-500 text-white"
+                    : "bg-white/95 dark:bg-[#050505]/95 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-600 dark:text-white"
+              )}
+              title={digitizeMode ? "Keluar Mode Digitasi" : "Mode Digitasi — Tambah Bidang"}
+          >
+              <Pencil className="w-4 h-4" />
           </button>
         )}
     </div>
@@ -352,6 +425,11 @@ export function RegionMap({
   const [wpSyncStats, setWpSyncStats] = useState<{ missingFromGis: number; gisOnlyCount: number } | null>(null);
   const [loadingWp, setLoadingWp] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Digitize mode states
+  const [digitizeMode, setDigitizeMode] = useState(false);
+  const [pendingGeometry, setPendingGeometry] = useState<any | null>(null);
+  const [selectedDigitizeNop, setSelectedDigitizeNop] = useState<any | null>(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -771,6 +849,12 @@ export function RegionMap({
           )}
 
           <MapWatcher center={center} zoom={zoom} />
+          <GeomanController
+            active={digitizeMode}
+            onCreated={(geometry) => {
+              setPendingGeometry(geometry);
+            }}
+          />
           <MapControls 
             showSatellite={showSatellite} setShowSatellite={setShowSatellite} 
             showDesa={showDesa} setShowDesa={setShowDesa}
@@ -780,6 +864,7 @@ export function RegionMap({
             showBlok={showBlok} setShowBlok={setShowBlok}
             showWp={showWp} setShowWp={setShowWp}
             isPublic={isPublic}
+            digitizeMode={digitizeMode} setDigitizeMode={setDigitizeMode}
           />
           
           {showDesa && <GeoJSON key={`desa-${showDesa}-${Object.keys(stats).length}`} data={{ type: "FeatureCollection", features: desaFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
@@ -791,6 +876,30 @@ export function RegionMap({
           <MapLegend />
         </MapContainer>
       </div>
+
+      {/* Digitize Panel */}
+      {digitizeMode && !isPublic && (
+        <WpDigitizePanel
+          tahun={tahun}
+          onSelectNop={(nop) => {
+            setSelectedDigitizeNop(nop);
+            setPendingGeometry(null);
+          }}
+          selectedNop={selectedDigitizeNop}
+          onSaved={() => {
+            // Reload WP layer by resetting data
+            setWpData(null);
+            setPendingGeometry(null);
+            setSelectedDigitizeNop(null);
+          }}
+          pendingGeometry={pendingGeometry}
+          onClose={() => {
+            setDigitizeMode(false);
+            setPendingGeometry(null);
+            setSelectedDigitizeNop(null);
+          }}
+        />
+      )}
 
       {loadingWp && (
         <div className="absolute top-6 right-6 z-[500] bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-slate-200 dark:border-white/10 transition-all duration-300">
