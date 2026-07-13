@@ -30,6 +30,8 @@ Pembaruan teknis berfokus pada optimalisasi pemindaian PDF pintar (Smart Scan), 
 ### Security & Dependencies
 - **Security Updates (pbb-app)**: Menyelesaikan peringatan keamanan Dependabot dengan memperbarui versi pustaka `dompurify` (3.4.11), `form-data` (4.0.6), `undici` (7.28.0), dan `hono` (4.12.25) di aplikasi utama.
 - **Mobile App Security & Peer Dependencies (pbb-mobile)**: Memperbarui pustaka `@babel/core`, `js-yaml`, dan `react-native` (melalui Dependabot) di aplikasi mobile. Menyesuaikan versi pustaka `react` dan `react-dom` ke `^19.2.3` untuk mengatasi konflik *peer dependency* dengan `react-native@0.86.0`.
+- **Role-Based Update Restriction**: Mengamankan rute API mobile (`/api/mobile/tax`) dengan membatasi kueri `updateMany` agar petugas `PENARIK` hanya dapat memperbarui data wajib pajak yang ditugaskan ke `userId` mereka sendiri, sedangkan role `ADMIN` tetap memiliki hak akses update global.
+
 
 ## v10.2 - 2026-06-06: Code Refactoring, CI/CD Hardening, Testing Setup & Performance Optimizations
 

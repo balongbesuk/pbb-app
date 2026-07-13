@@ -137,14 +137,32 @@ export async function POST(request: Request) {
 
     const today = new Date();
 
+    const whereClause: any = { nop: nop };
+    if (auth.role === "PENARIK") {
+      whereClause.penarikId = auth.userId;
+    }
+
     const updated = await prisma.taxData.updateMany({
-      where: { nop: nop },
+      where: whereClause,
       data: {
         paymentStatus: 'LUNAS',
         tanggalBayar: today,
         tempatBayar: 'Mobile App Simulator'
       }
     });
+
+    if (updated.count === 0) {
+      if (auth.role === "PENARIK") {
+        return NextResponse.json(
+          { success: false, error: 'NOP tidak ditemukan atau ditugaskan ke petugas lain' },
+          { status: 403, headers }
+        );
+      }
+      return NextResponse.json(
+        { success: false, error: 'NOP tidak ditemukan' },
+        { status: 404, headers }
+      );
+    }
 
     return NextResponse.json({ success: true, message: 'Status berhasil diperbarui jadi LUNAS', updated: updated.count }, { headers });
   } catch (error) {
