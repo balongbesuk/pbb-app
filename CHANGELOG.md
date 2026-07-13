@@ -1,16 +1,14 @@
 # Changelog
 
-## v10.4 - 2026-07-13: Performance Optimization & Database Integrity Restoration
+## v10.3 - 2026-07-13: Performance Optimization, DB Integrity Restoration, and CI/CD Fixes
 
-Pembaruan ini berfokus pada optimalisasi pemindaian PDF pintar (Smart Scan), peningkatan efisiensi transaksi basis data bulk tax mapping, pengindeksan komposit SQLite, penerapan Next.js Streaming & Suspense untuk dashboard yang instan, serta pemulihan integritas database dari cadangan.
+Pembaruan teknis berfokus pada optimalisasi pemindaian PDF pintar (Smart Scan), peningkatan efisiensi transaksi basis data bulk tax mapping, pengindeksan komposit SQLite, penerapan Next.js Streaming & Suspense untuk dashboard yang instan, pemulihan integritas database, serta perbaikan pipeline CI di GitHub Actions dan pembaruan keamanan pustaka.
 
 ### PDF Smart Scan & Smart Archive
 - **Single-Pass Text Parsing**: Memodifikasi pemrosesan pindaian cerdas PDF (`archive-smart-scan-job.ts` & `archive-actions.ts`) agar menggunakan parameter `pagerender` sekali jalan untuk mengekstrak teks, menghindari pemecahan buffer per halaman yang berulang. Mengurangi waktu pemrosesan PDF 176 halaman dari beberapa menit menjadi hanya 46,1 detik (peningkatan efisiensi ~10x lipat).
 
-### Database Bulk Mapping
+### Database Bulk Mapping & Indexing
 - **Chunked Delete & Insert Transaction**: Mengganti kueri upsert sekuensial yang lambat pada alokasi petugas penarik (`tax-assign-actions.ts`) dengan transaksi bulk `deleteMany` dan `createMany` dalam batch berisi 500 item untuk mencegah penguncian SQLite berkepanjangan.
-
-### Database Indexing & Connection Pool
 - **Composite Indexing**: Menambahkan indeks komposit baru `[tahun, rt, rw]` dan `[tahun, paymentStatus, rt, rw]` pada model `TaxData` untuk mempercepat pemrosesan query statistik pembagian wilayah.
 - **Connection String Parameters**: Membersihkan parameter `DATABASE_URL` ke SQLite untuk kompatibilitas native driver `@prisma/adapter-better-sqlite3` pada lingkungan Windows.
 
@@ -19,10 +17,6 @@ Pembaruan ini berfokus pada optimalisasi pemindaian PDF pintar (Smart Scan), pen
 
 ### Database Repair & Maintenance
 - **Database Restoration**: Memulihkan database lokal `dev.db` yang sempat mengalami korupsi data (`SQLITE_CORRUPT`) dari cadangan otomatis terakhir yang sehat (`backups/pre-restore-1783930072240.db`) untuk menjaga kontinuitas data 11 user terdaftar.
-
-## v10.3 - 2026-06-23: CI/CD Pipeline Fixes & Security Dependency Updates
-
-Pembaruan teknis berfokus pada perbaikan pipeline CI di GitHub Actions, pembaruan keamanan (security updates) dari Dependabot, dan penyesuaian versi pustaka inti untuk kompatibilitas.
 
 ### CI/CD & GitHub Actions
 - **Node.js 24 Migration**: Memperbarui matriks pengujian di GitHub Actions (`verify.yml`) untuk secara eksklusif menggunakan Node.js versi 24, menghapus versi 20 yang sudah usang (*deprecated*).
