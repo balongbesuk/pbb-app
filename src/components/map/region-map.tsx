@@ -8,6 +8,7 @@ import { useMap } from "react-leaflet";
 import type { Feature, FeatureCollection, GeoJsonProperties, Geometry } from "geojson";
 import type { GeoJSON as LeafletGeoJSON, Layer } from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 import { RegionUnpaidDialog } from "./region-unpaid-dialog";
 import { WpDigitizePanel } from "./wp-digitize-panel";
 
@@ -19,7 +20,6 @@ async function ensureGeoman() {
   const L = await import("leaflet");
   (window as any).L = L.default || L;
   await import("@geoman-io/leaflet-geoman-free");
-  await import("@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css");
   geomanLoaded = true;
 }
 // Pre-load di background agar map.pm sudah siap saat Mode Digitasi pertama kali dibuka
@@ -128,7 +128,15 @@ function MapWatcher({ center, zoom }: { center: [number, number], zoom: number }
 }
 
 // Komponen Geoman untuk mode digitasi
-function GeomanController({ active, onCreated }: { active: boolean; onCreated: (geometry: any) => void }) {
+function GeomanController({
+  active,
+  selectedNop,
+  onCreated,
+}: {
+  active: boolean;
+  selectedNop: any | null;
+  onCreated: (geometry: any) => void;
+}) {
   const map = useMap();
 
   useEffect(() => {
@@ -180,7 +188,20 @@ function GeomanController({ active, onCreated }: { active: boolean; onCreated: (
         };
 
         (map as any).on("pm:create", handler);
+
+        // Aktifkan mode gambar polygon secara otomatis jika NOP sudah dipilih
+        if (selectedNop) {
+          pm.enableDraw("Polygon", {
+            snappable: true,
+            snapDistance: 20,
+            templineStyle: { color: "#f59e0b" },
+            hintlineStyle: { color: "#f59e0b", dashArray: [5, 5] },
+          });
+        } else {
+          pm.disableDraw();
+        }
       } else {
+        pm.disableDraw();
         pm.removeControls?.();
       }
     }
@@ -191,9 +212,10 @@ function GeomanController({ active, onCreated }: { active: boolean; onCreated: (
       mounted = false;
       if (retryTimer) clearTimeout(retryTimer);
       if (handler) (map as any).off("pm:create", handler);
+      (map as any).pm?.disableDraw?.();
       (map as any).pm?.removeControls?.();
     };
-  }, [active, map, onCreated]);
+  }, [active, selectedNop, map, onCreated]);
 
   return null;
 }
@@ -886,6 +908,7 @@ export function RegionMap({
           <MapWatcher center={center} zoom={zoom} />
           <GeomanController
             active={digitizeMode}
+            selectedNop={selectedDigitizeNop}
             onCreated={(geometry) => {
               setPendingGeometry(geometry);
             }}
