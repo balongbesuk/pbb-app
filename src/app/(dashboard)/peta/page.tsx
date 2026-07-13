@@ -10,7 +10,7 @@ export default function PetaPage() {
   const [mapConfig, setMapConfig] = useState<{
     center: [number, number];
     zoom: number;
-  }>({ center: [-7.5744, 112.235], zoom: 15 });
+  }>({ center: [-7.5744, 112.235], zoom: 16 });
   const [showUnpaidGis, setShowUnpaidGis] = useState(false);
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function PetaPage() {
         if (d.mapCenterLat && d.mapCenterLng) {
           setMapConfig({
             center: [d.mapCenterLat, d.mapCenterLng],
-            zoom: d.mapDefaultZoom || 15,
+            zoom: d.mapDefaultZoom || 16,
           });
         }
         if (d.tahunPajak) {

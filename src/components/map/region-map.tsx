@@ -117,7 +117,9 @@ function MapControls({
   showDusun, setShowDusun,
   showRW, setShowRW,
   showRT, setShowRT,
-  showBlok, setShowBlok
+  showBlok, setShowBlok,
+  showWp, setShowWp,
+  isPublic = false
 }: { 
   showSatellite: boolean; 
   setShowSatellite: (v: boolean) => void;
@@ -126,6 +128,8 @@ function MapControls({
   showRW: boolean; setShowRW: (v: boolean) => void;
   showRT: boolean; setShowRT: (v: boolean) => void;
   showBlok: boolean; setShowBlok: (v: boolean) => void;
+  showWp: boolean; setShowWp: (v: boolean) => void;
+  isPublic?: boolean;
 }) {
   const map = useMap();
 
@@ -193,8 +197,9 @@ function MapControls({
                         const nextState = !item.state;
                         item.setter(nextState);
                         if (nextState) {
-                            // Jika layer administratif aktif, matikan layer Blok
+                            // Jika layer administratif aktif, matikan layer Blok & WP
                             setShowBlok(false);
+                            setShowWp(false);
                         }
                     }}
                     className={cn(
@@ -225,6 +230,7 @@ function MapControls({
                     setShowDusun(false);
                     setShowRW(false);
                     setShowRT(false);
+                    setShowWp(false);
                 }
             }}
             className={cn(
@@ -240,6 +246,34 @@ function MapControls({
                 showBlok ? "scale-110" : "scale-100"
             )} />
         </button>
+
+        {/* Layer PBB (Bidang WP) */}
+        {!isPublic && (
+          <button
+              onClick={() => {
+                  const nextState = !showWp;
+                  setShowWp(nextState);
+                  if (nextState) {
+                      setShowDesa(false);
+                      setShowDusun(false);
+                      setShowRW(false);
+                      setShowRT(false);
+                      setShowBlok(false);
+                  }
+              }}
+              className={cn(
+                  "flex flex-col items-center justify-center p-3 backdrop-blur-3xl rounded-2xl shadow-2xl transition-all active:scale-95 group mt-1",
+                  showWp 
+                    ? "bg-indigo-600 text-white" 
+                    : "bg-white/95 dark:bg-[#050505]/95 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-600 dark:text-white"
+              )}
+              title="Toggle Peta Bidang WP"
+          >
+              <span className={cn(
+                  "text-[10px] font-black tracking-widest transition-colors uppercase",
+              )}>WP</span>
+          </button>
+        )}
     </div>
   );
 }
@@ -312,6 +346,10 @@ export function RegionMap({
   const [showBlok, setShowBlok] = useState(false);
   const [showDesa, setShowDesa] = useState(false);
   const [showSatellite, setShowSatellite] = useState(false);
+  const [showWp, setShowWp] = useState(false);
+  const [wpData, setWpData] = useState<any | null>(null);
+  const [unpaidNops, setUnpaidNops] = useState<Set<string>>(new Set());
+  const [loadingWp, setLoadingWp] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -320,6 +358,41 @@ export function RegionMap({
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Memuat data spasial Bidang WP dan status tagihan secara asinkron saat diaktifkan
+  useEffect(() => {
+    let active = true;
+    if (showWp && !wpData && !isPublic) {
+      setLoadingWp(true);
+      Promise.all([
+        fetch(`/maps/wp.json?v=${Date.now()}`).then((res) => {
+          if (!res.ok) throw new Error("Gagal memuat peta bidang");
+          return res.json();
+        }),
+        fetch(`/api/region-unpaid?tahun=${tahun}&limit=3000`).then((res) => {
+          if (!res.ok) throw new Error("Gagal mengambil status tagihan");
+          return res.json();
+        })
+      ])
+        .then(([geoJson, unpaidWps]) => {
+          if (!active) return;
+          setWpData(geoJson);
+          const nops = new Set<string>(
+            (unpaidWps.data || []).map((wp: any) => wp.nop.replace(/\D/g, ""))
+          );
+          setUnpaidNops(nops);
+        })
+        .catch((err) => {
+          console.error("Gagal memuat data bidang WP:", err);
+        })
+        .finally(() => {
+          if (active) setLoadingWp(false);
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [showWp, wpData, tahun, isPublic]);
 
   const [statusText, setStatusText] = useState("Memuat Peta Desa...");
 
@@ -537,6 +610,72 @@ export function RegionMap({
     });
   };
 
+  const getWpStyle = (feature?: any) => {
+    const props = feature?.properties;
+    if (!props) return { fillColor: "transparent", weight: 0.5, color: "#cbd5e1", fillOpacity: 0 };
+    
+    const cleanNop = props.fullNop.replace(/\D/g, "");
+    const isUnpaid = unpaidNops.has(cleanNop);
+    
+    return {
+      fillColor: isUnpaid ? "#ef4444" : "#10b981", // Merah jika belum bayar, Hijau jika lunas
+      fillOpacity: 0.65,
+      weight: 1,
+      color: isUnpaid ? "#f87171" : "#34d399",
+      dashArray: "",
+      interactive: true
+    };
+  };
+
+  const onEachFeatureWp = (feature: any, layer: Layer) => {
+    const props = feature.properties;
+    if (!props) return;
+    
+    const cleanNop = props.fullNop.replace(/\D/g, "");
+    const isUnpaid = unpaidNops.has(cleanNop);
+    const statusText = isUnpaid ? "BELUM LUNAS" : "LUNAS";
+    const statusColor = isUnpaid ? "#ef4444" : "#10b981";
+    
+    const escapeHtml = (unsafe: string) => {
+        return String(unsafe || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    };
+
+    const label = `
+      <div style="min-width: 180px; font-family: sans-serif;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <div style="background: ${statusColor}20; color: ${statusColor}; width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px;">🏠</div>
+          <span style="font-size: 12px; font-weight: 800; color: #0f172a;">${escapeHtml(props.name)}</span>
+        </div>
+        <div style="background: #f8fafc; border-radius: 8px; padding: 8px; border: 1px solid #f1f5f9; font-size: 10px; color: #475569;">
+          <div>NOP: <strong style="color: #0f172a;">${escapeHtml(props.fullNop)}</strong></div>
+          <div>Blok: <strong>${escapeHtml(props.blok)}</strong></div>
+          <div style="margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+            Status: <span style="background: ${statusColor}20; color: ${statusColor}; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 9px;">${statusText}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    const regionLayer = layer as LeafletGeoJSON;
+    if (!isMobile) {
+      regionLayer.bindTooltip(label, { sticky: true });
+    }
+    regionLayer.bindPopup(label, { closeButton: false });
+    
+    regionLayer.on({
+      mouseover: (event: any) => { 
+        event.target.setStyle({ fillOpacity: 0.9, weight: 2 }); 
+      },
+      mouseout: (event: any) => { 
+        event.target.setStyle({ fillOpacity: 0.65, weight: 1 }); 
+      },
+      click: (event: any) => {
+        if (event.originalEvent) event.originalEvent.preventDefault();
+        regionLayer.openPopup();
+      }
+    });
+  };
+
   if (loading) return (
     <div className="h-[500px] flex flex-col items-center justify-center bg-slate-50/50 backdrop-blur-sm rounded-3xl border border-dashed border-slate-300">
       <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-6"></div>
@@ -581,14 +720,21 @@ export function RegionMap({
       <style dangerouslySetInnerHTML={{ __html: mapStyles }} />
       {/* Peta Tanpa Batas */}
       <div id="map-container-root" ref={mapRef} className="absolute inset-0 z-0 bg-[#f1f5f9]">
-        <MapContainer center={center} zoom={zoom} minZoom={14} scrollWheelZoom={true} style={{ height: "100%", width: "100%", background: "#f1f5f9" }} zoomControl={false}>
+        <MapContainer center={center} zoom={zoom} minZoom={14} maxZoom={21} scrollWheelZoom={true} style={{ height: "100%", width: "100%", background: "#f1f5f9" }} zoomControl={false}>
           {showSatellite ? (
             <TileLayer 
-              attribution='&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community'
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" 
+              attribution='&copy; Google Maps'
+              url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" 
+              maxZoom={21}
+              maxNativeZoom={21}
             />
           ) : (
-            <TileLayer attribution='&copy; OSM' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <TileLayer 
+              attribution='&copy; Google Maps' 
+              url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&apistyle=s.t%3A0%7Cs.e%3Al%7Cp.v%3Aoff%2Cs.t%3A2%7Cp.v%3Aoff" 
+              maxZoom={21}
+              maxNativeZoom={21}
+            />
           )}
 
           <MapWatcher center={center} zoom={zoom} />
@@ -599,16 +745,26 @@ export function RegionMap({
             showRW={showRW} setShowRW={setShowRW}
             showRT={showRT} setShowRT={setShowRT}
             showBlok={showBlok} setShowBlok={setShowBlok}
+            showWp={showWp} setShowWp={setShowWp}
+            isPublic={isPublic}
           />
           
-          {showDesa && <GeoJSON key={`desa-${showDesa}`} data={{ type: "FeatureCollection", features: desaFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
-          {showDusun && <GeoJSON key={`dusun-${showDusun}`} data={{ type: "FeatureCollection", features: dusunFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
-          {showBlok && <GeoJSON key={`blok-${showBlok}`} data={{ type: "FeatureCollection", features: blokFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
-            {showRW && <GeoJSON key={`rw-${showRW}`} data={{ type: "FeatureCollection", features: rwFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
-            {showRT && <GeoJSON key={`rt-${showRT}-${tahun}`} data={{ type: "FeatureCollection", features: rtFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
-            <MapLegend />
-          </MapContainer>
+          {showDesa && <GeoJSON key={`desa-${showDesa}-${Object.keys(stats).length}`} data={{ type: "FeatureCollection", features: desaFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
+          {showDusun && <GeoJSON key={`dusun-${showDusun}-${Object.keys(stats).length}`} data={{ type: "FeatureCollection", features: dusunFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
+          {showBlok && <GeoJSON key={`blok-${showBlok}-${Object.keys(stats).length}`} data={{ type: "FeatureCollection", features: blokFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
+          {showRW && <GeoJSON key={`rw-${showRW}-${Object.keys(stats).length}`} data={{ type: "FeatureCollection", features: rwFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
+          {showRT && <GeoJSON key={`rt-${showRT}-${tahun}-${Object.keys(stats).length}`} data={{ type: "FeatureCollection", features: rtFeatures } as RegionFeatureCollection} style={getLayerStyle} onEachFeature={onEachFeatureGeneric} />}
+          {showWp && wpData && <GeoJSON key={`wp-${showWp}-${Object.keys(stats).length}`} data={wpData} style={getWpStyle} onEachFeature={onEachFeatureWp} />}
+          <MapLegend />
+        </MapContainer>
+      </div>
+
+      {loadingWp && (
+        <div className="absolute top-6 right-6 z-[500] bg-white/95 dark:bg-[#050505]/95 backdrop-blur-3xl px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-slate-200 dark:border-white/10 transition-all duration-300">
+          <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-[10px] font-bold tracking-tight text-slate-600 dark:text-white">Memuat Bidang WP...</span>
         </div>
+      )}
 
 
 

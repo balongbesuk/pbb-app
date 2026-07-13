@@ -1,5 +1,15 @@
 # Changelog
 
+## v10.4 - 2026-07-13: GIS Map Restoration and Leaflet Rendering Fixes
+
+Pembaruan teknis berfokus pada pemulihan kualitas visual peta batas GIS Blok dari berkas cadangan asli, serta pembenahan siklus hidup rendering komponen peta di sisi client-side untuk mencegah caching Leaflet yang usang.
+
+### GIS & Map Visuals Restoration
+- **Batas Wilayah Blok Asli**: Mengembalikan berkas peta `public/maps/village.json` menggunakan versi cadangan asli dari `tmp/village.json`. Langkah ini memulihkan batas-batas wilayah Blok PBB 001 s.d. 017 menjadi rapi, kontigu, dan selaras sempurna dengan jalan raya serta pemukiman (menghilangkan garis bergerigi dan celah kosong di tengah pemukiman).
+
+### Leaflet Rendering Lifecycle Fix
+- **Dynamic Key Re-render**: Menambahkan jumlah key data statistik (`Object.keys(stats).length`) pada prop `key` di seluruh komponen `<GeoJSON />` di [region-map.tsx](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/components/map/region-map.tsx). Ini memaksa Leaflet menghancurkan cache path lama dan menggambar ulang polygon dengan warna status pembayaran yang akurat secara real-time begitu data asinkron dari API server selesai dimuat, tanpa perlu memicu klik tombol toggle secara manual.
+
 ## v10.3 - 2026-07-13: Performance Optimization, DB Integrity Restoration, and CI/CD Fixes
 
 Pembaruan teknis berfokus pada optimalisasi pemindaian PDF pintar (Smart Scan), peningkatan efisiensi transaksi basis data bulk tax mapping, pengindeksan komposit SQLite, penerapan Next.js Streaming & Suspense untuk dashboard yang instan, pemulihan integritas database, serta perbaikan pipeline CI di GitHub Actions dan pembaruan keamanan pustaka.

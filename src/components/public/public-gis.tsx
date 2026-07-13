@@ -24,7 +24,7 @@ export function PublicGis({ tahunPajak }: PublicGisProps) {
         if (d.mapCenterLat && d.mapCenterLng) {
           setMapConfig({
             center: [d.mapCenterLat, d.mapCenterLng],
-            zoom: d.mapDefaultZoom || 15,
+            zoom: d.mapDefaultZoom || 16,
             showUnpaidGis: !!d.showUnpaidDetailsGis,
           });
         }
