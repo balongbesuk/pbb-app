@@ -7,6 +7,9 @@ Pembaruan teknis berfokus pada optimalisasi pemindaian PDF pintar (Smart Scan), 
 ### PDF Smart Scan & Smart Archive
 - **Single-Pass Text Parsing**: Memodifikasi pemrosesan pindaian cerdas PDF (`archive-smart-scan-job.ts` & `archive-actions.ts`) agar menggunakan parameter `pagerender` sekali jalan untuk mengekstrak teks, menghindari pemecahan buffer per halaman yang berulang. Mengurangi waktu pemrosesan PDF 176 halaman dari beberapa menit menjadi hanya 46,1 detik (peningkatan efisiensi ~10x lipat).
 
+### GIS & GeoJSON Optimization
+- **Coordinate Precision Truncation**: Menambahkan fungsi pembulatan koordinat `truncateCoordinate` dan optimasi geometri `optimizeGeometry` pada rute API unggah peta (`peta/upload/route.ts`). Memotong presisi koordinat desimal dari 15 digit desimal menjadi maksimal 6 digit desimal (~10 cm akurasi), mereduksi ukuran penyimpanan berkas `village.json` hingga ~42% secara teoretis serta melancarkan render Leaflet di client-side.
+
 ### Database Bulk Mapping & Indexing
 - **Chunked Delete & Insert Transaction**: Mengganti kueri upsert sekuensial yang lambat pada alokasi petugas penarik (`tax-assign-actions.ts`) dengan transaksi bulk `deleteMany` dan `createMany` dalam batch berisi 500 item untuk mencegah penguncian SQLite berkepanjangan.
 - **Composite Indexing**: Menambahkan indeks komposit baru `[tahun, rt, rw]` dan `[tahun, paymentStatus, rt, rw]` pada model `TaxData` untuk mempercepat pemrosesan query statistik pembagian wilayah.

@@ -28,6 +28,27 @@ function isAdmin(user?: AppUser): boolean {
   return user?.role === "ADMIN";
 }
 
+function truncateCoordinate(val: number): number {
+  return Math.round(val * 1e6) / 1e6;
+}
+
+function optimizeGeometry(geometry: Geometry): Geometry {
+  if (!geometry) return geometry;
+  
+  if (geometry.type === "Point") {
+    geometry.coordinates = geometry.coordinates.map(truncateCoordinate);
+  } else if (geometry.type === "LineString" || geometry.type === "MultiPoint") {
+    geometry.coordinates = geometry.coordinates.map((coord) => coord.map(truncateCoordinate));
+  } else if (geometry.type === "Polygon" || geometry.type === "MultiLineString") {
+    geometry.coordinates = geometry.coordinates.map((ring) => ring.map((coord) => coord.map(truncateCoordinate)));
+  } else if (geometry.type === "MultiPolygon") {
+    geometry.coordinates = geometry.coordinates.map((polygon) =>
+      polygon.map((ring) => ring.map((coord) => coord.map(truncateCoordinate)))
+    );
+  }
+  return geometry;
+}
+
 const MAX_MAP_UPLOAD_FILES = 20;
 const MAX_MAP_UPLOAD_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_MAP_EXTENSIONS = new Set([".gpx"]);
@@ -167,6 +188,8 @@ export async function POST(req: Request) {
                     geometry = { type: "Polygon", coordinates: [coords] } as Polygon;
                 }
             }
+
+            geometry = optimizeGeometry(geometry);
 
             const processedFeature: MapFeature = {
                 ...feature,
