@@ -125,7 +125,54 @@ async function processSmartScanJob(jobId: string) {
     updateSmartScanJob(jobId, (job) => ({
       ...job,
       total: totalPages,
-      status: `Memindai ${totalPages} halaman...`,
+      status: `Mengekstrak teks dari ${totalPages} halaman...`,
+      percent: 10,
+    }));
+
+    const pageNops: { index: number; nop: string }[] = [];
+    let pageCounter = 0;
+    let lastParseProgressTime = Date.now();
+
+    const parseOptions = {
+      pagerender: async function (pageData: any) {
+        const textContent = await pageData.getTextContent();
+        let lastY: number | undefined = undefined;
+        let text = "";
+        for (const item of textContent.items) {
+          if (lastY === item.transform[5] || lastY === undefined) {
+            text += item.str;
+          } else {
+            text += "\n" + item.str;
+          }
+          lastY = item.transform[5];
+        }
+
+        const nop = extractNopFromText(text);
+        const currentPageIndex = pageCounter++;
+        pageNops.push({ index: currentPageIndex, nop });
+
+        // Update progress of text extraction occasionally
+        const nowTime = Date.now();
+        if (nowTime - lastParseProgressTime > 1500 || currentPageIndex === totalPages - 1) {
+          const progressPercent = Math.min(45, 10 + Math.round((currentPageIndex / totalPages) * 35));
+          updateSmartScanJob(jobId, (job) => ({
+            ...job,
+            status: `Membaca halaman ${currentPageIndex + 1}/${totalPages}...`,
+            percent: progressPercent,
+          }));
+          lastParseProgressTime = nowTime;
+        }
+
+        return text;
+      },
+    };
+
+    await parsePdf(inputBuffer, parseOptions);
+
+    updateSmartScanJob(jobId, (job) => ({
+      ...job,
+      status: `Memotong & menulis ${totalPages} halaman PDF...`,
+      percent: 50,
     }));
 
     const archiveDir = ensureArchiveDir(currentJob.year);
@@ -135,35 +182,28 @@ async function processSmartScanJob(jobId: string) {
     let lastWriteTime = 0;
 
     for (let i = 0; i < totalPages; i++) {
-      let nop: string | undefined = undefined;
-      try {
-        const subPdfDoc = await PDFDocument.create();
-        const [copiedPage] = await subPdfDoc.copyPages(mainPdfDoc, [i]);
-        subPdfDoc.addPage(copiedPage);
-        const subPdfBytes = await subPdfDoc.save();
+      const item = pageNops.find((p) => p.index === i);
+      const nop = item ? item.nop : "";
 
-        let rawText = "";
+      if (nop) {
         try {
-          const data = await parsePdf(Buffer.from(subPdfBytes));
-          rawText = data.text || "";
-        } catch (err) {
-          console.error(`[SmartScan] Error parsing page ${i + 1}:`, err);
-          rawText = "";
-        }
+          const subPdfDoc = await PDFDocument.create();
+          const [copiedPage] = await subPdfDoc.copyPages(mainPdfDoc, [i]);
+          subPdfDoc.addPage(copiedPage);
+          const subPdfBytes = await subPdfDoc.save();
 
-        nop = extractNopFromText(rawText);
-        if (nop) {
           fs.writeFileSync(path.join(archiveDir, `${nop}.pdf`), subPdfBytes);
           detectedCount++;
-        } else {
+        } catch (err) {
           skippedCount++;
+          console.error(`[SmartScan] Gagal menulis halaman ${i + 1}:`, err);
         }
-      } catch {
+      } else {
         skippedCount++;
       }
 
-      // Throttle JSON status write to disk
-      const percent = Math.min(99, Math.round(((i + 1) / totalPages) * 100));
+      // Throttle JSON status write to disk (mapped from 50% to 99%)
+      const percent = Math.min(99, 50 + Math.round(((i + 1) / totalPages) * 49));
       const nowTime = Date.now();
       const isFirst = i === 0;
       const isLast = i === totalPages - 1;
@@ -179,7 +219,7 @@ async function processSmartScanJob(jobId: string) {
           skippedCount,
           nopLast: nop || "Tidak terdeteksi",
           percent,
-          status: `Halaman ${i + 1}/${totalPages} diproses`,
+          status: `Memproses berkas PDF halaman ${i + 1}/${totalPages}...`,
         }));
         lastWriteTime = nowTime;
       }

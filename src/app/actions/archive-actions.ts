@@ -104,12 +104,39 @@ export async function processSmartArchive(formData: FormData) {
     fs.appendFileSync(logPath, `Processing file: ${file.name} (${file.size} bytes)\n`);
 
     const arrayBuffer = await file.arrayBuffer();
-    let buffer: Buffer | null = Buffer.from(arrayBuffer);
-    const mainPdfDoc = await PDFDocument.load(buffer);
-    
-    // Clear buffer to free memory
-    buffer = null;
+    const buffer = Buffer.from(arrayBuffer);
 
+    // 1. Ekstraksi teks single-pass dari seluruh dokumen
+    fs.appendFileSync(logPath, `Extracting text from all pages in single pass...\n`);
+    const pageNops: { index: number; nop: string }[] = [];
+    let pageCounter = 0;
+    
+    const parseOptions = {
+      pagerender: async function (pageData: any) {
+        const textContent = await pageData.getTextContent();
+        let lastY: number | undefined = undefined;
+        let text = "";
+        for (const item of textContent.items) {
+          if (lastY === item.transform[5] || lastY === undefined) {
+            text += item.str;
+          } else {
+            text += "\n" + item.str;
+          }
+          lastY = item.transform[5];
+        }
+
+        const nop = extractNopFromText(text);
+        const currentPageIndex = pageCounter++;
+        pageNops.push({ index: currentPageIndex, nop });
+        return text;
+      },
+    };
+
+    await parsePdf(buffer, parseOptions);
+    fs.appendFileSync(logPath, `Text extraction complete. Found ${pageNops.filter(p => p.nop).length} NOPs.\n`);
+
+    // 2. Muat dokumen asli dengan pdf-lib
+    const mainPdfDoc = await PDFDocument.load(buffer);
     const totalPages = mainPdfDoc.getPageCount();
 
     fs.appendFileSync(logPath, `Total Pages: ${totalPages}\n`);
@@ -119,27 +146,18 @@ export async function processSmartArchive(formData: FormData) {
     let detectedCount = 0;
     let skippedCount = 0;
 
+    // 3. Loop untuk menulis sub-pdf
     for (let i = 0; i < totalPages; i++) {
         try {
-          const subPdfDoc = await PDFDocument.create();
-          const [copiedPage] = await subPdfDoc.copyPages(mainPdfDoc, [i]);
-          subPdfDoc.addPage(copiedPage);
-          const subPdfBytes = await subPdfDoc.save();
-
-          // Extract text
-          let rawText = "";
-          try {
-            const data = await parsePdf(Buffer.from(subPdfBytes));
-            rawText = data.text || "";
-          } catch (error) {
-            fs.appendFileSync(logPath, `PAGE ${i + 1}: Extraction library error -> ${String(error)}\n`);
-          }
-
-          fs.appendFileSync(logPath, `PAGE ${i+1}: Extracted text length ${rawText.length}\n`);
-
-          const nop = extractNopFromText(rawText);
+          const item = pageNops.find((p) => p.index === i);
+          const nop = item ? item.nop : "";
 
           if (nop) {
+            const subPdfDoc = await PDFDocument.create();
+            const [copiedPage] = await subPdfDoc.copyPages(mainPdfDoc, [i]);
+            subPdfDoc.addPage(copiedPage);
+            const subPdfBytes = await subPdfDoc.save();
+
             const filename = `${nop}.pdf`;
             fs.writeFileSync(path.join(archiveDir, filename), subPdfBytes);
             detectedCount++;

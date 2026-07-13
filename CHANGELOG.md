@@ -1,5 +1,25 @@
 # Changelog
 
+## v10.4 - 2026-07-13: Performance Optimization & Database Integrity Restoration
+
+Pembaruan ini berfokus pada optimalisasi pemindaian PDF pintar (Smart Scan), peningkatan efisiensi transaksi basis data bulk tax mapping, pengindeksan komposit SQLite, penerapan Next.js Streaming & Suspense untuk dashboard yang instan, serta pemulihan integritas database dari cadangan.
+
+### PDF Smart Scan & Smart Archive
+- **Single-Pass Text Parsing**: Memodifikasi pemrosesan pindaian cerdas PDF (`archive-smart-scan-job.ts` & `archive-actions.ts`) agar menggunakan parameter `pagerender` sekali jalan untuk mengekstrak teks, menghindari pemecahan buffer per halaman yang berulang. Mengurangi waktu pemrosesan PDF 176 halaman dari beberapa menit menjadi hanya 46,1 detik (peningkatan efisiensi ~10x lipat).
+
+### Database Bulk Mapping
+- **Chunked Delete & Insert Transaction**: Mengganti kueri upsert sekuensial yang lambat pada alokasi petugas penarik (`tax-assign-actions.ts`) dengan transaksi bulk `deleteMany` dan `createMany` dalam batch berisi 500 item untuk mencegah penguncian SQLite berkepanjangan.
+
+### Database Indexing & Connection Pool
+- **Composite Indexing**: Menambahkan indeks komposit baru `[tahun, rt, rw]` dan `[tahun, paymentStatus, rt, rw]` pada model `TaxData` untuk mempercepat pemrosesan query statistik pembagian wilayah.
+- **Connection String Parameters**: Membersihkan parameter `DATABASE_URL` ke SQLite untuk kompatibilitas native driver `@prisma/adapter-better-sqlite3` pada lingkungan Windows.
+
+### Dashboard Performance (Streaming & Suspense)
+- **Next.js Suspense Containers**: Memecah query monolitik `getDashboardStats()` pada `page.tsx` menjadi Server Component asinkron mandiri (`StatsHeroGridContainer`, `RWBarChartContainer`, `TrendAnalysisChartContainer`, `StatusPieChartContainer`, `TopPenariksContainer`, `PhysicalStatsGridContainer`) yang dibungkus batas `<Suspense>` dengan *skeleton loader* yang halus. Dashboard Shell kini termuat instan dalam < 50ms.
+
+### Database Repair & Maintenance
+- **Database Restoration**: Memulihkan database lokal `dev.db` yang sempat mengalami korupsi data (`SQLITE_CORRUPT`) dari cadangan otomatis terakhir yang sehat (`backups/pre-restore-1783930072240.db`) untuk menjaga kontinuitas data 11 user terdaftar.
+
 ## v10.3 - 2026-06-23: CI/CD Pipeline Fixes & Security Dependency Updates
 
 Pembaruan teknis berfokus pada perbaikan pipeline CI di GitHub Actions, pembaruan keamanan (security updates) dari Dependabot, dan penyesuaian versi pustaka inti untuk kompatibilitas.

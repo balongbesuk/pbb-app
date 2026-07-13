@@ -31,15 +31,49 @@ async function syncTaxMappingsForRecords(
     return;
   }
 
-  await prisma.$transaction(
-    mappingPayload.map((mapping) =>
-      prisma.taxMapping.upsert({
-        where: { nop: mapping.nop },
-        update: mapping,
-        create: mapping,
-      })
-    )
-  );
+  const nops = mappingPayload.map((m) => m.nop);
+
+  try {
+    const CHUNK_SIZE = 500;
+    const deletePromises = [];
+    for (let j = 0; j < nops.length; j += CHUNK_SIZE) {
+      const chunk = nops.slice(j, j + CHUNK_SIZE);
+      deletePromises.push(
+        prisma.taxMapping.deleteMany({
+          where: { nop: { in: chunk } },
+        })
+      );
+    }
+
+    const createPromises = [];
+    for (let j = 0; j < mappingPayload.length; j += CHUNK_SIZE) {
+      const chunk = mappingPayload.slice(j, j + CHUNK_SIZE);
+      createPromises.push(
+        prisma.taxMapping.createMany({
+          data: chunk,
+        })
+      );
+    }
+
+    await prisma.$transaction([
+      ...deletePromises,
+      ...createPromises,
+    ]);
+  } catch (txError) {
+    console.error("Mapping sync failed, falling back to individual upserts:", txError);
+    // Fallback to individual upserts if bulk transaction fails
+    for (const mapping of mappingPayload) {
+      try {
+        await prisma.taxMapping.upsert({
+          where: { nop: mapping.nop },
+          update: mapping,
+          create: mapping,
+        });
+      } catch (err) {
+        console.warn(`Failed to upsert tax mapping for NOP ${mapping.nop}:`, err);
+      }
+    }
+  }
 }
 
 

@@ -130,74 +130,203 @@ async function getPenarikDailyLog(userId: string) {
   return { logs, total };
 }
 
-async function getDashboardStats(tahun: number = new Date().getFullYear()) {
-  const [
-    aggregateRows,
-    pajakPerRW,
-    trenPembayaran,
-    penarikStats,
-  ] = await Promise.all([
-    prisma.$queryRaw<DashboardAggregateRow[]>`
-      SELECT
-        COUNT(*) AS totalPajak,
-        SUM(ketetapan) AS totalKetetapan,
-        SUM(CASE WHEN paymentStatus = 'LUNAS' THEN pembayaran ELSE 0 END) AS totalPembayaranLunas,
-        SUM(CASE WHEN paymentStatus = 'BELUM_LUNAS' THEN ketetapan ELSE 0 END) AS totalKetetapanBelumLunas,
-        SUM(CASE WHEN paymentStatus = 'LUNAS' THEN 1 ELSE 0 END) AS countLunas,
-        SUM(CASE WHEN paymentStatus = 'BELUM_LUNAS' THEN 1 ELSE 0 END) AS countBelumLunas,
-        SUM(CASE WHEN paymentStatus = 'TIDAK_TERBIT' THEN 1 ELSE 0 END) AS countTidakTerbit,
-        SUM(CASE WHEN paymentStatus = 'SUSPEND' THEN 1 ELSE 0 END) AS countSengketa,
-        SUM(CASE WHEN luasTanah > 0 AND luasBangunan = 0 THEN 1 ELSE 0 END) AS tanahTanpaBangunan,
-        SUM(CASE WHEN luasTanah > 0 AND luasBangunan > 0 THEN 1 ELSE 0 END) AS tanahDenganBangunan,
-        SUM(luasTanah) AS totalLuasTanah,
-        SUM(luasBangunan) AS totalLuasBangunan
-      FROM TaxData
-      WHERE tahun = ${tahun}
-    `,
+function StatsSkeleton() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-pulse">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-32 w-full bg-muted/40 rounded-3xl border border-border/20" />
+      ))}
+    </div>
+  );
+}
 
-    prisma.taxData.groupBy({
-      by: ["rw"],
-      where: { tahun },
-      _sum: { ketetapan: true, pembayaran: true },
-      _count: true,
-    }),
+function ChartSkeleton() {
+  return (
+    <div className="h-[350px] w-full animate-pulse bg-muted/40 rounded-3xl border border-border/20" />
+  );
+}
 
-    prisma.taxData.groupBy({
-      by: ["tanggalBayar"],
-      where: {
-        tahun,
-        tanggalBayar: { not: null },
-      },
-      _sum: { pembayaran: true },
-      _count: { _all: true },
-    }),
+function SidebarCardSkeleton() {
+  return (
+    <div className="h-[400px] w-full animate-pulse bg-muted/40 rounded-3xl border border-border/20" />
+  );
+}
 
-    prisma.taxData.groupBy({
-      by: ["penarikId"],
-      where: { tahun },
-      _sum: { pembayaran: true, ketetapan: true },
-    }),
-  ]);
-
+async function StatsHeroGridContainer({ tahun }: { tahun: number }) {
+  const aggregateRows = await prisma.$queryRaw<DashboardAggregateRow[]>`
+    SELECT
+      COUNT(*) AS totalPajak,
+      SUM(ketetapan) AS totalKetetapan,
+      SUM(CASE WHEN paymentStatus = 'LUNAS' THEN pembayaran ELSE 0 END) AS totalPembayaranLunas,
+      SUM(CASE WHEN paymentStatus = 'BELUM_LUNAS' THEN ketetapan ELSE 0 END) AS totalKetetapanBelumLunas,
+      SUM(CASE WHEN paymentStatus = 'LUNAS' THEN 1 ELSE 0 END) AS countLunas,
+      SUM(CASE WHEN paymentStatus = 'BELUM_LUNAS' THEN 1 ELSE 0 END) AS countBelumLunas
+    FROM TaxData
+    WHERE tahun = ${tahun}
+  `;
   const aggregate = aggregateRows[0];
   const totalPajak = Number(aggregate?.totalPajak ?? 0);
-  const totalNominalValue = Number(aggregate?.totalKetetapan ?? 0);
+  const totalNominal = Number(aggregate?.totalKetetapan ?? 0);
   const sudahDibayarValue = Number(aggregate?.totalPembayaranLunas ?? 0);
-  const sengketaCount = Number(aggregate?.countSengketa ?? 0);
-  const persentase = totalNominalValue > 0 ? (sudahDibayarValue / totalNominalValue) * 100 : 0;
+  const sudahDibayarCount = Number(aggregate?.countLunas ?? 0);
+  const belumDibayarCount = Number(aggregate?.countBelumLunas ?? 0);
+  const belumDibayarValue = Number(aggregate?.totalKetetapanBelumLunas ?? 0);
+  const persentase = totalNominal > 0 ? (sudahDibayarValue / totalNominal) * 100 : 0;
 
-  // Get penarik names
-  const penarikIds = penarikStats.map((s: { penarikId: string | null }) => s.penarikId).filter(Boolean) as string[];
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <StatsHeroCard
+        title="Total Ketetapan"
+        value={formatCurrency(totalNominal)}
+        icon={<Wallet className="h-5 w-5" />}
+        description={`${totalPajak.toLocaleString("id-ID")} WP Desa terdaftar`}
+        color="indigo"
+      />
+      <StatsHeroCard
+        title="Sudah Realisasi"
+        value={formatCurrency(sudahDibayarValue)}
+        icon={<CheckCircle2 className="h-5 w-5" />}
+        description={`${sudahDibayarCount.toLocaleString("id-ID")} WP sudah lunas`}
+        percent={persentase}
+        color="emerald"
+      />
+      <StatsHeroCard
+        title="Sisa Tagihan"
+        value={formatCurrency(belumDibayarValue)}
+        icon={<AlertCircle className="h-5 w-5" />}
+        description={`${belumDibayarCount} WP belum lunas`}
+        color="rose"
+      />
+      <StatsHeroCard
+        title="Partisipasi Warga"
+        value={`${((sudahDibayarCount / (totalPajak || 1)) * 100).toFixed(1)}%`}
+        icon={<UserCheck className="h-5 w-5" />}
+        description="Wajib Pajak yang sudah lunas"
+        color="blue"
+      />
+    </div>
+  );
+}
+
+async function RWBarChartContainer({ tahun }: { tahun: number }) {
+  const data = await prisma.taxData.groupBy({
+    by: ["rw"],
+    where: { tahun },
+    _sum: { ketetapan: true, pembayaran: true },
+    _count: true,
+  });
+
+  const sortedData = data
+    .sort((a, b) => (a.rw || "").localeCompare(b.rw || ""))
+    .map((item) => ({
+      rw: item.rw || "?",
+      _sum: { ketetapan: item._sum.ketetapan || 0, pembayaran: item._sum.pembayaran || 0 },
+    }));
+
+  return (
+    <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
+      <CardContent className="pt-6">
+        <RWBarChart data={sortedData} />
+      </CardContent>
+    </Card>
+  );
+}
+
+async function TrendAnalysisChartContainer({ tahun }: { tahun: number }) {
+  const data = await prisma.taxData.groupBy({
+    by: ["tanggalBayar"],
+    where: {
+      tahun,
+      tanggalBayar: { not: null },
+    },
+    _sum: { pembayaran: true },
+    _count: { _all: true },
+  });
+
+  return (
+    <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
+      <CardContent className="pt-6">
+        <TrendAnalysisChart data={data} tahun={tahun} />
+      </CardContent>
+    </Card>
+  );
+}
+
+async function StatusPieChartContainer({ tahun }: { tahun: number }) {
+  const aggregateRows = await prisma.$queryRaw<DashboardAggregateRow[]>`
+    SELECT
+      COUNT(*) AS totalPajak,
+      SUM(CASE WHEN paymentStatus = 'LUNAS' THEN 1 ELSE 0 END) AS countLunas,
+      SUM(CASE WHEN paymentStatus = 'BELUM_LUNAS' THEN 1 ELSE 0 END) AS countBelumLunas,
+      SUM(CASE WHEN paymentStatus = 'TIDAK_TERBIT' THEN 1 ELSE 0 END) AS countTidakTerbit,
+      SUM(CASE WHEN paymentStatus = 'SUSPEND' THEN 1 ELSE 0 END) AS countSengketa
+    FROM TaxData
+    WHERE tahun = ${tahun}
+  `;
+  const aggregate = aggregateRows[0];
+  const totalPajak = Number(aggregate?.totalPajak ?? 0);
+  const sudahDibayarCount = Number(aggregate?.countLunas ?? 0);
+  const belumDibayarCount = Number(aggregate?.countBelumLunas ?? 0);
+  const sengketaCount = Number(aggregate?.countSengketa ?? 0);
+  const tidakTerbit = Number(aggregate?.countTidakTerbit ?? 0);
+
+  return (
+    <Card className="rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
+      <CardHeader className="border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
+        <CardTitle className="flex items-center gap-2 text-lg font-bold tracking-tight">
+          <div className="bg-primary/5 rounded-lg p-1.5">
+            <PieChartIcon className="text-primary h-4 w-4" />
+          </div>
+          Pencapaian WP
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <StatusPieChart
+          data={[
+            { name: "Lunas", value: sudahDibayarCount, color: "#10b981" },
+            { name: "Belum", value: belumDibayarCount, color: "#ef4444" },
+            { name: "Sengketa", value: sengketaCount, color: "#f59e0b" },
+            { name: "Tdk Terbit", value: tidakTerbit, color: "#71717a" },
+          ]}
+        />
+        <div className="mt-6 space-y-2">
+          <DashboardMiniStat
+            label="Rasio Kelunasan"
+            value={`${((sudahDibayarCount / (totalPajak || 1)) * 100).toFixed(1)}%`}
+          />
+          <DashboardMiniStat
+            label="WP Belum Bayar"
+            value={belumDibayarCount.toString()}
+          />
+          <DashboardMiniStat
+            label="Bermasalah / Sengketa"
+            value={sengketaCount.toString()}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+async function TopPenariksContainer({ tahun }: { tahun: number }) {
+  const penarikStats = await prisma.taxData.groupBy({
+    by: ["penarikId"],
+    where: { tahun },
+    _sum: { pembayaran: true, ketetapan: true },
+  });
+
+  const penarikIds = penarikStats.map((s) => s.penarikId).filter(Boolean) as string[];
   const penarikUsers = await prisma.user.findMany({
     where: { id: { in: penarikIds } },
     select: { id: true, name: true },
   });
 
   const penarikMap = new Map<string, string | null>(
-    penarikUsers.map((u: { id: string; name: string | null }) => [u.id, u.name])
+    penarikUsers.map((u) => [u.id, u.name])
   );
+
   const topPenariks = penarikStats
-    .map((s: { penarikId: string | null; _sum: { pembayaran: number | null; ketetapan: number | null } }) => ({
+    .map((s) => ({
       name: s.penarikId ? penarikMap.get(s.penarikId) || "Petugas" : "Belum Alokasi",
       nominal: s._sum.pembayaran || 0,
       target: s._sum.ketetapan || 0,
@@ -209,29 +338,93 @@ async function getDashboardStats(tahun: number = new Date().getFullYear()) {
     .sort((a, b) => b.percent - a.percent)
     .slice(0, 4);
 
-  return {
-    totalPajak,
-    totalNominal: totalNominalValue,
-    sudahDibayarCount: Number(aggregate?.countLunas ?? 0),
-    sudahDibayarValue,
-    belumDibayarCount: Number(aggregate?.countBelumLunas ?? 0),
-    belumDibayarValue: Number(aggregate?.totalKetetapanBelumLunas ?? 0),
-    tidakTerbit: Number(aggregate?.countTidakTerbit ?? 0),
-    sengketaCount,
-    persentase,
-    pajakPerRW: pajakPerRW
-      .sort((a, b) => (a.rw || "").localeCompare(b.rw || ""))
-      .map((item) => ({
-        rw: item.rw || "?",
-        _sum: { ketetapan: item._sum.ketetapan || 0, pembayaran: item._sum.pembayaran || 0 },
-      })),
-    trenPembayaran,
-    topPenariks,
-    tanahTanpaBangunan: Number(aggregate?.tanahTanpaBangunan ?? 0),
-    tanahDenganBangunan: Number(aggregate?.tanahDenganBangunan ?? 0),
-    totalLuasTanah: Number(aggregate?.totalLuasTanah ?? 0),
-    totalLuasBangunan: Number(aggregate?.totalLuasBangunan ?? 0),
-  };
+  return (
+    <Card className="rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
+      <CardHeader className="border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
+        <CardTitle className="flex items-center gap-2 text-lg font-bold tracking-tight">
+          <div className="rounded-lg bg-blue-500/5 p-1.5">
+            <Target className="h-4 w-4 text-blue-500" />
+          </div>
+          Top Kolektor
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <div className="space-y-5">
+          {topPenariks.map((p, i) => (
+            <div key={i} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-foreground text-xs font-bold">{p.name}</span>
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-black text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                  {p.percent.toFixed(0)}%
+                </span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-950">
+                <div
+                  className="h-full rounded-full bg-blue-500 transition-all duration-700 ease-out"
+                  style={{ width: `${Math.min(p.percent, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Link href="/laporan" className="mt-8 block">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 w-full gap-2 rounded-xl border-zinc-100 text-[10px] font-bold transition-all hover:bg-zinc-50 sm:text-xs dark:border-zinc-800 dark:hover:bg-zinc-900"
+          >
+            Lihat Semua Laporan <ChevronRight className="h-3 w-3" />
+          </Button>
+        </Link>
+      </CardContent>
+    </Card>
+  );
+}
+
+async function PhysicalStatsGridContainer({ tahun }: { tahun: number }) {
+  const aggregateRows = await prisma.$queryRaw<DashboardAggregateRow[]>`
+    SELECT
+      SUM(CASE WHEN luasTanah > 0 AND luasBangunan = 0 THEN 1 ELSE 0 END) AS tanahTanpaBangunan,
+      SUM(CASE WHEN luasTanah > 0 AND luasBangunan > 0 THEN 1 ELSE 0 END) AS tanahDenganBangunan,
+      SUM(luasTanah) AS totalLuasTanah,
+      SUM(luasBangunan) AS totalLuasBangunan
+    FROM TaxData
+    WHERE tahun = ${tahun}
+  `;
+  const aggregate = aggregateRows[0];
+  const tanahTanpaBangunan = Number(aggregate?.tanahTanpaBangunan ?? 0);
+  const tanahDenganBangunan = Number(aggregate?.tanahDenganBangunan ?? 0);
+  const totalLuasTanah = Number(aggregate?.totalLuasTanah ?? 0);
+  const totalLuasBangunan = Number(aggregate?.totalLuasBangunan ?? 0);
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <PhysicalStatsCard
+        title="Tanah Kosong"
+        value={tanahTanpaBangunan.toLocaleString("id-ID")}
+        description="Bidang tanpa bangunan"
+        icon={<MapIcon className="h-4 w-4 text-orange-500" />}
+      />
+      <PhysicalStatsCard
+        title="Tanah & Bangunan"
+        value={tanahDenganBangunan.toLocaleString("id-ID")}
+        description="Objek pajak lengkap"
+        icon={<HomeIcon className="h-4 w-4 text-purple-500" />}
+      />
+      <PhysicalStatsCard
+        title="Total Luas Tanah"
+        value={`${totalLuasTanah.toLocaleString("id-ID")} m²`}
+        description="Kumulatif luas tanah"
+        icon={<LayersIcon className="h-4 w-4 text-cyan-500" />}
+      />
+      <PhysicalStatsCard
+        title="Total Luas Bangunan"
+        value={`${totalLuasBangunan.toLocaleString("id-ID")} m²`}
+        description="Kumulatif luas bangunan"
+        icon={<ZapIcon className="h-4 w-4 text-yellow-500" />}
+      />
+    </div>
+  );
 }
 
 export default async function DashboardPage({
@@ -247,10 +440,7 @@ export default async function DashboardPage({
     redirect("/");
   }
 
-  const [stats, villageConfig] = await Promise.all([
-    getDashboardStats(currentYear),
-    getVillageConfig(),
-  ]);
+  const villageConfig = await getVillageConfig();
 
   let personalStats = null;
   let dailyLogs: DailyLogItem[] = [];
@@ -380,23 +570,24 @@ export default async function DashboardPage({
                 {dailyLogs.map((log) => {
                   const isUnpaid = log.details?.includes("BELUM_LUNAS") || log.details?.includes("TIDAK_TERBIT");
                   return (
-                  <div key={log.id} className="flex items-start gap-3 text-sm">
-                    <div className={`mt-0.5 rounded-full p-1 ${isUnpaid ? 'bg-rose-500/20' : 'bg-emerald-500/20'}`}>
-                      {isUnpaid ? (
-                        <XCircle className="h-3 w-3 text-rose-600 dark:text-rose-400" />
-                      ) : (
-                        <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-                      )}
+                    <div key={log.id} className="flex items-start gap-3 text-sm">
+                      <div className={`mt-0.5 rounded-full p-1 ${isUnpaid ? 'bg-rose-500/20' : 'bg-emerald-500/20'}`}>
+                        {isUnpaid ? (
+                          <XCircle className="h-3 w-3 text-rose-600 dark:text-rose-400" />
+                        ) : (
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-semibold">{log.details}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {log.createdAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • {log.createdAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB 
+                          {log.entityId ? ` • WP: ${log.entityId}` : ""}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold">{log.details}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {log.createdAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} • {log.createdAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB 
-                        {log.entityId ? ` • WP: ${log.entityId}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                )})}
+                  );
+                })}
                 {dailyLogs.length === 5 && totalLogs > 5 && (
                   <div className="pt-4 mt-2 border-t">
                     <Link href="/riwayat" className="w-full">
@@ -418,131 +609,32 @@ export default async function DashboardPage({
       )}
 
       {/* Main Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsHeroCard
-          title="Total Ketetapan"
-          value={formatCurrency(stats.totalNominal)}
-          icon={<Wallet className="h-5 w-5" />}
-          description={`${stats.totalPajak.toLocaleString("id-ID")} WP Desa terdaftar`}
-          color="indigo"
-        />
-        <StatsHeroCard
-          title="Sudah Realisasi"
-          value={formatCurrency(stats.sudahDibayarValue)}
-          icon={<CheckCircle2 className="h-5 w-5" />}
-          description={`${stats.sudahDibayarCount.toLocaleString("id-ID")} WP sudah lunas`}
-          percent={stats.persentase}
-          color="emerald"
-        />
-        <StatsHeroCard
-          title="Sisa Tagihan"
-          value={formatCurrency(stats.belumDibayarValue)}
-          icon={<AlertCircle className="h-5 w-5" />}
-          description={`${stats.belumDibayarCount} WP belum lunas`}
-          color="rose"
-        />
-        <StatsHeroCard
-          title="Partisipasi Warga"
-          value={`${((stats.sudahDibayarCount / (stats.totalPajak || 1)) * 100).toFixed(1)}%`}
-          icon={<UserCheck className="h-5 w-5" />}
-          description="Wajib Pajak yang sudah lunas"
-          color="blue"
-        />
-      </div>
+      <Suspense fallback={<StatsSkeleton />}>
+        <StatsHeroGridContainer tahun={currentYear} />
+      </Suspense>
 
       {/* Analytics Group */}
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Charts Section */}
         <div className="space-y-6 lg:col-span-8">
-          <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
-            <CardContent className="pt-6">
-              <RWBarChart data={stats.pajakPerRW} />
-            </CardContent>
-          </Card>
+          <Suspense fallback={<ChartSkeleton />}>
+            <RWBarChartContainer tahun={currentYear} />
+          </Suspense>
 
-          <Card className="overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
-            <CardContent className="pt-6">
-              <TrendAnalysisChart data={stats.trenPembayaran} tahun={currentYear} />
-            </CardContent>
-          </Card>
+          <Suspense fallback={<ChartSkeleton />}>
+            <TrendAnalysisChartContainer tahun={currentYear} />
+          </Suspense>
         </div>
 
         {/* Sidebar Analytics */}
         <div className="space-y-6 lg:col-span-4">
-          <Card className="rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
-            <CardHeader className="border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
-              <CardTitle className="flex items-center gap-2 text-lg font-bold tracking-tight">
-                <div className="bg-primary/5 rounded-lg p-1.5">
-                  <PieChartIcon className="text-primary h-4 w-4" />
-                </div>
-                Pencapaian WP
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <StatusPieChart
-                data={[
-                  { name: "Lunas", value: stats.sudahDibayarCount, color: "#10b981" },
-                  { name: "Belum", value: stats.belumDibayarCount, color: "#ef4444" },
-                  { name: "Sengketa", value: stats.sengketaCount, color: "#f59e0b" },
-                  { name: "Tdk Terbit", value: stats.tidakTerbit, color: "#71717a" },
-                ]}
-              />
-              <div className="mt-6 space-y-2">
-                <DashboardMiniStat
-                  label="Rasio Kelunasan"
-                  value={`${((stats.sudahDibayarCount / (stats.totalPajak || 1)) * 100).toFixed(1)}%`}
-                />
-                <DashboardMiniStat
-                  label="WP Belum Bayar"
-                  value={stats.belumDibayarCount.toString()}
-                />
-                <DashboardMiniStat
-                  label="Bermasalah / Sengketa"
-                  value={stats.sengketaCount.toString()}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <Suspense fallback={<SidebarCardSkeleton />}>
+            <StatusPieChartContainer tahun={currentYear} />
+          </Suspense>
 
-          <Card className="rounded-3xl border border-zinc-100 bg-white shadow-sm dark:border-zinc-900 dark:bg-zinc-950">
-            <CardHeader className="border-b border-zinc-50 pb-4 dark:border-zinc-900/50">
-              <CardTitle className="flex items-center gap-2 text-lg font-bold tracking-tight">
-                <div className="rounded-lg bg-blue-500/5 p-1.5">
-                  <Target className="h-4 w-4 text-blue-500" />
-                </div>
-                Top Kolektor
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="space-y-5">
-                {stats.topPenariks.map((p, i) => (
-                  <div key={i} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-foreground text-xs font-bold">{p.name}</span>
-                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-black text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-                        {p.percent.toFixed(0)}%
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-900">
-                      <div
-                        className="h-full rounded-full bg-blue-500 transition-all duration-700 ease-out"
-                        style={{ width: `${Math.min(p.percent, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Link href="/laporan" className="mt-8 block">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 w-full gap-2 rounded-xl border-zinc-100 text-[10px] font-bold transition-all hover:bg-zinc-50 sm:text-xs dark:border-zinc-800 dark:hover:bg-zinc-900"
-                >
-                  Lihat Semua Laporan <ChevronRight className="h-3 w-3" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <Suspense fallback={<SidebarCardSkeleton />}>
+            <TopPenariksContainer tahun={currentYear} />
+          </Suspense>
         </div>
       </div>
 
@@ -552,32 +644,9 @@ export default async function DashboardPage({
           <MapIcon className="text-primary h-5 w-5" />
           <h2 className="text-xl font-bold">Statistik Fisik Objek Pajak</h2>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <PhysicalStatsCard
-            title="Tanah Kosong"
-            value={stats.tanahTanpaBangunan.toLocaleString("id-ID")}
-            description="Bidang tanpa bangunan"
-            icon={<MapIcon className="h-4 w-4 text-orange-500" />}
-          />
-          <PhysicalStatsCard
-            title="Tanah & Bangunan"
-            value={stats.tanahDenganBangunan.toLocaleString("id-ID")}
-            description="Objek pajak lengkap"
-            icon={<HomeIcon className="h-4 w-4 text-purple-500" />}
-          />
-          <PhysicalStatsCard
-            title="Total Luas Tanah"
-            value={`${stats.totalLuasTanah.toLocaleString("id-ID")} m²`}
-            description="Kumulatif luas tanah"
-            icon={<LayersIcon className="h-4 w-4 text-cyan-500" />}
-          />
-          <PhysicalStatsCard
-            title="Total Luas Bangunan"
-            value={`${stats.totalLuasBangunan.toLocaleString("id-ID")} m²`}
-            description="Kumulatif luas bangunan"
-            icon={<ZapIcon className="h-4 w-4 text-yellow-500" />}
-          />
-        </div>
+        <Suspense fallback={<StatsSkeleton />}>
+          <PhysicalStatsGridContainer tahun={currentYear} />
+        </Suspense>
       </div>
     </div>
   );

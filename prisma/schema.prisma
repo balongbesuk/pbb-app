@@ -93,6 +93,8 @@ model TaxData {
   @@index([tahun, paymentStatus])
   @@index([tahun, paymentStatus, dusun])
   @@index([tahun, paymentStatus, penarikId])
+  @@index([tahun, rt, rw])
+  @@index([tahun, paymentStatus, rt, rw])
 }
 
 model Notification {
