@@ -10,6 +10,10 @@ Pembaruan teknis berfokus pada pemulihan kualitas visual peta batas GIS Blok dar
 ### Leaflet Rendering Lifecycle Fix
 - **Dynamic Key Re-render**: Menambahkan jumlah key data statistik (`Object.keys(stats).length`) pada prop `key` di seluruh komponen `<GeoJSON />` di [region-map.tsx](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/components/map/region-map.tsx). Ini memaksa Leaflet menghancurkan cache path lama dan menggambar ulang polygon dengan warna status pembayaran yang akurat secara real-time begitu data asinkron dari API server selesai dimuat, tanpa perlu memicu klik tombol toggle secara manual.
 
+### Dependency Security Upgrades
+- **Upgraded Packages**: Memperbarui paket `hono` ke versi `4.12.26`, `form-data` ke versi `4.0.6`, dan `undici` ke versi `7.28.0` untuk menerapkan tambalan keamanan terbaru (Security Patches) dari Dependabot.
+
+
 ## v10.3 - 2026-07-13: Performance Optimization, DB Integrity Restoration, and CI/CD Fixes
 
 Pembaruan teknis berfokus pada optimalisasi pemindaian PDF pintar (Smart Scan), peningkatan efisiensi transaksi basis data bulk tax mapping, pengindeksan komposit SQLite, penerapan Next.js Streaming & Suspense untuk dashboard yang instan, pemulihan integritas database, serta perbaikan pipeline CI di GitHub Actions dan pembaruan keamanan pustaka.
