@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createDatabaseBackup } from "@/lib/backup";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,11 @@ async function runBackup(req: NextRequest, clientToken: string | null) {
   if (!backupPath) {
     return NextResponse.json({ error: "Gagal membuat backup basis data." }, { status: 500 });
   }
+
+  // Pemicu asinkron SQLite VACUUM di latar belakang untuk merapikan fragmentasi berkas DB
+  prisma.$executeRawUnsafe("VACUUM;").catch((err) => {
+    console.error("[Cron Backup] Gagal menjalankan VACUUM database:", err);
+  });
 
   return NextResponse.json({
     success: true,

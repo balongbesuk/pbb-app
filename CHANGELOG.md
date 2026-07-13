@@ -21,6 +21,8 @@ Pembaruan teknis berfokus pada optimalisasi pemindaian PDF pintar (Smart Scan), 
 
 ### Database Repair & Maintenance
 - **Database Restoration**: Memulihkan database lokal `dev.db` yang sempat mengalami korupsi data (`SQLITE_CORRUPT`) dari cadangan otomatis terakhir yang sehat (`backups/pre-restore-1783930072240.db`) untuk menjaga kontinuitas data 11 user terdaftar.
+- **Asynchronous Defragmentation**: Menyisipkan perintah `VACUUM` secara asinkron di latar belakang pada rute API cron backup (`cron/backup/route.ts`) setelah pencadangan sukses, guna mengembalikan sisa ruang penyimpanan kosong yang terfragmentasi ke disk server secara berkala.
+
 
 ### CI/CD & GitHub Actions
 - **Node.js 24 Migration**: Memperbarui matriks pengujian di GitHub Actions (`verify.yml`) untuk secara eksklusif menggunakan Node.js versi 24, menghapus versi 20 yang sudah usang (*deprecated*).
