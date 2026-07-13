@@ -8,7 +8,12 @@ Pembaruan teknis berfokus pada pemulihan kualitas visual peta batas GIS Blok dar
 - **Batas Wilayah Blok Asli**: Mengembalikan berkas peta `public/maps/village.json` menggunakan versi cadangan asli dari `tmp/village.json`. Langkah ini memulihkan batas-batas wilayah Blok PBB 001 s.d. 017 menjadi rapi, kontigu, dan selaras sempurna dengan jalan raya serta pemukiman (menghilangkan garis bergerigi dan celah kosong di tengah pemukiman).
 
 ### Leaflet Rendering Lifecycle Fix
-- **Dynamic Key Re-render**: Menambahkan jumlah key data statistik (`Object.keys(stats).length`) pada prop `key` di seluruh komponen `<GeoJSON />` di [region-map.tsx](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/components/map/region-map.tsx). Ini memaksa Leaflet menghancurkan cache path lama dan menggambar ulang polygon dengan warna status pembayaran yang akurat secara real-time begitu data asinkron dari API server selesai dimuat, tanpa perlu memicu klik tombol toggle secara manual.
+- **Dynamic Key Re-render**: Menambahkan jumlah key data statistik (`Object.keys(stats).length`) pada prop `key` di seluruh komponen `<GeoJSON />` di [region-map.tsx](file:///f:/Projek%20Vibe Koding/pbb-app/src/components/map/region-map.tsx). Ini memaksa Leaflet menghancurkan cache path lama dan menggambar ulang polygon dengan warna status pembayaran yang akurat secara real-time begitu data asinkron dari API server selesai dimuat, tanpa perlu memicu klik tombol toggle secara manual.
+
+### WP Map Synchronization & Popup Navigation
+- **Pewarnaan Abu-Abu Bidang Kosong**: Memodifikasi modul pembacaan peta bidang WP di [region-map.tsx](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/components/map/region-map.tsx) agar menampilkan warna **Abu-Abu (`#94a3b8`)** untuk bidang tanah yang NOP-nya **tidak terdaftar/ditemukan di database**. Warna Merah tetap mewakili Belum Lunas dan Hijau mewakili Lunas.
+- **Tautan Popup Detail Pajak**: Menambahkan tombol tautan interaktif **"Detail Data Pajak ➔"** di bagian bawah popup bidang tanah (mengarah ke `/data-pajak?q=[NOP]&tahun=[tahun]` dengan target `_blank`). Warga/admin kini dapat berpindah ke baris tabel data pajak yang terfilter secara instan langsung dari peta.
+- **Optimasi API `allStatus`**: Menambahkan parameter kueri `allStatus=true` pada endpoint `/api/region-unpaid` di [route.ts](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/app/api/region-unpaid/route.ts) untuk mengembalikan pemetaan langsung seluruh NOP terhadap status pembayarannya secara efisien.
 
 ### Dependency Security Upgrades
 - **Upgraded Packages**: Memperbarui paket `hono` ke versi `4.12.26`, `form-data` ke versi `4.0.6`, dan `undici` ke versi `7.28.0` untuk menerapkan tambalan keamanan terbaru (Security Patches) dari Dependabot.
