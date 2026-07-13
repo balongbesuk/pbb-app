@@ -348,7 +348,7 @@ export function RegionMap({
   const [showSatellite, setShowSatellite] = useState(false);
   const [showWp, setShowWp] = useState(false);
   const [wpData, setWpData] = useState<any | null>(null);
-  const [unpaidNops, setUnpaidNops] = useState<Set<string>>(new Set());
+  const [wpStatusMap, setWpStatusMap] = useState<Record<string, string>>({});
   const [loadingWp, setLoadingWp] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -369,18 +369,15 @@ export function RegionMap({
           if (!res.ok) throw new Error("Gagal memuat peta bidang");
           return res.json();
         }),
-        fetch(`/api/region-unpaid?tahun=${tahun}&limit=3000`).then((res) => {
+        fetch(`/api/region-unpaid?tahun=${tahun}&allStatus=true`).then((res) => {
           if (!res.ok) throw new Error("Gagal mengambil status tagihan");
           return res.json();
         })
       ])
-        .then(([geoJson, unpaidWps]) => {
+        .then(([geoJson, statusMap]) => {
           if (!active) return;
           setWpData(geoJson);
-          const nops = new Set<string>(
-            (unpaidWps.data || []).map((wp: any) => wp.nop.replace(/\D/g, ""))
-          );
-          setUnpaidNops(nops);
+          setWpStatusMap(statusMap);
         })
         .catch((err) => {
           console.error("Gagal memuat data bidang WP:", err);
@@ -615,13 +612,24 @@ export function RegionMap({
     if (!props) return { fillColor: "transparent", weight: 0.5, color: "#cbd5e1", fillOpacity: 0 };
     
     const cleanNop = props.fullNop.replace(/\D/g, "");
-    const isUnpaid = unpaidNops.has(cleanNop);
+    const status = wpStatusMap[cleanNop];
+    
+    let fillColor = "#94a3b8"; // Default abu-abu (Tidak ada di database)
+    let borderColor = "#cbd5e1";
+    
+    if (status === "BELUM_LUNAS") {
+      fillColor = "#ef4444"; // Merah
+      borderColor = "#f87171";
+    } else if (status === "LUNAS") {
+      fillColor = "#10b981"; // Hijau
+      borderColor = "#34d399";
+    }
     
     return {
-      fillColor: isUnpaid ? "#ef4444" : "#10b981", // Merah jika belum bayar, Hijau jika lunas
+      fillColor,
       fillOpacity: 0.65,
       weight: 1,
-      color: isUnpaid ? "#f87171" : "#34d399",
+      color: borderColor,
       dashArray: "",
       interactive: true
     };
@@ -632,13 +640,26 @@ export function RegionMap({
     if (!props) return;
     
     const cleanNop = props.fullNop.replace(/\D/g, "");
-    const isUnpaid = unpaidNops.has(cleanNop);
-    const statusText = isUnpaid ? "BELUM LUNAS" : "LUNAS";
-    const statusColor = isUnpaid ? "#ef4444" : "#10b981";
+    const status = wpStatusMap[cleanNop];
+    
+    let statusText = "TIDAK ADA DATA";
+    let statusColor = "#94a3b8";
+    
+    if (status === "BELUM_LUNAS") {
+      statusText = "BELUM LUNAS";
+      statusColor = "#ef4444";
+    } else if (status === "LUNAS") {
+      statusText = "LUNAS";
+      statusColor = "#10b981";
+    }
     
     const escapeHtml = (unsafe: string) => {
         return String(unsafe || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     };
+
+    const linkHtml = `<div style="margin-top: 8px; text-align: right; border-top: 1px solid #f1f5f9; padding-top: 6px;">
+      <a href="/data-pajak?q=${cleanNop}&tahun=${tahun}" style="color: #2563eb; text-decoration: underline; font-weight: 700; font-size: 10px;" target="_blank">Detail Data Pajak ➔</a>
+    </div>`;
 
     const label = `
       <div style="min-width: 180px; font-family: sans-serif;">
@@ -653,6 +674,7 @@ export function RegionMap({
             Status: <span style="background: ${statusColor}20; color: ${statusColor}; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 9px;">${statusText}</span>
           </div>
         </div>
+        ${linkHtml}
       </div>
     `;
     

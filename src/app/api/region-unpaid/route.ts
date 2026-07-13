@@ -30,6 +30,25 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const tahun = parseInt(searchParams.get("tahun") || new Date().getFullYear().toString());
+
+    const allStatus = searchParams.get("allStatus") === "true";
+    if (allStatus) {
+      const wps = await prisma.taxData.findMany({
+        where: { tahun },
+        select: {
+          nop: true,
+          paymentStatus: true,
+        },
+      });
+
+      const statusMap: Record<string, string> = {};
+      for (const wp of wps) {
+        const cleanNop = wp.nop.replace(/\D/g, "");
+        statusMap[cleanNop] = wp.paymentStatus;
+      }
+
+      return NextResponse.json(statusMap);
+    }
     const type = searchParams.get("type"); // RT, RW, DUSUN, DESA
     const rt = searchParams.get("rt");
     const rw = searchParams.get("rw");
