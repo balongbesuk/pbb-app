@@ -648,8 +648,10 @@ export function RegionMap({
   useEffect(() => {
     const handleMapBtnClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.classList.contains("detail-wp-btn")) {
-        const data = target.dataset;
+
+      const detailBtn = target.closest(".detail-wp-btn") as HTMLElement | null;
+      if (detailBtn) {
+        const data = detailBtn.dataset;
         setDialogConfig({
           type: data.type || "RT",
           rt: data.rt,
@@ -659,10 +661,12 @@ export function RegionMap({
           title: data.title || "Detail WP"
         });
         setOpenUnpaidDialog(true);
+        return;
       }
 
-      if (target.classList.contains("delete-wp-btn")) {
-        const nop = target.dataset.nop;
+      const deleteBtn = target.closest(".delete-wp-btn") as HTMLElement | null;
+      if (deleteBtn) {
+        const nop = deleteBtn.dataset.nop;
         if (nop && window.confirm(`Apakah Anda yakin ingin menghapus batas bidang tanah dengan NOP ${nop} dari peta? Setelah dihapus, Anda bisa mendigitasinya ulang.`)) {
           fetch("/api/peta/wp-digitize", {
             method: "DELETE",
@@ -684,11 +688,13 @@ export function RegionMap({
             alert("Terjadi kesalahan koneksi.");
           });
         }
+        return;
       }
 
-      if (target.classList.contains("edit-wp-btn")) {
-        const nop = target.dataset.nop;
-        const name = target.dataset.name || "Wajib Pajak";
+      const editBtn = target.closest(".edit-wp-btn") as HTMLElement | null;
+      if (editBtn) {
+        const nop = editBtn.dataset.nop;
+        const name = editBtn.dataset.name || "Wajib Pajak";
         if (nop) {
           const cleanNop = nop.replace(/\D/g, "");
           const layer = wpLayersRef.current[cleanNop];
@@ -700,6 +706,7 @@ export function RegionMap({
             alert("Batas bidang tanah tidak ditemukan.");
           }
         }
+        return;
       }
     };
 
