@@ -487,6 +487,8 @@ export function RegionMap({
   const [digitizeMode, setDigitizeMode] = useState(false);
   const [pendingGeometry, setPendingGeometry] = useState<any | null>(null);
   const [selectedDigitizeNop, setSelectedDigitizeNop] = useState<any | null>(null);
+  const [wpRefreshCount, setWpRefreshCount] = useState(0);
+
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -608,6 +610,31 @@ export function RegionMap({
           title: data.title || "Detail WP"
         });
         setOpenUnpaidDialog(true);
+      }
+
+      if (target.classList.contains("delete-wp-btn")) {
+        const nop = target.dataset.nop;
+        if (nop && window.confirm(`Apakah Anda yakin ingin menghapus batas bidang tanah dengan NOP ${nop} dari peta? Setelah dihapus, Anda bisa mendigitasinya ulang.`)) {
+          fetch("/api/peta/wp-digitize", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fullNop: nop })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert("Batas bidang tanah berhasil dihapus dari peta.");
+              setWpData(null);
+              setWpRefreshCount(c => c + 1);
+            } else {
+              alert("Gagal menghapus: " + (data.error || "error tidak diketahui"));
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            alert("Terjadi kesalahan koneksi.");
+          });
+        }
       }
     };
 
@@ -807,6 +834,16 @@ export function RegionMap({
       <a href="/data-pajak?q=${cleanNop}&tahun=${tahun}" style="color: #2563eb; text-decoration: underline; font-weight: 700; font-size: 10px;" target="_blank">Detail Data Pajak ➔</a>
     </div>`;
 
+    const deleteButton = (!isPublic) ? `
+        <button 
+          class="delete-wp-btn" 
+          data-nop="${escapeHtml(props.fullNop)}"
+          style="margin-top: 6px; width: 100%; background: #fef2f2; border: 1px solid #fee2e2; color: #ef4444; border-radius: 8px; padding: 6px 8px; font-weight: 700; font-size: 10px; cursor: pointer; text-align: center; transition: all 0.2s;"
+        >
+          Hapus Batas Peta 🗑️
+        </button>
+    ` : "";
+
     const label = `
       <div style="min-width: 180px; font-family: sans-serif;">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
@@ -820,6 +857,7 @@ export function RegionMap({
             Status: <span style="background: ${statusColor}20; color: ${statusColor}; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 9px;">${statusText}</span>
           </div>
         </div>
+        ${deleteButton}
         ${linkHtml}
       </div>
     `;
@@ -956,6 +994,7 @@ export function RegionMap({
             setPendingGeometry(null);
             setSelectedDigitizeNop(null);
           }}
+          refreshCount={wpRefreshCount}
         />
       )}
 

@@ -20,6 +20,7 @@ type Props = {
   onSaved: () => void;
   pendingGeometry: any | null;
   onClose: () => void;
+  refreshCount?: number;
 };
 
 export function WpDigitizePanel({
@@ -29,6 +30,7 @@ export function WpDigitizePanel({
   onSaved,
   pendingGeometry,
   onClose,
+  refreshCount = 0,
 }: Props) {
   const [list, setList] = useState<UnmappedNop[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,7 @@ export function WpDigitizePanel({
       })
       .catch(() => setError("Gagal memuat daftar NOP"))
       .finally(() => setLoading(false));
-  }, [tahun, savedCount]);
+  }, [tahun, savedCount, refreshCount]);
 
   const filtered = list.filter(
     (w) =>
