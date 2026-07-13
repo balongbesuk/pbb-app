@@ -1,24 +1,36 @@
 # Changelog
 
-## v10.4 - 2026-07-13: GIS Map Restoration and Leaflet Rendering Fixes
+## v10.4 - 2026-07-13: GIS Map Restoration, Edit Batas Peta, and Fullscreen Overlay Fixes
 
-Pembaruan teknis berfokus pada pemulihan kualitas visual peta batas GIS Blok dari berkas cadangan asli, serta pembenahan siklus hidup rendering komponen peta di sisi client-side untuk mencegah caching Leaflet yang usang.
+Pembaruan teknis berfokus pada pemulihan kualitas visual peta batas GIS Blok dari berkas cadangan asli, pembenahan siklus hidup rendering komponen peta di sisi client-side, penambahan fitur edit dan hapus batas bidang tanah langsung dari popup peta, serta perbaikan tampilan panel overlay saat mode fullscreen aktif.
 
 ### GIS & Map Visuals Restoration
 - **Batas Wilayah Blok Asli**: Mengembalikan berkas peta `public/maps/village.json` menggunakan versi cadangan asli dari `tmp/village.json`. Langkah ini memulihkan batas-batas wilayah Blok PBB 001 s.d. 017 menjadi rapi, kontigu, dan selaras sempurna dengan jalan raya serta pemukiman (menghilangkan garis bergerigi dan celah kosong di tengah pemukiman).
 
 ### Leaflet Rendering Lifecycle Fix
-- **Dynamic Key Re-render**: Menambahkan jumlah key data statistik (`Object.keys(stats).length`) pada prop `key` di seluruh komponen `<GeoJSON />` di [region-map.tsx](file:///f:/Projek%20Vibe Koding/pbb-app/src/components/map/region-map.tsx). Ini memaksa Leaflet menghancurkan cache path lama dan menggambar ulang polygon dengan warna status pembayaran yang akurat secara real-time begitu data asinkron dari API server selesai dimuat, tanpa perlu memicu klik tombol toggle secara manual.
+- **Dynamic Key Re-render**: Menambahkan jumlah key data statistik (`Object.keys(stats).length`) pada prop `key` di seluruh komponen `<GeoJSON />` di [region-map.tsx](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/components/map/region-map.tsx). Ini memaksa Leaflet menghancurkan cache path lama dan menggambar ulang polygon dengan warna status pembayaran yang akurat secara real-time begitu data asinkron dari API server selesai dimuat, tanpa perlu memicu klik tombol toggle secara manual.
 
 ### WP Map Synchronization & Popup Navigation
 - **Pewarnaan Abu-Abu Bidang Kosong**: Memodifikasi modul pembacaan peta bidang WP di [region-map.tsx](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/components/map/region-map.tsx) agar menampilkan warna **Abu-Abu (`#94a3b8`)** untuk bidang tanah yang NOP-nya **tidak terdaftar/ditemukan di database**. Warna Merah tetap mewakili Belum Lunas dan Hijau mewakili Lunas.
 - **Tautan Popup Detail Pajak**: Menambahkan tombol tautan interaktif **"Detail Data Pajak ➔"** di bagian bawah popup bidang tanah (mengarah ke `/data-pajak?q=[NOP]&tahun=[tahun]` dengan target `_blank`). Warga/admin kini dapat berpindah ke baris tabel data pajak yang terfilter secara instan langsung dari peta.
 - **Optimasi API `allStatus`**: Menambahkan parameter kueri `allStatus=true` pada endpoint `/api/region-unpaid` di [route.ts](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/app/api/region-unpaid/route.ts) untuk mengembalikan pemetaan langsung seluruh NOP terhadap status pembayarannya secara efisien.
 
+### Fitur Edit & Hapus Batas Bidang Tanah
+- **Tombol Edit Batas Peta**: Menambahkan tombol **"Edit Batas Peta"** di popup bidang WP yang mengaktifkan mode drag vertex polygon menggunakan Leaflet-Geoman (`layer.pm.enable()`). Admin dapat menyeret titik-titik sudut bidang tanah secara langsung di atas peta untuk memperbarui batas spasialnya.
+- **REST API PUT Digitasi**: Menambahkan handler `PUT` pada `/api/peta/wp-digitize` yang mencari bidang berdasarkan `fullNop` dan mengganti properti `geometry` (koordinat baru) di `public/maps/wp.json`. Data batas yang diperbarui tersimpan langsung ke berkas GeoJSON tanpa reload halaman.
+- **Panel Floating Mode Edit**: Menampilkan panel kontrol melayang premium di bagian bawah peta saat mode edit aktif, memuat nama wajib pajak, NOP, serta tombol **"Simpan"** (indigo) dan **"Batal"** dengan transisi animasi `fade-in slide-in-from-bottom`.
+- **Perbaikan Urutan Inisialisasi Geoman**: Mengubah alur pemuatan data WP di `region-map.tsx` agar menunggu `ensureGeoman()` selesai (async import Leaflet Geoman) sebelum merender layer `<GeoJSON>`, menjamin prototype `layer.pm` telah teraugmentasi sebelum layer dibuat di peta.
+
+### Perbaikan Event Delegation Popup Peta
+- **Selector `.closest()` untuk Tombol Popup**: Memperbaiki bug di mana klik pada ikon SVG atau teks di dalam tombol popup peta (`edit-wp-btn`, `delete-wp-btn`, `detail-wp-btn`) tidak terdeteksi. Penyebabnya adalah `e.target` menunjuk ke elemen anak (SVG/text), bukan tombol itu sendiri. Solusinya mengganti `classList.contains()` dengan `target.closest('.class-name')` yang traverses ke atas DOM, sehingga klik di mana saja pada tombol selalu terdeteksi dengan benar.
+
 ### GIS Synchronization Laporan & Mode Digitasi (Admin)
 - **Laporan Sinkronisasi GIS (`/laporan-gis`)**: Membuat halaman laporan komprehensif bagi admin untuk membandingkan NOP di database aktif dengan NOP di berkas peta `wp.json`. Laporan ini menampilkan daftar lengkap 48 NOP yang belum terpetakan beserta detail wajib pajak, dan counter jumlah bidang di peta yang tidak memiliki kecocokan data pajak di database (warna abu-abu).
 - **Floating Panel Info Peta**: Menyediakan widget overlay dinamis di bawah peta saat layer WP diaktifkan, berisi statistik sinkronisasi real-time dan akses cepat ke laporan GIS.
 - **Mode Digitasi Bidang Baru**: Mengintegrasikan alat gambar Leaflet-Geoman (polygon & rectangle) ke dalam peta wilayah. Admin dapat memilih NOP yang belum terpetakan dari panel pencarian, menggambarkan bidang tanahnya di atas peta satelit secara presisi, lalu menyimpannya langsung ke berkas `public/maps/wp.json` melalui API `/api/peta/wp-digitize` yang baru.
+
+### Perbaikan Panel Overlay di Mode Fullscreen
+- **Overlay Masuk ke Dalam Fullscreen Container**: Memindahkan semua panel overlay peta (panel Mode Edit Batas, panel Loading WP, panel Info Sinkronisasi GIS, panel Digitasi) ke **dalam** elemen `#map-container-root` yang menjadi target `requestFullscreen()`. Sebelumnya panel berada di luar container sehingga tertutup layar hitam saat mode fullscreen diaktifkan. Sekarang seluruh UI peta — termasuk panel edit, panel notifikasi, dan kontrol — tampil penuh di atas layar penuh.
 
 ### Dependency Security Upgrades
 - **Upgraded Packages**: Memperbarui paket `hono` ke versi `4.12.26`, `form-data` ke versi `4.0.6`, dan `undici` ke versi `7.28.0` untuk menerapkan tambalan keamanan terbaru (Security Patches) dari Dependabot.
