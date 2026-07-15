@@ -50,8 +50,8 @@ export default async function LaporanGisPage({
 
   // Baca NOP dari wp.json
   const wpJsonPath = path.join(process.cwd(), "public/maps/wp.json");
-  let gisNops = new Set<string>();
-  let gisNopMap = new Map<string, string>(); // cleanNop -> fullNop
+  const gisNops = new Set<string>();
+  const gisNopMap = new Map<string, string>(); // cleanNop -> fullNop
   if (fs.existsSync(wpJsonPath)) {
     try {
       const wpData = JSON.parse(fs.readFileSync(wpJsonPath, "utf-8"));
