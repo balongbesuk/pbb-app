@@ -39,11 +39,14 @@ Pembaruan teknis berfokus pada pemulihan kualitas visual peta batas GIS Blok dar
   - `hono`: `4.12.26` ➔ `4.13.0`
   - `undici`: `7.28.0` ➔ `7.29.0`
   - `fast-uri`: `3.1.2` ➔ `3.1.5`
-  - `dompurify`: `3.4.11` ➔ `3.4.12`
+  - `dompurify`: `3.4.11` ➔ `3.4.13` (Resolusi celah keamanan bypass di 3.4.12)
+  - `pdfjs-dist`: `6.0.227` ➔ `6.2.108` (Mencegah eksekusi JavaScript arbitrer)
   - `adm-zip`: `0.5.17` ➔ `0.6.0` (Lolos verifikasi CI penuh)
+  - `nanoid`: Diperbarui ke versi aman untuk mencegah infinite loop DoS.
 - **Upgraded Packages (Mobile App)**: Memperbarui pustaka pendukung pada folder `pbb-mobile` untuk menambal kerentanan keamanan:
   - `postcss`: `8.5.12` ➔ `8.5.25`
   - `shell-quote`: `1.8.4` ➔ `1.10.0`
+  - `js-yaml`: `4.2.0` ➔ `4.3.1` (Resolusi kerentanan CPU consumption)
   - `brace-expansion`: Diperbarui melalui penyesuaian dependensi.
 
 
