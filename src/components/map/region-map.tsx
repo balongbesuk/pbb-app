@@ -544,16 +544,20 @@ export function RegionMap({
   // Memuat data spasial Bidang WP dan status tagihan secara asinkron saat diaktifkan
   useEffect(() => {
     let active = true;
-    if (showWp && !wpData && !isPublic) {
+    if (showWp && !isPublic) {
       setLoadingWp(true);
       ensureGeoman()
         .then(() => {
           if (!active) return;
+          const fetchWpGeoJson = wpData
+            ? Promise.resolve(wpData)
+            : fetch(`/maps/wp.json?v=${Date.now()}`).then((res) => {
+                if (!res.ok) throw new Error("Gagal memuat peta bidang");
+                return res.json();
+              });
+
           return Promise.all([
-            fetch(`/maps/wp.json?v=${Date.now()}`).then((res) => {
-              if (!res.ok) throw new Error("Gagal memuat peta bidang");
-              return res.json();
-            }),
+            fetchWpGeoJson,
             fetch(`/api/region-unpaid?tahun=${tahun}&allStatus=true`).then((res) => {
               if (!res.ok) throw new Error("Gagal mengambil status tagihan");
               return res.json();
@@ -567,7 +571,7 @@ export function RegionMap({
         .then((result) => {
           if (!active || !result) return;
           const [geoJson, statusMap, syncReport] = result;
-          setWpData(geoJson);
+          if (!wpData) setWpData(geoJson);
           setWpStatusMap(statusMap);
           if (syncReport?.summary) {
             setWpSyncStats({
@@ -586,7 +590,7 @@ export function RegionMap({
     return () => {
       active = false;
     };
-  }, [showWp, wpData, tahun, isPublic]);
+  }, [showWp, tahun, isPublic]);
 
   const [statusText, setStatusText] = useState("Memuat Peta Desa...");
 
