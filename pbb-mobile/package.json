@@ -47,7 +47,10 @@
     "glob": "10.5.0",
     "xmldom": "npm:@xmldom/xmldom@0.9.10",
     "uuid": "14.0.0",
-    "postcss": "^8.5.10"
+    "postcss": "^8.5.10",
+    "image-size": "1.2.1",
+    "brace-expansion": "2.1.4",
+    "nanoid": "3.3.18"
   },
   "private": true
 }
