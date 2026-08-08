@@ -1,6 +1,6 @@
 "use client";
 
-import { Save, DatabaseZap, Loader2, Eye, EyeOff, Map, Users, Smartphone, Bell, Settings, Network, Globe } from "lucide-react";
+import { Save, DatabaseZap, Loader2, Eye, EyeOff, Map, Users, Smartphone, Bell, Settings, Network, Globe, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -133,15 +133,20 @@ export function TaxConfigForm() {
             {/* UNIT 1: UMUM & BIAYA */}
             <TabsContent value="umum" className="space-y-6 outline-none focus:outline-none">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="tahun-aktif" className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Tahun Pajak Aktif Target</Label>
-                  <Input
-                    id="tahun-aktif"
-                    type="number"
-                    value={tahun}
-                    onChange={(e) => setTahun(parseInt(e.target.value) || 2026)}
-                    className="bg-white/50 dark:bg-[#111827]/50"
-                  />
+                <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-zinc-900/80 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm w-full">
+                  <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <Label htmlFor="tahun-aktif" className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400 block truncate">
+                      Tahun Pajak Aktif Target
+                    </Label>
+                    <Input
+                      id="tahun-aktif"
+                      type="number"
+                      value={tahun}
+                      onChange={(e) => setTahun(parseInt(e.target.value) || 2026)}
+                      className="h-8 w-24 bg-white dark:bg-zinc-800 font-black text-center border-none rounded-xl text-xs text-slate-800 dark:text-white mt-0.5"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="jatuh-tempo" className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Tanggal Jatuh Tempo</Label>

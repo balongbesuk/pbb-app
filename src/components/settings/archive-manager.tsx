@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileStack, Trash2, Loader2, FileText, Search, AlertTriangle, CheckCircle2, Files, Printer, FileDown, X } from "lucide-react";
+import { FileStack, Trash2, Loader2, FileText, Search, AlertTriangle, CheckCircle2, Files, Printer, FileDown, X, Calendar } from "lucide-react";
 import { getArchiveList, deleteArchive, getArchiveStats } from "@/app/actions/archive-actions";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -141,8 +141,9 @@ export function ArchiveManager() {
             </CardDescription>
           </div>
           
-          <div className="flex items-center gap-3 bg-primary/5 p-2 px-3 rounded-2xl border border-primary/10">
-            <Label htmlFor="year-select" className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground whitespace-nowrap">
+          <div className="flex items-center gap-2.5 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm">
+            <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <Label htmlFor="year-select" className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400 whitespace-nowrap">
               Tahun Arsip:
             </Label>
             <Input
@@ -150,7 +151,7 @@ export function ArchiveManager() {
               type="number"
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value) || 2026)}
-              className="h-8 w-24 bg-white dark:bg-zinc-950 font-bold text-center border-none shadow-inner"
+              className="h-8 w-20 bg-slate-100 dark:bg-zinc-800 font-black text-center border-none rounded-xl text-xs text-slate-800 dark:text-white"
             />
           </div>
         </div>

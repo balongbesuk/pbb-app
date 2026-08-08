@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   FileText,
+  Calendar,
 } from "lucide-react";
 
 import { Progress } from "@/components/ui/progress";
@@ -221,15 +222,17 @@ export default function UploadPBBPage() {
             </Button>
           </CardHeader>
           <CardContent className="space-y-6 p-6">
-            <div className="space-y-2.5">
-              <Label className="text-muted-foreground px-1 text-[10px] font-bold tracking-widest uppercase">
-                Tahun Pajak
+            <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-zinc-900/80 px-3.5 py-1.5 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm w-fit">
+              <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <Label htmlFor="upload-year-input" className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400 whitespace-nowrap">
+                Tahun Pajak Target:
               </Label>
               <Input
+                id="upload-year-input"
                 type="number"
                 value={tahun}
-                onChange={(e) => setTahun(parseInt(e.target.value))}
-                className="h-10 w-32 rounded-xl border-zinc-100 bg-zinc-50 font-bold dark:border-zinc-800 dark:bg-zinc-900"
+                onChange={(e) => setTahun(parseInt(e.target.value) || new Date().getFullYear())}
+                className="h-8 w-20 bg-white dark:bg-zinc-800 font-black text-center border-none rounded-xl text-xs text-slate-800 dark:text-white"
               />
             </div>
 

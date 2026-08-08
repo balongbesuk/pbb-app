@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "lucide-react";
 
 export function DashboardFilters() {
   const router = useRouter();
@@ -17,7 +18,8 @@ export function DashboardFilters() {
   const currentParams = new URLSearchParams(searchParams?.toString() ?? "");
 
   const currentYear = currentParams.get("tahun") || new Date().getFullYear().toString();
-  const years = Array.from({ length: 5 }, (_, i) => (new Date().getFullYear() - i).toString());
+  const currentYearNum = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => (currentYearNum + 1 - i).toString());
 
   const handleYearChange = (val: string) => {
     const params = new URLSearchParams(currentParams);
@@ -26,24 +28,23 @@ export function DashboardFilters() {
   };
 
   return (
-    <div className="glass flex items-center gap-4 rounded-xl border-white/20 p-2 px-4">
-      <div className="flex items-center gap-2">
-        <Label className="text-muted-foreground text-xs font-semibold whitespace-nowrap uppercase">
-          Tahun Pajak
-        </Label>
-        <Select value={currentYear} onValueChange={(val) => handleYearChange(val || "")}>
-          <SelectTrigger className="h-9 w-[100px] border-none bg-white/50 dark:bg-[#111827]/50 dark:text-white shadow-none focus:ring-0">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {years.map((y) => (
-              <SelectItem key={y} value={y}>
-                {y}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="flex items-center gap-2.5 bg-white dark:bg-zinc-900 px-3.5 py-1.5 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm">
+      <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+      <Label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400 whitespace-nowrap">
+        Tahun Pajak:
+      </Label>
+      <Select value={currentYear} onValueChange={(val) => handleYearChange(val || "")}>
+        <SelectTrigger className="h-8 w-[95px] border-none bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-white font-black text-xs rounded-xl shadow-none focus:ring-0">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="rounded-xl border-slate-200 dark:border-zinc-800 shadow-xl">
+          {years.map((y) => (
+            <SelectItem key={y} value={y} className="font-bold text-xs">
+              {y}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
