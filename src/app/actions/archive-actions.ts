@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
 import * as pdfParse from "pdf-parse";
+import { pathToFileURL } from "url";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/server-auth";
 import { assertSafeFilename, resolveSafeChildPath } from "@/lib/file-security";
@@ -31,6 +32,29 @@ for (const key of [
   }
 }
 
+function initPdfWorker(PDFParseClass: any) {
+  try {
+    const candidatePaths = [
+      path.join(process.cwd(), "node_modules", "pdf-parse", "node_modules", "pdfjs-dist", "legacy", "build", "pdf.worker.mjs"),
+      path.join(process.cwd(), "node_modules", "pdf-parse", "node_modules", "pdfjs-dist", "build", "pdf.worker.mjs"),
+      path.join(process.cwd(), "node_modules", "pdfjs-dist", "legacy", "build", "pdf.worker.mjs"),
+      path.join(process.cwd(), "node_modules", "pdfjs-dist", "build", "pdf.worker.mjs"),
+    ];
+
+    for (const p of candidatePaths) {
+      if (fs.existsSync(/* turbopackIgnore: true */ p)) {
+        const workerUrl = pathToFileURL(p).href;
+        if (typeof PDFParseClass?.setWorker === "function") {
+          PDFParseClass.setWorker(workerUrl);
+        }
+        break;
+      }
+    }
+  } catch (e) {
+    console.warn("Gagal mengkonfigurasi pdf.worker path:", e);
+  }
+}
+
 async function parsePdf(
   dataBuffer: Buffer,
   options?: { pagerender?: (pageData: any) => Promise<string> }
@@ -44,6 +68,7 @@ async function parsePdf(
   }
   const PDFParseClass = moduleObj?.PDFParse || moduleObj?.default?.PDFParse;
   if (PDFParseClass) {
+    initPdfWorker(PDFParseClass);
     const parser = new PDFParseClass({ data: dataBuffer });
     const res = await parser.getText();
     if (options?.pagerender) {
