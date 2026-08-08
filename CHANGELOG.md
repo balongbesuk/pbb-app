@@ -33,7 +33,18 @@ Pembaruan teknis berfokus pada pemulihan kualitas visual peta batas GIS Blok dar
 - **Overlay Masuk ke Dalam Fullscreen Container**: Memindahkan semua panel overlay peta (panel Mode Edit Batas, panel Loading WP, panel Info Sinkronisasi GIS, panel Digitasi) ke **dalam** elemen `#map-container-root` yang menjadi target `requestFullscreen()`. Sebelumnya panel berada di luar container sehingga tertutup layar hitam saat mode fullscreen diaktifkan. Sekarang seluruh UI peta — termasuk panel edit, panel notifikasi, dan kontrol — tampil penuh di atas layar penuh.
 
 ### Dependency Security Upgrades
-- **Upgraded Packages**: Memperbarui paket `hono` ke versi `4.12.26`, `form-data` ke versi `4.0.6`, dan `undici` ke versi `7.28.0` untuk menerapkan tambalan keamanan terbaru (Security Patches) dari Dependabot.
+- **Upgraded Packages (Main App)**: Memperbarui beberapa dependensi utama ke versi terbaru untuk menutup celah keamanan (Security Patches) dari Dependabot:
+  - `next`: `16.2.9` ➔ `16.3.0`
+  - `next-auth`: `4.24.14` ➔ `4.24.15` (Resolusi konflik dengan Next.js 16.3.0)
+  - `hono`: `4.12.26` ➔ `4.13.0`
+  - `undici`: `7.28.0` ➔ `7.29.0`
+  - `fast-uri`: `3.1.2` ➔ `3.1.5`
+  - `dompurify`: `3.4.11` ➔ `3.4.12`
+  - `adm-zip`: `0.5.17` ➔ `0.6.0` (Lolos verifikasi CI penuh)
+- **Upgraded Packages (Mobile App)**: Memperbarui pustaka pendukung pada folder `pbb-mobile` untuk menambal kerentanan keamanan:
+  - `postcss`: `8.5.12` ➔ `8.5.25`
+  - `shell-quote`: `1.8.4` ➔ `1.10.0`
+  - `brace-expansion`: Diperbarui melalui penyesuaian dependensi.
 
 
 ## v10.3 - 2026-07-13: Performance Optimization, DB Integrity Restoration, and CI/CD Fixes
