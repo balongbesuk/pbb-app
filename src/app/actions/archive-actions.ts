@@ -240,16 +240,25 @@ export async function processSmartArchive(formData: FormData) {
   }
 }
 
-/** Get list of all archive filenames and sizes by year */
-export async function getArchiveList(year: number): Promise<{ name: string; size: number }[]> {
+/** Get list of all archive filenames, sizes, and connection status by year */
+export async function getArchiveList(year: number): Promise<{ name: string; size: number; isConnected: boolean }[]> {
   try {
     const archiveDir = getArchiveDir(year);
     if (!fs.existsSync(archiveDir)) return [];
     const files = fs.readdirSync(archiveDir).filter(f => !f.startsWith("."));
+
+    const allTaxes = await prisma.taxData.findMany({
+      where: { tahun: year },
+      select: { nop: true }
+    });
+    const dbNops = new Set(allTaxes.map(t => t.nop.replace(/\D/g, "")));
+
     return files.map(f => {
       const filePath = path.join(archiveDir, f);
       const stat = fs.statSync(filePath);
-      return { name: f, size: stat.size };
+      const cleanFileName = f.replace(/\D/g, "");
+      const isConnected = dbNops.has(cleanFileName);
+      return { name: f, size: stat.size, isConnected };
     }).sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
     console.error(error);

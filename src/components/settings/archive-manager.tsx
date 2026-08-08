@@ -13,9 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { TaxTablePagination } from "@/components/tax/table/tax-table-pagination";
 
 export function ArchiveManager() {
-  const [files, setFiles] = useState<{ name: string; size: number }[]>([]);
+  const [files, setFiles] = useState<{ name: string; size: number; isConnected: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "connected" | "orphan">("all");
   const [selectedYear, setSelectedYear] = useState(2026);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 24;
@@ -60,7 +61,7 @@ export function ArchiveManager() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, statusFilter]);
 
   const handleDeleteRequest = (filename: string) => {
     setFileToDelete(filename);
@@ -104,7 +105,13 @@ export function ArchiveManager() {
     document.body.removeChild(link);
   };
 
-  const filteredFiles = files.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredFiles = files.filter(f => {
+    const matchesSearch = f.name.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+    if (statusFilter === "connected") return f.isConnected;
+    if (statusFilter === "orphan") return !f.isConnected;
+    return true;
+  });
 
   const totalPages = Math.ceil(filteredFiles.length / itemsPerPage);
   const paginatedFiles = filteredFiles.slice(
@@ -130,7 +137,7 @@ export function ArchiveManager() {
               </span>
             </CardTitle>
             <CardDescription className="mt-1">
-              Daftar arsip digital yang tersimpan di server.
+              Daftar arsip digital yang tersimpan di server. Klik pada kartu statistik untuk memfilter berkas.
             </CardDescription>
           </div>
           
@@ -150,7 +157,14 @@ export function ArchiveManager() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-           <div className="hover:border-primary/20 group space-y-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300">
+           <button 
+             onClick={() => setStatusFilter("all")}
+             className={`text-left group space-y-4 rounded-3xl border p-6 shadow-sm transition-all duration-300 cursor-pointer ${
+               statusFilter === "all"
+                 ? "border-blue-500 bg-blue-500/5 ring-2 ring-blue-500/20"
+                 : "border-border bg-card hover:border-blue-300 dark:hover:border-blue-800"
+             }`}
+           >
               <div className="flex items-start justify-between">
                 <div className="rounded-xl border border-blue-100 bg-blue-500/5 p-2.5 dark:border-blue-900/40 text-blue-600">
                   <Files className="h-5 w-5" />
@@ -169,9 +183,16 @@ export function ArchiveManager() {
                   Kapasitas: {displaySize}
                 </p>
               </div>
-           </div>
+           </button>
 
-           <div className="hover:border-primary/20 group space-y-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300">
+           <button 
+             onClick={() => setStatusFilter("connected")}
+             className={`text-left group space-y-4 rounded-3xl border p-6 shadow-sm transition-all duration-300 cursor-pointer ${
+               statusFilter === "connected"
+                 ? "border-emerald-500 bg-emerald-500/5 ring-2 ring-emerald-500/20"
+                 : "border-border bg-card hover:border-emerald-300 dark:hover:border-emerald-800"
+             }`}
+           >
               <div className="flex items-start justify-between">
                 <div className="rounded-xl border border-emerald-100 bg-emerald-500/5 p-2.5 dark:border-emerald-900/40 text-emerald-600">
                   <CheckCircle2 className="h-5 w-5" />
@@ -190,9 +211,16 @@ export function ArchiveManager() {
                   Sesuai NOP Database
                 </p>
               </div>
-           </div>
+           </button>
 
-           <div className="hover:border-primary/20 group space-y-4 rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300">
+           <button 
+             onClick={() => setStatusFilter("orphan")}
+             className={`text-left group space-y-4 rounded-3xl border p-6 shadow-sm transition-all duration-300 cursor-pointer ${
+               statusFilter === "orphan"
+                 ? "border-rose-500 bg-rose-500/5 ring-2 ring-rose-500/20"
+                 : "border-border bg-card hover:border-rose-300 dark:hover:border-rose-800"
+             }`}
+           >
               <div className="flex items-start justify-between">
                 <div className="rounded-xl border border-rose-100 bg-rose-500/5 p-2.5 dark:border-rose-900/40 text-rose-600">
                   <AlertTriangle className="h-5 w-5" />
@@ -211,11 +239,11 @@ export function ArchiveManager() {
                   NOP Tidak Terdaftar
                 </p>
               </div>
-           </div>
+           </button>
         </div>
 
-        <div className="pt-2">
-           <div className="relative w-full">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+           <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
               <Input
                 placeholder="Masukkan NOP atau Nama File untuk mencari..."
@@ -223,6 +251,39 @@ export function ArchiveManager() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
+           </div>
+
+           <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-2xl shrink-0">
+             <button
+               onClick={() => setStatusFilter("all")}
+               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                 statusFilter === "all"
+                   ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm"
+                   : "text-muted-foreground hover:text-foreground"
+               }`}
+             >
+               Semua ({files.length})
+             </button>
+             <button
+               onClick={() => setStatusFilter("connected")}
+               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                 statusFilter === "connected"
+                   ? "bg-emerald-500 text-white shadow-sm"
+                   : "text-muted-foreground hover:text-emerald-600"
+               }`}
+             >
+               Valid ({archiveStats.connected})
+             </button>
+             <button
+               onClick={() => setStatusFilter("orphan")}
+               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                 statusFilter === "orphan"
+                   ? "bg-rose-500 text-white shadow-sm"
+                   : "text-muted-foreground hover:text-rose-600"
+               }`}
+             >
+               Yatim / Anonim ({archiveStats.disconnected})
+             </button>
            </div>
         </div>
 
@@ -235,7 +296,9 @@ export function ArchiveManager() {
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground/60">
               <FileText className="h-12 w-12 mb-2 opacity-20" />
               <p className="text-sm font-medium">Belum ada file arsip yang ditemukan.</p>
-              <p className="text-[10px] uppercase font-bold tracking-widest mt-1 opacity-50">Upload file PDF/Gambar di Pengaturan.</p>
+              <p className="text-[10px] uppercase font-bold tracking-widest mt-1 opacity-50">
+                {statusFilter === "orphan" ? "Tidak ada berkas arsip yatim / anonim." : "Upload file PDF/Gambar di Pengaturan."}
+              </p>
             </div>
           ) : (
             <>
@@ -243,15 +306,28 @@ export function ArchiveManager() {
                 {paginatedFiles.map((file) => (
                   <div 
                     key={file.name}
-                    className="group relative flex items-center justify-between p-3 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 transition-all overflow-hidden"
+                    className={`group relative flex items-center justify-between p-3 rounded-xl border transition-all overflow-hidden ${
+                      file.isConnected 
+                        ? "bg-primary/5 hover:bg-primary/10 border-primary/10" 
+                        : "bg-rose-500/5 hover:bg-rose-500/10 border-rose-500/20"
+                    }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="bg-white/80 dark:bg-zinc-900/80 p-2 rounded-lg shadow-sm">
-                        <FileText className="h-4 w-4 text-blue-500" />
+                      <div className={`p-2 rounded-lg shadow-sm ${file.isConnected ? "bg-white/80 dark:bg-zinc-900/80 text-blue-500" : "bg-rose-100 dark:bg-rose-950 text-rose-500"}`}>
+                        <FileText className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold truncate pr-8">{file.name}</p>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 pr-8">
+                          <p className="text-xs font-bold truncate">{file.name}</p>
+                          <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${
+                            file.isConnected 
+                              ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300" 
+                              : "bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300"
+                          }`}>
+                            {file.isConnected ? "Valid" : "Yatim"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[9px] text-muted-foreground font-medium bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-sm">{(file.size / 1024).toFixed(1)} KB</span>
                             <button 
                             onClick={() => handleViewFile(file.name)}
