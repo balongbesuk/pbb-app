@@ -857,7 +857,8 @@ export function RegionMap({
     if (!props) return { fillColor: "transparent", weight: 0.5, color: "#cbd5e1", fillOpacity: 0 };
     
     const cleanNop = props.fullNop.replace(/\D/g, "");
-    const status = wpStatusMap[cleanNop];
+    const item = wpStatusMap[cleanNop] as { status?: string; namaWp?: string } | string | undefined;
+    const status = typeof item === "object" ? item?.status : item;
     
     let fillColor = "#94a3b8"; // Default abu-abu (Tidak ada di database)
     let borderColor = "#cbd5e1";
@@ -885,7 +886,10 @@ export function RegionMap({
     if (!props) return;
     
     const cleanNop = props.fullNop.replace(/\D/g, "");
-    const status = wpStatusMap[cleanNop];
+    const item = wpStatusMap[cleanNop] as { status?: string; namaWp?: string } | string | undefined;
+    const status = typeof item === "object" ? item?.status : item;
+    const dbNamaWp = typeof item === "object" ? item?.namaWp : undefined;
+    const displayName = dbNamaWp || props.name || "TIDAK DIKETAHUI";
     
     let statusText = "TIDAK ADA DATA";
     let statusColor = "#94a3b8";
@@ -906,7 +910,7 @@ export function RegionMap({
         <button 
           class="edit-wp-btn" 
           data-nop="${escapeHtml(props.fullNop)}"
-          data-name="${escapeHtml(props.name)}"
+          data-name="${escapeHtml(displayName)}"
           style="display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; background: #f0fdf4; border: 1px solid #dcfce7; color: #16a34a; border-radius: 8px; padding: 7px; font-weight: 700; font-size: 10px; cursor: pointer; transition: all 0.2s;"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
@@ -932,7 +936,7 @@ export function RegionMap({
           <div style="background: ${statusColor}15; color: ${statusColor}; width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </div>
-          <span style="font-size: 13px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">${escapeHtml(props.name)}</span>
+          <span style="font-size: 13px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">${escapeHtml(displayName)}</span>
         </div>
         
         <!-- Info Card -->

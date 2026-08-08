@@ -37,14 +37,18 @@ export async function GET(req: Request) {
         where: { tahun },
         select: {
           nop: true,
+          namaWp: true,
           paymentStatus: true,
         },
       });
 
-      const statusMap: Record<string, string> = {};
+      const statusMap: Record<string, { status: string; namaWp: string }> = {};
       for (const wp of wps) {
         const cleanNop = wp.nop.replace(/\D/g, "");
-        statusMap[cleanNop] = wp.paymentStatus;
+        statusMap[cleanNop] = {
+          status: wp.paymentStatus,
+          namaWp: wp.namaWp,
+        };
       }
 
       return NextResponse.json(statusMap);
