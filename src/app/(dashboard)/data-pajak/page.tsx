@@ -9,6 +9,7 @@ import { TaxTableSkeleton } from "@/components/tax/table/tax-skeleton";
 import { TaxAddManualDialog } from "@/components/tax/tax-add-manual-dialog";
 import { redirect } from "next/navigation";
 import { buildTaxWhereInput } from "@/lib/tax-query";
+import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 
 
 export default async function DataPajakPage({
@@ -135,16 +136,26 @@ export default async function DataPajakPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Data Pajak PBB</h1>
-          <p className="text-muted-foreground">Kelola dan pantau seluruh data pajak terdaftar</p>
+          <p className="text-muted-foreground mt-1 flex items-center gap-1.5 flex-wrap">
+            Kelola dan pantau seluruh data pajak terdaftar tahun{" "}
+            <span className="font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
+              {tahun}
+            </span>
+          </p>
         </div>
-        <TaxAddManualDialog
-          dusunList={passDusuns}
-          rwList={passRws}
-          rtList={passRts}
-        />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <Suspense fallback={<div className="h-9 w-[190px] animate-pulse bg-muted rounded-2xl" />}>
+            <DashboardFilters />
+          </Suspense>
+          <TaxAddManualDialog
+            dusunList={passDusuns}
+            rwList={passRws}
+            rtList={passRts}
+          />
+        </div>
       </div>
 
       <Card className="glass border-none shadow-xl">
