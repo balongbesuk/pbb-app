@@ -31,9 +31,40 @@ for (const key of [
   }
 }
 
-type PdfParseResult = { text?: string };
-type PdfParseFn = (dataBuffer: Buffer) => Promise<PdfParseResult>;
-const parsePdf = (pdfParse as any).default || pdfParse;
+async function parsePdf(
+  dataBuffer: Buffer,
+  options?: { pagerender?: (pageData: any) => Promise<string> }
+) {
+  const moduleObj = pdfParse as any;
+  if (typeof moduleObj === "function") {
+    return await moduleObj(dataBuffer, options);
+  }
+  if (typeof moduleObj?.default === "function") {
+    return await moduleObj.default(dataBuffer, options);
+  }
+  const PDFParseClass = moduleObj?.PDFParse || moduleObj?.default?.PDFParse;
+  if (PDFParseClass) {
+    const parser = new PDFParseClass({ data: dataBuffer });
+    const res = await parser.getText();
+    if (options?.pagerender) {
+      for (let i = 0; i < res.pages.length; i++) {
+        const page = res.pages[i];
+        await options.pagerender({
+          getTextContent: async () => ({
+            items: [{ str: page.text, transform: [0, 0, 0, 0, 0, 0] }],
+          }),
+        });
+      }
+    }
+    await parser.destroy();
+    return {
+      text: res.text,
+      numpages: res.total || res.pages.length,
+      numrender: res.pages.length,
+    };
+  }
+  throw new Error("Tidak dapat menginisialisasi pustaka pdf-parse.");
+}
 
 function getArchiveDir(year: number) {
   return resolveArchiveDir(year);
