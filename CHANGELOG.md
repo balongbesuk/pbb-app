@@ -1,8 +1,11 @@
 # Changelog
 
-## v10.5 - 2026-08-08: PDF Parse Compatibility, Dynamic WP Map Names, Archive Orphan Filters & Standardized Tax Year System
+## v10.4 - 2026-08-08: PDF Parse Compatibility, Dynamic WP Map Names, Archive Orphan Filters, Standardized Tax Year System & Turbopack Build Optimization
 
-Pembaruan teknis berfokus pada resolusi kompatibilitas `pdf-parse@2.4.5` pada Windows/Turbopack, sinkronisasi nama Wajib Pajak otomatis dari database ke popup Peta Wilayah, penambahan filter interaktif & penanda visual berkas arsip yatim/anonim, serta penyeragaman UI sistem Pemilih Tahun Pajak (Tax Year Selector) di seluruh halaman aplikasi.
+Pembaruan teknis berfokus pada resolusi kompatibilitas `pdf-parse@2.4.5` pada Windows/Turbopack, optimalisasi build Turbopack tanpa warning filesystem, sinkronisasi nama Wajib Pajak otomatis dari database ke popup Peta Wilayah, penambahan filter interaktif & penanda visual berkas arsip yatim/anonim, serta penyeragaman UI sistem Pemilih Tahun Pajak (Tax Year Selector) di seluruh halaman aplikasi.
+
+### Turbopack Build Optimization & Dynamic FS Access Fix
+- **Turbopack Ignore Annotations**: Menambahkan instruksi `/* turbopackIgnore: true */` pada semua panggilan fungsi `fs` dan `path.join` berparameter dinamis di [settings-actions.ts](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/app/actions/settings-actions.ts#L54-L80), mengeliminasi 5 peringatan *dynamic filesystem tracing warning* saat kompilasi build produksi Next.js/Turbopack.
 
 ### PDF Worker Setup & `pdf-parse@2.4.5` Compatibility
 - **Inisialisasi Worker Universal (`initPdfWorker`)**: Menambahkan helper `initPdfWorker()` di [archive-actions.ts](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/app/actions/archive-actions.ts) dan [archive-smart-scan-job.ts](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/lib/archive-smart-scan-job.ts) menggunakan `pathToFileURL()` untuk mengubah path lokal `pdf.worker.mjs` di Windows menjadi URL `file://` yang sah, menyelesaikan error `Setting up fake worker failed: Received protocol 'f:'`.

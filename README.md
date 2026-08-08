@@ -15,7 +15,7 @@
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS_4-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![Firebase](https://img.shields.io/badge/Firebase_FCM-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
-[![Version](https://img.shields.io/badge/v10.2.0-blue)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/v10.4.0-blue)](./CHANGELOG.md)
 
 [📖 Panduan Instalasi](./docs/PANDUAN_INSTALASI.md) · [📲 Panduan Notifikasi](./docs/PANDUAN_NOTIFIKASI.md) · [📘 Wiki Teknis](./docs/WIKI.md) · [📋 Changelog](./CHANGELOG.md) · [🔒 Security](./SECURITY.md)
 
@@ -44,7 +44,7 @@ PBB Manager dibangun khusus untuk menyelesaikan masalah nyata pengelolaan pajak 
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                        PBB Manager v10.2.0                       │
+│                        PBB Manager v10.4.0                       │
 ├──────────────────┬──────────────────┬────────────────────────────┤
 │   Web Dashboard  │  Portal Publik   │    PBB Mobile v2.1.0       │
 │   (Admin/Petugas)│  (Warga)         │    (Petugas Lapangan)     │

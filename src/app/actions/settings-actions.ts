@@ -54,11 +54,11 @@ export async function deleteAllTaxData() {
     // 2. Physical file deletion (Cleaning public/uploads)
     try {
       const uploadsPath = path.join(/* turbopackIgnore: true */ process.cwd(), "public", "uploads");
-      if (fs.existsSync(uploadsPath)) {
-        const rootFiles = fs.readdirSync(uploadsPath);
+      if (fs.existsSync(/* turbopackIgnore: true */ uploadsPath)) {
+        const rootFiles = fs.readdirSync(/* turbopackIgnore: true */ uploadsPath);
         for (const entry of rootFiles) {
-          const entryPath = path.join(uploadsPath, entry);
-          if (fs.statSync(entryPath).isFile()) {
+          const entryPath = path.join(/* turbopackIgnore: true */ uploadsPath, entry);
+          if (fs.statSync(/* turbopackIgnore: true */ entryPath).isFile()) {
             fs.unlinkSync(entryPath);
           }
         }
@@ -66,12 +66,12 @@ export async function deleteAllTaxData() {
         // We delete subfolders content but keep the folders structure
         const subfolders = ["avatars", "logos"];
         for (const sub of subfolders) {
-          const subPath = path.join(uploadsPath, sub);
-          if (fs.existsSync(subPath)) {
-            const files = fs.readdirSync(subPath);
+          const subPath = path.join(/* turbopackIgnore: true */ uploadsPath, sub);
+          if (fs.existsSync(/* turbopackIgnore: true */ subPath)) {
+            const files = fs.readdirSync(/* turbopackIgnore: true */ subPath);
             for (const file of files) {
-              const filePath = path.join(subPath, file);
-              if (fs.statSync(filePath).isFile()) {
+              const filePath = path.join(/* turbopackIgnore: true */ subPath, file);
+              if (fs.statSync(/* turbopackIgnore: true */ filePath).isFile()) {
                 fs.unlinkSync(filePath);
               }
             }
