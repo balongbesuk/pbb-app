@@ -44,11 +44,16 @@ Pembaruan teknis berfokus pada pemulihan kualitas visual peta batas GIS Blok dar
   - `js-yaml`: `4.2.0` ➔ `4.3.1` (Resolusi kerentanan CPU consumption)
   - `adm-zip`: `0.5.17` ➔ `0.6.0` (Lolos verifikasi CI penuh)
   - `nanoid`: Diperbarui ke versi aman untuk mencegah infinite loop DoS.
-- **Upgraded Packages (Mobile App)**: Memperbarui pustaka pendukung pada folder `pbb-mobile` untuk menambal kerentanan keamanan:
+- **Manual Security Overrides (Main App)**: Menambahkan `overrides` pada `package.json` untuk memaksa penggunaan sub-dependensi aman guna membersihkan kerentanan tersisa:
+  - `ip-address`: Dipaksa ke `10.4.0` untuk mencegah SSRF (sebelumnya `10.2.0` / `<=10.3.0`).
+  - `@hono/node-server`: Dipaksa ke `2.0.10` untuk mencegah DoS kebocoran memori (sebelumnya `1.19.13` / `<2.0.5`).
+  - `brace-expansion`: Dipaksa ke `1.1.18` untuk mencegah DoS.
+- **Upgraded Packages & Overrides (Mobile App)**: Memperbarui pustaka pendukung pada folder `pbb-mobile` untuk menambal kerentanan keamanan:
   - `postcss`: `8.5.12` ➔ `8.5.25`
   - `shell-quote`: `1.8.4` ➔ `1.10.0`
   - `js-yaml`: `4.2.0` ➔ `4.3.1` (Resolusi kerentanan CPU consumption)
-  - `brace-expansion`: Diperbarui melalui penyesuaian dependensi.
+  - `brace-expansion`: Dipaksa ke `2.1.4` via override (Resolusi kerentanan DoS).
+  - `nanoid`: Dipaksa ke `3.3.18` via override (Resolusi kerentanan infinite loop).
 
 
 ## v10.3 - 2026-07-13: Performance Optimization, DB Integrity Restoration, and CI/CD Fixes
