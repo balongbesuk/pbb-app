@@ -1,8 +1,28 @@
 # Changelog
 
-## v10.4 - 2026-07-13: GIS Map Restoration, Edit Batas Peta, and Fullscreen Overlay Fixes
+## v10.5 - 2026-08-08: PDF Parse Compatibility, Dynamic WP Map Names, Archive Orphan Filters & Standardized Tax Year System
 
-Pembaruan teknis berfokus pada pemulihan kualitas visual peta batas GIS Blok dari berkas cadangan asli, pembenahan siklus hidup rendering komponen peta di sisi client-side, penambahan fitur edit dan hapus batas bidang tanah langsung dari popup peta, serta perbaikan tampilan panel overlay saat mode fullscreen aktif.
+Pembaruan teknis berfokus pada resolusi kompatibilitas `pdf-parse@2.4.5` pada Windows/Turbopack, sinkronisasi nama Wajib Pajak otomatis dari database ke popup Peta Wilayah, penambahan filter interaktif & penanda visual berkas arsip yatim/anonim, serta penyeragaman UI sistem Pemilih Tahun Pajak (Tax Year Selector) di seluruh halaman aplikasi.
+
+### PDF Worker Setup & `pdf-parse@2.4.5` Compatibility
+- **Inisialisasi Worker Universal (`initPdfWorker`)**: Menambahkan helper `initPdfWorker()` di [archive-actions.ts](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/app/actions/archive-actions.ts) dan [archive-smart-scan-job.ts](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/lib/archive-smart-scan-job.ts) menggunakan `pathToFileURL()` untuk mengubah path lokal `pdf.worker.mjs` di Windows menjadi URL `file://` yang sah, menyelesaikan error `Setting up fake worker failed: Received protocol 'f:'`.
+- **Refactoring Handler Class `PDFParse`**: Mengubah alur ekstraksi teks PDF dari fungsi bawaan lama ke konstruktor berbasis class `new PDFParse({ data: buffer })` sesuai standar `pdf-parse@2.4.5` terbaru tanpa melakukan downgrade versi.
+
+### Dynamic WP Taxpayer Name (`namaWp`) Synchronization
+- **Optimasi API `/api/region-unpaid`**: Memperbarui mode `allStatus=true` pada [route.ts](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/app/api/region-unpaid/route.ts) untuk memilih dan mengembalikan field `namaWp` bersama dengan `paymentStatus` untuk setiap NOP.
+- **Dynamic Popup Header di Peta Wilayah**: Mengubah fungsi `onEachFeatureWp` pada [region-map.tsx](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/components/map/region-map.tsx) agar judul popup peta bidang secara dinamis mengutamakan `namaWp` dari database (`TaxData`) di atas properti GeoJSON statis `props.name` ("TIDAK DIKETAHUI").
+
+### Filter Interaktif & Badge Arsip Yatim/Anonim (Kelola Arsip Digital)
+- **Kartu Statistik Interaktif**: Mengubah kartu statistik pada [archive-manager.tsx](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/components/settings/archive-manager.tsx) menjadi tombol interaktif yang memungkinkan admin memfilter daftar berkas arsip berdasarkan status **Total Arsip**, **Terkoneksi (Valid)**, dan **Yatim / Anonim (Perlu Cek)** hanya dengan 1 kali klik.
+- **Navigasi Tab Filter & Penanda Visual**: Menambahkan bilah filter cepat (`Semua`, `Valid`, `Yatim / Anonim`) serta badge status visual **`VALID`** (hijau) dan **`YATIM`** (merah) pada setiap kartu berkas PDF untuk memudahkan identifikasi file arsip yang NOP-nya tidak terdaftar di database.
+
+### Tax Year Design System Standardization
+- **Unifikasi UI Pemilih Tahun Pajak**: Menyeragamkan bahasa desain kontrol Tahun Pajak di seluruh halaman aplikasi menggunakan kapsul rounded `rounded-2xl`, ikon `<Calendar />`, label berhuruf kapital tebal `TAHUN PAJAK:`, serta kontrol angka/select yang konsisten.
+- **Peta Wilayah (`/peta`)**: Menambahkan pemilih tahun pajak di header halaman peta beserta mekanisme refetch asinkron otomatis yang memperbarui warna status bidang WP & statistik wilayah tanpa mengunduh ulang file spasial `wp.json`.
+- **Data Pajak PBB (`/data-pajak`)**: Menambahkan pemilih tahun pajak berseragam di header tabel untuk memudahkan pemeriksaan data historis dan riwayat tunggakan PBB tahun-tahun sebelumnya.
+- **Konsistensi Halaman Lain**: Menerapkan style pemilih tahun berseragam pada halaman **Dashboard**, **Laporan Realisasi**, **Laporan GIS**, **Kelola Arsip**, **Upload PBB**, dan **Pengaturan Desa**.
+
+
 
 ### GIS & Map Visuals Restoration
 - **Batas Wilayah Blok Asli**: Mengembalikan berkas peta `public/maps/village.json` menggunakan versi cadangan asli dari `tmp/village.json`. Langkah ini memulihkan batas-batas wilayah Blok PBB 001 s.d. 017 menjadi rapi, kontigu, dan selaras sempurna dengan jalan raya serta pemukiman (menghilangkan garis bergerigi dan celah kosong di tengah pemukiman).
