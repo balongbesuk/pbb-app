@@ -2,7 +2,7 @@
   "expo": {
     "name": "PBB Mobile",
     "slug": "pbb-mobile",
-    "version": "2.1.0",
+    "version": "10.5.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,7 +16,7 @@
     },
     "android": {
       "package": "com.balongbesuk.pbbmobile",
-      "versionCode": 21,
+      "versionCode": 105,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

@@ -1,4 +1,4 @@
-# PBB Mobile v2.1.0 — Panduan Build APK & Development
+# PBB Mobile v10.5.0 — Panduan Build APK & Development
 <img width="100%" alt="PBB Mobile Banner" src="https://github.com/user-attachments/assets/1cc7b3c6-030e-49c1-a388-33af515376bc" />
 
 
@@ -90,5 +90,5 @@ Kemudian tekan `a` untuk membuka di emulator Android atau scan QR code dengan ap
 
 ---
 
-*Terakhir diperbarui: Mei 2026*
-*Dibuat untuk ekosistem PBB App v10.1.0 (PBB Mobile v2.1.0)*
+*Terakhir diperbarui: November 2026*
+*Dibuat untuk ekosistem PBB App & PBB Mobile v10.5.0*

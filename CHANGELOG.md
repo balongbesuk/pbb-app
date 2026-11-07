@@ -1,8 +1,8 @@
 # Changelog
 
-## v10.5.0 - 2026-11-07: Security Hardening, Audit Fixes, Mobile Alih Tugas Sync & Performance Optimization
+## v10.5.0 (Web & PBB Mobile APK) - 2026-11-07: Security Hardening, Audit Fixes, Mobile Alih Tugas Sync & Performance Optimization
 
-Pembaruan komprehensif berfokus pada penguatan keamanan (Security Hardening) berbasis audit kode mendalam, integritas sinkronisasi data spasial pada modul alih tugas Android PBB Mobile, ketahanan backup basis data SQLite, optimasi performa *first-load* landing page via code-splitting, serta perapian dependensi dan stabilitas sistem. Akses publik bagi warga desa untuk mengecek status pajak PBB melalui website portal desa maupun aplikasi Android tetap dipertahankan cepat dan mudah tanpa memerlukan login.
+Pembaruan komprehensif ini menyeragamkan versi aplikasi Web Dashboard & PBB Mobile (APK) ke **v10.5.0** secara terintegrasi. Fokus rilis meliputi penguatan keamanan (Security Hardening) berbasis audit kode mendalam, integritas sinkronisasi data spasial pada modul alih tugas Android PBB Mobile, ketahanan backup basis data SQLite, optimasi performa *first-load* landing page via code-splitting, serta perapian dependensi dan stabilitas sistem. Akses publik bagi warga desa untuk mengecek status pajak PBB melalui website portal desa maupun aplikasi Android tetap dipertahankan cepat dan mudah tanpa memerlukan login.
 
 ### Security Hardening & Audit Fixes
 - **Proteksi Otorisasi Server Actions**: Mengamankan server actions `getWpByRegion`, `getWpByPenarik`, `getCurrentUserSignature`, `getArchiveList`, dan `checkArchiveByNop` menggunakan middleware pengaman `requireAuth()`, menutup potensi kebocoran data wajib pajak dari panggilan aksi yang tidak terautentikasi.
