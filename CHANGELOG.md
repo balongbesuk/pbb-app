@@ -17,6 +17,14 @@ Pembaruan komprehensif ini menyeragamkan versi aplikasi Web Dashboard & PBB Mobi
 - **Sinkronisasi Otomatis `TaxMapping` pada Alih Tugas**: Menambahkan transaksi database `tx.taxMapping.upsert` pada endpoint persetujuan alih tugas (`/api/mobile/officer/transfer-response` dan `/api/mobile/officer/taxpayers/transfer`), menjamin peta bidang tanah di GIS langsung berpindah kepemilikan petugas secara instan saat alih tugas disetujui.
 - **Pembersihan Simulator Mobile**: Menghapus rute tiruan `POST /api/mobile/tax` (dead simulator code) untuk menjaga kebersihan dan keamanan API produksi.
 
+### PBB Mobile Build & Native Toolchain Stabilization
+- **Penyelarasan Versi React Native & Expo SDK 55**: Menyelaraskan dependensi `react-native` ke versi `0.83.10` dan memperbarui modul Expo (`expo@~55.0.32`, `expo-blur@~55.0.18`, `expo-device@~55.0.21`, dll), mengatasi kegagalan kompilasi assertion version check pada `react-native-reanimated` 4.2.1.
+- **Pembersihan & Pemulihan Paket `node_modules` Mobile**: Memulihkan 992 dependensi pada direktori `pbb-mobile` yang sebelumnya corrupt atau kehilangan file `.js` (`commander`, `jimp-compact`, `xcode`, `tr46`, `resolve-workspace-root`), sehingga perintah `expo-modules-autolinking` dan `expo prebuild` dapat berjalan lancar.
+- **Penyelesaian Isu Native Access OpenJDK 25 (CMake Prefab)**: Mengatasi peringatan restricted method Java 25 pada AGP Prefab CMake dengan mengonfigurasi wrapper `--enable-native-access=ALL-UNNAMED`, memungkinkan kompilasi native C++ untuk 4 arsitektur prosesor Android (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`) selesai 100% tanpa error.
+- **Inisialisasi Toolchain Android Native & NDK**: Menyiapkan konfigurasi `android/local.properties`, auto-accept lisensi Android SDK, serta pengunduhan NDK 27.1 dan CMake 3.22.1.
+- **Distribusi File APK Release**: Menghasilkan file instalasi final `pbb-mobile-v10.5.0.apk` (87.2 MB, signed & optimized) yang dapat diunduh via web atau diinstal langsung di HP Android petugas lapangan.
+- **Pengaturan `.gitignore` File Build**: Menambahkan `*.apk` dan `pbb-mobile/android/` ke dalam `.gitignore` agar file biner besar dan cache native tidak membebani repository git.
+
 ### Database Integrity & Atomic Backup
 - **Pencadangan SQLite Atomik (`VACUUM INTO`)**: Mengubah alur backup database SQLite menjadi atomic snapshot menggunakan perintah `VACUUM INTO` dalam mode WAL (Write-Ahead Logging), mencegah risiko korupsi file saat backup dilakukan bersamaan dengan transaksi aktif.
 - **Validasi Magic Header Restore**: Menambahkan verifikasi byte header SQLite (`SQLite format 3\0`) sebelum proses pemulihan (restore) database dijalankan untuk mencegah kerusakan akibat berkas non-database.
