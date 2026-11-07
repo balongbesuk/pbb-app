@@ -16,9 +16,9 @@ export const revalidate = 30;
 export default async function IndexPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }> | { q?: string };
+  searchParams?: Promise<{ q?: string }>;
 }) {
-  const resolvedParams = searchParams instanceof Promise ? await searchParams : searchParams;
+  const resolvedParams = searchParams ? await searchParams : undefined;
   const q = resolvedParams?.q || "";
   const config = await getVillageConfig();
   const rawNamaDesa = config?.namaDesa || "";

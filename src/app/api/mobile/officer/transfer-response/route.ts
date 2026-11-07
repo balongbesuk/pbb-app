@@ -69,10 +69,27 @@ export async function POST(req: Request) {
 
         const newPenarikId = request.type === "GIVE" ? request.receiverId : request.senderId;
 
-        // 3. Update Penarik
+        // 3. Update Penarik & sync TaxMapping
         await tx.taxData.update({
           where: { id: request.taxId },
           data: { penarikId: newPenarikId },
+        });
+
+        await tx.taxMapping.upsert({
+          where: { nop: currentTax.nop },
+          update: {
+            penarikId: newPenarikId,
+            rt: currentTax.rt || "",
+            rw: currentTax.rw || "",
+            dusun: currentTax.dusun || "",
+          },
+          create: {
+            nop: currentTax.nop,
+            penarikId: newPenarikId,
+            rt: currentTax.rt || "",
+            rw: currentTax.rw || "",
+            dusun: currentTax.dusun || "",
+          },
         });
 
         // 4. Update request status

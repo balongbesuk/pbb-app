@@ -109,77 +109,12 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { nop } = body;
-
-    const headers = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
-
-    const blockedResponse = await ensureMobileEnabled(headers);
-    if (blockedResponse) return blockedResponse;
-
-    // Pengecekan autentikasi token JWT Mobile
-    let auth;
-    try {
-      auth = await requireMobileAuth(request);
-    } catch (e) {
-      return unauthorizedMobileResponse(headers);
-    }
-
-    if (!nop) {
-      return NextResponse.json({ success: false, error: 'NOP wajib dikirim' }, { status: 400, headers });
-    }
-
-    const today = new Date();
-
-    const whereClause: any = { nop: nop };
-    if (auth.role === "PENARIK") {
-      whereClause.penarikId = auth.userId;
-    }
-
-    const updated = await prisma.taxData.updateMany({
-      where: whereClause,
-      data: {
-        paymentStatus: 'LUNAS',
-        tanggalBayar: today,
-        tempatBayar: 'Mobile App Simulator'
-      }
-    });
-
-    if (updated.count === 0) {
-      if (auth.role === "PENARIK") {
-        return NextResponse.json(
-          { success: false, error: 'NOP tidak ditemukan atau ditugaskan ke petugas lain' },
-          { status: 403, headers }
-        );
-      }
-      return NextResponse.json(
-        { success: false, error: 'NOP tidak ditemukan' },
-        { status: 404, headers }
-      );
-    }
-
-    return NextResponse.json({ success: true, message: 'Status berhasil diperbarui jadi LUNAS', updated: updated.count }, { headers });
-  } catch (error) {
-    console.error('API Mobile Tax Update Error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Gagal memperbarui status' },
-      { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } }
-    );
-  }
-}
-
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
   });

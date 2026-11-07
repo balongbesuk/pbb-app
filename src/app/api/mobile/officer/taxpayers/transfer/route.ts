@@ -54,6 +54,23 @@ export async function POST(req: Request) {
         data: { penarikId: receiverId }
       });
 
+      await prisma.taxMapping.upsert({
+        where: { nop: taxData.nop },
+        update: {
+          penarikId: receiverId,
+          rt: taxData.rt || "",
+          rw: taxData.rw || "",
+          dusun: taxData.dusun || "",
+        },
+        create: {
+          nop: taxData.nop,
+          penarikId: receiverId,
+          rt: taxData.rt || "",
+          rw: taxData.rw || "",
+          dusun: taxData.dusun || "",
+        },
+      });
+
       await prisma.notification.create({
         data: {
           userId: receiverId,
