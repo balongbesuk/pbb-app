@@ -58,15 +58,22 @@ export async function GET(req: NextRequest) {
       select: { id: true, nop: true }
     });
     
-    const missingArchiveIds = allTaxes
-      .filter(t => {
-        const cleanNop = t.nop.replace(/\D/g, "");
-        return !archiveNopDigits.has(cleanNop);
-      })
-      .map(t => t.id);
-      
+    const existingArchiveIds: number[] = [];
+    const missingArchiveIds: number[] = [];
+    for (const t of allTaxes) {
+      const cleanNop = t.nop.replace(/\D/g, "");
+      if (archiveNopDigits.has(cleanNop)) {
+        existingArchiveIds.push(t.id);
+      } else {
+        missingArchiveIds.push(t.id);
+      }
+    }
+
     const existingAnd = whereClause.AND;
-    const archiveFilter = { id: { in: missingArchiveIds } };
+    const archiveFilter =
+      existingArchiveIds.length <= missingArchiveIds.length
+        ? { id: { notIn: existingArchiveIds } }
+        : { id: { in: missingArchiveIds } };
     whereClause.AND = Array.isArray(existingAnd)
       ? [...existingAnd, archiveFilter]
       : existingAnd

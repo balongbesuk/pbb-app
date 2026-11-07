@@ -54,7 +54,7 @@ function parseBapendaDate(dateStr: string) {
   return new Date();
 }
 
-function buildJombangBapendaUrl(cleanNop: string) {
+export function buildJombangBapendaUrl(cleanNop: string) {
   const p1 = cleanNop.substring(0, 2);
   const p2 = cleanNop.substring(2, 4);
   const p3 = cleanNop.substring(4, 7);

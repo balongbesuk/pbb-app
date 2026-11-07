@@ -72,19 +72,13 @@ export async function searchPublicTaxData(
   tahunPajak: number, 
   page: number = 1, 
   pageSize: number = 10,
-  turnstileToken?: string,
-  skipTurnstile: boolean = false
+  turnstileToken?: string
 ) {
   try {
     // ─── Rate Limiting ──────────────────────────────────────────────
     const headersList = await headers();
-    const userAgent = headersList.get("user-agent") || "";
-    const isLighthouse = /Lighthouse|Google-Lighthouse/i.test(userAgent);
-
     const ip = getClientIp({ headers: headersList });
-    const rateLimitResult = !isLighthouse 
-      ? await checkRateLimit(ip, PUBLIC_SEARCH_RATE_LIMIT)
-      : { allowed: true, remaining: 999 };
+    const rateLimitResult = await checkRateLimit(ip, PUBLIC_SEARCH_RATE_LIMIT);
 
     if (!rateLimitResult.allowed) {
       return {
@@ -96,7 +90,10 @@ export async function searchPublicTaxData(
 
     // ─── Turnstile Anti-Bot Verification ────────────────────────────
     const secretKey = process.env.TURNSTILE_SECRET_KEY;
-    if (secretKey && !skipTurnstile) {
+    const isInternalServerCall = Boolean(
+      process.env.NEXTAUTH_SECRET && turnstileToken === process.env.NEXTAUTH_SECRET
+    );
+    if (secretKey && !isInternalServerCall) {
       if (!turnstileToken) {
         return { success: false, message: "Verifikasi Turnstile diperlukan untuk melakukan pencarian." };
       }

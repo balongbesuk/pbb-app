@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { createAuditLog } from "./log-actions";
 import { UserSchema, formatZodError } from "@/lib/validations/schemas";
-import { requireAdmin } from "@/lib/server-auth";
+import { requireAdmin, requireAuth } from "@/lib/server-auth";
 
 import { formatSignatureUrl } from "@/lib/utils";
 
@@ -136,6 +136,10 @@ export async function resetPassword(id: string) {
 
 export async function getCurrentUserSignature(id: string) {
   try {
+    const { userId, role } = await requireAuth();
+    if (role !== "ADMIN" && userId !== id) {
+      return null;
+    }
     const user = await prisma.user.findUnique({
       where: { id },
       select: { signatureUrl: true }

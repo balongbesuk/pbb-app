@@ -16,7 +16,8 @@ import fs from "fs";
  */
 
 const createErrorPage = (title: string, message: string, color: string = "rose") => {
-  const isAmber = color === "amber";
+  const accent = color === "amber" ? "#f59e0b" : "#f43f5e";
+  const accentBg = color === "amber" ? "rgba(245,158,11,0.12)" : "rgba(244,63,94,0.12)";
   return `
     <!DOCTYPE html>
     <html lang="id">
@@ -24,28 +25,32 @@ const createErrorPage = (title: string, message: string, color: string = "rose")
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${title}</title>
-      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{background:#09090b;color:#f4f4f5;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem;font-family:system-ui,-apple-system,sans-serif}
+        .card{max-width:28rem;width:100%;background:#18181b;border:1px solid #27272a;border-radius:2.5rem;padding:2rem;text-align:center;box-shadow:0 25px 50px -12px rgba(0,0,0,.6)}
+        .icon{margin:0 auto 1.5rem;width:6rem;height:6rem;border-radius:9999px;background:${accentBg};color:${accent};display:flex;align-items:center;justify-content:center}
+        h1{font-size:1.5rem;font-weight:900;text-transform:uppercase;letter-spacing:-.03em;margin-bottom:1rem;color:#fff}
+        p.msg{color:#a1a1aa;line-height:1.6;font-weight:500;margin-bottom:2rem}
+        a.btn{display:block;width:100%;padding:.875rem;background:#27272a;color:#fff;text-decoration:none;border-radius:1rem;font-weight:700}
+        a.btn:hover{background:#3f3f46}
+        p.foot{font-size:10px;color:#71717a;text-transform:uppercase;font-weight:700;letter-spacing:.1em;padding-top:.75rem}
+      </style>
     </head>
-    <body class="bg-zinc-950 text-zinc-100 flex items-center justify-center min-h-screen p-6 font-sans">
-      <div class="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-[2.5rem] p-8 text-center shadow-2xl">
-        <div class="mb-6 flex justify-center">
-            <div class="p-6 bg-${color}-500/10 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-${color}-500 ${isAmber ? "animate-pulse" : ""}">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
-                    <path d="M12 8v4"/>
-                    <path d="M12 16h.01"/>
-                </svg>
-            </div>
+    <body>
+      <div class="card">
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
+            <path d="M12 8v4"/>
+            <path d="M12 16h.01"/>
+          </svg>
         </div>
-        <h1 class="text-2xl font-black uppercase tracking-tighter mb-4 text-white">${title}</h1>
-        <p class="text-zinc-400 leading-relaxed font-medium mb-8">
-          ${message}
-        </p>
-        <div class="space-y-3">
-            <a href="/" class="block w-full py-3.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-2xl font-bold transition-all active:scale-[0.98]">
-              Kembali ke Beranda
-            </a>
-            <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-widest pt-2">Sistem Keamanan Pusat PBB Digital</p>
+        <h1>${title}</h1>
+        <p class="msg">${message}</p>
+        <div>
+          <a href="/" class="btn">Kembali ke Beranda</a>
+          <p class="foot">Sistem Keamanan Pusat PBB Digital</p>
         </div>
       </div>
     </body>

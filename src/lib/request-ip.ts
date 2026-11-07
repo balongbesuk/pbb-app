@@ -48,17 +48,26 @@ export function getClientIp(
   }
 
   if (isProxyTrusted()) {
-    const forwarded = getHeaderValue(req.headers, "x-forwarded-for");
-    if (forwarded) {
-      const firstForwardedIp = normalizeIp(forwarded.split(",")[0]);
-      if (firstForwardedIp) {
-        return firstForwardedIp;
-      }
+    const cfIp = normalizeIp(getHeaderValue(req.headers, "cf-connecting-ip"));
+    if (cfIp) {
+      return cfIp;
     }
 
     const realIp = normalizeIp(getHeaderValue(req.headers, "x-real-ip"));
     if (realIp) {
       return realIp;
+    }
+
+    const forwarded = getHeaderValue(req.headers, "x-forwarded-for");
+    if (forwarded) {
+      const parts = forwarded
+        .split(",")
+        .map((part) => normalizeIp(part))
+        .filter((part): part is string => Boolean(part));
+      const trustedForwardedIp = parts[parts.length - 1];
+      if (trustedForwardedIp) {
+        return trustedForwardedIp;
+      }
     }
   }
 

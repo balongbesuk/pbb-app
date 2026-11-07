@@ -6,7 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { resolveSafeChildPath } from "@/lib/file-security";
 
 const MAX_RESTORE_ZIP_SIZE = 200 * 1024 * 1024;
+const MAX_RESTORE_UNCOMPRESSED_SIZE = 500 * 1024 * 1024;
 const MAX_RESTORE_ENTRIES = 5000;
+const SQLITE_MAGIC_HEADER = "SQLite format 3\0";
 
 function isAllowedRestoreEntry(entryName: string) {
   return entryName === "dev.db" || entryName.startsWith("uploads/");
@@ -52,6 +54,14 @@ export async function restoreDatabaseFromZip(zipBuffer: Buffer): Promise<{ succe
       throw new Error(`ZIP restore mengandung file tidak diizinkan: ${invalidEntry.entryName}`);
     }
 
+    const totalUncompressedSize = zipEntries.reduce(
+      (sum, entry) => sum + Math.max(0, entry.header?.size || 0),
+      0
+    );
+    if (totalUncompressedSize > MAX_RESTORE_UNCOMPRESSED_SIZE) {
+      throw new Error("Ukuran hasil ekstraksi ZIP melebihi batas aman (maksimal 500MB).");
+    }
+
     const dbEntries = zipEntries.filter((entry) => !entry.isDirectory && entry.entryName === "dev.db");
     if (dbEntries.length !== 1) {
       throw new Error("Backup harus berisi tepat satu file database bernama dev.db di root ZIP.");
@@ -60,9 +70,16 @@ export async function restoreDatabaseFromZip(zipBuffer: Buffer): Promise<{ succe
     ensureDir(stagingDir);
     ensureDir(backupDir);
 
-    // Extract to staging
+    // Extract to staging and verify SQLite magic header
     const dbEntry = dbEntries[0];
-    fs.writeFileSync(stagedDbPath, dbEntry.getData());
+    const dbBuffer = dbEntry.getData();
+    if (
+      dbBuffer.length < 16 ||
+      dbBuffer.subarray(0, 16).toString("utf8") !== SQLITE_MAGIC_HEADER
+    ) {
+      throw new Error("File dev.db di dalam ZIP bukan database SQLite yang valid.");
+    }
+    fs.writeFileSync(stagedDbPath, dbBuffer);
 
     const uploadEntries = zipEntries.filter((entry) => entry.entryName.startsWith("uploads/"));
     if (uploadEntries.length > 0) {

@@ -137,11 +137,13 @@ export async function bulkUpdatePaymentStatus(
 ) {
   try {
     if (!ids || ids.length === 0) return { success: false, message: "Tidak ada data yang dipilih" };
+    const validatedIds = z.array(z.number().int().positive()).min(1).parse(ids);
+    const validatedStatus = z.enum(["LUNAS", "BELUM_LUNAS", "TIDAK_TERBIT", "SUSPEND"]).parse(paymentStatus);
     const { role, userId } = await requireAuth();
 
     // Fetch the relevant data
     const taxDataRecords = await prisma.taxData.findMany({
-      where: { id: { in: ids } },
+      where: { id: { in: validatedIds } },
     });
 
     if (role === "PENARIK") {
@@ -152,26 +154,31 @@ export async function bulkUpdatePaymentStatus(
     }
 
     const now = new Date();
-
-    const idsList = ids.join(",");
-    const isLunas = paymentStatus === "LUNAS";
+    const isLunas = validatedStatus === "LUNAS";
     const nowStr = now.toISOString();
 
-    const updatedCount = await prisma.$executeRawUnsafe(
-      `UPDATE TaxData
-       SET 
-         paymentStatus = ?,
-         pembayaran = CASE WHEN ? = 'LUNAS' THEN ketetapan ELSE 0 END,
-         sisaTagihan = CASE WHEN ? = 'LUNAS' THEN 0 ELSE ketetapan END,
-         tanggalBayar = ?,
-         updatedAt = ?
-       WHERE id IN (${idsList})`,
-      paymentStatus,
-      paymentStatus,
-      paymentStatus,
-      isLunas ? nowStr : null,
-      nowStr
-    );
+    let updatedCount = 0;
+    const CHUNK_SIZE = 500;
+    for (let i = 0; i < validatedIds.length; i += CHUNK_SIZE) {
+      const chunk = validatedIds.slice(i, i + CHUNK_SIZE);
+      const placeholders = chunk.map(() => "?").join(",");
+      updatedCount += await prisma.$executeRawUnsafe(
+        `UPDATE TaxData
+         SET 
+           paymentStatus = ?,
+           pembayaran = CASE WHEN ? = 'LUNAS' THEN ketetapan ELSE 0 END,
+           sisaTagihan = CASE WHEN ? = 'LUNAS' THEN 0 ELSE ketetapan END,
+           tanggalBayar = ?,
+           updatedAt = ?
+         WHERE id IN (${placeholders})`,
+        validatedStatus,
+        validatedStatus,
+        validatedStatus,
+        isLunas ? nowStr : null,
+        nowStr,
+        ...chunk
+      );
+    }
 
     const wpNames = taxDataRecords.map(d => d.namaWp).join(", ");
     const limitedNames = wpNames.length > 60 ? wpNames.substring(0, 57) + "..." : wpNames;
@@ -267,6 +274,7 @@ export async function bulkUpdatePaymentStatus(
 
 export async function getWpByRegion(dusun: string | null, rw: string | null, tahun: number) {
   try {
+    await requireAuth();
     const data = await prisma.taxData.findMany({
       where: {
         tahun,
@@ -301,6 +309,7 @@ export async function getWpByPenarik(
   paymentStatus?: "LUNAS" | "BELUM_LUNAS" | "TIDAK_TERBIT" | "SUSPEND"
 ) {
   try {
+    await requireAuth();
     const whereClause: Prisma.TaxDataWhereInput = {
       tahun,
       penarikId,

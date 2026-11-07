@@ -1,5 +1,6 @@
 import { decode } from "next-auth/jwt";
 import type { Role } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 export type MobileAuthSession = {
   userId: string;
@@ -24,16 +25,24 @@ export async function requireMobileAuth(req: Request): Promise<MobileAuthSession
 
   const payload = await decode({ token, secret });
   const userId = payload?.id ? String(payload.id) : "";
-  const role = payload?.role as Role | undefined;
 
-  if (!userId || !role || !MOBILE_ALLOWED_ROLES.includes(role)) {
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true, name: true },
+  });
+
+  if (!user || !MOBILE_ALLOWED_ROLES.includes(user.role)) {
     throw new Error("Unauthorized");
   }
 
   return {
-    userId,
-    role,
-    name: payload?.name ? String(payload.name) : "",
+    userId: user.id,
+    role: user.role,
+    name: user.name || "",
   };
 }
 

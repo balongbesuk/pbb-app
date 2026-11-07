@@ -9,6 +9,7 @@ import { formatZodError } from "@/lib/validations/schemas";
 import { createDatabaseBackup } from "@/lib/backup";
 import * as cheerio from "cheerio";
 import type { ExcelRow } from "@/lib/excel-processor";
+import { buildJombangBapendaUrl } from "@/lib/bapenda-sync";
 
 export async function previewTaxData(formData: FormData, tahun: number) {
   try {
@@ -249,15 +250,7 @@ export async function fetchBapendaData(nop: string, tahun: number) {
     const cleanNop = nop.replace(/\D/g, "");
     if (cleanNop.length !== 18) throw new Error(`NOP harus 18 digit angka (Diterima ${cleanNop.length} digit).`);
 
-    const p1 = cleanNop.substring(0, 2);
-    const p2 = cleanNop.substring(2, 4);
-    const p3 = cleanNop.substring(4, 7);
-    const p4 = cleanNop.substring(7, 10);
-    const p5 = cleanNop.substring(10, 13);
-    const p6 = cleanNop.substring(13, 17);
-    const p7 = cleanNop.substring(17, 18);
-
-    const url = `https://bapenda.jombangkab.go.id/cek-bayar/ceknopbayar-jmb.kab?module=pbb&kata=${p1}&kata1=${p2}&kata2=${p3}&kata3=${p4}&kata4=${p5}&kata5=${p6}&kata6=${p7}&viewpbb=`;
+    const url = buildJombangBapendaUrl(cleanNop);
 
     const res = await fetch(url, {
       method: "GET",

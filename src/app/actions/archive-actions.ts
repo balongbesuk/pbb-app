@@ -1,95 +1,14 @@
 "use server";
 import fs from "fs";
 import path from "path";
-import { PDFDocument } from "pdf-lib";
-import * as pdfParse from "pdf-parse";
-import { pathToFileURL } from "url";
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/server-auth";
+import { requireAdmin, requireAuth } from "@/lib/server-auth";
 import { assertSafeFilename, resolveSafeChildPath } from "@/lib/file-security";
 import { prisma } from "@/lib/prisma";
 import {
   ensureArchiveDir,
-  extractNopFromText,
   getArchiveDir as resolveArchiveDir,
 } from "@/lib/archive-utils";
-
-// Comprehensive Browser Polyfills for Server-side PDF Parsing (needed for pdf-lib/pdf-parse)
-const noopClass = class {};
-const polyfillTarget = globalThis as Record<string, unknown>;
-for (const key of [
-  "DOMMatrix",
-  "DOMPoint",
-  "DOMRect",
-  "HTMLElement",
-  "HTMLCanvasElement",
-  "Navigator",
-  "Image",
-  "ReadableStream",
-]) {
-  if (typeof polyfillTarget[key] === "undefined") {
-    polyfillTarget[key] = noopClass;
-  }
-}
-
-function initPdfWorker(PDFParseClass: any) {
-  try {
-    const candidatePaths = [
-      path.join(process.cwd(), "node_modules", "pdf-parse", "node_modules", "pdfjs-dist", "legacy", "build", "pdf.worker.mjs"),
-      path.join(process.cwd(), "node_modules", "pdf-parse", "node_modules", "pdfjs-dist", "build", "pdf.worker.mjs"),
-      path.join(process.cwd(), "node_modules", "pdfjs-dist", "legacy", "build", "pdf.worker.mjs"),
-      path.join(process.cwd(), "node_modules", "pdfjs-dist", "build", "pdf.worker.mjs"),
-    ];
-
-    for (const p of candidatePaths) {
-      if (fs.existsSync(/* turbopackIgnore: true */ p)) {
-        const workerUrl = pathToFileURL(p).href;
-        if (typeof PDFParseClass?.setWorker === "function") {
-          PDFParseClass.setWorker(workerUrl);
-        }
-        break;
-      }
-    }
-  } catch (e) {
-    console.warn("Gagal mengkonfigurasi pdf.worker path:", e);
-  }
-}
-
-async function parsePdf(
-  dataBuffer: Buffer,
-  options?: { pagerender?: (pageData: any) => Promise<string> }
-) {
-  const moduleObj = pdfParse as any;
-  if (typeof moduleObj === "function") {
-    return await moduleObj(dataBuffer, options);
-  }
-  if (typeof moduleObj?.default === "function") {
-    return await moduleObj.default(dataBuffer, options);
-  }
-  const PDFParseClass = moduleObj?.PDFParse || moduleObj?.default?.PDFParse;
-  if (PDFParseClass) {
-    initPdfWorker(PDFParseClass);
-    const parser = new PDFParseClass({ data: dataBuffer });
-    const res = await parser.getText();
-    if (options?.pagerender) {
-      for (let i = 0; i < res.pages.length; i++) {
-        const page = res.pages[i];
-        await options.pagerender({
-          getTextContent: async () => ({
-            items: [{ str: page.text, transform: [0, 0, 0, 0, 0, 0] }],
-          }),
-        });
-      }
-    }
-    await parser.destroy();
-    return {
-      text: res.text,
-      numpages: res.total || res.pages.length,
-      numrender: res.pages.length,
-    };
-  }
-  throw new Error("Tidak dapat menginisialisasi pustaka pdf-parse.");
-}
 
 function getArchiveDir(year: number) {
   return resolveArchiveDir(year);
@@ -136,113 +55,10 @@ export async function getArchiveStats(year: number) {
   }
 }
 
-/** Smart Action to Split Large PDF by NOP */
-export async function processSmartArchive(formData: FormData) {
-  const logDir = path.join(/* turbopackIgnore: true */ process.cwd(), "tmp");
-  if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir, { recursive: true });
-  }
-  const logPath = path.join(logDir, "pbb_process_log.txt");
-  fs.writeFileSync(logPath, `--- STARTING SMART SCAN --- ${new Date().toISOString()}\n`);
-  
-  try {
-    await requireAdmin();
-    const file = formData.get("file") as File;
-    const yearRaw = formData.get("year");
-    const year = yearRaw ? parseInt(yearRaw.toString()) : new Date().getFullYear();
-    const archiveDir = getArchiveDir(year);
-
-    if (!file || file.size === 0) {
-       fs.appendFileSync(logPath, "ERROR: File is empty or not found\n");
-       return { success: false, message: "File kosong" };
-    }
-
-    fs.appendFileSync(logPath, `Processing file: ${file.name} (${file.size} bytes)\n`);
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // 1. Ekstraksi teks single-pass dari seluruh dokumen
-    fs.appendFileSync(logPath, `Extracting text from all pages in single pass...\n`);
-    const pageNops: { index: number; nop: string }[] = [];
-    let pageCounter = 0;
-    
-    const parseOptions = {
-      pagerender: async function (pageData: any) {
-        const textContent = await pageData.getTextContent();
-        let lastY: number | undefined = undefined;
-        let text = "";
-        for (const item of textContent.items) {
-          if (lastY === item.transform[5] || lastY === undefined) {
-            text += item.str;
-          } else {
-            text += "\n" + item.str;
-          }
-          lastY = item.transform[5];
-        }
-
-        const nop = extractNopFromText(text);
-        const currentPageIndex = pageCounter++;
-        pageNops.push({ index: currentPageIndex, nop });
-        return text;
-      },
-    };
-
-    await parsePdf(buffer, parseOptions);
-    fs.appendFileSync(logPath, `Text extraction complete. Found ${pageNops.filter(p => p.nop).length} NOPs.\n`);
-
-    // 2. Muat dokumen asli dengan pdf-lib
-    const mainPdfDoc = await PDFDocument.load(buffer);
-    const totalPages = mainPdfDoc.getPageCount();
-
-    fs.appendFileSync(logPath, `Total Pages: ${totalPages}\n`);
-
-    ensureArchiveDir(year);
-
-    let detectedCount = 0;
-    let skippedCount = 0;
-
-    // 3. Loop untuk menulis sub-pdf
-    for (let i = 0; i < totalPages; i++) {
-        try {
-          const item = pageNops.find((p) => p.index === i);
-          const nop = item ? item.nop : "";
-
-          if (nop) {
-            const subPdfDoc = await PDFDocument.create();
-            const [copiedPage] = await subPdfDoc.copyPages(mainPdfDoc, [i]);
-            subPdfDoc.addPage(copiedPage);
-            const subPdfBytes = await subPdfDoc.save();
-
-            const filename = `${nop}.pdf`;
-            fs.writeFileSync(path.join(archiveDir, filename), subPdfBytes);
-            detectedCount++;
-            fs.appendFileSync(logPath, `PAGE ${i+1}: NOP FOUND -> ${nop}\n`);
-          } else {
-            fs.appendFileSync(logPath, `PAGE ${i+1}: NO NOP DETECTED IN CLEAN TEXT\n`);
-            skippedCount++;
-          }
-        } catch (pageError) {
-          fs.appendFileSync(logPath, `PAGE ${i + 1}: FATAL ERROR -> ${String(pageError)}\n`);
-          skippedCount++;
-        }
-    }
-
-    revalidatePath("/kelola-arsip");
-    revalidatePath("/settings");
-    return { 
-      success: true, 
-      message: `Pemindaian selesai! Berhasil: ${detectedCount}, Terlewati: ${skippedCount}.` 
-    };
-  } catch (error) {
-    fs.appendFileSync(logPath, `FATAL CRASH: ${error}\n`);
-    return { success: false, message: "Gagal fatal. Cek log pbb_process_log.txt" };
-  }
-}
-
 /** Get list of all archive filenames, sizes, and connection status by year */
 export async function getArchiveList(year: number): Promise<{ name: string; size: number; isConnected: boolean }[]> {
   try {
+    await requireAuth();
     const archiveDir = getArchiveDir(year);
     if (!fs.existsSync(archiveDir)) return [];
     const files = fs.readdirSync(archiveDir).filter(f => !f.startsWith("."));
@@ -269,6 +85,7 @@ export async function getArchiveList(year: number): Promise<{ name: string; size
 /** Check if an archive exists for a specific NOP and year */
 export async function checkArchiveByNop(nop: string, year: number) {
   try {
+    await requireAuth();
     const cleanNop = nop.replace(/\D/g, "");
     const archiveDir = getArchiveDir(year);
     if (!fs.existsSync(archiveDir)) return null;

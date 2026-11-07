@@ -14,8 +14,14 @@ export async function GET(req: NextRequest) {
     const tahun = parseInt(searchParams.get("tahun") || new Date().getFullYear().toString());
     const page = parseInt(searchParams.get("page") || "1");
     
-    // We don't require Turnstile for mobile app API
-    const result = await searchPublicTaxData(query, tahun, page, 20, undefined, true);
+    // Authenticate internal server call without exposing a client-controlled skipTurnstile flag
+    const result = await searchPublicTaxData(
+      query,
+      tahun,
+      page,
+      20,
+      process.env.NEXTAUTH_SECRET
+    );
 
     return NextResponse.json(result, { status: 200, headers: corsHeaders });
   } catch (error) {
