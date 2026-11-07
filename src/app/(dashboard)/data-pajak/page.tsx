@@ -12,6 +12,59 @@ import { buildTaxWhereInput } from "@/lib/tax-query";
 import { DashboardFilters } from "@/components/dashboard/dashboard-filters";
 
 
+type FilterOptionsCacheItem = {
+  uniqueDusuns: string[];
+  uniqueRws: string[];
+  uniqueRts: string[];
+  uniqueBloks: string[];
+  expiry: number;
+};
+const filterOptionsCache = new Map<number, FilterOptionsCacheItem>();
+
+async function getCachedFilterOptions(tahun: number) {
+  const now = Date.now();
+  const cached = filterOptionsCache.get(tahun);
+  if (cached && cached.expiry > now) {
+    return cached;
+  }
+
+  const filterOptions = await prisma.taxData.findMany({
+    where: { tahun },
+    select: { dusun: true, rw: true, rt: true, nop: true },
+    distinct: ["dusun", "rw", "rt", "nop"],
+  });
+
+  const uniqueDusuns = Array.from(
+    new Set(filterOptions.map((o) => o.dusun).filter(Boolean))
+  ) as string[];
+  const uniqueRws = Array.from(
+    new Set(filterOptions.map((o) => o.rw).filter(Boolean))
+  ).sort() as string[];
+  const uniqueRts = Array.from(
+    new Set(filterOptions.map((o) => o.rt).filter(Boolean))
+  ).sort() as string[];
+  const uniqueBloks = Array.from(
+    new Set(
+      filterOptions
+        .map((o) => {
+          const cleanNop = o.nop.replace(/\D/g, "");
+          return cleanNop.length >= 13 ? cleanNop.substring(10, 13) : null;
+        })
+        .filter(Boolean)
+    )
+  ).sort() as string[];
+
+  const item: FilterOptionsCacheItem = {
+    uniqueDusuns,
+    uniqueRws,
+    uniqueRts,
+    uniqueBloks,
+    expiry: now + 5 * 60 * 1000,
+  };
+  filterOptionsCache.set(tahun, item);
+  return item;
+}
+
 export default async function DataPajakPage({
   searchParams,
 }: {
@@ -85,39 +138,18 @@ export default async function DataPajakPage({
       where: { role: "PENARIK" },
       select: { id: true, name: true, dusun: true, rt: true, rw: true },
     }),
-    prisma.taxData.findMany({
-      where: { tahun },
-      select: { dusun: true, rw: true, rt: true, nop: true },
-      distinct: ["dusun", "rw", "rt", "nop"],
-    }),
+    getCachedFilterOptions(tahun),
     prisma.dusunReference.findMany({
       select: { name: true },
       orderBy: { name: "asc" },
     }),
   ]);
 
-  const uniqueDusuns = Array.from(
-    new Set(filterOptions.map((o) => o.dusun).filter(Boolean))
-  ) as string[];
-  const uniqueRws = Array.from(
-    new Set(filterOptions.map((o) => o.rw).filter(Boolean))
-  ).sort() as string[];
-  const uniqueRts = Array.from(
-    new Set(filterOptions.map((o) => o.rt).filter(Boolean))
-  ).sort() as string[];
-  
-  const uniqueBloks = Array.from(
-    new Set(filterOptions.map((o) => {
-        const cleanNop = o.nop.replace(/\D/g, "");
-        return cleanNop.length >= 13 ? cleanNop.substring(10, 13) : null;
-    }).filter(Boolean))
-  ).sort() as string[];
- 
   const availableFilters = {
-    dusun: uniqueDusuns,
-    rw: uniqueRws,
-    rt: uniqueRts,
-    blok: uniqueBloks,
+    dusun: filterOptions.uniqueDusuns,
+    rw: filterOptions.uniqueRws,
+    rt: filterOptions.uniqueRts,
+    blok: filterOptions.uniqueBloks,
     penarik: penariks.map((p) => ({ id: p.id, name: p.name || "" })),
     dusunRefs: dusunRefsRaw.map((d) => d.name),
   };
@@ -130,9 +162,9 @@ export default async function DataPajakPage({
   const configRts = Array.from(new Set(villageRegions.map(v => v.rt))).sort();
 
   // Fallback to populated data if config is empty
-  const passDusuns = configDusuns.length > 0 ? configDusuns : (availableFilters.dusunRefs.length > 0 ? availableFilters.dusunRefs : uniqueDusuns);
-  const passRws = configRws.length > 0 ? configRws : uniqueRws;
-  const passRts = configRts.length > 0 ? configRts : uniqueRts;
+  const passDusuns = configDusuns.length > 0 ? configDusuns : (availableFilters.dusunRefs.length > 0 ? availableFilters.dusunRefs : filterOptions.uniqueDusuns);
+  const passRws = configRws.length > 0 ? configRws : filterOptions.uniqueRws;
+  const passRts = configRts.length > 0 ? configRts : filterOptions.uniqueRts;
 
   return (
     <div className="space-y-6">

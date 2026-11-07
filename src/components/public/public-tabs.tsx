@@ -1,11 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { PublicSearch } from "./public-search";
-import { PublicGis } from "./public-gis";
-import { Search, Map as MapIcon } from "lucide-react";
+import { Search, Map as MapIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePublicThemeContext } from "./public-theme-provider";
+
+const PublicGis = dynamic(
+  () => import("./public-gis").then((mod) => mod.PublicGis),
+  {
+    loading: () => (
+      <div className="w-full h-[600px] flex flex-col items-center justify-center gap-4 bg-black/20 backdrop-blur-xl rounded-[2.5rem] border border-white/10">
+        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+        <p className="text-sm font-bold text-blue-400/60 uppercase tracking-widest animate-pulse">
+          Menyiapkan Peta Desa...
+        </p>
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 interface PublicTabsProps {
   tahunPajak: number;
