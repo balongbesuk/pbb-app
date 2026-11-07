@@ -57,6 +57,26 @@ dev.db.bak
 /eslint.log
 /tmp/
 
+# Scratch & diagnostic scripts
+scripts/diagnose-pdf.js
+scripts/extract-nops.js
+scripts/nops.json
+scripts/process-large-sppt-fast.js
+scripts/process-large-sppt.js
+scripts/process-new-gis.ts
+scripts/split-by-gs-chunks.js
+scripts/split-by-gs-fast.js
+scripts/split-by-gs.js
+scripts/split-by-json.js
+scripts/split-pdf.js
+scripts/test-scan-js.js
+scripts/test-scan.ts
+
+# Agent configs
+.agents/
+AGENTS.md
+CLAUDE.md
+
 # Templates (Always keep)
 !/public/template-pbb.xlsx
 

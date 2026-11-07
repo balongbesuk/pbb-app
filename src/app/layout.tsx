@@ -14,6 +14,7 @@ const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
   display: "swap",
+  fallback: ["system-ui", "-apple-system", "sans-serif"],
 });
 
 
