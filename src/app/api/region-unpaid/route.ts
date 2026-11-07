@@ -30,9 +30,32 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const tahun = parseInt(searchParams.get("tahun") || new Date().getFullYear().toString());
+    const source = searchParams.get("source");
+
+    let isOfficer = false;
+    try {
+      if (source === "mobile") {
+        await requireMobileAuth(req);
+        isOfficer = true;
+      } else {
+        const session = await getServerSession(authOptions);
+        if (session?.user) {
+          isOfficer = true;
+        } else {
+          await requireMobileAuth(req);
+          isOfficer = true;
+        }
+      }
+    } catch (e) {
+      isOfficer = false;
+    }
 
     const allStatus = searchParams.get("allStatus") === "true";
     if (allStatus) {
+      if (!isOfficer) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
       const wps = await prisma.taxData.findMany({
         where: { tahun },
         select: {
@@ -63,25 +86,6 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const search = searchParams.get("search") || "";
     const skip = (page - 1) * limit;
-    const source = searchParams.get("source");
-    
-    let isOfficer = false;
-    try {
-      if (source === "mobile") {
-        await requireMobileAuth(req);
-        isOfficer = true;
-      } else {
-        const session = await getServerSession(authOptions);
-        if (session?.user) {
-          isOfficer = true;
-        } else {
-          await requireMobileAuth(req);
-          isOfficer = true;
-        }
-      }
-    } catch (e) {
-      isOfficer = false;
-    }
 
     const cacheKey = `region-unpaid:${tahun}:${type}:${rt}:${rw}:${dusun}:${blok}:${page}:${limit}:${search}:${source}:${isOfficer}`;
     const cached = unpaidCache.get(cacheKey);

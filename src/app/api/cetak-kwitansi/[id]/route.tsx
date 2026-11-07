@@ -4,6 +4,12 @@ import { NextRequest } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 import { formatSignatureUrl } from "@/lib/utils";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { requireMobileAuth } from "@/lib/mobile-auth";
+import { verifyTaxPin } from "@/lib/pin-verification";
+import { getClientIp } from "@/lib/request-ip";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // Terbilang Bahasa Indonesia Helper
 function terbilang(angka: number): string {
@@ -53,23 +59,59 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!taxId || isNaN(taxId)) return new Response("Invalid ID", { status: 400 });
 
   try {
+    const clientIp = getClientIp(req);
+    const rateLimit = await checkRateLimit(`cetak-kwitansi:${clientIp}`, {
+      limit: 30,
+      windowMs: 60 * 1000,
+    });
+    if (!rateLimit.allowed) {
+      return new Response("Terlalu banyak permintaan kwitansi. Coba lagi dalam beberapa saat.", { status: 429 });
+    }
+
     const tax = await prisma.taxData.findUnique({ where: { id: taxId } });
     if (!tax) return new Response("Tax data not found", { status: 404 });
+
+    if (tax.paymentStatus !== "LUNAS") {
+      return new Response("Kwitansi hanya tersedia untuk tagihan PBB yang telah berstatus LUNAS.", { status: 400 });
+    }
 
     const config = await prisma.villageConfig.findUnique({ where: { id: 1 } });
     
     const { searchParams } = new URL(req.url);
     const officerId = searchParams.get('officerId');
+    const pin = searchParams.get('pin');
+
+    const session = await getServerSession(authOptions);
+    let isOfficer = Boolean(session?.user);
+    if (!isOfficer) {
+      try {
+        await requireMobileAuth(req);
+        isOfficer = true;
+      } catch {}
+    }
+
+    let isCitizenAuthorized = false;
+    if (pin) {
+      const pinResult = await verifyTaxPin(taxId, pin, tax.tahun);
+      if (pinResult.success) {
+        isCitizenAuthorized = true;
+      }
+    }
 
     let officerName = null;
     let officerSignatureUrl = null;
 
     if (officerId) {
-      const officer = await prisma.user.findUnique({ where: { id: officerId } });
+      const officer = await prisma.user.findFirst({
+        where: { id: officerId, role: { in: ["ADMIN", "PENARIK"] } }
+      });
       if (officer) {
-        officerName = officer.name || officer.username;
-        if (officer.signatureUrl) {
-          officerSignatureUrl = await getLocalImageBase64(formatSignatureUrl(officer.signatureUrl)!);
+        // If caller is an active officer or citizen with valid PIN or assigned collector
+        if (isOfficer || isCitizenAuthorized || officer.role === "ADMIN" || tax.penarikId === officer.id) {
+          officerName = officer.name || officer.username;
+          if (officer.signatureUrl) {
+            officerSignatureUrl = await getLocalImageBase64(formatSignatureUrl(officer.signatureUrl)!);
+          }
         }
       }
     }
