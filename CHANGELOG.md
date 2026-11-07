@@ -1,5 +1,37 @@
 # Changelog
 
+## v10.5.0 - 2026-11-07: Security Hardening, Audit Fixes, Mobile Alih Tugas Sync & Performance Optimization
+
+Pembaruan komprehensif berfokus pada penguatan keamanan (Security Hardening) berbasis audit kode mendalam, integritas sinkronisasi data spasial pada modul alih tugas Android PBB Mobile, ketahanan backup basis data SQLite, optimasi performa *first-load* landing page via code-splitting, serta perapian dependensi dan stabilitas sistem. Akses publik bagi warga desa untuk mengecek status pajak PBB melalui website portal desa maupun aplikasi Android tetap dipertahankan cepat dan mudah tanpa memerlukan login.
+
+### Security Hardening & Audit Fixes
+- **Proteksi Otorisasi Server Actions**: Mengamankan server actions `getWpByRegion`, `getWpByPenarik`, `getCurrentUserSignature`, `getArchiveList`, dan `checkArchiveByNop` menggunakan middleware pengaman `requireAuth()`, menutup potensi kebocoran data wajib pajak dari panggilan aksi yang tidak terautentikasi.
+- **Pembersihan Celah Rate-Limit & Turnstile**: Menghapus celah bypass `skipTurnstile` dan user-agent bypass `Lighthouse` pada `searchPublicTaxData`. Pencarian publik bagi warga tetap berjalan lancar dan aman dengan proteksi rate limiting berbasis IP yang diperketat.
+- **Parameterisasi Kueri SQL Massal**: Memperbaiki kueri raw SQL pada `bulkUpdatePaymentStatus` dengan skema validasi `zod` ketat dan parameterized placeholder (`?`), mengeliminasi risiko injeksi SQL saat pembaruan massal status pembayaran.
+- **Proteksi Dump Data Wajib Pajak (`/api/region-unpaid`)**: Membatasi parameter kueri `allStatus=true` pada `/api/region-unpaid` khusus untuk petugas terautentikasi (`isOfficer`), mencegah pihak anonim mengunduh seluruh basis data NOP desa.
+- **Pengamanan Cetak Kwitansi (`/api/cetak-kwitansi/[id]`)**: Membatasi pencetakan kwitansi hanya untuk NOP berstatus `LUNAS`, menambahkan rate-limit IP anti-brute force, serta memvalidasi sesi dan PIN petugas sebelum menempelkan tanda tangan resmi.
+- **Anti-Spoofing IP Client**: Memperbaiki fungsi pembacaan IP `getClientIp()` agar tidak mudah dimanipulasi melalui header palsu `X-Forwarded-For`.
+- **Validasi Status Akun Mobile JWT**: Memperketat middleware `requireMobileAuth` dengan pengecekan status akun aktif langsung ke basis data pengguna untuk setiap permintaan token JWT.
+
+### Mobile API & Data Synchronization (Alih Tugas & PBB Mobile)
+- **Sinkronisasi Otomatis `TaxMapping` pada Alih Tugas**: Menambahkan transaksi database `tx.taxMapping.upsert` pada endpoint persetujuan alih tugas (`/api/mobile/officer/transfer-response` dan `/api/mobile/officer/taxpayers/transfer`), menjamin peta bidang tanah di GIS langsung berpindah kepemilikan petugas secara instan saat alih tugas disetujui.
+- **Pembersihan Simulator Mobile**: Menghapus rute tiruan `POST /api/mobile/tax` (dead simulator code) untuk menjaga kebersihan dan keamanan API produksi.
+
+### Database Integrity & Atomic Backup
+- **Pencadangan SQLite Atomik (`VACUUM INTO`)**: Mengubah alur backup database SQLite menjadi atomic snapshot menggunakan perintah `VACUUM INTO` dalam mode WAL (Write-Ahead Logging), mencegah risiko korupsi file saat backup dilakukan bersamaan dengan transaksi aktif.
+- **Validasi Magic Header Restore**: Menambahkan verifikasi byte header SQLite (`SQLite format 3\0`) sebelum proses pemulihan (restore) database dijalankan untuk mencegah kerusakan akibat berkas non-database.
+
+### Performance & Code Splitting
+- **Dynamic Code-Splitting GIS Publik**: Menerapkan dynamic lazy-loading (`next/dynamic` dengan SSR disabled) pada komponen peta GIS publik (`PublicGis`) di [public-tabs.tsx](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/components/public/public-tabs.tsx), memangkas bundle awal halaman portal depan secara drastis untuk akses warga yang lebih gesit.
+- **In-Memory Caching Filter Opsi Data Pajak**: Menambahkan mekanisme cache memory 5 menit untuk query filter dropdown (dusun, rw, rt, blok) di [data-pajak/page.tsx](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/app/(dashboard)/data-pajak/page.tsx), mengeliminasi query berulang ke database pada setiap render tabel.
+- **Cache Konfigurasi Desa**: Mengintegrasikan `React.cache()` pada pembacaan profil desa `getVillageConfig()`.
+- **Font Fallbacks**: Menambahkan fallback font lokal (`system-ui`, `-apple-system`, `sans-serif`) pada konfigurasi font Google di [layout.tsx](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/app/layout.tsx) guna menjamin UI tetap tampil konsisten saat terjadi kendala jaringan eksternal.
+
+### Maintenance, Cleanup & Testing
+- **Pembersihan Dependensi Tak Terpakai**: Menghapus 187 dependensi usang yang tidak terpakai dari proyek untuk mempercepat proses instalasi dan build.
+- **Pengujian Unit Lengkap**: Menambahkan pengujian otomatis komprehensif pada [audit-fixes.test.ts](file:///f:/Projek%20Vibe%20Koding/pbb-app/src/lib/__tests__/audit-fixes.test.ts) (53/53 pengujian unit berhasil lolos 100%).
+- **Pelacakan Skrip Recovery Admin**: Menyimpan skrip [reset-admin-password.js](file:///f:/Projek%20Vibe%20Koding/pbb-app/scripts/reset-admin-password.js) ke dalam repositori git untuk kebutuhan pemulihan kredensial darurat.
+
 ## v10.4 - 2026-08-08: PDF Parse Compatibility, Dynamic WP Map Names, Archive Orphan Filters, Standardized Tax Year System & Turbopack Build Optimization
 
 Pembaruan teknis berfokus pada resolusi kompatibilitas `pdf-parse@2.4.5` pada Windows/Turbopack, optimalisasi build Turbopack tanpa warning filesystem, sinkronisasi nama Wajib Pajak otomatis dari database ke popup Peta Wilayah, penambahan filter interaktif & penanda visual berkas arsip yatim/anonim, serta penyeragaman UI sistem Pemilih Tahun Pajak (Tax Year Selector) di seluruh halaman aplikasi.
